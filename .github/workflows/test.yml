@@ -21,7 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-dev.txt
       - name: Backend syntax
-        run: python -m py_compile app.py app_extra.py app_extra_v10.py app_extra_v11.py app_extra_v12.py app_extra_v14.py app_extra_v15.py
+        run: python -m py_compile app.py app_extra.py app_extra_v10.py app_extra_v11.py app_extra_v12.py app_extra_v14.py app_extra_v15.py app_extra_v16.py
       - name: Backend tests
         env:
           PLUGART_DB: /tmp/plugart_ci.db
@@ -58,6 +58,7 @@ jobs:
           node --check /tmp/plugart-frontend.js
           node --check static/content_studio_v10.js
           node --check static/content_studio_v11.js
+          node --check static/thumbnail_v16.js
       - name: V11 assets
         run: |
           test -s static/content_studio_v11.css
@@ -81,3 +82,16 @@ jobs:
           grep -q 'version = "15.0"' app_extra_v15.py
           grep -q 'glass_v15.css?v=15.20260909.1' app_extra_v15.py
           grep -q 'maximum-transparent-bubble' app_extra_v15.py
+      - name: V16 contrast and thumbnails
+        run: |
+          test -s static/visual_v16.css
+          test -s static/thumbnail_v16.js
+          grep -q -- '--v16-text' static/visual_v16.css
+          grep -q 'thumb-placeholder-v16' static/visual_v16.css
+          grep -q 'detail-dialog' static/visual_v16.css
+          grep -q 'resolveThumb = function' static/thumbnail_v16.js
+          grep -q 'thumbHTML = function' static/thumbnail_v16.js
+          grep -q 'version = "16.0"' app_extra_v16.py
+          grep -q 'thumbnail_proxy_v16' app_extra_v16.py
+          grep -q 'visual_v16.css?v=16.20260909.1' app_extra_v16.py
+          grep -q 'thumbnail_v16.js?v=16.20260909.1' app_extra_v16.py
