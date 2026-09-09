@@ -10,6 +10,13 @@ import app as core
 app = core.app
 app.version = "8.0"
 
+# Assemble the V8 interface from text parts committed to GitHub.
+# This keeps the UI source editable while avoiding binary/static upload limitations.
+_V8_PARTS = sorted((core.BASE / "static").glob("v8_part_*.html"))
+if _V8_PARTS:
+    _V8_HTML = "".join(part.read_text(encoding="utf-8") for part in _V8_PARTS)
+    (core.BASE / "static" / "index.html").write_text(_V8_HTML, encoding="utf-8")
+
 PREVIEW_TTL_SECONDS = 60 * 60 * 24 * 7
 
 CITY_COORDS = {
@@ -125,11 +132,15 @@ def _extract_preview(source_url, force=False):
                 pass
             m = parser.meta
             page_title = _safe_text(
-                m.get("og:title") or m.get("twitter:title") or " ".join(parser.title_parts),
+                m.get("og:title")
+                or m.get("twitter:title")
+                or " ".join(parser.title_parts),
                 260,
             )
             description = _safe_text(
-                m.get("og:description") or m.get("twitter:description") or m.get("description"),
+                m.get("og:description")
+                or m.get("twitter:description")
+                or m.get("description"),
                 1100,
             )
             image_url = (
@@ -184,7 +195,7 @@ def _extract_preview(source_url, force=False):
         "error": error,
     }
 
-def _fallback_svg(title, domain_name=""):
+def _fallback_svg(title, domain_name="", accent="#101828"):
     title = _safe_text(title, 70) or "PLUG ART"
     domain_name = _safe_text(domain_name, 50)
     safe_title = html.escape(title)
@@ -193,9 +204,23 @@ def _fallback_svg(title, domain_name=""):
     a = f"#{digest[:6]}"
     b = f"#{digest[6:12]}"
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
-    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="{a}"/><stop offset=".55" stop-color="{b}"/><stop offset="1" stop-color="#eef4ff"/></linearGradient><filter id="blur"><feGaussianBlur stdDeviation="36"/></filter></defs>
-    <rect width="1200" height="720" rx="48" fill="#f8fbff"/><circle cx="200" cy="170" r="230" fill="{a}" opacity=".32" filter="url(#blur)"/><circle cx="980" cy="540" r="280" fill="{b}" opacity=".30" filter="url(#blur)"/><rect x="70" y="70" width="1060" height="580" rx="38" fill="url(#g)" opacity=".17"/>
-    <text x="90" y="150" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="38" fill="#101828">PLUG ART</text><text x="90" y="360" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="58" fill="#101828">{safe_title}</text><text x="90" y="430" font-family="Arial,Helvetica,sans-serif" font-size="28" fill="#667085">{safe_domain}</text><text x="90" y="585" font-family="Arial,Helvetica,sans-serif" font-size="22" fill="#667085">Aperçu source non disponible · vignette PLUG ART</text></svg>"""
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="{a}"/>
+        <stop offset=".55" stop-color="{b}"/>
+        <stop offset="1" stop-color="#eef4ff"/>
+      </linearGradient>
+      <filter id="blur"><feGaussianBlur stdDeviation="36"/></filter>
+    </defs>
+    <rect width="1200" height="720" rx="48" fill="#f8fbff"/>
+    <circle cx="200" cy="170" r="230" fill="{a}" opacity=".32" filter="url(#blur)"/>
+    <circle cx="980" cy="540" r="280" fill="{b}" opacity=".30" filter="url(#blur)"/>
+    <rect x="70" y="70" width="1060" height="580" rx="38" fill="url(#g)" opacity=".17"/>
+    <text x="90" y="150" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="38" fill="#101828">PLUG ART</text>
+    <text x="90" y="360" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="58" fill="#101828">{safe_title}</text>
+    <text x="90" y="430" font-family="Arial,Helvetica,sans-serif" font-size="28" fill="#667085">{safe_domain}</text>
+    <text x="90" y="585" font-family="Arial,Helvetica,sans-serif" font-size="22" fill="#667085">Aperçu source non disponible · vignette PLUG ART</text>
+    </svg>"""
 
 def _opportunity(oid):
     item = core.one("select * from opportunities where id=?", (oid,))
@@ -213,7 +238,12 @@ def _exhibition(eid):
 def opportunity_details(oid: int, refresh: bool = False):
     item = _opportunity(oid)
     preview = _extract_preview(item.get("source_url") or "", force=refresh) if item.get("source_url") else {}
-    return {**item,"source_preview":preview,"detail_summary":preview.get("description") or item.get("summary") or "","thumbnail_url":preview.get("image_url") or f"/api/opportunities/{oid}/thumbnail"}
+    return {
+        **item,
+        "source_preview": preview,
+        "detail_summary": preview.get("description") or item.get("summary") or "",
+        "thumbnail_url": preview.get("image_url") or f"/api/opportunities/{oid}/thumbnail",
+    }
 
 @app.get("/api/opportunities/{oid}/thumbnail")
 def opportunity_thumbnail(oid: int, refresh: bool = False):
@@ -229,7 +259,12 @@ def opportunity_thumbnail(oid: int, refresh: bool = False):
 def exhibition_details(eid: int, refresh: bool = False):
     item = _exhibition(eid)
     preview = _extract_preview(item.get("source_url") or "", force=refresh) if item.get("source_url") else {}
-    return {**item,"source_preview":preview,"detail_summary":preview.get("description") or item.get("notes") or "","thumbnail_url":preview.get("image_url") or f"/api/exhibitions/{eid}/thumbnail"}
+    return {
+        **item,
+        "source_preview": preview,
+        "detail_summary": preview.get("description") or item.get("notes") or "",
+        "thumbnail_url": preview.get("image_url") or f"/api/exhibitions/{eid}/thumbnail",
+    }
 
 @app.get("/api/exhibitions/{eid}/thumbnail")
 def exhibition_thumbnail(eid: int, refresh: bool = False):
@@ -238,13 +273,15 @@ def exhibition_thumbnail(eid: int, refresh: bool = False):
     image_url = (preview or {}).get("image_url")
     if image_url and image_url.startswith(("http://","https://")):
         return RedirectResponse(image_url, status_code=307)
-    svg = _fallback_svg(item.get("title"), core.domain(item.get("source_url") or ""))
+    svg = _fallback_svg(item.get("title"), core.domain(item.get("source_url") or ""), "#1d4ed8")
     return Response(svg, media_type="image/svg+xml", headers={"Cache-Control":"public, max-age=21600"})
 
 @app.get("/api/map/enhanced")
 def enhanced_map():
     out = []
-    for o in core.rows("""select id,title,city,country,lat,lon,deadline,fee,coalesce(radar_score,score,0) score,source_url,'opportunity' kind from opportunities where status in ('open','rolling')"""):
+    for o in core.rows("""select id,title,city,country,lat,lon,deadline,fee,
+        coalesce(radar_score,score,0) score,source_url,'opportunity' kind
+        from opportunities where status in ('open','rolling')"""):
         lat, lon = o.get("lat"), o.get("lon")
         if lat is None or lon is None:
             coords = CITY_COORDS.get((o.get("city") or "").strip().lower())
@@ -254,7 +291,8 @@ def enhanced_map():
             o["lat"], o["lon"] = float(lat), float(lon)
             o["thumbnail_url"] = f"/api/opportunities/{o['id']}/thumbnail"
             out.append(o)
-    for e in core.rows("""select id,title,city,country,lat,lon,start deadline,source_url,'event' kind from exhibitions"""):
+    for e in core.rows("""select id,title,city,country,lat,lon,start deadline,
+        source_url,'event' kind from exhibitions"""):
         lat, lon = e.get("lat"), e.get("lon")
         if lat is None or lon is None:
             coords = CITY_COORDS.get((e.get("city") or "").strip().lower())
@@ -269,4 +307,8 @@ def enhanced_map():
 
 @app.get("/api/source-previews/status")
 def preview_status():
-    return {"cached":core.one("select count(*) c from source_previews")["c"],"with_images":core.one("select count(*) c from source_previews where image_url<>''")["c"],"online":core.one("select count(*) c from source_previews where status='online'")["c"]}
+    return {
+        "cached": core.one("select count(*) c from source_previews")["c"],
+        "with_images": core.one("select count(*) c from source_previews where image_url<>''")["c"],
+        "online": core.one("select count(*) c from source_previews where status='online'")["c"],
+    }
