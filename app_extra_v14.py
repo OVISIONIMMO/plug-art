@@ -7,7 +7,8 @@ app.version = "14.0"
 BASE = Path(__file__).resolve().parent
 INDEX = BASE / "static" / "index.html"
 
-V14_ASSET = "/static/glass_v14.css?v=14.20260909.1"
+# Version d'asset volontairement unique pour empêcher tout cache de l'ancien thème.
+V14_ASSET = "/static/glass_v14.css?v=14.20260909.2"
 
 # Remplacement visuel complet : retire tous les anciens thèmes Glass et charge V14.
 if INDEX.exists():
