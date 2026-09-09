@@ -33,8 +33,10 @@ jobs:
           from html.parser import HTMLParser
           from pathlib import Path
           import re
-          html=Path('static/index.html').read_text(encoding='utf-8')
-          required=['explorer','opencalls','events','artists','resources','workspace','oppGrid','eventGrid','artistGrid','candidateGrid','desktopMsgs','floatMsgs']
+          parts=sorted(Path('static').glob('v8_part_*.html'))
+          html=''.join(p.read_text(encoding='utf-8') for p in parts) if parts else Path('static/index.html').read_text(encoding='utf-8')
+          Path('/tmp/plugart-v8.html').write_text(html,encoding='utf-8')
+          required=['explorer','opencalls','events','artists','mapview','resources','workspace','content','notes','contacts','oppGrid','eventGrid','artistGrid','world','radarMap','candidateGrid','detailModal','modalSource','desktopMsgs','floatMsgs']
           class P(HTMLParser):
               def __init__(self): super().__init__(); self.ids=[]
               def handle_starttag(self,tag,attrs):
@@ -45,9 +47,12 @@ jobs:
           dup=[x for x in set(p.ids) if p.ids.count(x)>1]
           assert not missing, f'Missing ids: {missing}'
           assert not dup, f'Duplicate ids: {dup}'
-          scripts=re.findall(r'<script(?![^>]+src=)[^>]*>(.*?)</script>',html,re.S)
+          assert 'PLUGY, mascotte PLUG ART 3D réaliste à tête de prise' in html
+          assert '/api/opportunities/${item.id}/thumbnail' in html
+          assert 'basemaps.cartocdn.com' in html
+          scripts=re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>',html,re.S)
           assert scripts, 'No inline JavaScript found'
           Path('/tmp/plugart-frontend.js').write_text('\n'.join(scripts),encoding='utf-8')
-          print(f'HTML OK: {len(p.ids)} ids, {len(html)} chars')
+          print(f'V8 HTML OK: {len(p.ids)} ids, {len(html)} chars, {len(parts)} parts')
           PY
           node --check /tmp/plugart-frontend.js
