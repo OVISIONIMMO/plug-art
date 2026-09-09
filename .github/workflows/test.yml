@@ -76,5 +76,5 @@ jobs:
           grep -q 'background:transparent !important' static/glass_v14.css
           grep -q 'backdrop-filter:blur' static/glass_v14.css
           grep -q 'version = "14.0"' app_extra_v14.py
-          grep -q 'glass_v14.css?v=14.20260909.1' app_extra_v14.py
+          grep -q 'glass_v14.css?v=14.20260909.2' app_extra_v14.py
           grep -q 'transparent-bubble' app_extra_v14.py
