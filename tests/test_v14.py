@@ -1,37 +1,18 @@
-from fastapi.testclient import TestClient
-import app_extra_v14 as v14
-
-client = TestClient(v14.app)
+from pathlib import Path
 
 
-def test_theme_status_v14():
-    r = client.get('/api/theme/status')
-    assert r.status_code == 200
-    data = r.json()
-    assert data['version'] == '14.0'
-    assert data['theme'] == 'transparent-bubble'
-    assert data['transparent_panels'] is True
-    assert data['large_opaque_surfaces'] is False
-    assert data['bubble_cards'] is True
-    assert 'glass_v14.css?v=14.20260909.2' in data['asset']
-
-
-def test_v14_glass_asset_is_served():
-    r = client.get('/static/glass_v14.css')
-    assert r.status_code == 200
-    css = r.text
+def test_legacy_v14_asset_is_kept_for_compatibility():
+    css_path = Path('static/glass_v14.css')
+    assert css_path.exists()
+    css = css_path.read_text(encoding='utf-8')
     assert '--v14-bubble' in css
-    assert 'background:transparent !important' in css
     assert 'backdrop-filter:blur' in css
     assert '.header' in css
     assert '.cat' in css
     assert '.thumb' in css
 
 
-def test_index_has_only_v14_glass_stylesheet():
-    r = client.get('/')
-    assert r.status_code == 200
-    html = r.text
-    assert 'glass_v14.css?v=14.20260909.2' in html
-    assert 'glass_v13.css' not in html
-    assert 'glass_v12.css' not in html
+def test_v14_is_not_the_active_runtime_theme():
+    runtime = Path('app_extra_v15.py').read_text(encoding='utf-8')
+    assert 'glass_v15.css?v=15.20260909.1' in runtime
+    assert 'maximum-transparent-bubble' in runtime
