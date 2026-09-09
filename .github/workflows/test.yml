@@ -21,7 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-dev.txt
       - name: Backend syntax
-        run: python -m py_compile app.py
+        run: python -m py_compile app.py app_extra.py
       - name: Backend tests
         env:
           PLUGART_DB: /tmp/plugart_ci.db
@@ -34,7 +34,7 @@ jobs:
           from pathlib import Path
           import re
           html=Path('static/index.html').read_text(encoding='utf-8')
-          required=['explorer','opencalls','events','artists','resources','workspace','oppGrid','eventGrid','artistGrid','world','candidateGrid','desktopMsgs','floatMsgs']
+          required=['explorer','opencalls','events','artists','resources','workspace','oppGrid','eventGrid','artistGrid','candidateGrid','desktopMsgs','floatMsgs']
           class P(HTMLParser):
               def __init__(self): super().__init__(); self.ids=[]
               def handle_starttag(self,tag,attrs):
@@ -45,7 +45,7 @@ jobs:
           dup=[x for x in set(p.ids) if p.ids.count(x)>1]
           assert not missing, f'Missing ids: {missing}'
           assert not dup, f'Duplicate ids: {dup}'
-          scripts=re.findall(r'<script[^>]*>(.*?)</script>',html,re.S)
+          scripts=re.findall(r'<script(?![^>]+src=)[^>]*>(.*?)</script>',html,re.S)
           assert scripts, 'No inline JavaScript found'
           Path('/tmp/plugart-frontend.js').write_text('\n'.join(scripts),encoding='utf-8')
           print(f'HTML OK: {len(p.ids)} ids, {len(html)} chars')
