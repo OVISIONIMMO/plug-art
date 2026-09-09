@@ -12,6 +12,6 @@ def test_legacy_v12_asset_is_kept_for_compatibility():
 
 
 def test_v12_is_not_the_active_runtime_theme():
-    runtime = Path('app_extra_v14.py').read_text(encoding='utf-8')
-    assert 'glass_v14.css' in runtime
-    assert 'transparent-bubble' in runtime
+    runtime = Path('app_extra_v15.py').read_text(encoding='utf-8')
+    assert 'glass_v15.css' in runtime
+    assert 'maximum-transparent-bubble' in runtime
