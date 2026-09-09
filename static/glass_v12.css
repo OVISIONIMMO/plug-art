@@ -1,0 +1,162 @@
+:root{
+  --glass-bg:rgba(255,255,255,.36);
+  --glass-bg-soft:rgba(255,255,255,.24);
+  --glass-bg-strong:rgba(255,255,255,.54);
+  --glass-border:rgba(255,255,255,.62);
+  --glass-line:rgba(92,106,151,.14);
+  --glass-shadow:0 18px 52px rgba(48,63,108,.10), inset 0 1px 0 rgba(255,255,255,.78);
+  --glass-shadow-hover:0 24px 66px rgba(54,67,118,.15), inset 0 1px 0 rgba(255,255,255,.86);
+  --bubble-radius:28px;
+}
+
+html{background:#f4f7fd}
+body{
+  background:
+    radial-gradient(circle at 12% 7%,rgba(126,199,255,.22),transparent 24%),
+    radial-gradient(circle at 88% 10%,rgba(174,139,255,.20),transparent 25%),
+    radial-gradient(circle at 8% 82%,rgba(255,150,207,.16),transparent 22%),
+    radial-gradient(circle at 82% 78%,rgba(84,225,235,.12),transparent 23%),
+    linear-gradient(145deg,#f7faff 0%,#f4f6fb 48%,#fbfaff 100%) !important;
+  background-attachment:fixed !important;
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
+  background:linear-gradient(115deg,rgba(255,255,255,.54),rgba(255,255,255,.08) 43%,rgba(255,255,255,.28));
+}
+
+/* Barre de navigation flottante et translucide */
+.header{
+  top:10px !important;height:76px !important;padding:0 18px !important;margin-bottom:12px;
+  border:1px solid rgba(255,255,255,.68) !important;border-radius:28px !important;
+  background:rgba(255,255,255,.34) !important;
+  box-shadow:0 12px 42px rgba(56,70,117,.08),inset 0 1px 0 rgba(255,255,255,.9) !important;
+  -webkit-backdrop-filter:blur(28px) saturate(150%);backdrop-filter:blur(28px) saturate(150%) !important;
+}
+.nav{gap:8px !important}
+.nav button{
+  padding:10px 14px !important;border:1px solid transparent !important;border-radius:999px !important;
+  color:#45516b !important;transition:background .22s ease,border-color .22s ease,box-shadow .22s ease,transform .22s ease !important;
+}
+.nav button:after{display:none !important}
+.nav button:hover,.nav button.active{
+  background:rgba(255,255,255,.52) !important;border-color:rgba(255,255,255,.72) !important;
+  box-shadow:0 8px 22px rgba(50,64,110,.08),inset 0 1px 0 rgba(255,255,255,.9) !important;transform:translateY(-1px)
+}
+.space-btn,.primary{
+  box-shadow:0 9px 24px rgba(12,21,42,.16),inset 0 1px 0 rgba(255,255,255,.12) !important
+}
+.soft,.ghost,.micro,.chip,.segment button,.format-row button,.content-mode-tabs button,.editor-actions button,.dot{
+  background:rgba(255,255,255,.34) !important;border-color:rgba(255,255,255,.58) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 7px 18px rgba(54,67,108,.05) !important;
+  -webkit-backdrop-filter:blur(18px) saturate(145%);backdrop-filter:blur(18px) saturate(145%);
+}
+.soft:hover,.ghost:hover,.micro:hover,.chip:hover,.segment button:hover,.format-row button:hover,.content-mode-tabs button:hover,.editor-actions button:hover{
+  background:rgba(255,255,255,.58) !important;transform:translateY(-1px)
+}
+.segment button.on,.format-row button.on,.content-mode-tabs button.on,.dot.on{
+  background:rgba(12,22,44,.88) !important;border-color:rgba(255,255,255,.18) !important;color:#fff !important;
+}
+
+/* Panneaux : effet bulle légère */
+.page-hero,.plugy-panel,.card,.studio-panel,.studio-preview,.caption-box,.draft,.float-chat,.ai-photo-lab,.layer-section,.saved-template-section{
+  background:linear-gradient(145deg,rgba(255,255,255,.46),rgba(255,255,255,.20)) !important;
+  border:1px solid var(--glass-border) !important;border-radius:var(--bubble-radius) !important;
+  box-shadow:var(--glass-shadow) !important;
+  -webkit-backdrop-filter:blur(28px) saturate(150%);backdrop-filter:blur(28px) saturate(150%) !important;
+}
+.card,.studio-panel,.caption-box,.draft{transition:transform .24s ease,box-shadow .24s ease,background .24s ease}
+.card:hover,.draft:hover{
+  transform:translateY(-3px);box-shadow:var(--glass-shadow-hover) !important;
+  background:linear-gradient(145deg,rgba(255,255,255,.57),rgba(255,255,255,.27)) !important;
+}
+.page-hero:after{opacity:.42 !important;filter:blur(34px) !important}
+
+/* Vignettes / catégories sous forme de bulles */
+.category-strip{gap:16px !important}
+.cat{
+  position:relative;overflow:hidden;padding:10px !important;border-radius:30px !important;
+  border:1px solid rgba(255,255,255,.68) !important;
+  background:linear-gradient(145deg,rgba(255,255,255,.44),rgba(255,255,255,.20)) !important;
+  box-shadow:0 18px 44px rgba(46,60,104,.08),inset 0 1px 0 rgba(255,255,255,.9) !important;
+  -webkit-backdrop-filter:blur(25px) saturate(150%);backdrop-filter:blur(25px) saturate(150%);
+  transition:.25s ease !important;
+}
+.cat:before{
+  content:"";position:absolute;left:10%;right:10%;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);z-index:3
+}
+.cat:hover{transform:translateY(-5px) scale(1.01);box-shadow:0 25px 60px rgba(53,66,112,.13),inset 0 1px 0 rgba(255,255,255,.95) !important}
+.cat-art{
+  height:112px !important;border-radius:25px !important;border:1px solid rgba(255,255,255,.60);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 10px 26px rgba(37,51,95,.10);
+  opacity:.88;filter:saturate(.92) contrast(.96)
+}
+.cat-copy{padding:12px 9px 5px !important}.arrow{background:rgba(255,255,255,.48) !important;border:1px solid rgba(255,255,255,.68) !important;backdrop-filter:blur(14px)}
+
+/* Cartes Open Calls : plus aérées et transparentes */
+.opp{padding:12px 12px 16px !important;border-radius:30px !important;overflow:hidden}
+.opp:before{height:2px !important;left:9%;right:9%;top:0;border-radius:99px;opacity:.65}
+.thumb{
+  height:170px !important;border-radius:25px !important;margin-bottom:14px !important;
+  border:1px solid rgba(255,255,255,.68) !important;
+  background:linear-gradient(145deg,rgba(220,232,255,.56),rgba(246,235,255,.38)) !important;
+  box-shadow:0 12px 32px rgba(39,52,95,.09),inset 0 1px 0 rgba(255,255,255,.78) !important;
+  position:relative;
+}
+.thumb:after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(145deg,rgba(255,255,255,.18),transparent 46%);pointer-events:none}
+.thumb img{border-radius:inherit;filter:saturate(.94) contrast(.98)}
+.fav{background:rgba(255,255,255,.55) !important;border:1px solid rgba(255,255,255,.75) !important;backdrop-filter:blur(16px);z-index:4}
+.reason{background:rgba(241,244,255,.46) !important;border:1px solid rgba(255,255,255,.58);backdrop-filter:blur(12px)}
+.score,.studio-badge,.v10-pill,.v11-pill,.layer-badge{
+  background:rgba(245,243,255,.58) !important;border:1px solid rgba(255,255,255,.66) !important;backdrop-filter:blur(12px)
+}
+
+/* Studio contenu : canvas dans une coque vitrée */
+.studio-shell{gap:18px !important}
+.studio-preview{padding:18px !important;background:rgba(255,255,255,.26) !important}
+.slide-stage{
+  border-radius:32px;padding:18px !important;background:linear-gradient(145deg,rgba(255,255,255,.24),rgba(220,229,255,.20));
+  border:1px solid rgba(255,255,255,.50);box-shadow:inset 0 1px 0 rgba(255,255,255,.75)
+}
+.carousel-slide{box-shadow:0 30px 70px rgba(30,44,87,.18),0 2px 0 rgba(255,255,255,.9) inset !important}
+.mini-slide{
+  background:rgba(255,255,255,.38) !important;border:1px solid rgba(255,255,255,.58) !important;border-radius:16px !important;
+  box-shadow:0 8px 20px rgba(45,58,100,.06),inset 0 1px 0 rgba(255,255,255,.72)
+}
+.mini-slide.on{border-color:rgba(91,78,240,.50) !important;box-shadow:0 10px 25px rgba(91,78,240,.12),inset 0 1px 0 rgba(255,255,255,.82)}
+.field input,.field select,.field textarea,.filters input,.filters select{
+  background:rgba(255,255,255,.38) !important;border:1px solid rgba(255,255,255,.65) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.78);backdrop-filter:blur(16px)
+}
+.field input:focus,.field select:focus,.field textarea:focus,.filters input:focus,.filters select:focus{
+  outline:none;border-color:rgba(89,78,235,.30) !important;box-shadow:0 0 0 4px rgba(92,77,238,.07),inset 0 1px 0 rgba(255,255,255,.84)
+}
+
+/* Carte, stats et Radar */
+.stats{background:rgba(255,255,255,.20);border:1px solid rgba(255,255,255,.50) !important;border-radius:25px;padding:20px 10px !important;backdrop-filter:blur(20px)}
+.map,.radar-map-wrap,#radarMap,#world{
+  border-radius:30px !important;border:1px solid rgba(255,255,255,.62) !important;
+  box-shadow:var(--glass-shadow) !important;overflow:hidden
+}
+.radar-dark{border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 48px rgba(9,17,31,.18),inset 0 1px 0 rgba(255,255,255,.10)}
+.source-row{border-bottom-color:rgba(98,110,151,.10) !important}
+
+/* PLUGY : garde sa présence, sans bloc lourd */
+.plugy-stage:after{opacity:.48}
+.plug-robot{filter:drop-shadow(0 26px 42px rgba(48,56,98,.18)) !important}
+.plugy-panel{background:rgba(255,255,255,.30) !important}
+.intro,.msg.bot,.chat-form{background:rgba(255,255,255,.48) !important;border:1px solid rgba(255,255,255,.62);backdrop-filter:blur(16px)}
+.float-btn{box-shadow:0 14px 35px rgba(12,21,42,.20);border:1px solid rgba(255,255,255,.14)}
+
+/* Scrollbars discrètes */
+*{scrollbar-width:thin;scrollbar-color:rgba(105,113,146,.26) transparent}
+*::-webkit-scrollbar{width:8px;height:8px}*::-webkit-scrollbar-track{background:transparent}*::-webkit-scrollbar-thumb{background:rgba(105,113,146,.22);border-radius:999px}
+
+@media(max-width:1180px){
+  .header{border-radius:23px !important;padding:0 14px !important}
+}
+@media(max-width:760px){
+  .header{top:6px !important;height:66px !important;border-radius:21px !important}
+  .page-hero,.card,.studio-panel,.studio-preview,.cat{border-radius:24px !important}
+  .cat-art,.thumb{border-radius:20px !important}
+  .studio-shell{gap:12px !important}
+}
