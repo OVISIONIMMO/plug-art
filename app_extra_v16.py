@@ -1,6 +1,7 @@
 from pathlib import Path
 from fastapi import Request
-from fastapi.responses import Response
+from fastapi.responses import Response, JSONResponse
+import asyncio
 import hashlib
 import json
 import os
@@ -13,11 +14,23 @@ import app_extra as previews
 import app as core
 
 app = v15.app
-app.version = "16.0"
+app.version = "16.1"
 BASE = Path(__file__).resolve().parent
 INDEX = BASE / "static" / "index.html"
 V16_CSS = "/static/visual_v16.css?v=16.20260909.1"
 V16_JS = "/static/thumbnail_v16.js?v=16.20260909.1"
+
+OPENAI_API_URL = "https://api.openai.com/v1/responses"
+OPENAI_MODEL = os.getenv("PLUGART_OPENAI_MODEL", "gpt-5.6-terra")
+OPENAI_TIMEOUT = int(os.getenv("PLUGART_OPENAI_TIMEOUT", "45"))
+PLUGY_INSTRUCTIONS = """Tu es PLUGY, l'agent IA interne de PLUG ART.
+Tu réponds principalement en français, de façon claire, concrète et directement exploitable.
+Tes domaines prioritaires sont : art contemporain et artistes émergents, appels à candidatures et expositions collectives, stratégie associative et culturelle, développement de lieux artistiques, partenariats, marketing digital, réseaux sociaux, création de carrousels Instagram, rédaction de candidatures et stratégie de prospection.
+Quand le contexte PLUG ART contient des opportunités, utilise ces données en priorité et ne fabrique jamais de deadline, tarif, lieu ou lien. Si une donnée n'est pas confirmée, dis qu'elle doit être vérifiée sur la source.
+Pour les recommandations, privilégie les opportunités accessibles aux artistes émergents, gratuites ou à coût raisonnable, avec une priorité Paris/Île-de-France puis Europe.
+Quand l'utilisateur demande une publication ou un carrousel, donne une structure prête à utiliser, avec accroche, informations essentielles et CTA.
+Reste concis par défaut, mais développe quand la demande nécessite une stratégie détaillée.
+"""
 
 if INDEX.exists():
     page = INDEX.read_text(encoding="utf-8")
@@ -32,6 +45,101 @@ THUMB_CACHE_DIR = Path(os.getenv("PLUGART_THUMB_CACHE_DIR", str(_db_hint.parent 
 THUMB_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 THUMB_TTL = 60 * 60 * 24 * 7
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
+
+
+def _openai_configured():
+    return bool(os.getenv("OPENAI_API_KEY", "").strip())
+
+
+def _compact_opportunity(row):
+    return {
+        "id": row.get("id"),
+        "title": row.get("title"),
+        "city": row.get("city"),
+        "country": row.get("country"),
+        "deadline": row.get("deadline"),
+        "fee": row.get("fee"),
+        "score": row.get("score"),
+        "priority": row.get("priority"),
+        "reason": row.get("radar_reason"),
+        "source_url": row.get("source_url"),
+    }
+
+
+def _plugy_context():
+    active = core.rows("select id,title,city,country,deadline,fee,coalesce(radar_score,score,0) score,priority,radar_reason,source_url from opportunities where status in ('open','rolling') order by coalesce(radar_score,score,0) desc limit 12")
+    candidates = core.rows("select id,title,city,country,deadline,fee,candidate_score score,reason,source_url from radar_candidates where state='new' order by candidate_score desc limit 8")
+    return {
+        "stats": core.stats(),
+        "top_opportunities": [_compact_opportunity(x) for x in active],
+        "new_candidates": candidates,
+    }
+
+
+def _extract_openai_text(data):
+    text = data.get("output_text")
+    if isinstance(text, str) and text.strip():
+        return text.strip()
+    parts = []
+    for item in data.get("output") or []:
+        for content in item.get("content") or []:
+            if content.get("type") == "output_text" and content.get("text"):
+                parts.append(content["text"])
+    return "\n".join(parts).strip()
+
+
+def _ask_openai(message: str):
+    key = os.getenv("OPENAI_API_KEY", "").strip()
+    if not key:
+        return None
+    context = _plugy_context()
+    user_input = (
+        "CONTEXTE INTERNE PLUG ART (données du Radar, à utiliser sans les inventer) :\n"
+        + json.dumps(context, ensure_ascii=False, separators=(",", ":"))
+        + "\n\nQUESTION / DEMANDE :\n"
+        + message
+    )
+    payload = {
+        "model": OPENAI_MODEL,
+        "instructions": PLUGY_INSTRUCTIONS,
+        "input": user_input,
+        "store": False,
+        "max_output_tokens": 1200,
+    }
+    response = requests.post(
+        OPENAI_API_URL,
+        headers={
+            "Authorization": f"Bearer {key}",
+            "Content-Type": "application/json",
+        },
+        json=payload,
+        timeout=OPENAI_TIMEOUT,
+    )
+    if not response.ok:
+        try:
+            detail = response.json().get("error", {}).get("message") or response.text
+        except Exception:
+            detail = response.text
+        raise RuntimeError(f"OpenAI HTTP {response.status_code}: {detail[:240]}")
+    data = response.json()
+    answer = _extract_openai_text(data)
+    if not answer:
+        raise RuntimeError("OpenAI a renvoyé une réponse vide")
+    return {
+        "answer": answer,
+        "items": context["top_opportunities"][:5],
+        "ai": True,
+        "model": data.get("model") or OPENAI_MODEL,
+    }
+
+
+def _legacy_plugy(message: str, error: str = ""):
+    result = core.plugy(core.PlugyMessage(message=message))
+    result["ai"] = False
+    result["model"] = "local-radar"
+    if error:
+        result["ai_error"] = error[:240]
+    return result
 
 
 def _thumb_cache_paths(image_url: str):
@@ -133,6 +241,21 @@ def _thumbnail_for(kind: str, item_id: int, force=False):
 @app.middleware("http")
 async def thumbnail_proxy_v16(request: Request, call_next):
     path = request.url.path
+
+    if path == "/api/plugy" and request.method == "POST" and _openai_configured():
+        try:
+            body = await request.json()
+            message = str((body or {}).get("message") or "").strip()
+            if not message:
+                return JSONResponse({"detail": "Message vide"}, status_code=422)
+            result = await asyncio.to_thread(_ask_openai, message)
+            return JSONResponse(result)
+        except Exception as exc:
+            message = locals().get("message", "")
+            if message:
+                return JSONResponse(_legacy_plugy(message, str(exc)))
+            return JSONResponse({"detail": "PLUGY indisponible"}, status_code=503)
+
     match = re.fullmatch(r"/api/(opportunities|exhibitions)/(\d+)/thumbnail", path)
     if match and request.method in {"GET", "HEAD"}:
         kind = "opportunity" if match.group(1) == "opportunities" else "event"
@@ -156,12 +279,26 @@ def v16_status():
     cache_files = len(list(THUMB_CACHE_DIR.glob("*.bin")))
     return {
         "ok": True,
-        "version": "16.0",
+        "version": "16.1",
         "visual": "refined-transparent-glass",
         "contrast": "enhanced",
         "thumbnail_proxy": True,
         "thumbnail_disk_cache": True,
         "thumbnail_cache_files": cache_files,
+        "openai_configured": _openai_configured(),
+        "plugy_ai": "openai" if _openai_configured() else "local-radar",
+        "openai_model": OPENAI_MODEL,
         "css": V16_CSS,
         "js": V16_JS,
+    }
+
+
+@app.get("/api/v16/openai/status")
+def openai_status():
+    return {
+        "ok": True,
+        "configured": _openai_configured(),
+        "model": OPENAI_MODEL,
+        "endpoint": "responses",
+        "fallback": "local-radar",
     }
