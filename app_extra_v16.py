@@ -14,15 +14,16 @@ import app_extra as previews
 import app as core
 
 app = v15.app
-app.version = "16.1"
+app.version = "16.2"
 BASE = Path(__file__).resolve().parent
 INDEX = BASE / "static" / "index.html"
 V16_CSS = "/static/visual_v16.css?v=16.20260909.1"
 V16_JS = "/static/thumbnail_v16.js?v=16.20260909.1"
+PLUGY_CHAT_JS = "/static/plugy_ai_v17.js?v=17.20260909.1"
 
 OPENAI_API_URL = "https://api.openai.com/v1/responses"
 OPENAI_MODEL = os.getenv("PLUGART_OPENAI_MODEL", "gpt-5.6-terra")
-OPENAI_TIMEOUT = int(os.getenv("PLUGART_OPENAI_TIMEOUT", "45"))
+OPENAI_TIMEOUT = int(os.getenv("PLUGART_OPENAI_TIMEOUT", "35"))
 PLUGY_INSTRUCTIONS = """Tu es PLUGY, l'agent IA interne de PLUG ART.
 Tu réponds principalement en français, de façon claire, concrète et directement exploitable.
 Tes domaines prioritaires sont : art contemporain et artistes émergents, appels à candidatures et expositions collectives, stratégie associative et culturelle, développement de lieux artistiques, partenariats, marketing digital, réseaux sociaux, création de carrousels Instagram, rédaction de candidatures et stratégie de prospection.
@@ -38,6 +39,8 @@ if INDEX.exists():
         page = page.replace("</head>", f'<link rel="stylesheet" href="{V16_CSS}">\n</head>', 1)
     if "thumbnail_v16.js" not in page:
         page = page.replace("</body>", f'<script src="{V16_JS}"></script>\n</body>', 1)
+    if "plugy_ai_v17.js" not in page:
+        page = page.replace("</body>", f'<script src="{PLUGY_CHAT_JS}"></script>\n</body>', 1)
     INDEX.write_text(page, encoding="utf-8")
 
 _db_hint = Path(os.getenv("PLUGART_DB", "/data/plugart.db"))
@@ -104,8 +107,11 @@ def _ask_openai(message: str):
         "instructions": PLUGY_INSTRUCTIONS,
         "input": user_input,
         "store": False,
-        "max_output_tokens": 1200,
+        "reasoning": {"effort": "low"},
+        "max_output_tokens": 800,
     }
+    started = time.time()
+    print(f"PLUGY_OPENAI_START model={OPENAI_MODEL} message_chars={len(message)}", flush=True)
     response = requests.post(
         OPENAI_API_URL,
         headers={
@@ -115,27 +121,34 @@ def _ask_openai(message: str):
         json=payload,
         timeout=OPENAI_TIMEOUT,
     )
+    elapsed_ms = int((time.time() - started) * 1000)
     if not response.ok:
         try:
             detail = response.json().get("error", {}).get("message") or response.text
         except Exception:
             detail = response.text
+        print(f"PLUGY_OPENAI_ERROR status={response.status_code} elapsed_ms={elapsed_ms} detail={detail[:220]}", flush=True)
         raise RuntimeError(f"OpenAI HTTP {response.status_code}: {detail[:240]}")
     data = response.json()
     answer = _extract_openai_text(data)
     if not answer:
+        print(f"PLUGY_OPENAI_ERROR status=empty elapsed_ms={elapsed_ms}", flush=True)
         raise RuntimeError("OpenAI a renvoyé une réponse vide")
+    print(f"PLUGY_OPENAI_OK elapsed_ms={elapsed_ms} answer_chars={len(answer)} model={data.get('model') or OPENAI_MODEL}", flush=True)
     return {
         "answer": answer,
         "items": context["top_opportunities"][:5],
         "ai": True,
+        "fallback": False,
         "model": data.get("model") or OPENAI_MODEL,
+        "latency_ms": elapsed_ms,
     }
 
 
 def _legacy_plugy(message: str, error: str = ""):
     result = core.plugy(core.PlugyMessage(message=message))
     result["ai"] = False
+    result["fallback"] = True
     result["model"] = "local-radar"
     if error:
         result["ai_error"] = error[:240]
@@ -249,11 +262,12 @@ async def thumbnail_proxy_v16(request: Request, call_next):
             if not message:
                 return JSONResponse({"detail": "Message vide"}, status_code=422)
             result = await asyncio.to_thread(_ask_openai, message)
-            return JSONResponse(result)
+            return JSONResponse(result, headers={"Cache-Control": "no-store"})
         except Exception as exc:
             message = locals().get("message", "")
+            print(f"PLUGY_FALLBACK reason={type(exc).__name__}: {str(exc)[:220]}", flush=True)
             if message:
-                return JSONResponse(_legacy_plugy(message, str(exc)))
+                return JSONResponse(_legacy_plugy(message, str(exc)), headers={"Cache-Control": "no-store"})
             return JSONResponse({"detail": "PLUGY indisponible"}, status_code=503)
 
     match = re.fullmatch(r"/api/(opportunities|exhibitions)/(\d+)/thumbnail", path)
@@ -267,7 +281,7 @@ async def thumbnail_proxy_v16(request: Request, call_next):
         except Exception:
             return await call_next(request)
     response = await call_next(request)
-    if path in ("/", "/index.html") or path.endswith("visual_v16.css") or path.endswith("thumbnail_v16.js"):
+    if path in ("/", "/index.html") or path.endswith("visual_v16.css") or path.endswith("thumbnail_v16.js") or path.endswith("plugy_ai_v17.js"):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
@@ -279,7 +293,7 @@ def v16_status():
     cache_files = len(list(THUMB_CACHE_DIR.glob("*.bin")))
     return {
         "ok": True,
-        "version": "16.1",
+        "version": "16.2",
         "visual": "refined-transparent-glass",
         "contrast": "enhanced",
         "thumbnail_proxy": True,
@@ -288,6 +302,7 @@ def v16_status():
         "openai_configured": _openai_configured(),
         "plugy_ai": "openai" if _openai_configured() else "local-radar",
         "openai_model": OPENAI_MODEL,
+        "plugy_chat_bridge": "v17",
         "css": V16_CSS,
         "js": V16_JS,
     }
@@ -301,4 +316,5 @@ def openai_status():
         "model": OPENAI_MODEL,
         "endpoint": "responses",
         "fallback": "local-radar",
+        "chat_bridge": "v17",
     }
