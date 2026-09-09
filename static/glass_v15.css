@@ -1,0 +1,285 @@
+/* PLUG ART V15 — Maximum Transparent Bubble
+   Direction finale : fond diffus/floute, presque aucune surface opaque,
+   interfaces comme des bulles de verre flottantes. */
+:root{
+  --v15-ink:#f7f9ff;
+  --v15-ink-soft:#e8eeff;
+  --v15-muted:#cad5ef;
+  --v15-glass:rgba(255,255,255,.075);
+  --v15-glass-soft:rgba(255,255,255,.045);
+  --v15-glass-hover:rgba(255,255,255,.13);
+  --v15-glass-strong:rgba(255,255,255,.115);
+  --v15-border:rgba(255,255,255,.18);
+  --v15-border-strong:rgba(255,255,255,.28);
+  --v15-shadow:0 22px 70px rgba(5,11,28,.22),inset 0 1px 0 rgba(255,255,255,.16);
+  --v15-shadow-hover:0 28px 82px rgba(5,11,28,.28),inset 0 1px 0 rgba(255,255,255,.22);
+  --v15-radius:30px;
+}
+
+html{
+  min-height:100%;
+  background:#0d1530 !important;
+}
+body{
+  min-height:100vh;
+  color:var(--v15-ink) !important;
+  background:transparent !important;
+  background-image:none !important;
+  position:relative;
+  overflow-x:hidden;
+}
+/* Fond diffus et floute : assez present pour reveler le verre, jamais une plaque opaque. */
+body:before{
+  content:"" !important;
+  display:block !important;
+  position:fixed;
+  inset:-5%;
+  z-index:-3;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 12% 14%,rgba(70,126,255,.48) 0,rgba(70,126,255,.14) 22%,transparent 46%),
+    radial-gradient(circle at 82% 16%,rgba(63,220,235,.34) 0,rgba(63,220,235,.10) 20%,transparent 44%),
+    radial-gradient(circle at 74% 74%,rgba(237,73,185,.30) 0,rgba(237,73,185,.08) 22%,transparent 44%),
+    radial-gradient(circle at 23% 78%,rgba(124,84,255,.34) 0,rgba(124,84,255,.09) 24%,transparent 48%),
+    linear-gradient(135deg,#0d1530 0%,#142044 36%,#101938 66%,#111a35 100%);
+  filter:blur(22px) saturate(132%);
+  transform:scale(1.06);
+}
+body:after{
+  content:"" !important;
+  display:block !important;
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.006));
+  -webkit-backdrop-filter:blur(18px) saturate(118%);
+  backdrop-filter:blur(18px) saturate(118%);
+}
+.shell,main,.view,.hero,.hero-copy,.plugy-stage,.category-strip,.grid,.artist-grid,.resource-grid,.radar-layout,.studio-shell,.note-grid,.contact-grid{
+  background:transparent !important;
+  background-image:none !important;
+}
+
+/* Neutralise toutes les anciennes decorations pleines. */
+.page-hero:after,.plugy-stage:after,.thumb:after,.cat:before,.plugy-panel:before{
+  display:none !important;
+  content:none !important;
+}
+
+/* Navigation bulle flottante tres transparente. */
+.header{
+  top:12px !important;
+  height:78px !important;
+  padding:0 18px !important;
+  margin:12px 0 20px !important;
+  border:1px solid var(--v15-border) !important;
+  border-radius:999px !important;
+  background:rgba(255,255,255,.055) !important;
+  box-shadow:var(--v15-shadow) !important;
+  -webkit-backdrop-filter:blur(38px) saturate(165%) !important;
+  backdrop-filter:blur(38px) saturate(165%) !important;
+}
+.brand-main,.brand-main span,.brand-sub{color:#fff !important}
+.brand-sub{opacity:.72 !important}
+.nav{gap:7px !important}
+.nav button{
+  padding:10px 14px !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+  border-radius:999px !important;
+  background:rgba(255,255,255,.028) !important;
+  color:var(--v15-ink-soft) !important;
+  box-shadow:none !important;
+  transition:.22s ease !important;
+}
+.nav button:after{display:none !important}
+.nav button:hover,.nav button.active{
+  background:rgba(255,255,255,.11) !important;
+  border-color:rgba(255,255,255,.22) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 10px 24px rgba(4,10,24,.10) !important;
+  color:#fff !important;
+  transform:translateY(-1px)
+}
+
+/* Toutes les surfaces importantes deviennent du verre. */
+.page-hero,.card,.cat,.plugy-panel,.studio-panel,.studio-preview,.caption-box,.draft,.float-chat,.ai-photo-lab,.layer-section,.saved-template-section,.stats,.map,.radar-map-wrap,#radarMap,#world,
+#detailModal .modal-card,#detailModal .modal-content,#detailModal .detail-card,#detailModal .detail-panel,#detailModal>div,
+.intro,.msg.bot,.chat-form,.reason,.score,.studio-badge,.v10-pill,.v11-pill,.layer-badge,.source-row,.idea,.mini-slide{
+  background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.045)) !important;
+  background-image:none !important;
+  border:1px solid var(--v15-border) !important;
+  box-shadow:var(--v15-shadow) !important;
+  -webkit-backdrop-filter:blur(34px) saturate(165%) !important;
+  backdrop-filter:blur(34px) saturate(165%) !important;
+}
+.page-hero,.card,.cat,.plugy-panel,.studio-panel,.studio-preview,.caption-box,.draft,.float-chat,.ai-photo-lab,.layer-section,.saved-template-section{
+  border-radius:var(--v15-radius) !important;
+}
+.page-hero{
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.035)) !important;
+  border-color:rgba(255,255,255,.14) !important;
+  padding:34px !important;
+}
+.page-hero small{color:#cbd6f5 !important}
+.page-hero h1,.hero-title,.cat-copy strong,.card h2,.card h3,.card h4,.plugy-panel b,.studio-panel h3,.preview-top strong,.slide-count,.kicker,strong,b{
+  color:#fff !important;
+}
+.page-hero p,.hero-copy p,.cat-copy span,.opp p,.event p,.artist p,.resource p,.reason,.foot,.quote,.metric span,.intro,.msg.bot,.source-row,.slide-count,.draft p,.kicker{
+  color:var(--v15-muted) !important;
+}
+
+.card,.cat,.draft,.idea,.mini-slide{
+  transition:transform .22s ease,background .22s ease,box-shadow .22s ease,border-color .22s ease !important;
+}
+.card:hover,.cat:hover,.draft:hover,.idea:hover,.mini-slide:hover{
+  transform:translateY(-4px) !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.075)) !important;
+  border-color:var(--v15-border-strong) !important;
+  box-shadow:var(--v15-shadow-hover) !important;
+}
+
+/* Hero / PLUGY : pas de nuage, pas de plaque derriere la mascotte. */
+.hero{padding-top:18px !important}
+.hero-title{filter:drop-shadow(0 12px 34px rgba(4,10,24,.20))}
+.eyebrow{color:#cfdbf6 !important}
+.plugy-stage{background:transparent !important}
+.plug-robot{filter:drop-shadow(0 28px 46px rgba(3,9,24,.24)) !important}
+.plugy-panel{background:rgba(255,255,255,.06) !important}
+.avatar{
+  background:linear-gradient(145deg,rgba(255,255,255,.22),rgba(122,104,255,.22)) !important;
+  border:1px solid rgba(255,255,255,.20) !important;
+  box-shadow:0 12px 30px rgba(4,10,24,.16) !important;
+}
+.status{color:#8cf4c2 !important}
+.tools{color:#dfe7fa !important}
+.stream{background:transparent !important;border:0 !important;box-shadow:none !important}
+.msg.user{
+  background:rgba(12,20,44,.55) !important;
+  color:#fff !important;
+  border:1px solid rgba(255,255,255,.13) !important;
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)
+}
+
+/* Categories et vignettes : images dans des bulles transparentes. */
+.category-strip{gap:16px !important}
+.cat{padding:9px !important;border-radius:32px !important}
+.cat-art,.thumb{
+  border-radius:25px !important;
+  border:1px solid rgba(255,255,255,.16) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 12px 34px rgba(4,10,24,.10) !important;
+  overflow:hidden !important;
+}
+.cat-art{height:108px !important}
+.thumb{height:170px !important;margin-bottom:14px !important;background:rgba(255,255,255,.025) !important}
+.thumb img{border-radius:inherit !important;filter:saturate(.96) contrast(1.02) brightness(.94)}
+.cat-copy{padding:12px 10px 6px !important}
+.arrow,.fav{
+  background:rgba(255,255,255,.08) !important;
+  border:1px solid rgba(255,255,255,.16) !important;
+  color:#fff !important;
+  box-shadow:0 8px 22px rgba(4,10,24,.10) !important;
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)
+}
+.opp{padding:11px 11px 16px !important;border-radius:32px !important;overflow:hidden}
+.opp:before{opacity:.5 !important}
+
+/* Boutons capsules : meme logique de verre, presque sans aplat. */
+.soft,.ghost,.micro,.chip,.segment button,.format-row button,.content-mode-tabs button,.editor-actions button,.dot,.idea,.space-btn,.primary{
+  border-radius:999px !important;
+  background:rgba(255,255,255,.06) !important;
+  border:1px solid rgba(255,255,255,.17) !important;
+  color:#eef3ff !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 8px 22px rgba(4,10,24,.08) !important;
+  -webkit-backdrop-filter:blur(24px) saturate(150%) !important;
+  backdrop-filter:blur(24px) saturate(150%) !important;
+}
+.soft:hover,.ghost:hover,.micro:hover,.chip:hover,.segment button:hover,.format-row button:hover,.content-mode-tabs button:hover,.editor-actions button:hover,.idea:hover,.space-btn:hover,.primary:hover{
+  background:rgba(255,255,255,.12) !important;
+  border-color:rgba(255,255,255,.25) !important;
+  transform:translateY(-1px)
+}
+.segment button.on,.format-row button.on,.content-mode-tabs button.on,.dot.on{
+  background:rgba(255,255,255,.16) !important;
+  border-color:rgba(255,255,255,.28) !important;
+  color:#fff !important;
+}
+
+/* Inputs : transparence poussee au maximum mais texte lisible. */
+input,select,textarea,.field input,.field select,.field textarea,.filters input,.filters select,.chat-form{
+  background:rgba(255,255,255,.045) !important;
+  border:1px solid rgba(255,255,255,.15) !important;
+  color:#f6f8ff !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08) !important;
+  -webkit-backdrop-filter:blur(24px) saturate(145%) !important;
+  backdrop-filter:blur(24px) saturate(145%) !important;
+}
+input::placeholder,textarea::placeholder{color:#bcc9e6 !important}
+select option{background:#131d3c !important;color:#f7f9ff !important}
+input:focus,select:focus,textarea:focus,.field input:focus,.field select:focus,.field textarea:focus,.filters input:focus,.filters select:focus{
+  outline:none !important;
+  border-color:rgba(255,255,255,.27) !important;
+  box-shadow:0 0 0 4px rgba(112,96,255,.08),inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+.chat-form input{border:0 !important;box-shadow:none !important;background:transparent !important}
+
+/* Studio contenu : seul le canvas exportable garde son design plein. */
+.studio-shell{gap:18px !important}
+.studio-preview{background:rgba(255,255,255,.05) !important}
+.slide-stage{
+  background:rgba(255,255,255,.025) !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  border-radius:32px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+.carousel-slide{
+  box-shadow:0 30px 78px rgba(3,8,22,.34) !important;
+}
+.mini-slide{background:rgba(255,255,255,.045) !important;border-radius:17px !important}
+.mini-slide.on{background:rgba(255,255,255,.11) !important;border-color:rgba(255,255,255,.24) !important}
+.caption-box,.draft{background:rgba(255,255,255,.05) !important}
+
+/* Radar / carte : le conteneur lui-meme reste du verre. */
+.stats{border-radius:30px !important;padding:20px 10px !important}
+.metric{border-right-color:rgba(255,255,255,.08) !important}
+.radar-dark{
+  background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.04)) !important;
+  color:#fff !important;
+  border:1px solid var(--v15-border) !important;
+  box-shadow:var(--v15-shadow) !important;
+  -webkit-backdrop-filter:blur(34px) saturate(160%) !important;
+  backdrop-filter:blur(34px) saturate(160%) !important;
+}
+.radar-dark p{color:var(--v15-muted) !important}
+.map,.radar-map-wrap,#radarMap,#world{border-radius:32px !important;overflow:hidden !important}
+.source-row{border-bottom-color:rgba(255,255,255,.08) !important}
+
+/* Detail annonce : grande bulle presque transparente au-dessus du fond floute. */
+#detailModal{
+  background:rgba(5,10,24,.12) !important;
+  -webkit-backdrop-filter:blur(22px) saturate(125%) !important;
+  backdrop-filter:blur(22px) saturate(125%) !important;
+}
+#detailModal .modal-card,#detailModal .modal-content,#detailModal .detail-card,#detailModal .detail-panel,#detailModal>div{
+  border-radius:34px !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.105),rgba(255,255,255,.055)) !important;
+  border:1px solid rgba(255,255,255,.20) !important;
+  box-shadow:0 36px 110px rgba(3,8,22,.34),inset 0 1px 0 rgba(255,255,255,.16) !important;
+  -webkit-backdrop-filter:blur(42px) saturate(175%) !important;
+  backdrop-filter:blur(42px) saturate(175%) !important;
+}
+
+/* Scrollbars ultra discretes. */
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.14) transparent}
+*::-webkit-scrollbar{width:7px;height:7px}
+*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:999px}
+
+@media(max-width:1180px){
+  .header{border-radius:30px !important;padding:0 14px !important}
+}
+@media(max-width:760px){
+  .header{top:6px !important;height:66px !important;border-radius:26px !important}
+  .page-hero,.card,.cat,.studio-panel,.studio-preview,.plugy-panel{border-radius:25px !important}
+  .cat-art,.thumb{border-radius:21px !important}
+  .studio-shell{gap:12px !important}
+}
