@@ -21,7 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-dev.txt
       - name: Backend syntax
-        run: python -m py_compile app.py app_extra.py
+        run: python -m py_compile app.py app_extra.py app_extra_v10.py app_extra_v11.py
       - name: Backend tests
         env:
           PLUGART_DB: /tmp/plugart_ci.db
@@ -53,6 +53,15 @@ jobs:
           scripts=re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>',html,re.S)
           assert scripts, 'No inline JavaScript found'
           Path('/tmp/plugart-frontend.js').write_text('\n'.join(scripts),encoding='utf-8')
-          print(f'V8 HTML OK: {len(p.ids)} ids, {len(html)} chars, {len(parts)} parts')
+          print(f'Base HTML OK: {len(p.ids)} ids, {len(html)} chars, {len(parts)} parts')
           PY
           node --check /tmp/plugart-frontend.js
+          node --check static/content_studio_v10.js
+          node --check static/content_studio_v11.js
+      - name: V11 assets
+        run: |
+          test -s static/content_studio_v11.css
+          test -s static/content_studio_v11.js
+          grep -q "Photo IA PLUGY" static/content_studio_v11.js
+          grep -q "plugart_templates_v11" static/content_studio_v11.js
+          grep -q "gpt-image-2.5-sunburst" app_extra_v11.py
