@@ -26,7 +26,8 @@ if INDEX.exists():
         page = page.replace("</body>", js_tag + "\n</body>", 1)
     INDEX.write_text(page, encoding="utf-8")
 
-GENERATED_DIR = Path(os.getenv("PLUGART_GENERATED_DIR", "/data/generated-content"))
+_db_hint = Path(os.getenv("PLUGART_DB", "/data/plugart.db"))
+GENERATED_DIR = Path(os.getenv("PLUGART_GENERATED_DIR", str(_db_hint.parent / "generated-content")))
 GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 ALLOWED_IMAGE_MODELS = {
     "gpt-image-2.5-sunburst",
