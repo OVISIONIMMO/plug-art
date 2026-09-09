@@ -21,7 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-dev.txt
       - name: Backend syntax
-        run: python -m py_compile app.py app_extra.py app_extra_v10.py app_extra_v11.py app_extra_v12.py app_extra_v14.py
+        run: python -m py_compile app.py app_extra.py app_extra_v10.py app_extra_v11.py app_extra_v12.py app_extra_v14.py app_extra_v15.py
       - name: Backend tests
         env:
           PLUGART_DB: /tmp/plugart_ci.db
@@ -65,16 +65,19 @@ jobs:
           grep -q "Photo IA PLUGY" static/content_studio_v11.js
           grep -q "plugart_templates_v11" static/content_studio_v11.js
           grep -q "gpt-image-2.5-sunburst" app_extra_v11.py
-      - name: Legacy glass asset
+      - name: Legacy glass assets
         run: |
           test -s static/glass_v12.css
-          grep -q -- '--glass-bg' static/glass_v12.css
-      - name: V14 transparent bubble theme
-        run: |
           test -s static/glass_v14.css
+          grep -q -- '--glass-bg' static/glass_v12.css
           grep -q -- '--v14-bubble' static/glass_v14.css
-          grep -q 'background:transparent !important' static/glass_v14.css
-          grep -q 'backdrop-filter:blur' static/glass_v14.css
-          grep -q 'version = "14.0"' app_extra_v14.py
-          grep -q 'glass_v14.css?v=14.20260909.2' app_extra_v14.py
-          grep -q 'transparent-bubble' app_extra_v14.py
+      - name: V15 maximum transparent bubble theme
+        run: |
+          test -s static/glass_v15.css
+          grep -q -- '--v15-glass' static/glass_v15.css
+          grep -q 'body:before' static/glass_v15.css
+          grep -q 'filter:blur(22px)' static/glass_v15.css
+          grep -q 'backdrop-filter:blur(34px)' static/glass_v15.css
+          grep -q 'version = "15.0"' app_extra_v15.py
+          grep -q 'glass_v15.css?v=15.20260909.1' app_extra_v15.py
+          grep -q 'maximum-transparent-bubble' app_extra_v15.py
