@@ -69,10 +69,8 @@
     }
   }
 
-  // Remplace la fonction globale utilisée par les anciens handlers.
   window.ask=robustAsk;
 
-  // Rebranche explicitement les formulaires et raccourcis pour éviter qu’un ancien handler reste actif.
   $$('.plug-form').forEach(form=>{
     form.onsubmit=e=>{
       e.preventDefault();
@@ -88,5 +86,21 @@
     button.onclick=()=>robustAsk(button.dataset.q||button.textContent.trim());
   });
 
-  console.info('[PLUGY] AI chat bridge v17 loaded');
+  // Charge la couche d'expérience v18 : compagnon PLUGY, chat lisible et Studio boosté.
+  if(!document.querySelector('link[data-plugy-v18]')){
+    const link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href='/static/plugy_experience_v18.css?v=18.20260910.1';
+    link.dataset.plugyV18='1';
+    document.head.appendChild(link);
+  }
+  if(!document.querySelector('script[data-plugy-v18]')){
+    const script=document.createElement('script');
+    script.src='/static/plugy_experience_v18.js?v=18.20260910.1';
+    script.defer=true;
+    script.dataset.plugyV18='1';
+    document.body.appendChild(script);
+  }
+
+  console.info('[PLUGY] AI chat bridge v17 + experience v18 loader');
 })();
