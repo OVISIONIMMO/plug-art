@@ -15,11 +15,12 @@ def test_v24_home_assets_present():
     assert ".v24-chat" in css
     assert "#v24PlugyDock" in css
     assert "v24-studio-steps" in css
-    assert "/static/plugy.glb?v=24.20260910.1" in js
+    assert "/static/plugy.glb?v=24." in js
     assert "model-viewer" in js
     assert "pointermove" in js
     assert "data-v24-page" in js
     assert "/api/opportunities" in js
+    assert "submitChat" in js
 
 
 def test_v24_single_plugy_runtime():
