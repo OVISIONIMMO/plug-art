@@ -28,8 +28,9 @@ jobs:
         env:
           PLUGART_DB: /tmp/plugart_v22_ci.db
           PLUGART_AUTORADAR: '0'
+          PYTHONPATH: .
         run: |
-          pytest -q tests/test_v22.py
+          python -m pytest -q tests/test_v22.py
           python - <<'PY'
           import app_extra_v22 as v22
           import hashlib
