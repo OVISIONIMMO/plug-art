@@ -95,7 +95,7 @@ jobs:
           grep -q 'detail-dialog' static/visual_v16.css
           grep -q 'resolveThumb = function' static/thumbnail_v16.js
           grep -q 'thumbHTML = function' static/thumbnail_v16.js
-          grep -q 'app.version = "16.1"' app_extra_v16.py
+          grep -q 'app.version = "16.2"' app_extra_v16.py
           grep -q 'thumbnail_proxy_v16' app_extra_v16.py
           grep -q 'visual_v16.css?v=16.20260909.1' app_extra_v16.py
           grep -q 'thumbnail_v16.js?v=16.20260909.1' app_extra_v16.py
