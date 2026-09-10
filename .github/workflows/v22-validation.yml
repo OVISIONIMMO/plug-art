@@ -1,0 +1,50 @@
+name: PLUG ART V22 Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  v22:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+      - name: V22 syntax
+        run: |
+          python -m py_compile app_extra_v22.py
+          node --check static/studio_v22.js
+      - name: Exact rig-ready PLUGY
+        run: |
+          test "$(find assets -maxdepth 1 -name 'plugy_v2_rigready_part_*.b64' | wc -l)" -eq 2
+          python - <<'PY'
+          from pathlib import Path
+          import base64, hashlib, lzma
+          parts=sorted(Path('assets').glob('plugy_v2_rigready_part_*.b64'))
+          raw=lzma.decompress(base64.b64decode(''.join(p.read_text().strip() for p in parts)))
+          assert raw[:4] == b'glTF'
+          assert len(raw) == 414024
+          assert hashlib.sha256(raw).hexdigest() == '834a9621418173173d391c33dc1c5785138a05fcacf43606f0a358a428be9a37'
+          print('PLUGY V2 rig-ready OK', len(raw))
+          PY
+      - name: V22 tests
+        env:
+          PLUGART_DB: /tmp/plugart_v22_ci.db
+          PLUGART_AUTORADAR: '0'
+        run: pytest -q tests/test_v22.py
+      - name: V22 UI markers
+        run: |
+          grep -q 'single-screen-creator' app_extra_v22.py
+          grep -q 'Créer une publication' static/studio_v22.js
+          grep -q 'Éditeur avancé' static/studio_v22.js
+          grep -q 'plug-studio-v22-active' static/studio_v22.css
