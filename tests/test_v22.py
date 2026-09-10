@@ -16,7 +16,9 @@ def test_v22_status_and_rigready_model():
     assert data['plugy_rig_ready'] is True
     assert data['plugy_model_bytes'] == 414024
     assert data['plugy_model_sha256'] == '834a9621418173173d391c33dc1c5785138a05fcacf43606f0a358a428be9a37'
-    assert data['model_parts'] == 2
+    assert data['rebuild_source'] == 'v21-exact-glb'
+    assert data['animation'] == 'Idle'
+    assert data['rig_nodes'] == ['Rig_Torso', 'Rig_Head', 'Rig_Arm_L', 'Rig_Arm_R', 'Rig_Leg_L', 'Rig_Leg_R']
 
 
 def test_v22_model_is_exact_glb():
