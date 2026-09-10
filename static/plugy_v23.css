@@ -1,0 +1,13 @@
+/* PLUGY V23 — compagnon 3D visible, immersif et réactif */
+#plugyCompanion{z-index:95!important;overflow:visible!important;transition:transform .22s ease,filter .22s ease!important;transform-origin:80% 80%}
+#plugyCompanion .plugy-glb-shell.v23{position:absolute!important;inset:-28%!important;pointer-events:auto!important;animation:plugyV23Float 4.2s ease-in-out infinite!important;filter:drop-shadow(0 22px 34px rgba(41,74,255,.26))!important;will-change:transform}
+#plugyCompanion .plugy-glb-shell.v23 model-viewer{position:absolute;inset:0;width:100%;height:100%;background:transparent!important;--poster-color:transparent;touch-action:none;cursor:pointer}
+#plugyCompanion:hover .plugy-glb-shell.v23{filter:drop-shadow(0 28px 44px rgba(55,103,255,.38))!important}
+#plugyCompanion.v23-engaged{transform:scale(1.12)!important;filter:saturate(1.1)}
+#plugyCompanion .plugy-v23-orbit{position:absolute;inset:8%;border-radius:50%;border:1px solid rgba(115,165,255,.16);box-shadow:0 0 50px rgba(68,104,255,.12),inset 0 0 32px rgba(80,202,255,.06);pointer-events:none;opacity:.7;animation:plugyV23Pulse 3.4s ease-in-out infinite}
+#plugyCompanion .plugy-v23-status{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);padding:5px 8px;border-radius:999px;background:rgba(10,17,39,.62);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(14px);color:#dbe7ff;font-size:7px;font-weight:800;letter-spacing:.4px;white-space:nowrap;pointer-events:none;opacity:0;transition:.2s}
+#plugyCompanion:hover .plugy-v23-status,#plugyCompanion.v23-engaged .plugy-v23-status{opacity:1}
+@keyframes plugyV23Float{0%,100%{transform:translateY(0) rotateZ(-.4deg)}50%{transform:translateY(-10px) rotateZ(.6deg)}}
+@keyframes plugyV23Pulse{50%{transform:scale(1.06);opacity:.35}}
+@media(max-width:680px){#plugyCompanion{min-width:106px!important;min-height:142px!important;right:10px!important;bottom:78px!important}#plugyCompanion .plugy-glb-shell.v23{inset:-38%!important}#plugyCompanion.v23-engaged{transform:scale(1.2)!important}.plugy-v23-status{display:none!important}}
+@media(prefers-reduced-motion:reduce){#plugyCompanion .plugy-glb-shell.v23,#plugyCompanion .plugy-v23-orbit{animation:none!important}}
