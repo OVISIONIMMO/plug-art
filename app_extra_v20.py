@@ -1,14 +1,18 @@
 from pathlib import Path
 from fastapi import Request
+from fastapi.responses import Response
+import base64
 
 import app_extra_v19 as v19
 from build_plugy_glb import build_plugy_glb
 
 app = v19.app
-app.version = "20.0"
+app.version = "20.1"
 BASE = Path(__file__).resolve().parent
 INDEX = BASE / "static" / "index.html"
 GLB = BASE / "static" / "plugy.glb"
+REF_B64 = BASE / "static" / "plugy_reference_tiny.b64"
+REF_IMG = BASE / "static" / "plugy_reference.jpg"
 
 V20_STUDIO_CSS = "/static/studio_v20.css?v=20.20260910.1"
 V20_STUDIO_JS = "/static/studio_v20.js?v=20.20260910.1"
@@ -27,6 +31,20 @@ def _build_glb():
     except Exception as exc:
         print(f"PLUGY_GLB_ERROR {type(exc).__name__}: {str(exc)[:240]}", flush=True)
         return False, GLB.stat().st_size if GLB.exists() else 0, str(exc)[:240]
+
+
+def _build_reference_image():
+    try:
+        encoded = REF_B64.read_text(encoding="utf-8").strip()
+        raw = base64.b64decode(encoded)
+        if len(raw) < 2000 or raw[:2] != b"\xff\xd8":
+            raise RuntimeError("image de référence JPEG invalide")
+        REF_IMG.write_bytes(raw)
+        print(f"PLUGY_REFERENCE_READY bytes={len(raw)}", flush=True)
+        return True, len(raw)
+    except Exception as exc:
+        print(f"PLUGY_REFERENCE_ERROR {type(exc).__name__}: {str(exc)[:240]}", flush=True)
+        return False, 0
 
 
 def _inject_assets():
@@ -50,7 +68,16 @@ def _inject_assets():
 
 
 GLB_READY, GLB_BYTES, GLB_ERROR = _build_glb()
+REF_READY, REF_BYTES = _build_reference_image()
 _inject_assets()
+
+
+@app.get("/api/plugy/reference.jpg")
+def plugy_reference_image():
+    raw = REF_IMG.read_bytes() if REF_IMG.exists() else b""
+    if not raw:
+        return Response(status_code=404)
+    return Response(raw, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=3600"})
 
 
 @app.middleware("http")
@@ -75,7 +102,7 @@ def v20_status():
     valid = len(raw) >= 10000 and raw[:4] == b"glTF"
     return {
         "ok": True,
-        "version": "20.0",
+        "version": "20.1",
         "studio_v20": True,
         "studio_radar_import": True,
         "studio_one_screen_workflow": True,
@@ -84,6 +111,9 @@ def v20_status():
         "glb_ready": valid,
         "glb_bytes": len(raw),
         "glb_path": "/static/plugy.glb",
+        "reference_ready": REF_READY,
+        "reference_bytes": REF_BYTES,
+        "reference_path": "/api/plugy/reference.jpg",
         "blink": True,
         "mini_mode": True,
         "thinking_motion": True,
