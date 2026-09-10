@@ -126,7 +126,7 @@ jobs:
           test -s static/studio_v20.js
           test -s static/plugy_v20.css
           test -s static/plugy_glb_runtime_v20.js
-          grep -q 'app.version = "20.0"' app_extra_v20.py
+          grep -q 'app.version = "20.1"' app_extra_v20.py
           grep -q 'build_plugy_glb' app_extra_v20.py
       - name: V21 guided studio and new PLUGY
         run: |
