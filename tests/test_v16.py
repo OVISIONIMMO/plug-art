@@ -9,7 +9,7 @@ def test_v16_status():
     r = client.get('/api/v16/status')
     assert r.status_code == 200
     data = r.json()
-    assert data['version'] == '16.0'
+    assert data['version'] == '16.2'
     assert data['visual'] == 'refined-transparent-glass'
     assert data['contrast'] == 'enhanced'
     assert data['thumbnail_proxy'] is True
