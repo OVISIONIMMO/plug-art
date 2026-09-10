@@ -1,0 +1,23 @@
+/* PLUG ART V25 — garde-fou de chargement + PLUGY toujours visible */
+body:not(.v25-ready) #explorer>.hero{display:grid!important}
+body:not(.v25-ready) #explorer>.category-strip{display:grid!important}
+body:not(.v25-ready) #explorer>.stats{display:grid!important}
+body:not(.v25-ready) #plugyCompanion{display:none!important}
+body.v25-ready #explorer>.hero,body.v25-ready #explorer>.category-strip,body.v25-ready #explorer>.stats{display:none!important}
+#v25BootFallback{display:none}
+#v24PlugySingle .v24-model{opacity:0;transition:opacity .28s ease}
+#v24PlugySingle .v24-fallback{display:flex!important;opacity:1;transition:opacity .28s ease;pointer-events:none}
+#v24PlugySingle.v25-model-ready .v24-model{opacity:1}
+#v24PlugySingle.v25-model-ready .v24-fallback{opacity:0}
+#v24PlugySingle.v25-model-error .v24-model{display:none!important}
+#v24PlugySingle.v25-model-error .v24-fallback{opacity:1!important;display:flex!important}
+.v25-fallback-body{position:absolute;left:28%;right:28%;top:57%;height:26%;border-radius:34% 34% 28% 28%;background:linear-gradient(145deg,#263665,#111936 65%,#29355f);box-shadow:0 20px 40px rgba(64,75,150,.18)}
+.v25-fallback-body:before,.v25-fallback-body:after{content:"";position:absolute;top:14%;width:22%;height:58%;border-radius:999px;background:linear-gradient(145deg,#24325c,#0f1730)}
+.v25-fallback-body:before{left:-15%;transform:rotate(18deg)}
+.v25-fallback-body:after{right:-15%;transform:rotate(-18deg)}
+.v25-fallback-feet{position:absolute;left:34%;right:34%;top:79%;height:15%}
+.v25-fallback-feet:before,.v25-fallback-feet:after{content:"";position:absolute;bottom:0;width:35%;height:100%;border-radius:40%;background:linear-gradient(145deg,#fefefe,#dcecff)}
+.v25-fallback-feet:before{left:0}.v25-fallback-feet:after{right:0}
+.v25-boot-badge{position:fixed;left:50%;bottom:18px;z-index:9999;transform:translateX(-50%);padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.78);border:1px solid rgba(92,112,190,.14);box-shadow:0 8px 28px rgba(57,77,145,.12);backdrop-filter:blur(18px);font:700 10px/1.2 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#31427e;opacity:0;pointer-events:none;transition:.2s}
+body.v25-booting .v25-boot-badge{opacity:1}
+@media(max-width:720px){body:not(.v25-ready) #explorer>.hero{display:block!important}.v25-boot-badge{bottom:10px}}
