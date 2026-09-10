@@ -11,7 +11,7 @@ app = v16.app
 app.version = "17.0"
 BASE = Path(__file__).resolve().parent
 INDEX = BASE / "static" / "index.html"
-MODEL_B64 = BASE / "assets" / "plugy_web_mascot.glb.xz.b64"
+MODEL_PARTS = sorted((BASE / "assets").glob("plugy_web_mascot_part_*.b64"))
 MODEL_DIR = Path("/data/plugy-assets")
 MODEL_FILE = MODEL_DIR / "PLUGY_web_mascot.glb"
 MODEL_SHA256 = "f8438dea4931c3324854575b9ce97c7cb2747e5ae5eaa1bc34941aa219ac0f70"
@@ -27,9 +27,10 @@ def _ensure_plugy_model():
         raw = MODEL_FILE.read_bytes()
         if len(raw) == MODEL_SIZE and hashlib.sha256(raw).hexdigest() == MODEL_SHA256:
             return
-    if not MODEL_B64.exists():
+    if not MODEL_PARTS:
         return
-    compressed = base64.b64decode(MODEL_B64.read_text(encoding="utf-8").strip())
+    encoded = "".join(part.read_text(encoding="utf-8").strip() for part in MODEL_PARTS)
+    compressed = base64.b64decode(encoded)
     raw = lzma.decompress(compressed)
     if len(raw) != MODEL_SIZE or hashlib.sha256(raw).hexdigest() != MODEL_SHA256:
         raise RuntimeError("PLUGY GLB V17 invalide")
@@ -89,6 +90,7 @@ def v17_status():
         "plugy_model": "/api/assets/plugy.glb",
         "plugy_model_size": MODEL_FILE.stat().st_size if model_ok else 0,
         "plugy_sha256": MODEL_SHA256,
+        "model_parts": len(MODEL_PARTS),
         "css": V17_CSS,
         "js": V17_JS,
     }
