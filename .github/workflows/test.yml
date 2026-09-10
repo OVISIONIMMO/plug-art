@@ -21,7 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-dev.txt
       - name: Backend syntax
-        run: python -m py_compile app.py app_extra.py app_extra_v10.py app_extra_v11.py app_extra_v12.py app_extra_v14.py app_extra_v15.py app_extra_v16.py app_extra_v17.py
+        run: python -m py_compile app.py app_extra.py app_extra_v10.py app_extra_v11.py app_extra_v12.py app_extra_v14.py app_extra_v15.py app_extra_v16.py app_extra_v17.py app_extra_v19.py app_extra_v20.py app_extra_v21.py build_plugy_glb.py
       - name: Backend tests
         env:
           PLUGART_DB: /tmp/plugart_ci.db
@@ -60,6 +60,9 @@ jobs:
           node --check static/content_studio_v11.js
           node --check static/thumbnail_v16.js
           node --check static/studio_v17.js
+          node --check static/studio_v20.js
+          node --check static/plugy_glb_runtime_v20.js
+          node --check static/studio_v21.js
       - name: V11 assets
         run: |
           test -s static/content_studio_v11.css
@@ -96,18 +99,9 @@ jobs:
           grep -q 'thumbnail_proxy_v16' app_extra_v16.py
           grep -q 'visual_v16.css?v=16.20260909.1' app_extra_v16.py
           grep -q 'thumbnail_v16.js?v=16.20260909.1' app_extra_v16.py
-      - name: V17 studio and PLUGY GLB
+      - name: Exact PLUGY GLB source
         run: |
-          test -s static/studio_v17.css
-          test -s static/studio_v17.js
-          test -s app_extra_v17.py
           test "$(find assets -maxdepth 1 -name 'plugy_web_mascot_part_*.b64' | wc -l)" -eq 8
-          grep -q 'app.version = "17.0"' app_extra_v17.py
-          grep -q 'PLUGY_web_mascot.glb' app_extra_v17.py
-          grep -q 'MODEL_PARTS' app_extra_v17.py
-          grep -q 'Studio simplifié' static/studio_v17.js
-          grep -q 'plugyModelV17' static/studio_v17.js
-          grep -q 'v17-studio-layout' static/studio_v17.css
           python - <<'PY'
           from pathlib import Path
           import base64, hashlib, lzma
@@ -117,5 +111,32 @@ jobs:
           assert len(raw)==411480, len(raw)
           assert hashlib.sha256(raw).hexdigest()=='f8438dea4931c3324854575b9ce97c7cb2747e5ae5eaa1bc34941aa219ac0f70'
           assert raw[:4]==b'glTF'
-          print('PLUGY GLB V17 OK:', len(raw), hashlib.sha256(raw).hexdigest())
+          print('PLUGY GLB exact OK:', len(raw), hashlib.sha256(raw).hexdigest())
           PY
+      - name: V17 compatibility layer
+        run: |
+          test -s static/studio_v17.css
+          test -s static/studio_v17.js
+          test -s app_extra_v17.py
+          grep -q 'app.version = "17.0"' app_extra_v17.py
+          grep -q 'MODEL_PARTS' app_extra_v17.py
+      - name: V20 current production baseline
+        run: |
+          test -s static/studio_v20.css
+          test -s static/studio_v20.js
+          test -s static/plugy_v20.css
+          test -s static/plugy_glb_runtime_v20.js
+          grep -q 'app.version = "20.0"' app_extra_v20.py
+          grep -q 'build_plugy_glb' app_extra_v20.py
+      - name: V21 guided studio and new PLUGY
+        run: |
+          test -s static/studio_v21.css
+          test -s static/studio_v21.js
+          test -s app_extra_v21.py
+          grep -q 'app.version = "21.0"' app_extra_v21.py
+          grep -q 'MODEL_SHA256 = "f8438dea4931c3324854575b9ce97c7cb2747e5ae5eaa1bc34941aa219ac0f70"' app_extra_v21.py
+          grep -q 'guided-three-step-workflow' app_extra_v21.py
+          grep -q 'plug-v21-progress' static/studio_v21.css
+          grep -q 'plug-v21-advanced' static/studio_v21.css
+          grep -q 'Construire le sujet' static/studio_v21.js
+          grep -q 'reorganizeAdvanced' static/studio_v21.js
