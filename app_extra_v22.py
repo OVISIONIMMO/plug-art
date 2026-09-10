@@ -1,38 +1,35 @@
 from pathlib import Path
 from fastapi import Request
-import base64
 import hashlib
-import lzma
 import re
 
 import app_extra_v21 as v21
+from rebuild_plugy_rigready import rebuild_plugy_rigready, TARGET_SHA256, TARGET_SIZE
 
 app = v21.app
 app.version = "22.0"
 BASE = Path(__file__).resolve().parent
 INDEX = BASE / "static" / "index.html"
 GLB = BASE / "static" / "plugy.glb"
-MODEL_PARTS = sorted((BASE / "assets").glob("plugy_v2_rigready_part_*.b64"))
-MODEL_SHA256 = "834a9621418173173d391c33dc1c5785138a05fcacf43606f0a358a428be9a37"
-MODEL_SIZE = 414024
+MODEL_SHA256 = TARGET_SHA256
+MODEL_SIZE = TARGET_SIZE
 V22_CSS = "/static/studio_v22.css?v=22.20260910.1"
 V22_JS = "/static/studio_v22.js?v=22.20260910.1"
 
 
 def _install_rigready_plugy():
-    if not MODEL_PARTS:
-        raise RuntimeError("Fragments PLUGY V2 rig-ready introuvables")
-    encoded = "".join(part.read_text(encoding="utf-8").strip() for part in MODEL_PARTS)
-    raw = lzma.decompress(base64.b64decode(encoded))
-    digest = hashlib.sha256(raw).hexdigest()
-    if len(raw) != MODEL_SIZE or raw[:4] != b"glTF" or digest != MODEL_SHA256:
-        raise RuntimeError(f"PLUGY V2 rig-ready invalide: bytes={len(raw)} sha={digest}")
-    GLB.write_bytes(raw)
-    print(f"PLUGY_V22_RIGREADY_READY bytes={len(raw)} sha256={digest}", flush=True)
-    return len(raw), digest
+    # app_extra_v21 reconstruit d'abord la source exacte 411 480 octets.
+    # On transforme ensuite cette source de manière déterministe : pivots locaux,
+    # hiérarchie articulable tête/bras/jambes et animation Idle.
+    result = rebuild_plugy_rigready(GLB, GLB)
+    print(
+        f"PLUGY_V22_RIGREADY_READY bytes={result['bytes']} sha256={result['sha256']} nodes={result['nodes']}",
+        flush=True,
+    )
+    return result
 
 
-GLB_BYTES, GLB_SHA = _install_rigready_plugy()
+MODEL_RESULT = _install_rigready_plugy()
 
 if INDEX.exists():
     page = INDEX.read_text(encoding="utf-8")
@@ -71,6 +68,8 @@ def v22_status():
         "plugy_model_bytes": len(raw),
         "plugy_model_sha256": digest,
         "expected_sha256": MODEL_SHA256,
-        "model_parts": len(MODEL_PARTS),
+        "rig_nodes": ["Rig_Torso", "Rig_Head", "Rig_Arm_L", "Rig_Arm_R", "Rig_Leg_L", "Rig_Leg_R"],
+        "animation": "Idle",
+        "rebuild_source": "v21-exact-glb",
         "assets": [V22_CSS, V22_JS],
     }
