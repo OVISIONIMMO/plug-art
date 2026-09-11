@@ -21,14 +21,16 @@ def test_v28_status_and_initial_profile():
 
 
 def test_v28_assets_exist_and_final_profile_stays_clean():
-    # V28 reste une couche historique testable, mais V30 peut légitimement la
-    # remplacer dans index.html pendant la collecte de la suite complète.
     css = Path('static/studio_v28.css')
     js = Path('static/studio_v28_patch.js')
     assert css.is_file() and css.stat().st_size > 500
     assert js.is_file() and js.stat().st_size > 2000
     page = v28.INDEX.read_text(encoding='utf-8')
-    assert ('studio_v28_patch.js?v=28.20260911.1' in page) or ('studio_v30.js?v=30.20260911.1' in page)
+    assert any(x in page for x in (
+        'studio_v28_patch.js?v=28.20260911.1',
+        'studio_v30.js?v=30.20260911.1',
+        'studio_v32.js?v=32.20260911.1',
+    ))
     for legacy in (
         'content_studio_v10.css',
         'content_studio_v10.js',
