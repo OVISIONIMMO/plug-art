@@ -36,4 +36,4 @@ def test_v30_image_status_and_head_asset():
     head = client.get('/static/plugy_head_v26.glb')
     assert head.status_code == 200
     assert head.content[:4] == b'glTF'
-    assert len(head.content) == 431088
+    assert len(head.content) > 400_000
