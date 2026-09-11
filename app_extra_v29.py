@@ -70,12 +70,13 @@ async def v29_no_cache(request: Request, call_next):
 @app.get("/api/v29/status")
 def v29_status():
     page = INDEX.read_text(encoding="utf-8") if INDEX.exists() else ""
+    head_only_guard = ("window.__PLUG_V26=true" in page) or ("window.__PLUG_V30=true" in page)
     return {
         "ok": True,
         "version": "29.0",
         "profile": "plugy-head-only-prominent",
         "plugy_head": "/static/plugy_head_v26.glb",
-        "legacy_full_body_boot_disabled": "window.__PLUG_V26=true" in page,
+        "legacy_full_body_boot_disabled": head_only_guard,
         "photo_overlay_guard": True,
         "single_model_guard": True,
         "home_prominence": "large-central-agent",
