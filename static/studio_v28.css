@@ -1,0 +1,12 @@
+/* PLUG ART V28 — finition Studio + performance */
+.plug-v26{content-visibility:auto;contain-intrinsic-size:900px}
+.v26-command,.v26-advanced,.v26-card{transform:translateZ(0)}
+.v26-command input,.v26-panel input,.v26-panel select,.v26-panel textarea,.v26-btn,.v26-pills button,.v26-tabs button{transition:border-color .16s ease,box-shadow .16s ease,background .16s ease,transform .16s ease,opacity .16s ease}
+.v26-advanced:not([open]){background:rgba(255,255,255,.50)}
+.v26-advanced:not([open]) .v26-advanced-body{display:none!important}
+.v26-legacy-wrap.loading{display:block;min-height:110px;position:relative}
+.v26-legacy-wrap.loading:before{content:"Chargement de l’éditeur complet…";display:grid;place-items:center;min-height:110px;border:1px dashed rgba(91,76,255,.18);border-radius:16px;color:#6877a4;font-size:11px;font-weight:800;background:rgba(255,255,255,.48)}
+.v26-provider.off{color:#6f7da7!important}
+#v26GenerateImage:not(:disabled){box-shadow:0 10px 24px rgba(90,78,255,.20)}
+@media(prefers-reduced-motion:reduce){.v26-command input,.v26-panel input,.v26-panel select,.v26-panel textarea,.v26-btn,.v26-pills button,.v26-tabs button{transition:none!important}.v26-status.busy:before{animation:none!important}}
+@media(max-width:700px){.v26-studio-head p{max-width:32rem}.v26-command{gap:7px}.v26-advanced>summary{padding:12px 13px}.v26-workspace{margin-top:10px}.v26-card-head{padding:13px 12px 10px}}
