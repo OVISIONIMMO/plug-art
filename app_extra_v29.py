@@ -46,6 +46,14 @@ def _inject_v29():
 
 
 _inject_v29()
+_page = INDEX.read_text(encoding="utf-8") if INDEX.exists() else ""
+print(
+    "PLUG_ART_V29_READY "
+    f"head_only_boot={BOOT in _page} "
+    f"css={V29_CSS in _page} js={V29_JS in _page} "
+    f"head_bytes={(BASE / 'static' / 'plugy_head_v26.glb').stat().st_size if (BASE / 'static' / 'plugy_head_v26.glb').exists() else 0}",
+    flush=True,
+)
 
 
 @app.middleware("http")
