@@ -1,15 +1,56 @@
-/* PLUG ART V32 — PLUGY plus vivant, aucune boîte autour du personnage, rendu plus léger */
-html.plugy-v32 #plugyFree30{transform:translateX(-50%) translateY(var(--p32-drift,0px));contain:layout style;isolation:isolate}
-html.plugy-v32 .plugy30-away #plugyFree30{transform:translateY(calc(-50% + var(--p32-drift,0px)))}
-html.plugy-v32 #plugyModel30{filter:saturate(1.04) contrast(1.015);transition:filter .2s ease,transform .24s ease}
-html.plugy-v32 #plugyFree30.p32-engaged #plugyModel30{filter:saturate(1.12) contrast(1.025) drop-shadow(0 0 13px rgba(71,214,255,.16));transform:scale(1.025)}
-html.plugy-v32 #plugyFree30.p32-thinking .v30-aura{animation-duration:.95s;opacity:.96;filter:blur(11px) saturate(1.25)}
-html.plugy-v32 #plugyFree30.p32-thinking .v30-agent-chip{background:linear-gradient(135deg,rgba(255,255,255,.88),rgba(243,238,255,.88));color:#6045d7}
+/* PLUG ART V32 refined — PLUGY is a free visual layer, never a boxed widget */
+html.plugy-v32 body{overflow-x:hidden}
+html.plugy-v32 .v30-hero{grid-template-columns:minmax(270px,.78fr) minmax(500px,1.38fr) minmax(300px,.78fr)!important;gap:16px!important;min-height:720px!important;overflow:visible!important;position:relative!important}
+html.plugy-v32 .v30-agent-space{min-height:650px!important;position:relative!important;pointer-events:none!important}
+html.plugy-v32 .v30-agent-space:before{left:20%!important;width:60%!important;top:9%!important;bottom:7%!important;filter:blur(28px)!important;background:radial-gradient(circle at 50% 47%,rgba(255,255,255,.99) 0 20%,rgba(56,215,255,.18) 35%,rgba(111,79,255,.13) 54%,rgba(235,64,207,.09) 67%,transparent 78%)!important}
+
+/* The mascot itself has no visual container. The DOM box is transparent and allowed to bleed into the layout. */
+html.plugy-v32 #plugyFree30{position:absolute!important;left:51%!important;top:92px!important;width:min(700px,49vw)!important;height:630px!important;right:auto!important;bottom:auto!important;z-index:48!important;overflow:visible!important;isolation:visible!important;contain:none!important;pointer-events:none!important;background:transparent!important;border:0!important;box-shadow:none!important;transform:translateX(-50%) translateY(var(--p32-drift,0px))!important;filter:drop-shadow(0 42px 58px rgba(68,62,176,.20)) drop-shadow(0 0 50px rgba(48,214,255,.14));transition:width .42s ease,height .42s ease,left .48s cubic-bezier(.2,.8,.2,1),right .48s cubic-bezier(.2,.8,.2,1),top .48s cubic-bezier(.2,.8,.2,1),filter .25s ease!important;will-change:transform}
+html.plugy-v32 #plugyModel30{position:absolute!important;inset:-3%!important;width:106%!important;height:106%!important;pointer-events:auto!important;background:transparent!important;border:0!important;box-shadow:none!important;outline:0!important;overflow:visible!important;clip-path:none!important;--poster-color:transparent!important;filter:saturate(1.055) contrast(1.018);transition:filter .2s ease,transform .24s ease;touch-action:pan-y;cursor:grab}
+html.plugy-v32 #plugyModel30:active{cursor:grabbing}
+html.plugy-v32 #plugyModel30::part(default-progress-bar){display:none!important}
+html.plugy-v32 #plugyFree30.p32-engaged #plugyModel30{filter:saturate(1.13) contrast(1.03) drop-shadow(0 0 15px rgba(68,216,255,.16));transform:scale(1.024)}
+
+/* Organic light around PLUGY, never a rectangle. */
+html.plugy-v32 #plugyFree30 .v30-aura{position:absolute!important;inset:13% 7% 5%!important;border-radius:50%!important;z-index:-3!important;background:radial-gradient(circle at 50% 46%,rgba(255,255,255,.22),rgba(64,218,255,.15) 33%,rgba(107,77,255,.11) 52%,rgba(235,65,210,.08) 65%,transparent 77%)!important;filter:blur(18px)!important;animation:p32Aura 5s ease-in-out infinite!important;pointer-events:none!important}
+@keyframes p32Aura{50%{transform:scale(1.09);opacity:.72}}
+html.plugy-v32 .p32-orbit{position:absolute;left:50%;top:54%;width:82%;height:27%;border-radius:50%;transform:translate(-50%,-50%) rotate(-7deg);z-index:-1;pointer-events:none;border:1.5px solid transparent;background:linear-gradient(90deg,rgba(46,220,255,.72),rgba(111,78,255,.50),rgba(239,66,211,.70)) border-box;-webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.55;filter:drop-shadow(0 0 10px rgba(73,207,255,.20));animation:p32Orbit 7s ease-in-out infinite}
+html.plugy-v32 .p32-orbit-b{width:66%;height:20%;top:57%;transform:translate(-50%,-50%) rotate(12deg);opacity:.28;animation-duration:9s;animation-direction:reverse}
+@keyframes p32Orbit{50%{transform:translate(-50%,-50%) rotate(2deg) scale(1.035);opacity:.72}}
+html.plugy-v32 .p32-spark{position:absolute;width:8px;height:8px;border-radius:50%;z-index:4;pointer-events:none;background:radial-gradient(circle at 35% 35%,#fff 0 20%,#5ee8ff 38%,#8558ff 68%,transparent 72%);box-shadow:0 0 14px rgba(92,214,255,.45);animation:p32Spark 4.8s ease-in-out infinite}
+html.plugy-v32 .p32-spark.s1{left:17%;top:28%}.p32-spark.s2{right:14%;top:37%;animation-delay:-1.5s}.p32-spark.s3{left:25%;bottom:17%;animation-delay:-3s}
+@keyframes p32Spark{50%{transform:translateY(-12px) scale(1.3);opacity:.45}}
+
+/* Free speech bubble linked to PLUGY, not a card behind him. */
+html.plugy-v32 .v30-tip{right:-6px!important;top:19%!important;max-width:220px!important;padding:11px 13px!important;border-radius:18px!important;background:rgba(255,255,255,.82)!important;border:1px solid rgba(255,255,255,.92)!important;box-shadow:0 14px 34px rgba(75,86,160,.11)!important;backdrop-filter:blur(18px) saturate(125%)!important;-webkit-backdrop-filter:blur(18px) saturate(125%)!important;color:#40518d!important;font-size:10px!important;line-height:1.45!important;pointer-events:none!important}
+html.plugy-v32 .v30-agent-chip{display:none!important}
+html.plugy-v32 #plugyFree30.p32-thinking .v30-aura{animation-duration:.95s!important;opacity:.98!important;filter:blur(12px) saturate(1.28)!important}
+html.plugy-v32 #plugyFree30.p32-thinking .p32-orbit{animation-duration:1.5s!important;opacity:.78!important}
+
+/* On inner pages PLUGY becomes a free companion, still with no container. */
+html.plugy-v32 body.plugy30-away #plugyFree30{position:fixed!important;left:auto!important;right:14px!important;top:var(--plugy30-top,53%)!important;width:var(--plugy32-size,220px)!important;height:var(--plugy32-size,220px)!important;transform:translate(var(--p32-side-drift,0px),calc(-50% + var(--p32-drift,0px)))!important;filter:drop-shadow(0 22px 30px rgba(72,68,183,.22)) drop-shadow(0 0 27px rgba(48,214,255,.14))!important;z-index:105!important}
+html.plugy-v32 body.plugy30-away #plugyFree30 .p32-orbit{width:94%;height:30%;top:62%;opacity:.36}
+html.plugy-v32 body.plugy30-away #plugyFree30 .p32-spark{transform:scale(.72)}
+html.plugy-v32 body.plugy30-away .v30-tip{right:82%!important;top:4%!important;max-width:205px!important}
+html.plugy-v32 body.plugy30-away #plugyFree30.p32-engaged{filter:drop-shadow(0 26px 34px rgba(72,68,183,.27)) drop-shadow(0 0 34px rgba(48,214,255,.21))!important}
+
+/* Conversation stays separate from the mascot so PLUGY never looks trapped inside a widget. */
+html.plugy-v32 #plugyDrawer30{right:205px!important;bottom:18px!important;width:min(370px,calc(100vw - 240px))!important;z-index:116!important}
+html.plugy-v32 #plugyDrawer30 .v30-chat,html.plugy-v32 .v30-chat{backdrop-filter:blur(18px) saturate(125%);-webkit-backdrop-filter:blur(18px) saturate(125%)}
+html.plugy-v32 .v30-chat{border-color:rgba(255,255,255,.94)!important;background:rgba(255,255,255,.71)!important;box-shadow:0 22px 56px rgba(71,88,160,.10)!important}
+
+/* Home puts more visual weight on PLUGY. */
+html.plugy-v32 .v30-copy h1{font-size:84px!important;line-height:.86!important;letter-spacing:-5.5px!important}
+html.plugy-v32 .v30-copy h1 span{font-size:42px!important;line-height:1.02!important;margin-top:18px!important}
+html.plugy-v32 .v30-tools{position:relative!important;z-index:15!important;margin-top:-18px!important}
 html.plugy-v32 .p32-pending{opacity:.66}.p32-error{background:#fff2f5!important;color:#9a4354!important;border:1px solid rgba(198,63,90,.12)}
-html.plugy-v32 .v30-tip{pointer-events:none}
-html.plugy-v32 .v30-home-chat,html.plugy-v32 .v30-chat{backdrop-filter:blur(18px) saturate(125%);-webkit-backdrop-filter:blur(18px) saturate(125%)}
+
+/* Performance: only active views participate in painting. */
 html.plugy-v32 .card,html.plugy-v32 .studio-panel,html.plugy-v32 .page-hero{content-visibility:auto;contain:layout paint style}
 html.plugy-v32 .view:not(.active){content-visibility:hidden!important;contain:strict}
 html.plugy-v32 img[loading="lazy"]{content-visibility:auto}
-@media(max-width:760px){html.plugy-v32 #plugyFree30{transform:translateX(-50%) translateY(var(--p32-drift,0px))}html.plugy-v32 .plugy30-away #plugyFree30{transform:translateY(var(--p32-drift,0px))}}
-@media(prefers-reduced-motion:reduce){html.plugy-v32 #plugyModel30{transition:none!important;transform:none!important}}
+
+@media(max-width:1220px){html.plugy-v32 .v30-hero{grid-template-columns:minmax(240px,.78fr) minmax(420px,1.25fr) minmax(280px,.78fr)!important}html.plugy-v32 #plugyFree30{left:50%!important;width:min(600px,48vw)!important;height:560px!important;top:118px!important}.p32-orbit{opacity:.45!important}}
+@media(max-width:980px){html.plugy-v32 .v30-hero{grid-template-columns:1fr 1fr!important;min-height:auto!important}html.plugy-v32 .v30-copy{grid-column:1/2!important;text-align:left!important}html.plugy-v32 .v30-agent-space{grid-column:2/3!important;min-height:520px!important}html.plugy-v32 .v30-chat{grid-column:1/-1!important;min-height:360px!important}html.plugy-v32 #plugyFree30{left:74%!important;top:130px!important;width:440px!important;height:470px!important}.v30-tip{right:4px!important}}
+@media(max-width:760px){html.plugy-v32 .v30-hero{grid-template-columns:1fr!important;text-align:center!important;padding-top:12px!important}html.plugy-v32 .v30-copy{grid-column:1!important;text-align:center!important;position:relative!important;z-index:26!important}html.plugy-v32 .v30-copy h1{font-size:58px!important;letter-spacing:-4px!important}html.plugy-v32 .v30-copy h1 span{font-size:31px!important}html.plugy-v32 .v30-copy p{margin-left:auto!important;margin-right:auto!important}html.plugy-v32 .v30-actions{justify-content:center!important}html.plugy-v32 .v30-agent-space{grid-column:1!important;min-height:370px!important}html.plugy-v32 #plugyFree30{position:absolute!important;left:50%!important;top:330px!important;width:min(410px,98vw)!important;height:390px!important;right:auto!important;transform:translateX(-50%) translateY(var(--p32-drift,0px))!important}.v30-tip{top:8%!important;right:2%!important;max-width:165px!important}.p32-orbit{width:90%!important;height:24%!important}html.plugy-v32 body.plugy30-away #plugyFree30{position:fixed!important;left:auto!important;right:2px!important;top:auto!important;bottom:76px!important;width:132px!important;height:132px!important;transform:translate(var(--p32-side-drift,0px),var(--p32-drift,0px))!important}html.plugy-v32 body.plugy30-away .v30-tip{display:none!important}html.plugy-v32 #plugyDrawer30{right:8px!important;bottom:84px!important;width:calc(100vw - 16px)!important}.p32-spark{display:none!important}}
+@media(prefers-reduced-motion:reduce){html.plugy-v32 #plugyFree30,html.plugy-v32 #plugyModel30,html.plugy-v32 .v30-aura,html.plugy-v32 .p32-orbit,html.plugy-v32 .p32-spark{animation:none!important;transition:none!important;transform:none!important}}
