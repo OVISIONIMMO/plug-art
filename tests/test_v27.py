@@ -34,7 +34,8 @@ def test_plugy_v26_is_head_only_glb_with_blink(tmp_path):
     assert len(doc.get("meshes", [])) == 9
     names = {n.get("name") for n in doc.get("nodes", [])}
     assert {"PLUGY_HeadRig", "Body", "Prong_L", "Prong_R", "Eye_L", "Eye_R"} <= names
-    assert "IdleBlink" in {a.get("name") for a in doc.get("animations", [])}
+    animation_names = {a.get("name") for a in doc.get("animations", [])}
+    assert {"IdleBlink", "Curious", "React", "Think"} <= animation_names
     assert not any("Torso" in str(n) or "Arm" in str(n) or "Leg" in str(n) for n in names)
     mats = doc.get("materials", [])
     assert any("KHR_materials_clearcoat" in (m.get("extensions") or {}) for m in mats)
