@@ -28,14 +28,13 @@ def test_v22_model_is_exact_glb():
     assert hashlib.sha256(raw).hexdigest() == v22.MODEL_SHA256
 
 
-def test_v22_assets_and_index():
+def test_v22_assets_remain_available_for_legacy_compatibility():
+    # V28 retire volontairement les références V22 de la page de production pour
+    # alléger le chargement. On conserve néanmoins les fichiers V22 accessibles
+    # afin de ne pas casser les anciennes routes / outils de compatibilité.
     css = client.get('/static/studio_v22.css')
     js = client.get('/static/studio_v22.js')
-    page = client.get('/')
     assert css.status_code == 200
     assert js.status_code == 200
-    assert page.status_code == 200
-    assert 'studio_v22.css?v=22.20260910.1' in page.text
-    assert 'studio_v22.js?v=22.20260910.1' in page.text
     assert 'plug-v22' in css.text
     assert 'Créer une publication' in js.text
