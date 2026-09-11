@@ -1,0 +1,16 @@
+(()=>{
+'use strict';
+const $=(s,r=document)=>r.querySelector(s);
+let busy=false;
+function status(t,b=false){const e=$('#v26Status');if(e){e.textContent=t;e.classList.toggle('busy',b)}}
+function ratio(){return $('[data-v26-format].on')?.dataset.ratio||'4:5'}
+function prompt(){return $('#v26AiPrompt')?.value?.trim()||[$('#v26Title')?.value?.trim(),$('#v26Context')?.value?.trim()].filter(Boolean).join('. ')||'Visuel éditorial contemporain pour PLUG ART'}
+function style(){return $('#v26ImageStyle')?.value||'photo'}
+function quality(){return $('#v26Quality')?.value||'medium'}
+function show(url,label){const stage=$('#v26ImageStage');if(!stage)return;stage.innerHTML=`<img src="${url.replace(/"/g,'&quot;')}" alt="Visuel généré"><div class="v26-image-actions"><button type="button" id="v30Download">Télécharger</button></div>`;$('#v30Download')?.addEventListener('click',()=>{const a=document.createElement('a');a.href=url;a.download='PLUG_ART_visuel.png';document.body.appendChild(a);a.click();a.remove()});try{localStorage.setItem('plugart_v30_last_image',url)}catch{}status(label)}
+async function localVisual(){status('Création locale…',true);try{const r=await fetch('/api/content/visual',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt(),style:'abstract'}),cache:'no-store'});if(!r.ok)throw new Error(`Erreur ${r.status}`);show(URL.createObjectURL(await r.blob()),'Fond local prêt')}catch(e){status('Erreur visuelle')};}
+async function generate(){if(busy)return;busy=true;const buttons=['#v26GenerateImage','#v26GenerateImage2'].map($).filter(Boolean);buttons.forEach(b=>b.disabled=true);status('Génération image IA…',true);try{const r=await fetch('/api/v30/content/image',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt(),style:style(),ratio:ratio(),quality:quality()}),cache:'no-store'});const d=await r.json().catch(()=>({}));if(!r.ok||!d.url)throw new Error(d.detail||`Erreur ${r.status}`);show(d.url,`Visuel IA prêt · ${d.model||'GPT-Image'}`)}catch(e){console.warn('[V30 image] fallback local',e);await localVisual()}finally{busy=false;buttons.forEach(b=>b.disabled=false)}}
+async function provider(){try{const r=await fetch('/api/v30/content/image/status',{cache:'no-store'}),d=await r.json();const p=$('#v26Provider');if(p){p.textContent=d.enabled?`Image IA active · ${d.model}`:'Mode local disponible';p.classList.toggle('off',!d.enabled)}}catch{}['#v26GenerateImage','#v26GenerateImage2'].forEach(s=>{const b=$(s);if(b)b.disabled=false})}
+function bind(){if(document.documentElement.dataset.studio30==='1')return true;if(!$('#v26Studio'))return false;document.documentElement.dataset.studio30='1';['#v26GenerateImage','#v26GenerateImage2'].forEach(s=>{const b=$(s);if(b)b.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();generate()},true)});$('#v26LocalVisual')?.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();localVisual()},true);const adv=$('.v26-advanced');if(adv)adv.open=false;provider();const old=localStorage.getItem('plugart_v30_last_image');if(old?.startsWith('/api/v30/content/generated/'))show(old,'Dernier visuel restauré');console.info('[PLUG ART] Studio V30 actif');return true}
+let n=0;const t=setInterval(()=>{if(bind()||++n>80)clearInterval(t)},120);bind();
+})();
