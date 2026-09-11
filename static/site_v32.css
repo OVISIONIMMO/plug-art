@@ -1,0 +1,15 @@
+/* PLUG ART V32 — PLUGY plus vivant, aucune boîte autour du personnage, rendu plus léger */
+html.plugy-v32 #plugyFree30{transform:translateX(-50%) translateY(var(--p32-drift,0px));contain:layout style;isolation:isolate}
+html.plugy-v32 .plugy30-away #plugyFree30{transform:translateY(calc(-50% + var(--p32-drift,0px)))}
+html.plugy-v32 #plugyModel30{filter:saturate(1.04) contrast(1.015);transition:filter .2s ease,transform .24s ease}
+html.plugy-v32 #plugyFree30.p32-engaged #plugyModel30{filter:saturate(1.12) contrast(1.025) drop-shadow(0 0 13px rgba(71,214,255,.16));transform:scale(1.025)}
+html.plugy-v32 #plugyFree30.p32-thinking .v30-aura{animation-duration:.95s;opacity:.96;filter:blur(11px) saturate(1.25)}
+html.plugy-v32 #plugyFree30.p32-thinking .v30-agent-chip{background:linear-gradient(135deg,rgba(255,255,255,.88),rgba(243,238,255,.88));color:#6045d7}
+html.plugy-v32 .p32-pending{opacity:.66}.p32-error{background:#fff2f5!important;color:#9a4354!important;border:1px solid rgba(198,63,90,.12)}
+html.plugy-v32 .v30-tip{pointer-events:none}
+html.plugy-v32 .v30-home-chat,html.plugy-v32 .v30-chat{backdrop-filter:blur(18px) saturate(125%);-webkit-backdrop-filter:blur(18px) saturate(125%)}
+html.plugy-v32 .card,html.plugy-v32 .studio-panel,html.plugy-v32 .page-hero{content-visibility:auto;contain:layout paint style}
+html.plugy-v32 .view:not(.active){content-visibility:hidden!important;contain:strict}
+html.plugy-v32 img[loading="lazy"]{content-visibility:auto}
+@media(max-width:760px){html.plugy-v32 #plugyFree30{transform:translateX(-50%) translateY(var(--p32-drift,0px))}html.plugy-v32 .plugy30-away #plugyFree30{transform:translateY(var(--p32-drift,0px))}}
+@media(prefers-reduced-motion:reduce){html.plugy-v32 #plugyModel30{transition:none!important;transform:none!important}}
