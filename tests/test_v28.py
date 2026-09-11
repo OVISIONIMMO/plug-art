@@ -20,10 +20,15 @@ def test_v28_status_and_initial_profile():
     assert data['initial_legacy_editor_refs'] == []
 
 
-def test_v28_index_only_loads_patch_initially():
+def test_v28_assets_exist_and_final_profile_stays_clean():
+    # V28 reste une couche historique testable, mais V30 peut légitimement la
+    # remplacer dans index.html pendant la collecte de la suite complète.
+    css = Path('static/studio_v28.css')
+    js = Path('static/studio_v28_patch.js')
+    assert css.is_file() and css.stat().st_size > 500
+    assert js.is_file() and js.stat().st_size > 2000
     page = v28.INDEX.read_text(encoding='utf-8')
-    assert 'studio_v28.css?v=28.20260911.1' in page
-    assert 'studio_v28_patch.js?v=28.20260911.1' in page
+    assert ('studio_v28_patch.js?v=28.20260911.1' in page) or ('studio_v30.js?v=30.20260911.1' in page)
     for legacy in (
         'content_studio_v10.css',
         'content_studio_v10.js',
