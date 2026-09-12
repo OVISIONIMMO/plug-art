@@ -14,7 +14,7 @@ def test_v29_status_and_head_only_profile():
     assert data['plugy_head'] == '/static/plugy_head_v26.glb'
     # Le profil final peut remplacer le boot V29 par un runtime head-only plus récent.
     page = v29.INDEX.read_text(encoding='utf-8')
-    assert data['legacy_full_body_boot_disabled'] is True or 'window.__PLUG_V32=true' in page
+    assert data['legacy_full_body_boot_disabled'] is True or any(x in page for x in ('window.__PLUG_V32=true','window.__PLUG_V33=true'))
     assert data['photo_overlay_guard'] is True
     assert data['single_model_guard'] is True
 
@@ -31,5 +31,6 @@ def test_v29_assets_and_final_page_guards():
         'site_v29.js?v=29.20260911.1',
         'site_v30.js?v=30.20260911.1',
         'site_v32.js?v=32.20260911.1',
+        'site_v33.js?v=33.20260912.1',
     ))
-    assert any(x in page.text for x in ('window.__PLUG_V26=true','window.__PLUG_V30=true','window.__PLUG_V32=true'))
+    assert any(x in page.text for x in ('window.__PLUG_V26=true','window.__PLUG_V30=true','window.__PLUG_V32=true','window.__PLUG_V33=true'))
