@@ -15,6 +15,7 @@ INDEX=BASE/'static'/'index.html'
 HEAD=BASE/'static'/'plugy_head_v33.glb'
 V33_CSS='/static/site_v33.css?v=33.20260912.1'
 V33_JS='/static/site_v33.js?v=33.20260912.1'
+LEGACY_UI_GUARD='<style>#floatBtn,#floatChat,.float-btn,.float-chat{display:none!important}</style>'
 
 PLUGY_V33_INFO=build_plugy_head_v33(HEAD)
 print(f"PLUGY_V33_HEAD_READY bytes={PLUGY_V33_INFO['bytes']} animations={','.join(PLUGY_V33_INFO['animations'])}",flush=True)
@@ -33,7 +34,8 @@ def _inject_v33():
     for asset in ('site_v32.js','site_v32.css','site_v33.js','site_v33.css'):
         page=_remove_asset(page,asset)
     page=page.replace('<script>window.__PLUG_V32=true;window.__PLUG_HEAD_ONLY=true;</script>','')
-    page=page.replace('</head>',f'<script>window.__PLUG_V33=true;window.__PLUG_HEAD_ONLY=true;</script>\n<link rel="preload" href="/static/plugy_head_v33.glb?v=33.20260912.1" as="fetch" type="model/gltf-binary" crossorigin>\n<link rel="stylesheet" href="{V33_CSS}">\n</head>',1)
+    page=page.replace(LEGACY_UI_GUARD,'')
+    page=page.replace('</head>',f'<script>window.__PLUG_V33=true;window.__PLUG_HEAD_ONLY=true;</script>\n{LEGACY_UI_GUARD}\n<link rel="preload" href="/static/plugy_head_v33.glb?v=33.20260912.1" as="fetch" type="model/gltf-binary" crossorigin>\n<link rel="stylesheet" href="{V33_CSS}">\n</head>',1)
     page=page.replace('</body>',f'<script src="{V33_JS}"></script>\n</body>',1)
     INDEX.write_text(page,encoding='utf-8')
 
@@ -144,6 +146,7 @@ def v33_status():
         'plugy_model':'/static/plugy_head_v33.glb','plugy_model_bytes':HEAD.stat().st_size if HEAD.exists() else 0,
         'plugy_animations':PLUGY_V33_INFO['animations'],'stream_endpoint':'/api/v33/plugy/stream',
         'dashboard_internal':True,'typewriter_stream':True,'legacy_site_v32_js':'site_v32.js' in page,
+        'legacy_float_hidden':('#floatBtn' in LEGACY_UI_GUARD),
         'assets':[V33_CSS,V33_JS],
     }
 
