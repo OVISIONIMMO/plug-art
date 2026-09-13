@@ -1,1 +1,1 @@
-PLUG ART V36 Studio visuel intégré — deploy marker 2026-09-13
+PLUG ART V37.2 — force Studio content route before legacy router — 2026-09-13
