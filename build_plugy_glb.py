@@ -5,11 +5,11 @@ from trimesh.visual.material import PBRMaterial
 from trimesh.visual.texture import TextureVisuals
 
 
-def _material(rgb, name, emissive=None):
+def _material(rgb, name, emissive=None, roughness=.48, metallic=.04):
     kw = {
         "baseColorFactor": [rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1.0],
-        "metallicFactor": 0.05,
-        "roughnessFactor": 0.45,
+        "metallicFactor": metallic,
+        "roughnessFactor": roughness,
         "name": name,
     }
     if emissive:
@@ -22,7 +22,7 @@ def _mat(mesh, material):
     return mesh
 
 
-def _cyl(p1, p2, radius, material, sections=6):
+def _cyl(p1, p2, radius, material, sections=8):
     p1 = np.array(p1, dtype=float)
     p2 = np.array(p2, dtype=float)
     delta = p2 - p1
@@ -34,16 +34,23 @@ def _cyl(p1, p2, radius, material, sections=6):
 
 
 def build_plugy_glb(output_path: str | Path):
+    """Build a lightweight, web-first PLUGY GLB.
+
+    Geometry stays deliberately separated by body part so the web runtime can
+    articulate PLUGY visually without a heavy skinned rig.
+    """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    white = _material((242, 244, 248), "White")
-    navy = _material((13, 20, 36), "Navy")
-    navy2 = _material((24, 35, 58), "Navy2")
-    blue = _material((45, 110, 255), "Blue", (30, 90, 255))
-    cyan = _material((75, 215, 255), "Cyan", (30, 140, 255))
-    metal = _material((205, 212, 225), "Metal")
-    sole = _material((160, 172, 192), "Sole")
+    white = _material((250, 251, 255), "PLUGY_White", roughness=.34)
+    soft_white = _material((225, 232, 244), "PLUGY_SoftWhite", roughness=.42)
+    ink = _material((22, 29, 47), "PLUGY_Ink", roughness=.58)
+    ink2 = _material((40, 50, 75), "PLUGY_Ink2", roughness=.54)
+    blue = _material((79, 104, 255), "PLUGY_Blue", (38, 80, 255), roughness=.35)
+    cyan = _material((59, 221, 255), "PLUGY_Cyan", (25, 160, 255), roughness=.28)
+    pink = _material((255, 111, 183), "PLUGY_Pink", (150, 30, 95), roughness=.34)
+    metal = _material((205, 215, 231), "PLUGY_Metal", roughness=.25, metallic=.28)
+    sole = _material((175, 184, 202), "PLUGY_Sole", roughness=.68)
 
     scene = trimesh.Scene()
 
@@ -58,43 +65,58 @@ def build_plugy_glb(output_path: str | Path):
     def box(extents, material):
         return _mat(trimesh.creation.box(extents=extents), material)
 
-    def sphere(radius, material):
-        return _mat(trimesh.creation.icosphere(subdivisions=1, radius=radius), material)
+    def sphere(radius, material, sub=2):
+        return _mat(trimesh.creation.icosphere(subdivisions=sub, radius=radius), material)
 
-    # Head / plug silhouette
-    add(box((1.55, 1.05, 0.72), white), "Head", (0, 1.55, 0))
-    for i, (x, y) in enumerate([(-0.72, 1.98), (0.72, 1.98), (-0.72, 1.12), (0.72, 1.12)]):
-        add(sphere(0.15, white), f"HeadCorner{i}", (x, y, 0))
-    for x, side in [(-0.32, "L"), (0.32, "R")]:
-        add(_cyl((x, 2.06, 0), (x, 2.72, 0), 0.09, metal), f"Prong{side}")
+    # --- iconic plug head -------------------------------------------------
+    # Main body + soft corners. The silhouette reads as a wall plug first,
+    # then as a friendly character.
+    add(box((1.60, .98, .78), white), "HeadCore", (0, 1.53, 0))
+    for i, (x, y) in enumerate([(-.72, 1.93), (.72, 1.93), (-.72, 1.13), (.72, 1.13)]):
+        add(sphere(.18, white), f"HeadCorner{i}", (x, y, 0))
+    add(box((1.34, .09, .82), soft_white), "HeadRearBand", (0, 1.50, -.40))
 
-    # Closed smiling blue eyes
-    for cx, side in [(-0.34, "L"), (0.34, "R")]:
-        points = [(cx - 0.20, 1.55, 0.375), (cx, 1.72, 0.375), (cx + 0.20, 1.55, 0.375)]
-        add(_cyl(points[0], points[1], 0.055, cyan), f"Eye{side}A")
-        add(_cyl(points[1], points[2], 0.055, cyan), f"Eye{side}B")
+    # Proper twin prongs, slightly oversized to reinforce the plug identity.
+    for x, side in [(-.34, "L"), (.34, "R")]:
+        add(_cyl((x, 2.01, 0), (x, 2.72, 0), .095, metal, sections=10), f"Prong{side}")
+        add(sphere(.105, soft_white), f"ProngCap{side}", (x, 2.00, 0))
 
-    # Dark PLUG outfit with electric-blue accents
-    add(box((1.0, 1.05, 0.58), navy), "Torso", (0, 0.35, -0.02))
-    add(box((0.12, 0.65, 0.38), blue), "PackL", (-0.54, 0.42, -0.08))
-    add(box((0.12, 0.65, 0.38), blue), "PackR", (0.54, 0.42, -0.08))
-    add(box((0.50, 0.12, 0.05), white), "ChestMark", (0, 0.43, 0.31))
-    add(box((0.86, 0.12, 0.60), blue), "Waist", (0, -0.14, -0.02))
+    # Friendly closed eyes, split in two segments for a soft curved expression.
+    for cx, side in [(-.34, "L"), (.34, "R")]:
+        p0, p1, p2 = (cx-.20, 1.54, .405), (cx, 1.69, .415), (cx+.20, 1.54, .405)
+        add(_cyl(p0, p1, .052, cyan, sections=8), f"Eye{side}A")
+        add(_cyl(p1, p2, .052, cyan, sections=8), f"Eye{side}B")
 
-    # Friendly pointing pose inspired by the supplied screenshot
-    add(_cyl((-0.48, 0.55, 0), (-0.88, 0.55, 0.10), 0.12, navy2), "UpperArmL")
-    add(_cyl((-0.88, 0.55, 0.10), (-1.02, 0.83, 0.24), 0.11, navy2), "ForeArmL")
-    add(sphere(0.15, white), "HandL", (-1.06, 0.87, 0.26))
-    add(_cyl((-1.15, 0.90, 0.29), (-1.33, 1.02, 0.33), 0.035, white), "Finger")
-    add(_cyl((0.48, 0.55, 0), (0.74, 0.18, 0.08), 0.12, navy2), "UpperArmR")
-    add(_cyl((0.74, 0.18, 0.08), (0.80, -0.10, 0.20), 0.11, navy2), "ForeArmR")
-    add(sphere(0.15, white), "HandR", (0.81, -0.16, 0.21))
+    # Side energy nodes keep PLUGY colorful without making the whole mascot busy.
+    add(sphere(.10, pink), "EnergyNodeL", (-.84, 1.48, .03))
+    add(sphere(.10, blue), "EnergyNodeR", (.84, 1.48, .03))
 
-    for x, side in [(-0.27, "L"), (0.27, "R")]:
-        add(_cyl((x, -0.15, 0), (x, -0.66, 0.02), 0.15, navy2), f"Leg{side}")
-        add(box((0.40, 0.18, 0.62), navy2), f"Shoe{side}", (x, -0.92, 0.13))
-        add(box((0.42, 0.08, 0.64), sole), f"Sole{side}", (x, -1.04, 0.13))
-        add(box((0.10, 0.10, 0.38), blue), f"ShoeAccent{side}", (x, -0.90, 0.46))
+    # --- outfit / backpack ------------------------------------------------
+    add(box((1.04, .94, .62), ink), "Torso", (0, .42, -.02))
+    add(box((.88, .16, .64), ink2), "Hood", (0, .88, -.05))
+    add(box((.72, .13, .07), white), "ChestPLUG", (0, .48, .325))
+    add(box((.18, .58, .42), blue), "BackpackL", (-.57, .43, -.18))
+    add(box((.18, .58, .42), cyan), "BackpackR", (.57, .43, -.18))
+    add(box((.92, .11, .62), blue), "WaistGlow", (0, -.08, -.02))
+
+    # --- articulated-looking limbs ---------------------------------------
+    # Neutral asymmetrical pose. Each segment has its own node so the runtime
+    # can animate the whole character cheaply through transforms/camera motion.
+    add(_cyl((-.47, .63, 0), (-.82, .41, .08), .125, ink2), "UpperArmL")
+    add(_cyl((-.82, .41, .08), (-.94, .13, .22), .115, ink2), "ForeArmL")
+    add(sphere(.155, white), "HandL", (-.96, .08, .23))
+
+    add(_cyl((.47, .63, 0), (.79, .69, .10), .125, ink2), "UpperArmR")
+    add(_cyl((.79, .69, .10), (.96, .92, .25), .112, ink2), "ForeArmR")
+    add(sphere(.155, white), "HandR", (1.00, .96, .27))
+    add(_cyl((1.05, 1.02, .30), (1.22, 1.14, .34), .035, white, sections=8), "PointFingerR")
+
+    for x, side in [(-.27, "L"), (.27, "R")]:
+        add(_cyl((x, -.10, 0), (x, -.67, .02), .155, ink2), f"Leg{side}")
+        add(box((.42, .18, .64), ink2), f"Shoe{side}", (x, -.93, .14))
+        add(box((.44, .075, .66), sole), f"Sole{side}", (x, -1.045, .14))
+        accent = cyan if side == "L" else pink
+        add(box((.11, .10, .40), accent), f"ShoeAccent{side}", (x, -.91, .47))
 
     data = scene.export(file_type="glb")
     output_path.write_bytes(data)
