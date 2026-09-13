@@ -1,14 +1,16 @@
 (()=>{
- const GLB='/static/plugy.glb?v=41.0';
- const css='/static/site_v40.css?v=41.0';
+ const GLB='/static/plugy.glb?v=41.1';
  const addCss=(href,id)=>{if(document.getElementById(id))return;const l=document.createElement('link');l.id=id;l.rel='stylesheet';l.href=href;document.head.appendChild(l)};
- addCss(css,'plug-v41-ui');
+ const addScript=(src,id)=>{if(document.getElementById(id))return;const s=document.createElement('script');s.id=id;s.defer=true;s.src=src;document.head.appendChild(s)};
+ addCss('/static/site_v40.css?v=41.1','plug-v41-ui');
+ addCss('/static/studio_v41.css?v=41.1','plug-studio-v41-css');
+ addScript('/static/studio_v41.js?v=41.1','plug-studio-v41-js');
  document.documentElement.dataset.plugUi='41';
  let mv=null,host=null,shell=null,raf=0,lastMove=0,targetX=0,targetY=0,curX=0,curY=0;
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  function loadModelViewer(){return new Promise((resolve,reject)=>{if(customElements.get('model-viewer'))return resolve();const s=document.createElement('script');s.type='module';s.src='https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js';s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
  async function exists(){try{const r=await fetch(GLB,{method:'HEAD',cache:'no-store'});return r.ok}catch{return false}}
- function renderLoop(t){if(!mv||document.hidden){raf=0;return}const active=(t-lastMove)<1800 || host?.classList.contains('thinking');const ease=active?.10:.035;curX+=(targetX-curX)*ease;curY+=(targetY-curY)*ease;if(!reduced){const idle=Math.sin(t/1800)*2.1;mv.setAttribute('camera-orbit',`${curX+idle}deg ${76+curY}deg 3.45m`);shell?.style.setProperty('--plugy-bob',`${Math.sin(t/920)*4}px`);shell?.style.setProperty('--plugy-tilt',`${Math.sin(t/1500)*.7}deg`)}raf=requestAnimationFrame(renderLoop)}
+ function renderLoop(t){if(!mv||document.hidden){raf=0;return}const active=(t-lastMove)<1800||host?.classList.contains('thinking');const ease=active?.10:.035;curX+=(targetX-curX)*ease;curY+=(targetY-curY)*ease;if(!reduced){const idle=Math.sin(t/1800)*2.1;mv.setAttribute('camera-orbit',`${curX+idle}deg ${76+curY}deg 3.45m`);shell?.style.setProperty('--plugy-bob',`${Math.sin(t/920)*4}px`);shell?.style.setProperty('--plugy-tilt',`${Math.sin(t/1500)*.7}deg`)}raf=requestAnimationFrame(renderLoop)}
  function wake(){if(!raf)raf=requestAnimationFrame(renderLoop)}
  function bindMotion(){const onMove=e=>{if(!shell)return;const r=shell.getBoundingClientRect();const dx=(e.clientX-(r.left+r.width/2))/Math.max(1,r.width);const dy=(e.clientY-(r.top+r.height/2))/Math.max(1,r.height);targetX=Math.max(-18,Math.min(18,dx*28));targetY=Math.max(-7,Math.min(7,dy*11));lastMove=performance.now();wake()};document.addEventListener('pointermove',onMove,{passive:true});shell.addEventListener('pointerenter',()=>{shell.classList.add('plugy-hover');wake()},{passive:true});shell.addEventListener('pointerleave',()=>shell.classList.remove('plugy-hover'),{passive:true})}
  function addPresence(){const halo=document.createElement('div');halo.className='plugy-v41-halo';shell.appendChild(halo);const badge=document.createElement('div');badge.className='plugy-v41-badge';badge.innerHTML='<i></i><span>PLUGY · EN LIGNE</span>';shell.appendChild(badge)}
