@@ -1,4 +1,6 @@
-PLUG ART V40 production trigger
-interface=minimal
-plugy=refined
-revision=2
+PLUG ART V41 production trigger
+interface=bright-colorful
+plugy=real-glb-adaptive-motion
+studio=v41-focus-autosave
+performance=adaptive-raf
+revision=1
