@@ -1,0 +1,3 @@
+PLUG ART V40 production trigger
+interface=minimal
+plugy=refined
