@@ -6,7 +6,7 @@ import app_extra_v42 as v42
 from build_plugy_v43 import build_plugy_v43
 
 app = v42.app
-app.version = "43.4"
+app.version = "43.5"
 BASE = Path(__file__).resolve().parent
 GLB = BASE / "static" / "plugy.glb"
 INDEX = BASE / "static" / "index.html"
@@ -17,13 +17,13 @@ digest = hashlib.sha256(raw).hexdigest()
 
 if INDEX.exists():
     page = INDEX.read_text(encoding="utf-8")
-    for name in ("studio_v44_designs.js", "studio_v44_carousel.js", "studio_v44_quality.js"):
+    for name in ("studio_v44_designs.js", "studio_v44_carousel.js", "studio_v44_quality.js", "studio_v44_director.js"):
         page = re.sub(rf'<script[^>]+src=["\'][^"\']*{re.escape(name)}[^"\']*["\'][^>]*></script>\s*', '', page, flags=re.I)
-    page = page.replace("</body>", '<script defer src="/static/studio_v44_designs.js?v=44.20260914.4"></script>\n<script defer src="/static/studio_v44_carousel.js?v=44.20260914.4"></script>\n<script defer src="/static/studio_v44_quality.js?v=44.20260914.4"></script>\n</body>', 1)
+    page = page.replace("</body>", '<script defer src="/static/studio_v44_designs.js?v=44.20260915.5"></script>\n<script defer src="/static/studio_v44_carousel.js?v=44.20260915.5"></script>\n<script defer src="/static/studio_v44_quality.js?v=44.20260915.5"></script>\n<script defer src="/static/studio_v44_director.js?v=44.20260915.5"></script>\n</body>', 1)
     INDEX.write_text(page, encoding="utf-8")
 
 print(f"PLUGY_V43_READY bytes={len(raw)} nodes={result.get('nodes')} animations={','.join(result.get('animations', []))} sha256={digest}", flush=True)
-print("PLUG_ART_STUDIO_V44_4_READY marketing_preview=on typography=7 parallel_images=3 quality_score=on auto_correct=on", flush=True)
+print("PLUG_ART_STUDIO_V44_5_READY creative_director=on concepts=3 quality_score=on auto_correct=on", flush=True)
 
 @app.middleware("http")
 async def v43_no_cache(request: Request, call_next):
@@ -40,7 +40,7 @@ def v43_status():
     page = INDEX.read_text(encoding="utf-8") if INDEX.exists() else ""
     return {
         "ok": bool(current and current[:4] == b"glTF"),
-        "version": "43.4",
+        "version": "43.5",
         "plugy": "detailed-full-body-animated",
         "bytes": len(current),
         "sha256": hashlib.sha256(current).hexdigest() if current else "",
@@ -53,5 +53,7 @@ def v43_status():
         "studio_parallel_images": 3,
         "studio_quality_scoring": "studio_v44_quality.js" in page,
         "studio_auto_correct": True,
+        "studio_creative_director": "studio_v44_director.js" in page,
+        "studio_creative_concepts": 3,
         "path": "/static/plugy.glb",
     }
