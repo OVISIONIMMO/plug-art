@@ -6,7 +6,7 @@ import app_extra_v42 as v42
 from build_plugy_v43 import build_plugy_v43
 
 app = v42.app
-app.version = "43.5"
+app.version = "43.6"
 BASE = Path(__file__).resolve().parent
 GLB = BASE / "static" / "plugy.glb"
 INDEX = BASE / "static" / "index.html"
@@ -17,13 +17,15 @@ digest = hashlib.sha256(raw).hexdigest()
 
 if INDEX.exists():
     page = INDEX.read_text(encoding="utf-8")
-    for name in ("studio_v44_designs.js", "studio_v44_carousel.js", "studio_v44_quality.js", "studio_v44_director.js"):
+    names=("studio_v44_designs.js","studio_v44_carousel.js","studio_v44_quality.js","studio_v44_director.js","studio_v44_ai_director.js")
+    for name in names:
         page = re.sub(rf'<script[^>]+src=["\'][^"\']*{re.escape(name)}[^"\']*["\'][^>]*></script>\s*', '', page, flags=re.I)
-    page = page.replace("</body>", '<script defer src="/static/studio_v44_designs.js?v=44.20260915.5"></script>\n<script defer src="/static/studio_v44_carousel.js?v=44.20260915.5"></script>\n<script defer src="/static/studio_v44_quality.js?v=44.20260915.5"></script>\n<script defer src="/static/studio_v44_director.js?v=44.20260915.5"></script>\n</body>', 1)
+    scripts='\n'.join(f'<script defer src="/static/{name}?v=44.20260915.6"></script>' for name in names)
+    page = page.replace("</body>", scripts+"\n</body>", 1)
     INDEX.write_text(page, encoding="utf-8")
 
 print(f"PLUGY_V43_READY bytes={len(raw)} nodes={result.get('nodes')} animations={','.join(result.get('animations', []))} sha256={digest}", flush=True)
-print("PLUG_ART_STUDIO_V44_5_READY creative_director=on concepts=3 quality_score=on auto_correct=on", flush=True)
+print("PLUG_ART_STUDIO_V44_6_READY ai_creative_director=on subject_aware=on concepts=3", flush=True)
 
 @app.middleware("http")
 async def v43_no_cache(request: Request, call_next):
@@ -38,22 +40,4 @@ async def v43_no_cache(request: Request, call_next):
 def v43_status():
     current = GLB.read_bytes() if GLB.exists() else b""
     page = INDEX.read_text(encoding="utf-8") if INDEX.exists() else ""
-    return {
-        "ok": bool(current and current[:4] == b"glTF"),
-        "version": "43.5",
-        "plugy": "detailed-full-body-animated",
-        "bytes": len(current),
-        "sha256": hashlib.sha256(current).hexdigest() if current else "",
-        "nodes": result.get("nodes", 0),
-        "animations": result.get("animations", []),
-        "legacy_model_replaced": True,
-        "studio_v44": "studio_v44_carousel.js" in page and "studio_v44_designs.js" in page,
-        "studio_marketing_preview": True,
-        "studio_typography_presets": 7,
-        "studio_parallel_images": 3,
-        "studio_quality_scoring": "studio_v44_quality.js" in page,
-        "studio_auto_correct": True,
-        "studio_creative_director": "studio_v44_director.js" in page,
-        "studio_creative_concepts": 3,
-        "path": "/static/plugy.glb",
-    }
+    return {"ok":bool(current and current[:4]==b"glTF"),"version":"43.6","plugy":"detailed-full-body-animated","bytes":len(current),"sha256":hashlib.sha256(current).hexdigest() if current else "","nodes":result.get("nodes",0),"animations":result.get("animations",[]),"legacy_model_replaced":True,"studio_v44":"studio_v44_carousel.js" in page,"studio_quality_scoring":"studio_v44_quality.js" in page,"studio_creative_director":"studio_v44_director.js" in page,"studio_ai_creative_director":"studio_v44_ai_director.js" in page,"studio_subject_aware_concepts":True,"studio_creative_concepts":3,"path":"/static/plugy.glb"}
