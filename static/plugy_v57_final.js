@@ -1,5 +1,5 @@
 (()=>{
- const GLB='/static/PLUGY_final_animated.glb?v=57.20260917.1';
+ const GLB='/static/PLUGY_final_animated.glb?v=57.1.20260917.1';
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  let stage=null,mv=null,raf=0,targetYaw=-6,targetPitch=76,yaw=-6,pitch=76,px=0,py=0,tx=0,ty=0,idleTimer=0,lastAction=0;
 
