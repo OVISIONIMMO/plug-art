@@ -2,7 +2,7 @@ from pathlib import Path
 import math, hashlib
 import numpy as np
 import trimesh
-from build_plugy_v43 import mat, box, sph, cyl, superellipsoid, capsule_y, eye_arc, add_letter, quat, _scene_to_glb_with_anims
+from build_plugy_v43 import mat, sph, cyl, superellipsoid, capsule_y, tube_between, quat, _scene_to_glb_with_anims
 
 
 def _child(scene, mesh, name, t=(0,0,0), r=None):
@@ -13,12 +13,21 @@ def _child(scene, mesh, name, t=(0,0,0), r=None):
     scene.add_geometry(mesh, geom_name=name, node_name=name, transform=M, parent_node_name='PlugyRoot')
 
 
+def _child_eye_arc(scene, cx, cy, z, width, height, material, prefix, radius=.038):
+    xs=np.linspace(-width/2,width/2,7)
+    pts=[]
+    for x in xs:
+        yy=cy + height*(1-(2*x/width)**2)
+        pts.append((cx+x,yy,z))
+    for i in range(len(pts)-1):
+        _child(scene,tube_between(pts[i],pts[i+1],radius,material,12),f'{prefix}_{i}')
+
+
 def build_plugy_v53_head(output_path):
     """Official PLUGY head-only mascot. No body, arms or legs."""
     white = mat((248,248,247), 'PLUGY V53 Matte White', metallic=.025, rough=.22)
     white_soft = mat((225,230,238), 'PLUGY V53 Soft Edge', metallic=.035, rough=.30)
     navy = mat((9,17,35), 'PLUGY V53 Deep Blue Black', metallic=.16, rough=.30)
-    navy2 = mat((21,31,55), 'PLUGY V53 Rear Shell Detail', metallic=.18, rough=.26)
     cyan = mat((43,220,255), 'PLUGY V53 Active Cyan', emissive=(20,150,255), metallic=.03, rough=.14)
     blue = mat((42,91,255), 'PLUGY V53 Electric Blue', emissive=(12,55,220), metallic=.05, rough=.16)
     eye_dark = mat((5,10,22), 'PLUGY V53 Eye Core', metallic=.18, rough=.12)
@@ -39,29 +48,16 @@ def build_plugy_v53_head(output_path):
         _child(scene, cyl(.112,.15,metal,24), f'ProngTip{side}', (x,1.925,0), r=(math.pi/2,0,0))
 
     # Friendly arc eyes: dark core with cyan inner glow.
-    eye_arc(-.38,.69,.495,.46,.17,eye_dark,'EyeLCore',scene)
-    eye_arc(.38,.69,.495,.46,.17,eye_dark,'EyeRCore',scene)
-    eye_arc(-.38,.69,.505,.38,.13,cyan,'EyeLGlow',scene)
-    eye_arc(.38,.69,.505,.38,.13,cyan,'EyeRGlow',scene)
+    _child_eye_arc(scene,-.38,.69,.495,.46,.17,eye_dark,'EyeLCore',.045)
+    _child_eye_arc(scene,.38,.69,.495,.46,.17,eye_dark,'EyeRCore',.045)
+    _child_eye_arc(scene,-.38,.69,.510,.34,.11,cyan,'EyeLGlow',.026)
+    _child_eye_arc(scene,.38,.69,.510,.34,.11,cyan,'EyeRGlow',.026)
 
     # Side status lights, intentionally minimal.
-    _child(scene, sph(.060,cyan,2), 'SideLightL', (-.91,.72,-.05))
-    _child(scene, sph(.060,cyan,2), 'SideLightR', (.91,.72,-.05))
-    _child(scene, sph(.030,blue,2), 'SideLightCoreL', (-.945,.72,-.05))
-    _child(scene, sph(.030,blue,2), 'SideLightCoreR', (.945,.72,-.05))
-
-    # Back signature, subtle and readable when PLUGY turns.
-    for ch,x in zip('PLUGY',[-.40,-.20,0,.21,.42]):
-        add_letter(scene,ch,x,.72,-.690,.56,white_soft,f'Back_{ch}')
-        # reparent generated letter nodes to PlugyRoot
-    for node in list(scene.graph.nodes_geometry):
-        if str(node).startswith('Back_'):
-            try:
-                M=scene.graph.get(node)[0]
-                geom=scene.graph[node][1]
-                scene.graph.update(frame_to=node, frame_from='PlugyRoot', matrix=M, geometry=geom)
-            except Exception:
-                pass
+    _child(scene, sph(.062,cyan,2), 'SideLightL', (-.91,.72,-.05))
+    _child(scene, sph(.062,cyan,2), 'SideLightR', (.91,.72,-.05))
+    _child(scene, sph(.028,blue,2), 'SideLightCoreL', (-.945,.72,-.05))
+    _child(scene, sph(.028,blue,2), 'SideLightCoreR', (.945,.72,-.05))
 
     # Root-only animations keep every component perfectly together.
     anims=[
