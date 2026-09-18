@@ -1,0 +1,26 @@
+/* PLUG ART V38 — PLUGY fidèle à la référence, intégré au dashboard */
+:root{--plugy-cyan:#29dff3;--plugy-blue:#3d78ff;--plugy-violet:#7855ff;--plugy-pink:#ec4fd4}
+#plugyFree33{
+  background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;
+  overflow:visible!important;filter:drop-shadow(0 26px 38px rgba(48,66,160,.16))!important;
+}
+#plugyFree33:before{content:"";position:absolute;left:8%;right:8%;bottom:8%;height:26%;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(41,223,243,.26),rgba(120,85,255,.14) 48%,rgba(236,79,212,.09) 68%,transparent 76%);
+  filter:blur(18px);z-index:-2;pointer-events:none}
+#plugyFree33:after{content:"";position:absolute;inset:15% -4% 12%;border-radius:50%;
+  border:2px solid rgba(67,213,247,.20);box-shadow:0 0 28px rgba(114,82,255,.13),inset 0 0 22px rgba(236,79,212,.08);
+  transform:rotate(-8deg);z-index:-3;pointer-events:none}
+#plugyModel33{background:transparent!important;--poster-color:transparent!important;filter:saturate(1.08) contrast(1.04) brightness(1.025)!important;
+  transform:translateZ(0);border:0!important;outline:0!important}
+#plugyFree33 .v33-aura{background:radial-gradient(circle,rgba(41,223,243,.12),rgba(120,85,255,.075) 48%,rgba(236,79,212,.055) 66%,transparent 76%)!important}
+#plugyFree33 .v33-chip{bottom:-2px;background:rgba(255,255,255,.72);border-color:rgba(91,102,167,.10);font-size:8px}
+#plugyFree33 .v33-tip{background:rgba(255,255,255,.88);backdrop-filter:blur(12px);border-color:rgba(255,255,255,.95)}
+/* Une seule représentation de PLUGY : pas de faux mini-visage concurrent dans le chat/Studio. */
+.v33-mini,.v36-mini-face{display:none!important}.v33-chat-head{padding-left:2px}.v33-chat-title:before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;
+  background:linear-gradient(135deg,var(--plugy-cyan),var(--plugy-violet),var(--plugy-pink));box-shadow:0 0 12px rgba(120,85,255,.25)}
+.v33-chat-title{display:flex;align-items:center;flex-wrap:wrap}.v33-chat-title span{flex-basis:100%;margin-left:16px}
+.plugy33-home #plugyFree33{width:470px!important;height:420px!important;left:51%!important;top:150px!important}
+.plugy33-away #plugyFree33{width:164px!important;height:148px!important;right:18px!important}
+.v36-content-active #plugyFree33{width:220px!important;height:190px!important;right:9%!important;top:90px!important}
+@media(max-width:1180px){.plugy33-home #plugyFree33{width:400px!important;height:360px!important;left:68%!important}.v36-content-active #plugyFree33{width:180px!important;height:158px!important;right:3%!important}}
+@media(max-width:760px){.plugy33-home #plugyFree33{width:min(350px,92vw)!important;height:315px!important;left:50%!important;top:280px!important}.plugy33-away #plugyFree33{width:118px!important;height:108px!important;right:6px!important;bottom:76px!important;top:auto!important}.v36-content-active #plugyFree33{width:150px!important;height:132px!important;right:-2%!important;top:112px!important}}
