@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14231f">
+<title>PLUG ART — Workspace</title>
+<link rel="stylesheet" href="/static/dashboard_v64.css?v=64.20260919.1">
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
+</head>
+<body>
+<div class="room-backdrop" aria-hidden="true">
+  <div class="room-plant"></div>
+  <div class="room-wall"></div>
+  <div class="room-light"></div>
+</div>
+
+<aside class="side-rail">
+  <button class="brand" data-view="dashboard"><strong>PLUG</strong><span>ART</span><i></i></button>
+  <nav>
+    <button class="rail-item active" data-view="dashboard"><b>⌂</b><span>Vue</span></button>
+    <button class="rail-item" data-view="radar"><b>◎</b><span>Radar</span></button>
+    <button class="rail-item" data-view="studio"><b>✦</b><span>Studio</span></button>
+    <button class="rail-item" data-view="network"><b>◉</b><span>Réseau</span></button>
+    <button class="rail-item" data-view="workspace"><b>▦</b><span>Suivi</span></button>
+  </nav>
+  <button class="rail-item rail-plugy" id="openPlugy"><b>●</b><span>PLUGY</span></button>
+</aside>
+
+<main class="shell">
+  <header class="top-pill glass">
+    <div class="top-title"><strong id="pageTitle">Vue générale</strong><span id="pageSub">PLUG ART interne</span></div>
+    <nav class="top-nav">
+      <button class="active" data-view="dashboard">Vue générale</button>
+      <button data-view="radar">Open Calls</button>
+      <button data-view="studio">Création</button>
+      <button data-view="network">Réseau</button>
+      <button data-view="workspace">Suivi</button>
+    </nav>
+    <div class="top-right"><span class="sync"><i></i> synchronisé</span><button class="mini-button" id="quickGo">⌕</button></div>
+  </header>
+
+  <section class="view active" id="view-dashboard">
+    <div class="bento">
+      <article class="card card-priorities glass">
+        <div class="card-head"><div><small>PRIORITÉS</small><strong>À traiter maintenant</strong></div><button data-view="radar">ouvrir</button></div>
+        <div class="priority-stack" id="dashCalls"></div>
+      </article>
+
+      <article class="card card-radar glass">
+        <div class="card-head"><div><small>RADAR</small><strong>Activité</strong></div><span class="status-dot"><i></i> actif</span></div>
+        <div class="radar-kpis">
+          <div><b id="dashOpp">—</b><span>Open Calls</span></div>
+          <div><b id="dashRadar">—</b><span>sources</span></div>
+          <div><b id="dashScore">—</b><span>score moyen</span></div>
+        </div>
+        <svg class="spark" viewBox="0 0 520 150" preserveAspectRatio="none">
+          <defs><linearGradient id="sparkArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0cb68" stop-opacity=".56"/><stop offset="1" stop-color="#77d6cf" stop-opacity=".02"/></linearGradient></defs>
+          <path id="signalArea" fill="url(#sparkArea)" d="M0 140 L0 110 L90 92 L160 118 L240 76 L330 98 L410 52 L520 68 L520 140 Z"></path>
+          <path id="signalLine" fill="none" stroke="#f0cb68" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M0 110 L90 92 L160 118 L240 76 L330 98 L410 52 L520 68"></path>
+        </svg>
+        <div class="card-foot"><span>Dernier cycle <b id="dashCycle">—</b></span><button id="runRadarHome">Relancer</button></div>
+      </article>
+
+      <article class="card card-plugy glass">
+        <div class="card-head"><div><small>PLUGY</small><strong>Assistant</strong></div><span class="status-dot"><i></i> en ligne</span></div>
+        <div class="plugy-stage">
+          <div class="plugy-floor"></div>
+          <model-viewer id="plugyModel" src="/static/PLUGY_final_animated.glb?v=64.20260919.1" camera-orbit="-8deg 76deg 4.0m" camera-target="0m 1m -.05m" field-of-view="29deg" interaction-prompt="none" disable-zoom shadow-intensity=".06" shadow-softness="1" exposure="1.08" environment-image="neutral" loading="eager" reveal="auto" animation-crossfade-duration="240"></model-viewer>
+        </div>
+        <div class="plugy-controls"><button data-anim="Happy">☺</button><button data-anim="Think">…</button><button id="askPlugy">Ouvrir</button></div>
+      </article>
+
+      <article class="card card-studio glass">
+        <div class="card-head"><div><small>STUDIO</small><strong>Contenus</strong></div><button data-view="studio">ouvrir</button></div>
+        <div class="studio-summary">
+          <div class="mini-poster"><span>PLUG ART</span><strong id="dashDraftTitle">Carrousel</strong><small id="dashDraftMeta">aucun brouillon</small></div>
+          <div class="studio-shortcuts">
+            <button data-view="studio">＋ Nouveau carrousel</button>
+            <button id="homeAiStudio">✦ Générer avec PLUGY</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="card card-verify glass">
+        <div class="card-head"><div><small>À VÉRIFIER</small><strong>Pistes Radar</strong></div><button data-view="workspace">ouvrir</button></div>
+        <div class="compact-list" id="dashCandidates"></div>
+      </article>
+
+      <article class="card card-network glass">
+        <div class="card-head"><div><small>RÉSEAU</small><strong>Artistes suivis</strong></div><button data-view="network">ouvrir</button></div>
+        <div class="network-count"><b id="dashArtistCount">—</b><span>profils actifs</span></div>
+        <div class="avatar-row" id="dashArtists"></div>
+      </article>
+
+      <article class="card card-agenda glass">
+        <div class="card-head"><div><small>AGENDA</small><strong>À venir</strong></div><button data-view="network">ouvrir</button></div>
+        <div class="compact-list" id="dashEvents"></div>
+      </article>
+
+      <article class="card card-map glass">
+        <div class="card-head"><div><small>CARTE</small><strong>Zones actives</strong></div></div>
+        <div class="mini-map" id="miniMap"></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="view" id="view-radar">
+    <div class="section-bar">
+      <div><small>RADAR</small><h1>Open Calls</h1></div>
+      <div class="section-actions"><button class="glass-button" id="runRadar">Lancer le Radar</button></div>
+    </div>
+    <div class="radar-layout">
+      <aside class="filter-panel glass">
+        <label>Recherche<input id="searchOpp" placeholder="Nom, ville, type…"></label>
+        <label>Pays<select id="countryFilter"><option value="">Tous</option></select></label>
+        <label>Score minimum<select id="scoreFilter"><option value="0">Tous</option><option value="60">60+</option><option value="75">75+</option><option value="88">88+</option></select></label>
+        <div class="radar-status"><span>Dernier cycle</span><strong id="radarLast">—</strong><small id="radarInfo">Connexion…</small></div>
+      </aside>
+      <div class="opportunity-list" id="opportunityList"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-studio">
+    <div class="section-bar">
+      <div><small>CRÉATION</small><h1>Studio carrousel</h1></div>
+      <div class="section-actions">
+        <button class="glass-button ai" id="plugyCarouselBtn">✦ Générer avec PLUGY</button>
+        <button class="glass-button" id="generateAllImagesBtn">◫ Générer les images</button>
+        <button class="glass-button" id="saveDraftBtn">Sauvegarder</button>
+        <button class="glass-button primary" id="exportSlideBtn">Exporter</button>
+      </div>
+    </div>
+
+    <div class="studio-grid">
+      <aside class="studio-sidebar glass">
+        <div class="side-title"><span>01</span><strong>Projet</strong></div>
+        <label>Source<select id="studioSource"><option value="">Brief libre</option></select></label>
+        <label>Objectif<select id="studioObjective"><option value="inform">Informer</option><option value="apply">Faire candidater</option><option value="promote">Promouvoir</option><option value="storytell">Storytelling</option></select></label>
+        <label>Slides<div class="range-line"><input id="studioCount" type="range" min="3" max="10" value="5"><b id="studioCountValue">5</b></div></label>
+        <label>Brief<textarea id="studioBrief" placeholder="Sujet, angle, données importantes, CTA…"></textarea></label>
+        <div class="preset-grid">
+          <button class="active" data-preset="open">Open Call</button><button data-preset="urgent">Dernier jour</button><button data-preset="artist">Artiste</button><button data-preset="event">Événement</button>
+        </div>
+        <button class="wide-action" id="generateStudio">Structurer</button>
+        <button class="wide-action muted" id="improveStudio">Relire avec PLUGY</button>
+        <div class="image-status" id="imageStatus"><i></i><span>Images IA</span><b>vérification…</b></div>
+      </aside>
+
+      <section class="studio-canvas glass">
+        <div class="canvas-toolbar"><div><small>APERÇU</small><strong id="studioCounter">Slide 1 / 5</strong></div><div class="zoom-controls"><button id="zoomOut">−</button><span id="zoomLabel">100%</span><button id="zoomIn">+</button></div></div>
+        <div class="carousel-stage">
+          <article class="carousel-art theme-editorial layout-top cut-none align-left font-sans accent-violet" id="carouselArt">
+            <div class="art-media" id="artMedia"><div class="art-photo" id="artPhoto"></div><div class="art-photo-secondary" id="artPhotoSecondary"></div></div>
+            <div class="art-copy" id="artCopy"><span id="artKicker">PLUG ART</span><h3 id="artTitle">Titre du carrousel</h3><p id="artBody">Le contenu apparaîtra ici.</p><footer><b>PLUG ART</b><span id="artCta">Découvrir →</span></footer></div>
+          </article>
+        </div>
+        <div class="slide-nav"><button id="prevStudio">←</button><div id="slideDots"></div><button id="nextStudio">→</button></div>
+        <div class="slide-strip" id="studioStrip"></div>
+      </section>
+
+      <aside class="studio-editor glass">
+        <div class="editor-tabs">
+          <button class="active" data-editor-tab="text">Texte</button><button data-editor-tab="layout">Disposition</button><button data-editor-tab="image">Image</button><button data-editor-tab="style">Style</button>
+        </div>
+
+        <div class="editor-pane active" data-pane="text">
+          <label>Label<input id="editKicker"></label>
+          <label>Titre<textarea id="editTitle"></textarea></label>
+          <label>Texte<textarea id="editBody"></textarea></label>
+          <label>CTA<input id="editCta"></label>
+          <label>Taille titre<div class="range-line"><input id="titleSize" type="range" min="70" max="140" value="100"><b id="titleSizeValue">100%</b></div></label>
+          <label>Alignement<div class="choice-row"><button class="active" data-align="left">Gauche</button><button data-align="center">Centre</button><button data-align="right">Droite</button></div></label>
+        </div>
+
+        <div class="editor-pane" data-pane="layout">
+          <label>Disposition<select id="layoutSelect"><option value="top">Image haut</option><option value="cover">Plein écran</option><option value="left">Image gauche</option><option value="right">Image droite</option><option value="band">Bandeau</option><option value="collage">Collage 2 images</option><option value="minimal">Texte dominant</option></select></label>
+          <label>Coupure<select id="cutSelect"><option value="none">Droite</option><option value="diagonal">Diagonale</option><option value="curve">Courbe</option><option value="wave">Vague</option></select></label>
+          <label>Police<select id="fontSelect"><option value="sans">Sans moderne</option><option value="serif">Serif éditoriale</option><option value="display">Display condensée</option></select></label>
+          <button class="wide-action muted" id="smartLayout">Varier automatiquement les slides</button>
+          <button class="wide-action muted" id="applyLayoutAll">Appliquer à toutes les slides</button>
+        </div>
+
+        <div class="editor-pane" data-pane="image">
+          <label>Image principale<input id="editImage" placeholder="URL"></label>
+          <label>Image secondaire<input id="editImage2" placeholder="URL pour collage"></label>
+          <label>Importer<input id="imageUpload" type="file" accept="image/*"></label>
+          <label>Position<select id="imagePosition"><option value="center">Centre</option><option value="top">Haut</option><option value="bottom">Bas</option><option value="left">Gauche</option><option value="right">Droite</option></select></label>
+          <div class="ai-image-box">
+            <small>IMAGE IA / PLUGY</small>
+            <textarea id="imagePrompt" placeholder="Décris l’image à générer…"></textarea>
+            <div class="two-col"><select id="imageStyle"><option value="photo">Photo éditoriale</option><option value="gallery">Galerie</option><option value="portrait">Portrait</option><option value="urban">Urbain</option><option value="studio">Atelier</option><option value="architecture">Architecture</option><option value="product">Objet</option></select><select id="imageQuality"><option value="medium">Standard</option><option value="high">Haute qualité</option></select></div>
+            <button class="wide-action ai" id="generateSlideImage">✦ Générer cette image</button>
+          </div>
+        </div>
+
+        <div class="editor-pane" data-pane="style">
+          <label>Thème<div class="theme-grid"><button class="active" data-theme="editorial">Éditorial</button><button data-theme="glass">Glass</button><button data-theme="impact">Impact</button><button data-theme="paper">Papier</button><button data-theme="night">Night</button><button data-theme="color">Color</button></div></label>
+          <label>Accent<div class="accent-grid"><button class="active" data-accent="violet"></button><button data-accent="cyan"></button><button data-accent="pink"></button><button data-accent="gold"></button><button data-accent="ink"></button></div></label>
+          <button class="wide-action muted" id="applyStyleAll">Appliquer le style à toutes les slides</button>
+        </div>
+
+        <div class="editor-bottom">
+          <div class="editor-actions"><button id="duplicateStudio">Dupliquer</button><button id="deleteStudio">Supprimer</button></div>
+          <div class="caption-area"><small>LÉGENDE</small><textarea id="captionText"></textarea><button id="generateCaption">Générer la légende</button></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="view" id="view-network">
+    <div class="section-bar"><div><small>RÉSEAU</small><h1>Artistes, événements, lieux</h1></div></div>
+    <div class="network-grid">
+      <article class="network-panel glass"><div class="card-head"><div><small>ARTISTES</small><strong>Profils</strong></div></div><div class="network-list" id="artistList"></div></article>
+      <article class="network-panel glass"><div class="card-head"><div><small>ÉVÉNEMENTS</small><strong>Agenda</strong></div></div><div class="network-list" id="eventList"></div></article>
+      <article class="network-panel glass"><div class="card-head"><div><small>CARTE</small><strong>Territoires</strong></div></div><div class="world-map" id="worldMap"></div></article>
+    </div>
+  </section>
+
+  <section class="view" id="view-workspace">
+    <div class="section-bar"><div><small>SUIVI</small><h1>Actions & contacts</h1></div></div>
+    <div class="workspace-grid">
+      <article class="work-panel glass"><div class="card-head"><div><small>NOTES</small><strong>Actions</strong></div><button id="newNote">+ ajouter</button></div><div id="notesList"></div></article>
+      <article class="work-panel glass"><div class="card-head"><div><small>CONTACTS</small><strong>Suivi</strong></div><button id="newContact">+ ajouter</button></div><div id="contactsList"></div></article>
+      <article class="work-panel glass"><div class="card-head"><div><small>RADAR</small><strong>Pistes à vérifier</strong></div></div><div id="workspaceCandidates"></div></article>
+    </div>
+  </section>
+</main>
+
+<nav class="mobile-dock glass">
+  <button class="active" data-view="dashboard"><b>⌂</b><span>Vue</span></button><button data-view="radar"><b>◎</b><span>Radar</span></button><button data-view="studio"><b>✦</b><span>Studio</span></button><button data-view="network"><b>◉</b><span>Réseau</span></button><button data-view="workspace"><b>▦</b><span>Suivi</span></button>
+</nav>
+
+<div class="plugy-chat" id="plugyChat">
+  <div class="chat-head"><div><i></i><strong>PLUGY</strong><span>assistant interne</span></div><button id="closeChat">×</button></div>
+  <div class="chat-stream" id="chatStream"><div class="bot-msg">Prêt. Donne-moi la tâche.</div></div>
+  <form id="chatForm"><input id="chatInput" placeholder="Demande à PLUGY…"><button>↑</button></form>
+</div>
+
+<div class="modal" id="simpleModal"><div class="modal-card"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
+<script type="module" src="/static/dashboard_v64.js?v=64.20260919.1"></script>
+</body>
+</html>
