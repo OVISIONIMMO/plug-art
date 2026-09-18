@@ -31,7 +31,7 @@ def root_v59():
         "Cache-Control":"no-store, no-cache, must-revalidate, max-age=0",
         "Pragma":"no-cache",
         "Expires":"0",
-        "X-Plugy-Version":"59.0"
+        "X-Plugy-Version":"59.1"
     })
 
 @app.middleware("http")
@@ -49,7 +49,7 @@ def status_v44():
     html=INDEX.read_text(encoding="utf-8") if INDEX.exists() else ""
     return {
         "ok":True,
-        "version":"59.0",
+        "version":"59.1",
         "carousel_multi_visual":"studio_v44_carousel.js" in html,
         "expanded_designs":"studio_v44_designs.js" in html,
         "plugy_runtime":"plugy_v59_polished.js" in html,
@@ -61,4 +61,4 @@ def status_v44():
         "slides":[3,4,5,6]
     }
 
-print("PLUG_ART_V59_READY fresh_root=on plugy=hero_integrated mobile_polish=on emergency_mount=off",flush=True)
+print("PLUG_ART_V59_1_READY fresh_root=on plugy=hero_integrated mobile_polish=on emergency_mount=off",flush=True)
