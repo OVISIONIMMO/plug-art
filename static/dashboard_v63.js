@@ -274,20 +274,20 @@ function makeSlide(k,t,b,c,img){
 }
 
 function buildStudio(){
-  var o=currentOpp(),brief=cleanText($('#studioBrief').value),count=Number($('#studioCount').value||5),obj=$('#studioObjective').value;
+  var o=currentOpp(),brief=clean($('#studioBrief').value),count=Number($('#studioCount').value||5),obj=$('#studioObjective').value;
   var title=(o&&o.title)||brief||'Une opportunité à regarder maintenant';
-  var summary=sentence((o&&o.summary)||brief||'Informations à structurer.',230);
+  var summary=short((o&&o.summary)||brief||'Informations à structurer.',230);
   var loc=o?[o.city,o.country].filter(Boolean).join(' · '):'À confirmer'; if(!loc)loc='À confirmer';
-  var deadline=o&&o.deadline?'Deadline · '+o.deadline:'Date à vérifier',fee=o&&o.fee?o.fee:'Conditions à vérifier',img=o?oppThumb(o):'';
+  var deadline=o&&o.deadline?'Deadline · '+o.deadline:'Date à vérifier',fee=o&&o.fee?o.fee:'Conditions à vérifier',img=o?oppImage(o):'';
   var slides=[];
   if(state.preset==='urgent'){
     slides=[makeSlide('DERNIER RAPPEL',deadline,'Une opportunité à ne pas laisser passer.','Voir les infos →',img),makeSlide('À RETENIR',title,summary,'Continuer →',img),makeSlide('INFOS PRATIQUES',loc,deadline+' · '+fee,'Enregistrer',img),makeSlide('ACTION','Prépare ton dossier maintenant.','Vérifie la source officielle avant d’envoyer.','Candidater →',img)];
   }else if(state.preset==='artist'){
-    slides=[makeSlide('FOCUS ARTISTE',title,'Un univers à découvrir.','Découvrir →',img),makeSlide('UNIVERS',(o&&o.type)||'Création contemporaine',summary,'Explorer →',img),makeSlide('PARCOURS','Ce qui rend ce profil singulier.',sentence((o&&o.radar_reason)||summary,180),'Lire →',img),makeSlide('À SUIVRE','Les prochaines étapes.','Projets et connexions à garder dans le radar.','Suivre →',img)];
+    slides=[makeSlide('FOCUS ARTISTE',title,'Un univers à découvrir.','Découvrir →',img),makeSlide('UNIVERS',(o&&o.type)||'Création contemporaine',summary,'Explorer →',img),makeSlide('PARCOURS','Ce qui rend ce profil singulier.',short((o&&o.radar_reason)||summary,180),'Lire →',img),makeSlide('À SUIVRE','Les prochaines étapes.','Projets et connexions à garder dans le radar.','Suivre →',img)];
   }else if(state.preset==='event'){
     slides=[makeSlide('À L’AGENDA',title,loc,'Découvrir →',img),makeSlide('POURQUOI Y ALLER','Une scène, des artistes, des connexions.',summary,'Voir plus →',img),makeSlide('INFOS PRATIQUES',loc,deadline+' · '+fee,'Enregistrer',img),makeSlide('PLUG ART','Prépare ta visite.','Repère les artistes et contacts à rencontrer.','Organiser →',img)];
   }else{
-    slides=[makeSlide(obj==='apply'?'OPPORTUNITÉ À SAISIR':'OPEN CALL',title,loc,'Découvrir →',img),makeSlide('POURQUOI C’EST INTÉRESSANT','Une opportunité qui mérite ton attention.',sentence((o&&o.radar_reason)||summary,200),'Voir plus →',img),makeSlide('LE PROJET',(o&&o.type)||'Exposition / appel à projets',summary,'Comprendre →',img),makeSlide('INFOS PRATIQUES',loc,deadline+' · '+fee,'Enregistrer',img),makeSlide('ACTION','À toi de jouer.','Consulte la source officielle et vérifie les critères.','PLUG →',img)];
+    slides=[makeSlide(obj==='apply'?'OPPORTUNITÉ À SAISIR':'OPEN CALL',title,loc,'Découvrir →',img),makeSlide('POURQUOI C’EST INTÉRESSANT','Une opportunité qui mérite ton attention.',short((o&&o.radar_reason)||summary,200),'Voir plus →',img),makeSlide('LE PROJET',(o&&o.type)||'Exposition / appel à projets',summary,'Comprendre →',img),makeSlide('INFOS PRATIQUES',loc,deadline+' · '+fee,'Enregistrer',img),makeSlide('ACTION','À toi de jouer.','Consulte la source officielle et vérifie les critères.','PLUG →',img)];
   }
   while(slides.length<count) slides.splice(slides.length-1,0,makeSlide('À SAVOIR','Point clé '+slides.length,summary,'Continuer →',img));
   state.slides=slides.slice(0,count); state.slide=0; renderStudio(); generateCaption();
@@ -312,7 +312,7 @@ function renderStudio(){
   $$('[data-theme]').forEach(function(b){b.classList.toggle('active',b.dataset.theme===(s.theme||'editorial'))});
   $$('[data-accent]').forEach(function(b){b.classList.toggle('active',b.dataset.accent===(s.accent||'violet'))});
   $('#slideDots').innerHTML=state.slides.map(function(_,i){return '<button class="slide-dot '+(i===state.slide?'active':'')+'" data-slide="'+i+'"></button>'}).join('');
-  $('#studioStrip').innerHTML=state.slides.map(function(x,i){return '<button class="strip-slide '+(i===state.slide?'active':'')+'" data-slide="'+i+'"><b>'+String(i+1).padStart(2,'0')+'</b><br>'+esc(sentence(x.title,42))+'</button>'}).join('');
+  $('#studioStrip').innerHTML=state.slides.map(function(x,i){return '<button class="strip-slide '+(i===state.slide?'active':'')+'" data-slide="'+i+'"><b>'+String(i+1).padStart(2,'0')+'</b><br>'+esc(short(x.title,42))+'</button>'}).join('');
   $$('[data-slide]').forEach(function(b){b.onclick=function(){state.slide=Number(b.dataset.slide);renderStudio()}});
 }
 
@@ -324,7 +324,7 @@ async function checkImageStatus(){
 
 function imagePromptFor(s){
   var o=currentOpp(),loc=o?[o.city,o.country].filter(Boolean).join(', '):'';
-  return cleanText(s.prompt||('Visuel éditorial contemporain pour un carrousel PLUG ART. Sujet: '+s.title+'. Contexte: '+s.body+'. '+(loc?'Lieu: '+loc+'. ':'')+'Composition artistique premium, lisible, sans texte.'));
+  return clean(s.prompt||('Visuel éditorial contemporain pour un carrousel PLUG ART. Sujet: '+s.title+'. Contexte: '+s.body+'. '+(loc?'Lieu: '+loc+'. ':'')+'Composition artistique premium, lisible, sans texte.'));
 }
 
 async function generateImageForSlide(index,button){
@@ -350,7 +350,7 @@ async function plugyCarouselV63(){
   try{
     var r=await api('/api/v32/plugy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:prompt,page:'content',mode:'deep'})});
     var parsed=extractJsonV63(r.answer); if(!Array.isArray(parsed.slides)||!parsed.slides.length)throw new Error('Slides absentes');
-    var base=currentOpp()?oppThumb(currentOpp()):'';
+    var base=currentOpp()?oppImage(currentOpp()):'';
     state.slides=parsed.slides.slice(0,count).map(function(x){var s=makeSlide(x.kicker||'PLUG ART',x.title||'',x.body||'',x.cta||'Découvrir →',base);s.prompt=x.image_prompt||'';s.layout=['top','cover','left','right','band','collage','minimal'].includes(x.layout)?x.layout:'top';return s});
     while(state.slides.length<count)state.slides.push(makeSlide('À SAVOIR','Point clé '+(state.slides.length+1),'À compléter.','Continuer →',base));
     state.slide=0;renderStudio();generateCaption();playPlugy('Happy',true);
