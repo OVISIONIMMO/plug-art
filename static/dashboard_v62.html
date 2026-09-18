@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#12352f">
+<title>PLUG ART — Signal Desk</title>
+<link rel="stylesheet" href="/static/dashboard_v62.css?v=62.20260919.1">
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
+</head>
+<body>
+<div class="ambient ambient-a"></div><div class="ambient ambient-b"></div><div class="ambient ambient-c"></div>
+
+<aside class="rail" id="rail">
+  <button class="rail-brand" data-view="dashboard" aria-label="Accueil PLUG ART">
+    <span class="plug-logo">PLUG</span><span class="plug-art">ART</span><i></i>
+  </button>
+  <div class="rail-nav">
+    <button class="rail-btn active" data-view="dashboard" title="Tableau de bord"><span>⌂</span><small>Home</small></button>
+    <button class="rail-btn" data-view="radar" title="Radar & Open Calls"><span>◎</span><small>Radar</small></button>
+    <button class="rail-btn" data-view="studio" title="Studio contenu"><span>✦</span><small>Studio</small></button>
+    <button class="rail-btn" data-view="network" title="Réseau"><span>◉</span><small>Réseau</small></button>
+    <button class="rail-btn" data-view="workspace" title="Bureau"><span>▦</span><small>Bureau</small></button>
+  </div>
+  <div class="rail-status"><b></b><span>LIVE</span></div>
+</aside>
+
+<main class="app-shell">
+  <header class="topbar">
+    <div class="top-brand"><strong>PLUG ART</strong><span>Signal Desk</span></div>
+    <nav class="segmented" aria-label="Navigation principale">
+      <button class="active" data-view="dashboard">Dashboard</button>
+      <button data-view="radar">Radar</button>
+      <button data-view="studio">Studio</button>
+      <button data-view="network">Réseau</button>
+      <button data-view="workspace">Bureau</button>
+    </nav>
+    <div class="top-actions">
+      <button class="glass-btn compact" id="globalSearch"><span>⌕</span><em>Rechercher</em></button>
+      <button class="glass-btn plugy-open" id="openPlugy"><i></i><strong>PLUGY</strong></button>
+    </div>
+  </header>
+
+  <section class="view active" id="view-dashboard">
+    <div class="dashboard-grid">
+      <article class="panel intro-panel">
+        <div class="eyebrow">CONTROL ROOM / 00</div>
+        <h1>Tout PLUG ART.<br><span>Une seule surface.</span></h1>
+        <p>Repère les opportunités, surveille le Radar, prépare tes contenus et garde le réseau visible sans changer d’outil.</p>
+        <div class="intro-actions">
+          <button class="light-action" data-view="radar">Voir les Open Calls</button>
+          <button class="ghost-action" id="runRadarHome">Lancer le Radar</button>
+          <button class="ghost-action" data-view="studio">Créer un contenu</button>
+        </div>
+      </article>
+
+      <article class="panel pulse-panel">
+        <div class="panel-head"><div><span class="label">RADAR PULSE</span><strong>Signal des opportunités</strong></div><span class="live-pill"><i></i>Live</span></div>
+        <div class="pulse-main"><div><span id="dashOpp">—</span><small>opportunités actives</small></div><div><span id="dashRadar">—</span><small>sources en ligne</small></div></div>
+        <svg class="signal-chart" viewBox="0 0 520 160" preserveAspectRatio="none" aria-label="Signal Radar">
+          <defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0cc73" stop-opacity=".58"/><stop offset="1" stop-color="#6ee0d5" stop-opacity=".03"/></linearGradient></defs>
+          <path id="signalArea" fill="url(#area)" d="M0 150 L0 120 L80 104 L160 115 L240 74 L320 94 L400 54 L520 70 L520 150 Z"></path>
+          <path id="signalLine" fill="none" stroke="#f1d279" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M0 120 L80 104 L160 115 L240 74 L320 94 L400 54 L520 70"></path>
+        </svg>
+        <div class="chart-legend"><span>Fiabilité</span><b id="dashScore">—</b><span>Dernier cycle</span><b id="dashCycle">—</b></div>
+      </article>
+
+      <article class="panel plugy-live-panel">
+        <div class="panel-head"><div><span class="label">PLUGY / LIVE</span><strong>Assistant créatif</strong></div><span class="online">● en ligne</span></div>
+        <div class="plugy-stage-v62">
+          <div class="plugy-glow"></div>
+          <model-viewer id="plugyModel" src="/static/PLUGY_final_animated.glb?v=62.20260919.1" camera-orbit="-10deg 75deg 4.25m" camera-target="0m 1.00m -0.06m" field-of-view="30deg" interaction-prompt="none" disable-zoom shadow-intensity=".08" shadow-softness="1" exposure="1.08" environment-image="neutral" loading="eager" reveal="auto" animation-crossfade-duration="250" aria-label="PLUGY, mascotte 3D PLUG ART"></model-viewer>
+        </div>
+        <div class="plugy-actions">
+          <button data-anim="Happy">☺</button><button data-anim="Think">…</button><button data-anim="Wave">⌁</button><button id="askPlugy">Parler à PLUGY</button>
+        </div>
+      </article>
+
+      <article class="panel quick-panel">
+        <div class="panel-head"><div><span class="label">ACTIONS</span><strong>Accès rapide</strong></div></div>
+        <div class="quick-grid">
+          <button data-view="radar"><i>◎</i><span>Radar</span></button>
+          <button data-view="studio"><i>✦</i><span>Carrousel</span></button>
+          <button data-view="network"><i>◉</i><span>Artistes</span></button>
+          <button data-work="note"><i>＋</i><span>Note</span></button>
+        </div>
+      </article>
+
+      <article class="panel calls-panel">
+        <div class="panel-head"><div><span class="label">OPEN CALLS</span><strong>À regarder maintenant</strong></div><button class="text-btn" data-view="radar">Tout voir →</button></div>
+        <div class="call-list" id="dashCalls"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+      </article>
+
+      <article class="panel studio-teaser">
+        <div class="teaser-copy"><span class="label">STUDIO / 06</span><strong>Une idée.<br>Un carrousel prêt à publier.</strong><p>Choisis une opportunité, PLUG ART structure le récit et garde l’image au centre.</p><button class="light-action" data-view="studio">Ouvrir le Studio</button></div>
+        <div class="teaser-card">
+          <div class="mini-slide"><span>PLUG ART</span><h3 id="teaserTitle">6 opportunités<br>d’exposer</h3><p>Une sélection visuelle, claire et directement exploitable.</p><b>01 / 05</b></div>
+        </div>
+      </article>
+
+      <article class="panel people-panel">
+        <div class="panel-head"><div><span class="label">RÉSEAU</span><strong>Artistes suivis</strong></div><button class="text-btn" data-view="network">Ouvrir →</button></div>
+        <div class="people-row" id="dashArtists"></div>
+        <div class="people-meta"><span id="dashArtistCount">—</span><small>profils dans le radar</small></div>
+      </article>
+
+      <article class="panel map-mini-panel">
+        <div class="panel-head"><div><span class="label">CARTE</span><strong>Points actifs</strong></div></div>
+        <div class="mini-map" id="miniMap"><span class="continent c1"></span><span class="continent c2"></span><span class="continent c3"></span></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="view" id="view-radar">
+    <div class="view-title"><div><span>RADAR / 01</span><h2>Open Calls</h2><p>Une vue de travail, pas une avalanche de cartes.</p></div><button class="glass-btn" id="runRadar">Lancer le Radar</button></div>
+    <div class="radar-layout-v62">
+      <aside class="panel filter-panel">
+        <label>Recherche<input id="searchOpp" placeholder="Nom, lieu, type…"></label>
+        <label>Pays<select id="countryFilter"><option value="">Tous</option></select></label>
+        <label>Score minimum<select id="scoreFilter"><option value="0">Tous</option><option value="60">60+</option><option value="75">75+</option><option value="88">88+</option></select></label>
+        <div class="filter-status"><span>Dernier cycle</span><strong id="radarLast">—</strong><small id="radarInfo">Connexion…</small></div>
+      </aside>
+      <div class="opportunity-list" id="opportunityList"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-studio">
+    <div class="view-title"><div><span>STUDIO / 02</span><h2>Studio Carrousel</h2><p>Le contenu au centre, les réglages seulement quand tu en as besoin.</p></div><div class="studio-top-actions"><button class="glass-btn" id="saveDraftBtn">Sauvegarder</button><button class="glass-btn primary-glass" id="exportSlideBtn">Exporter PNG</button></div></div>
+    <div class="studio-layout-v62">
+      <aside class="panel studio-brief">
+        <div class="studio-step"><span>01</span><strong>Source</strong></div>
+        <label>Opportunité<select id="studioSource"><option value="">Brief libre</option></select></label>
+        <label>Objectif<select id="studioObjective"><option value="inform">Informer</option><option value="apply">Faire candidater</option><option value="promote">Promouvoir</option><option value="storytell">Storytelling</option></select></label>
+        <label>Slides<div class="range-row"><input id="studioCount" type="range" min="3" max="8" value="5"><b id="studioCountValue">5</b></div></label>
+        <label>Brief<textarea id="studioBrief" placeholder="Le message, l’angle, le CTA…"></textarea></label>
+        <div class="studio-presets"><button data-preset="open" class="active">Open Call</button><button data-preset="urgent">Dernier jour</button><button data-preset="artist">Artiste</button><button data-preset="event">Événement</button></div>
+        <button class="generate-btn" id="generateStudio">Générer le carrousel ✦</button>
+        <button class="soft-line-btn" id="improveStudio">Améliorer avec PLUGY</button>
+      </aside>
+
+      <section class="panel studio-canvas">
+        <div class="canvas-head"><div><span class="label">APERÇU</span><strong id="studioCounter">Slide 1 / 5</strong></div><div class="canvas-mode"><button class="active" data-theme="editorial">Éditorial</button><button data-theme="glass">Glass</button><button data-theme="impact">Impact</button></div></div>
+        <div class="carousel-stage">
+          <article class="carousel-art editorial" id="carouselArt">
+            <div class="art-photo" id="artPhoto"></div>
+            <div class="art-copy"><span id="artKicker">PLUG ART / OPPORTUNITÉ</span><h3 id="artTitle">Ton prochain carrousel commence ici.</h3><p id="artBody">Choisis une opportunité ou écris ton brief.</p><footer><b>PLUG ART</b><span id="artCta">Découvrir →</span></footer></div>
+          </article>
+        </div>
+        <div class="slide-controls"><button id="prevStudio">←</button><div id="slideDots"></div><button id="nextStudio">→</button></div>
+        <div class="slide-strip-v62" id="studioStrip"></div>
+      </section>
+
+      <aside class="panel studio-editor">
+        <div class="studio-step"><span>02</span><strong>Édition</strong></div>
+        <label>Label<input id="editKicker"></label>
+        <label>Titre<textarea id="editTitle"></textarea></label>
+        <label>Texte<textarea id="editBody"></textarea></label>
+        <label>CTA<input id="editCta"></label>
+        <label>Image<input id="editImage" placeholder="URL d’image"></label>
+        <div class="editor-actions-v62"><button id="duplicateStudio">Dupliquer</button><button id="deleteStudio">Supprimer</button></div>
+        <div class="caption-area"><span class="label">LÉGENDE</span><textarea id="captionText" placeholder="La légende sera générée ici."></textarea><button id="generateCaption">Générer la légende</button></div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="view" id="view-network">
+    <div class="view-title"><div><span>RÉSEAU / 03</span><h2>Artistes, événements, lieux</h2><p>Le réseau PLUG ART regroupé sur une même surface.</p></div></div>
+    <div class="network-grid">
+      <article class="panel network-artists"><div class="panel-head"><div><span class="label">ARTISTES</span><strong>Profils</strong></div></div><div class="network-list" id="artistList"></div></article>
+      <article class="panel network-events"><div class="panel-head"><div><span class="label">ÉVÉNEMENTS</span><strong>Agenda</strong></div></div><div class="network-list" id="eventList"></div></article>
+      <article class="panel network-map"><div class="panel-head"><div><span class="label">CARTE</span><strong>Territoires</strong></div></div><div class="world-map-v62" id="worldMap"></div></article>
+    </div>
+  </section>
+
+  <section class="view" id="view-workspace">
+    <div class="view-title"><div><span>BUREAU / 04</span><h2>Notes & contacts</h2><p>Deux outils simples pour ne pas perdre le fil.</p></div></div>
+    <div class="workspace-grid-v62">
+      <article class="panel notes-panel"><div class="panel-head"><div><span class="label">NOTES</span><strong>Prochaines actions</strong></div><button class="text-btn" id="newNote">+ Nouvelle</button></div><div id="notesList"></div></article>
+      <article class="panel contacts-panel"><div class="panel-head"><div><span class="label">CONTACTS</span><strong>Suivi</strong></div><button class="text-btn" id="newContact">+ Nouveau</button></div><div id="contactsList"></div></article>
+    </div>
+  </section>
+</main>
+
+<nav class="mobile-dock">
+  <button class="active" data-view="dashboard"><span>⌂</span><small>Home</small></button>
+  <button data-view="radar"><span>◎</span><small>Radar</small></button>
+  <button data-view="studio"><span>✦</span><small>Studio</small></button>
+  <button data-view="network"><span>◉</span><small>Réseau</small></button>
+  <button data-view="workspace"><span>▦</span><small>Bureau</small></button>
+</nav>
+
+<div class="plugy-chat" id="plugyChat">
+  <div class="chat-head"><div><i></i><strong>PLUGY</strong><span>assistant créatif</span></div><button id="closeChat">×</button></div>
+  <div class="chat-stream" id="chatStream"><div class="bot-msg">Je suis là. Radar, contenu, candidature ou stratégie : va droit au but.</div></div>
+  <form id="chatForm"><input id="chatInput" placeholder="Demande quelque chose à PLUGY…"><button>↑</button></form>
+</div>
+
+<div class="modal" id="simpleModal"><div class="modal-card"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
+
+<script type="module" src="/static/dashboard_v62.js?v=62.20260919.1"></script>
+</body>
+</html>
