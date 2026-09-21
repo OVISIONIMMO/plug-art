@@ -11,20 +11,26 @@ let notes=store.get('plugart_v65_notes',store.get('plugart_v64_notes',[]));
 let contacts=store.get('plugart_v65_contacts',store.get('plugart_v64_contacts',[]));
 let socialQueue=store.get('plugart_v66_social_queue',[]);
 
-function view(id){
+let currentView=null;
+function view(id,opt={}){
   if(!meta[id])id='dashboard';
+  const previous=currentView;currentView=id;
   qa('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+id));
   qa('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
-  const t=q('#pageTitle'),s=q('#pageSub');if(t)t.textContent=meta[id][0];if(s)s.textContent=meta[id][1];
-  history.replaceState(null,'','#'+id);
-  window.scrollTo({top:0,behavior:'smooth'});
+  const t=q('#pageTitle'),s=q('#pageSub'),crumb=q('#crumbCurrent');
+  if(t)t.textContent=meta[id][0];if(s)s.textContent=meta[id][1];if(crumb)crumb.textContent=meta[id][0];
+  document.body.dataset.view=id;
+  if(!opt.fromHistory){const url='#'+id;if(location.hash!==url)history.pushState({view:id,from:previous},'',url);else if(!history.state?.view)history.replaceState({view:id,from:previous},'',url)}
+  window.scrollTo({top:0,behavior:opt.instant?'auto':'smooth'});
 }
-qa('[data-view]').forEach(b=>b.addEventListener('click',()=>view(b.dataset.view)));
-addEventListener('hashchange',()=>view(location.hash.slice(1)||'dashboard'));
+qa('[data-view]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();view(b.dataset.view)}));
+function goBack(){if(history.length>1)history.back();else view('dashboard')}
+q('#navBack')?.addEventListener('click',goBack);q('#routePrev')?.addEventListener('click',goBack);
+addEventListener('popstate',e=>view(e.state?.view||location.hash.slice(1)||'dashboard',{fromHistory:true,instant:true}));
 
 const cut=(s,n=170)=>{s=String(s||'').replace(/\s+/g,' ').trim();return s.length>n?s.slice(0,n-1).replace(/\s+\S*$/,'')+'…':s};
 const fmt=v=>{if(!v)return'—';try{return new Date(v).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}catch{return String(v)}};
-const oppImg=o=>'/api/opportunities/'+encodeURIComponent(o.id)+'/thumbnail';
+const oppImg=o=>'/api/v67/opportunities/'+encodeURIComponent(o.id)+'/thumbnail';
 const initials=n=>String(n||'?').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase();
 const safe=u=>/^https?:\/\//i.test(String(u||''))?u:'#';
 
@@ -45,7 +51,7 @@ function renderDashboard(){
   chart(scores.slice(0,8));
   const calls=state.opps.slice().sort((a,b)=>Number(b.radar_score??b.score??0)-Number(a.radar_score??a.score??0)).slice(0,5);
   const dc=q('#dashCalls');if(dc)dc.innerHTML=calls.length?calls.map(o=>'<button class="priority-item" data-open="'+esc(o.id)+'"><div class="priority-thumb" style="background-image:url(\''+oppImg(o)+'\')"></div><div><h3>'+esc(o.title)+'</h3><p>'+esc([o.city,o.country].filter(Boolean).join(' · ')||o.type||'Open Call')+'</p></div><b>'+Number(o.radar_score??o.score??0)+'</b></button>').join(''):'<div class="compact-row"><span>Aucune opportunité.</span></div>';
-  qa('[data-open]').forEach(b=>b.onclick=()=>{view('radar');setTimeout(()=>document.querySelector('[data-opp-id="'+CSS.escape(b.dataset.open)+'"]')?.scrollIntoView({behavior:'smooth',block:'center'}),100)});
+  qa('[data-open]').forEach(b=>b.onclick=()=>{view('opencalls');setTimeout(()=>openOppDetails(b.dataset.open),120)});
   const cand=q('#dashCandidates');if(cand)cand.innerHTML=state.candidates.slice(0,3).map(c=>'<div class="compact-row"><strong>'+esc(c.title||'Piste')+'</strong><span>'+esc(c.source_name||'À vérifier')+' · '+Number(c.candidate_score||0)+'/100</span></div>').join('')||'<div class="compact-row"><span>Aucune nouvelle piste.</span></div>';
   const ev=q('#dashEvents');if(ev)ev.innerHTML=state.events.slice(0,3).map(e=>'<div class="compact-row"><strong>'+esc(cut(e.title,60))+'</strong><span>'+esc(e.city||e.country||'')+' · '+esc(fmt(e.start))+'</span></div>').join('')||'<div class="compact-row"><span>Aucun événement.</span></div>';
   const av=q('#dashArtists');if(av)av.innerHTML=state.artists.slice(0,7).map(a=>'<span class="avatar" title="'+esc(a.name)+'">'+esc(initials(a.name))+'</span>').join('');
@@ -145,7 +151,7 @@ async function openOppDetails(id){
   modal('<div class="opp-detail"><div class="opp-detail-head"><div><small>'+esc(o.type||'OPEN CALL')+'</small><h3>'+esc(o.title)+'</h3><p>'+esc([o.organizer,o.city,o.country].filter(Boolean).join(' · '))+'</p></div><b>'+Number(o.radar_score??o.score??0)+'/100</b></div><div id="oppMediaGrid" class="opp-media-grid"><div class="media-loading">Recherche des visuels officiels…</div></div><div class="opp-detail-copy"><p>'+esc(o.summary||'')+'</p><dl><div><dt>Deadline</dt><dd>'+esc(o.deadline||'À vérifier')+'</dd></div><div><dt>Frais</dt><dd>'+esc(o.fee||'À vérifier')+'</dd></div><div><dt>Éligibilité</dt><dd>'+esc(o.eligibility||'À vérifier')+'</dd></div></dl><div class="opp-detail-actions"><button class="save" data-modal-studio="'+esc(o.id)+'">Créer le contenu</button><a href="'+esc(safe(o.source_url))+'" target="_blank" rel="noopener">Source officielle ↗</a></div></div></div>');
   q('[data-modal-studio]')?.addEventListener('click',()=>{closeModal();view('studio');const sel=q('#studioSource');if(sel){sel.value=String(id);sel.dispatchEvent(new Event('change'))}});
   try{
-    const r=await api('/api/v66/opportunities/'+encodeURIComponent(id)+'/media');
+    const r=await api('/api/v67/opportunities/'+encodeURIComponent(id)+'/media');
     const imgs=Array.isArray(r.images)?r.images:[];
     const g=q('#oppMediaGrid');if(g)g.innerHTML=imgs.length?imgs.slice(0,8).map(u=>'<img src="'+esc(safe(u))+'" alt="" loading="lazy">').join(''):'<img src="'+oppImg(o)+'" alt="" loading="lazy">';
   }catch{const g=q('#oppMediaGrid');if(g)g.innerHTML='<img src="'+oppImg(o)+'" alt="" loading="lazy">'}
@@ -214,6 +220,6 @@ async function loadAll(){
   renderDashboard();renderRadar();renderOpenCalls();renderSocial();renderNetwork();renderWorkspace();return state;
 }
 window.PLUG65={q,qa,esc,api,store,state,view,cut,fmt,oppImg,playPlugy,openChat,renderDashboard,renderSocial,loadAll};
-view(location.hash.slice(1)||'dashboard');
+const initialView=location.hash.slice(1)||'dashboard';history.replaceState({view:initialView},'','#'+initialView);view(initialView,{fromHistory:true,instant:true});
 window.PLUG65.ready=loadAll();
 })();

@@ -12,17 +12,27 @@ BASE=Path(__file__).resolve().parent
 DEFAULT_DB=Path('/data/plugart.db') if Path('/data').exists() else BASE/'data'/'plugart.db'
 DB=Path(os.getenv('PLUGART_DB',str(DEFAULT_DB)))
 SEED=BASE/'data'/'seed.json'
-app=FastAPI(title='PLUG ART Tool',version='7.0')
+app=FastAPI(title='PLUG ART Tool',version='8.0')
 RADAR_LOCK=threading.Lock()
 DISCOVERY_SOURCES=[
- ('ArtConnect — Open Calls','https://www.artconnect.com/opportunities/opencalls?types=OPEN_CALL',82),
- ('ArtConnect — France','https://www.artconnect.com/opportunities/france?country=FR&sortBy=-deadline',82),
- ('ArtConnect — Paris','https://www.artconnect.com/opportunities?city=Paris&country=FR',84),
- ('CuratorSpace — Upcoming','https://www.curatorspace.com/opportunities/?orderBy=deadline&search=0',80),
- ('CuratorSpace — Latest','https://www.curatorspace.com/opportunities?orderBy=latest&search=1',80)
+ ('ArtConnect — Europe','https://www.artconnect.com/opportunities/europe',88),
+ ('ArtConnect — Open Calls','https://www.artconnect.com/opportunities/opencalls?types=OPEN_CALL',86),
+ ('ArtConnect — France','https://www.artconnect.com/opportunities/france?country=FR&sortBy=-deadline',88),
+ ('ArtConnect — Paris','https://www.artconnect.com/opportunities?city=Paris&country=FR',90),
+ ('CuratorSpace — Upcoming','https://www.curatorspace.com/opportunities/?orderBy=deadline&search=0',84),
+ ('CuratorSpace — Latest','https://www.curatorspace.com/opportunities?orderBy=latest&search=1',82),
+ ('Callfor — Art Open Calls','https://www.callfor.org/',76),
+ ('Art Call List','https://www.artcalllist.com/',76),
+ ('ARTFOND — Open Calls','https://artfond.me/open-calls',80),
+ ('ArtRabbit — Europe Exhibitions','https://www.artrabbit.com/artist-opportunities?location=Europe&type=Exhibition+Opportunity',82),
+ ('Creative Flair — Opportunities','https://creativeflair.org/opportunities/',78),
+ ('Artagon — Emerging Art','https://www.artagon.org/',90),
+ ('Cnap — Annonces','https://www.cnap.fr/annonces',88)
 ]
-LINK_HINTS=('opportun','open-call','open_call','opencall','call-for','detail','residen','exhibition','artist')
-BAD_LINK_HINTS=('login','register','privacy','terms','contact','about','newsletter','facebook','instagram')
+LINK_HINTS=('opportun','open-call','open_call','opencall','call-for','appel','candid','exhibition','exposition','artist','artiste','collective','collectif','emerging','emergent','residen')
+BAD_LINK_HINTS=('login','register','privacy','terms','contact','about','newsletter','facebook','instagram','cookie','press','shop')
+POSITIVE_LINK_HINTS=('open call','appel à candid','appel a candid','exhibition','exposition','collective','collectif','emerging','émergent','emergent','painting','peinture','photography','photographie','visual art','arts visuels','artist opportunity')
+NEGATIVE_LINK_HINTS=('competition','contest','concours','award','prize','prix','job','workshop','formation','webinar')
 EUROPE_WORDS=('france','italy','italie','spain','espagne','portugal','belgium','belgique','netherlands','pays-bas','united kingdom','royaume-uni','germany','allemagne','austria','autriche','switzerland','suisse')
 PARIS_WORDS=('paris','aubervilliers','saint-denis','pantin','montreuil','93','seine-saint-denis')
 
@@ -111,33 +121,41 @@ def infer_fee(text):
  m=re.search(r'(?:fee|fees|cost|application fee|entry fee|frais)[^€£$]{0,45}([€£$]\s?\d{1,4}|\d{1,4}\s?[€£$])',s,re.I);return norm(m.group(0))[:100] if m else 'À vérifier'
 
 def score_opp(o):
- today=date.today();score=42;why=[];text=' '.join(str(o.get(k) or '') for k in ['title','type','summary','accessibility','eligibility']).lower();fee=money_fee(o.get('fee'))
- if fee==0:score+=18;why.append('candidature gratuite')
- elif fee is not None and fee<=50:score+=12;why.append('coût faible')
- elif fee is not None and fee<=400:score+=5;why.append('coût compatible')
+ today=date.today();score=30;why=[];text=' '.join(str(o.get(k) or '') for k in ['title','type','summary','accessibility','eligibility']).lower();fee=money_fee(o.get('fee'))
+ if fee==0:score+=20;why.append('gratuit')
+ elif fee is not None and fee<=50:score+=14;why.append('coût très faible')
+ elif fee is not None and fee<=150:score+=8;why.append('coût accessible')
+ elif fee is not None and fee<=400:score+=4;why.append('≤ 400 €')
  elif fee and fee>400:score-=25;why.append('coût élevé')
- if any(k in text for k in ['emerging','émergent','young artist','early career']):score+=14;why.append('artistes émergents')
- if any(k in text for k in ['collective','group exhibition','exposition collective']):score+=8;why.append('format collectif')
- if any(k in text for k in ['open call','appel à candid']):score+=5
- if any(k in text for k in ['competition','concours']):score-=14;why.append('concours')
- if any(k in text for k in ['visual art','peinture','painting','photography','photographie','sculpture','mixed media']):score+=5
+ if any(k in text for k in ['emerging','émergent','emergent','young artist','early career','jeune création','jeunes artistes']):score+=18;why.append('émergent')
+ if any(k in text for k in ['collective','group exhibition','group show','exposition collective','collectif']):score+=14;why.append('collectif')
+ if any(k in text for k in ['exhibition','exposition','gallery show','salon']):score+=12;why.append('exposition')
+ if any(k in text for k in ['open call','appel à candid','appel a candid']):score+=5
+ if any(k in text for k in ['painting','peinture','photography','photographie','visual art','arts visuels','mixed media','sculpture']):score+=9;why.append('médium PLUG ART')
+ if any(k in text for k in ['all levels','no experience','tous niveaux','international artists','all nationalities']):score+=6;why.append('accessible')
+ if any(k in text for k in ['competition','contest','concours','award','prize','prix artistique']):score-=28;why.append('concours/prix')
+ if any(k in text for k in ['participation fee','exhibition fee','selected artists pay','fee if selected','pay to exhibit']):score-=16;why.append('pay-to-play')
+ if any(k in text for k in ['online only','virtual exhibition only','exposition en ligne uniquement']):score-=8;why.append('online only')
  country=(o.get('country') or '').lower();city=(o.get('city') or '').lower()
- if any(k in country for k in EUROPE_WORDS):score+=8;why.append('zone PLUG ART')
- if any(k in city for k in PARIS_WORDS):score+=10;why.append('priorité Paris/93')
+ if 'france' in country:score+=10;why.append('France')
+ elif any(k in country for k in EUROPE_WORDS):score+=7;why.append('Europe')
+ if any(k in city for k in PARIS_WORDS):score+=15;why.append('Paris/93')
  days=None
  try:
   if o.get('deadline'):days=(date.fromisoformat(o['deadline'])-today).days
  except:pass
- if days is not None:
-  if days<0:score=0;why.append('échéance passée')
-  elif days<=3:score+=12;why.append('urgent')
-  elif days<=14:score+=9;why.append('échéance proche')
-  elif days<=45:score+=5
- reliability=int(o.get('reliability') or 60);confidence=int(o.get('confidence') or 50);score+=round((reliability-60)*.15)+round((confidence-50)*.10);score=max(0,min(100,score));priority='faible'
+ if days is None:score-=5;why.append('deadline à confirmer')
+ elif days<0:score=0;why.append('échéance passée')
+ elif days<=3:score+=8;why.append('très urgent')
+ elif days<=14:score+=10;why.append('échéance proche')
+ elif days<=45:score+=6
+ elif days<=90:score+=3
+ reliability=int(o.get('reliability') or 60);confidence=int(o.get('confidence') or 50);score+=round((reliability-60)*.12)+round((confidence-50)*.10)
+ score=max(0,min(100,score));priority='faible'
  if score>=88:priority='urgente' if days is not None and days<=14 else 'très haute'
- elif score>=75:priority='haute'
+ elif score>=76:priority='haute'
  elif score>=60:priority='moyenne'
- return score,priority,days,' · '.join(why[:6])
+ return score,priority,days,' · '.join(why[:8])
 
 def score_candidate(x):
  s,_,_,w=score_opp({'title':x.get('title'),'type':'Open Call','summary':x.get('summary'),'accessibility':'','eligibility':'','fee':x.get('fee'),'city':x.get('city'),'country':x.get('country'),'deadline':x.get('deadline'),'reliability':x.get('reliability',70),'confidence':x.get('confidence',60)});return s,w
@@ -160,11 +178,19 @@ class LinkParser(HTMLParser):
 
 def strip_html(html):return norm(re.sub(r'<[^>]+>',' ',html or ''))
 def fetch_page(url,timeout=10):return requests.get(url,timeout=timeout,headers={'User-Agent':'Mozilla/5.0 PLUGART-Radar/3.0'},allow_redirects=True)
+def link_signal(url,label=''):
+ low=norm((url or '')+' '+(label or '')).lower();score=0
+ score+=sum(7 for h in POSITIVE_LINK_HINTS if h in low);score-=sum(10 for h in NEGATIVE_LINK_HINTS if h in low)
+ if any(h in low for h in ('collective','collectif','group exhibition')):score+=8
+ if any(h in low for h in ('emerging','émergent','emergent','young artist')):score+=8
+ if any(h in low for h in ('painting','peinture','photography','photographie')):score+=5
+ return score
+
 def valid_candidate_link(base,href,label):
  if not href or href.startswith(('#','mailto:','javascript:')):return False
  u=urljoin(base,href);low=(u+' '+(label or '')).lower()
  if urlparse(u).scheme not in ('http','https') or domain(u)!=domain(base) or any(b in low for b in BAD_LINK_HINTS):return False
- return any(h in low for h in LINK_HINTS)
+ return any(h in low for h in LINK_HINTS) and link_signal(u,label)>-12
 
 def extract_detail(url,fallback_title=''):
  r=fetch_page(url,10)
@@ -191,14 +217,17 @@ def discover_sources(max_details=18):
    for href,label in parser.links:
     if valid_candidate_link(src['url'],href,label):
      u=urljoin(src['url'],href).split('#')[0]
-     if u not in seen_urls:seen_urls.add(u);links.append((u,label))
+     if u not in seen_urls:seen_urls.add(u);links.append((u,label,link_signal(u,label)))
+   links.sort(key=lambda x:x[2],reverse=True)
    rel=min(100,int(src['reliability'] or 60)+1);c.execute("update radar_sources set last_seen=?,last_run=?,failures=0,last_error='',reliability=? where id=?",(now,now,rel,src['id']))
-   for u,label in links[:max_details]:
+   detail_cap=max(8,min(int(max_details),32))
+   for u,label,signal in links[:detail_cap]:
     if c.execute('select 1 from opportunities where source_url=?',(u,)).fetchone() or c.execute('select 1 from radar_candidates where source_url=?',(u,)).fetchone():continue
     try:
      d=extract_detail(u,label)
      if len(d['title'])<7 or d['title'].lower() in ('opportunities','open calls','calls for artists'):continue
      fp=candidate_fingerprint(u,d['title']);item={**d,'source_url':u,'source_name':src['name'],'source_page':src['url'],'reliability':rel};score,reason=score_candidate(item)
+     if score<38 and signal<8:continue
      before=c.total_changes;c.execute("INSERT OR IGNORE INTO radar_candidates(fingerprint,title,source_url,source_name,source_page,city,country,deadline,fee,summary,discovered_at,last_checked,confidence,candidate_score,state,reason,raw_excerpt) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'new',?,?)",(fp,d['title'],u,src['name'],src['url'],d['city'],d['country'],d['deadline'],d['fee'],d['summary'],now,now,d['confidence'],score,reason,d['raw_excerpt']))
      if c.total_changes>before:discovered+=1
     except Exception:errors+=1
@@ -244,7 +273,7 @@ if os.getenv('PLUGART_AUTORADAR','0')=='1':threading.Thread(target=scheduler_loo
 def health():
  try:c=conn();c.execute('select 1').fetchone();c.close();db_ok=True
  except:db_ok=False
- return {'ok':db_ok,'version':'7.0','database':str(DB),'persistent':str(DB).startswith('/data/'),'date':str(date.today())}
+ return {'ok':db_ok,'version':'8.0','database':str(DB),'persistent':str(DB).startswith('/data/'),'date':str(date.today())}
 @app.get('/api/stats')
 def stats():
  today=str(date.today());return {'opportunities':one("select count(*) c from opportunities where status in ('open','rolling')")['c'],'urgent':one("select count(*) c from opportunities where deadline is not null and deadline>=? and deadline<=date(?, '+14 day')",(today,today))['c'],'artists':one('select count(*) c from artists')['c'],'exhibitions':one('select count(*) c from exhibitions where end>=?',(today,))['c'],'favorites':one('select count(*) c from opportunities where favorite=1')['c'],'candidates':one("select count(*) c from radar_candidates where state='new'")['c']}
@@ -325,8 +354,8 @@ def plugy(body:PlugyMessage):
  if any(k in text for k in ['urgence','urgent','deadline','échéance','proche']):subset=sorted([o for o in active if o['deadline'] and o['deadline']>=str(date.today())],key=lambda x:x['deadline'])[:6];return {'answer':'Priorités par échéance : '+', '.join(f"{o['title']} ({o['deadline']})" for o in subset),'items':subset}
  if 'paris' in text:subset=[o for o in active if 'paris' in (o['city'] or '').lower()][:8];return {'answer':f'{len(subset)} opportunités actives liées à Paris, classées par score Radar.','items':subset}
  if 'favori' in text:subset=rows("select id,title,city,country,deadline,fee,coalesce(radar_score,score,0) score,priority,radar_reason,source_url,pipeline_status from opportunities where favorite=1 order by score desc");return {'answer':f"Tu as {len(subset)} opportunité(s) en favoris.",'items':subset}
- if any(k in text for k in ['meilleur','priorit','radar','opportun']):return {'answer':'Voici les meilleures opportunités selon le Radar V7 : pertinence émergente, format collectif, coût, géographie, fiabilité et échéance.','items':active[:8]}
- s=stats();return {'answer':f"Radar V7 : {s['opportunities']} opportunités actives, {s['urgent']} urgentes et {s['candidates']} nouvelles pistes à vérifier.",'items':active[:5]}
+ if any(k in text for k in ['meilleur','priorit','radar','opportun']):return {'answer':'Voici les meilleures opportunités selon le Radar V8 : pertinence émergente, format collectif, coût, géographie, fiabilité et échéance.','items':active[:8]}
+ s=stats();return {'answer':f"Radar V8 : {s['opportunities']} opportunités actives, {s['urgent']} urgentes et {s['candidates']} nouvelles pistes à vérifier.",'items':active[:5]}
 app.mount('/static',StaticFiles(directory=BASE/'static'),name='static')
 @app.get('/')
 def index():return FileResponse(BASE/'static'/'index.html')

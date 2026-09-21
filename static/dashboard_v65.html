@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#14231f">
 <title>PLUG ART — Dashboard</title>
-<link rel="stylesheet" href="/static/dashboard_v65.css?v=66.20260921.1">
+<link rel="stylesheet" href="/static/dashboard_v65.css?v=67.20260921.1">
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
 </head>
 <body>
@@ -31,18 +31,37 @@
 
 <main class="shell">
   <header class="top-pill glass">
-    <div class="top-title"><strong id="pageTitle">Vue générale</strong><span id="pageSub">PLUG ART interne</span></div>
+    <div class="top-leading">
+      <button class="nav-icon" id="navBack" aria-label="Retour" title="Retour">←</button>
+      <button class="nav-icon" data-view="dashboard" aria-label="Accueil" title="Accueil">⌂</button>
+      <div class="top-title"><strong id="pageTitle">Vue générale</strong><span id="pageSub">PLUG ART interne</span></div>
+    </div>
     <nav class="top-nav">
-      <button class="active" data-view="dashboard">Vue générale</button>
+      <button class="active" data-view="dashboard">Vue</button>
       <button data-view="radar">Radar</button>
       <button data-view="opencalls">Open Calls</button>
-      <button data-view="studio">Création</button>
+      <button data-view="studio">Studio</button>
       <button data-view="social">Instagram</button>
       <button data-view="network">Réseau</button>
       <button data-view="workspace">Suivi</button>
     </nav>
-    <div class="top-right"><span class="sync"><i></i> synchronisé</span><button class="mini-button" id="quickGo">⌕</button></div>
+    <div class="top-right">
+      <button class="command-button" data-view="opencalls">Explorer</button>
+      <button class="command-button primary" data-view="studio">＋ Créer</button>
+      <span class="sync"><i></i> live</span>
+      <button class="mini-button" id="quickGo" aria-label="Navigation rapide">⌕</button>
+    </div>
   </header>
+  <div class="route-bar">
+    <div class="breadcrumbs"><button data-view="dashboard">PLUG ART</button><span>/</span><strong id="crumbCurrent">Vue générale</strong></div>
+    <div class="route-shortcuts">
+      <button id="routePrev">← Retour</button>
+      <button data-view="dashboard">Accueil</button>
+      <button data-view="radar">Radar</button>
+      <button data-view="opencalls">Open Calls</button>
+      <button data-view="studio">Studio</button>
+    </div>
+  </div>
 
   <section class="view active" id="view-dashboard">
     <div class="bento">
@@ -70,7 +89,7 @@
         <div class="card-head"><div><small>PLUGY</small><strong>Assistant</strong></div><span class="status-dot"><i></i> en ligne</span></div>
         <div class="plugy-stage">
           <div class="plugy-floor"></div>
-          <model-viewer id="plugyModel" src="/static/PLUGY_final_animated.glb?v=66.20260921.1" camera-orbit="-8deg 76deg 4.0m" camera-target="0m 1m -.05m" field-of-view="29deg" interaction-prompt="none" disable-zoom shadow-intensity=".06" shadow-softness="1" exposure="1.08" environment-image="neutral" loading="eager" reveal="auto" animation-crossfade-duration="240"></model-viewer>
+          <model-viewer id="plugyModel" src="/static/PLUGY_final_animated.glb?v=67.20260921.1" camera-orbit="-8deg 76deg 4.0m" camera-target="0m 1m -.05m" field-of-view="29deg" interaction-prompt="none" disable-zoom shadow-intensity=".06" shadow-softness="1" exposure="1.08" environment-image="neutral" loading="eager" reveal="auto" animation-crossfade-duration="240"></model-viewer>
         </div>
         <div class="plugy-controls"><button data-anim="Happy">☺</button><button data-anim="Think">…</button><button id="askPlugy">Ouvrir</button></div>
       </article>
@@ -135,6 +154,16 @@
         <div class="panel-title"><div><small>SOURCES</small><h2>Sources actives</h2></div></div>
         <div id="radarSources" class="source-stack"></div>
       </article>
+      <article class="radar-panel radar-dna glass">
+        <div class="panel-title"><div><small>ADN RADAR</small><h2>Ce que PLUG ART cherche vraiment</h2></div><span>V8</span></div>
+        <div class="dna-matrix">
+          <span class="plus">Émergent <b>+18</b></span><span class="plus">Collectif <b>+14</b></span><span class="plus">Exposition <b>+12</b></span>
+          <span class="plus">Peinture / photo <b>+9</b></span><span class="plus">Paris / 93 <b>+15</b></span><span class="plus">France <b>+10</b></span>
+          <span class="plus">Gratuit <b>+20</b></span><span class="plus">≤ 400 € <b>+4 à +14</b></span>
+          <span class="minus">Concours / prix <b>−28</b></span><span class="minus">Pay-to-play <b>−16</b></span><span class="minus">Online only <b>−8</b></span>
+        </div>
+        <p class="dna-note">Le moteur classe d’abord les liens prometteurs, puis vérifie la page source, la deadline, le coût, le territoire et la fiabilité avant de proposer une piste.</p>
+      </article>
     </div>
   </section>
 
@@ -188,7 +217,7 @@
         <div class="canvas-toolbar"><div><small>APERÇU</small><strong id="studioCounter">Slide 1 / 5</strong></div><div class="zoom-controls"><button id="zoomOut">−</button><span id="zoomLabel">100%</span><button id="zoomIn">+</button></div></div>
         <div class="carousel-stage">
           <article class="carousel-art theme-editorial layout-top cut-none align-left font-sans accent-violet" id="carouselArt">
-            <div class="art-media" id="artMedia"><div class="art-photo" id="artPhoto"></div><div class="art-photo-secondary" id="artPhotoSecondary"></div></div>
+            <div class="art-media" id="artMedia"><div class="art-photo" id="artPhoto"></div><div class="art-photo-secondary" id="artPhotoSecondary"></div><div class="art-photo-third" id="artPhotoThird"></div><div class="art-photo-fourth" id="artPhotoFourth"></div></div>
             <div class="art-copy" id="artCopy"><span id="artKicker">PLUG ART</span><h3 id="artTitle">Titre du carrousel</h3><p id="artBody">Le contenu apparaîtra ici.</p><footer><b>PLUG ART</b><span id="artCta">Découvrir →</span></footer></div>
           </article>
         </div>
@@ -206,12 +235,13 @@
           <label>Titre<textarea id="editTitle"></textarea></label>
           <label>Texte<textarea id="editBody"></textarea></label>
           <label>CTA<input id="editCta"></label>
-          <label>Taille titre<div class="range-line"><input id="titleSize" type="range" min="70" max="140" value="100"><b id="titleSizeValue">100%</b></div></label>
+          <label>Taille titre<div class="range-line"><input id="titleSize" type="range" min="60" max="260" value="100"><b id="titleSizeValue">100%</b></div></label>
+          <label>Taille texte<div class="range-line"><input id="bodySize" type="range" min="60" max="180" value="100"><b id="bodySizeValue">100%</b></div></label>
           <label>Alignement<div class="choice-row"><button class="active" data-align="left">Gauche</button><button data-align="center">Centre</button><button data-align="right">Droite</button></div></label>
         </div>
 
         <div class="editor-pane" data-pane="layout">
-          <label>Disposition<select id="layoutSelect"><option value="top">Image haut</option><option value="cover">Plein écran</option><option value="left">Image gauche</option><option value="right">Image droite</option><option value="band">Bandeau</option><option value="collage">Collage 2 images</option><option value="minimal">Texte dominant</option></select></label>
+          <label>Disposition<select id="layoutSelect"><option value="top">Image haut</option><option value="cover">Plein écran</option><option value="left">Image gauche</option><option value="right">Image droite</option><option value="band">Bandeau</option><option value="collage">Collage 2 images</option><option value="collage3">Triptyque 3 images</option><option value="grid4">Grille 4 images</option><option value="frame">Cadre galerie</option><option value="poster">Poster éditorial</option><option value="minimal">Texte dominant</option><option value="text">100% typographie</option><option value="artfield">Champ artistique</option></select></label>
           <label>Coupure<select id="cutSelect"><option value="none">Droite</option><option value="diagonal">Diagonale</option><option value="curve">Courbe</option><option value="wave">Vague</option></select></label>
           <label>Police<select id="fontSelect"><option value="sans">Sans moderne</option><option value="serif">Serif éditoriale</option><option value="display">Display condensée</option></select></label>
           <button class="wide-action muted" id="smartLayout">Varier automatiquement les slides</button>
@@ -219,15 +249,19 @@
         </div>
 
         <div class="editor-pane" data-pane="image">
+          <label>Mode visuel<select id="visualMode"><option value="photo">Photo / visuel réel</option><option value="art">Illustration PLUG ART</option><option value="none">Sans image / typographie</option></select></label>
           <label>Image principale<input id="editImage" placeholder="URL"></label>
           <label>Image secondaire<input id="editImage2" placeholder="URL pour collage"></label>
+          <label>Image 3<input id="editImage3" placeholder="URL pour triptyque / grille"></label>
+          <label>Image 4<input id="editImage4" placeholder="URL pour grille"></label>
           <label>Importer<input id="imageUpload" type="file" accept="image/*"></label>
           <label>Position<select id="imagePosition"><option value="center">Centre</option><option value="top">Haut</option><option value="bottom">Bas</option><option value="left">Gauche</option><option value="right">Droite</option></select></label>
           <div class="ai-image-box">
-            <small>IMAGE IA / PLUGY</small>
-            <textarea id="imagePrompt" placeholder="Décris l’image à générer…"></textarea>
-            <div class="two-col"><select id="imageStyle"><option value="photo">Photo éditoriale</option><option value="gallery">Galerie</option><option value="portrait">Portrait</option><option value="urban">Urbain</option><option value="studio">Atelier</option><option value="architecture">Architecture</option><option value="product">Objet</option></select><select id="imageQuality"><option value="medium">Standard</option><option value="high">Haute qualité</option></select></div>
-            <button class="wide-action ai" id="generateSlideImage">✦ Générer cette image</button>
+            <small>ATELIER VISUEL PLUG ART</small>
+            <textarea id="imagePrompt" placeholder="Décris une création artistique : matière, exposition, peinture, photo, collage, installation…"></textarea>
+            <div class="two-col"><select id="imageStyle"><option value="gallery">Installation / galerie</option><option value="studio">Matière / atelier</option><option value="urban">Culture urbaine / street art</option><option value="photo">Collage éditorial artistique</option><option value="architecture">Architecture culturelle</option><option value="portrait">Portrait d’artiste</option></select><select id="imageQuality"><option value="medium">Standard</option><option value="high">Haute qualité</option></select></div>
+            <button class="wide-action ai" id="generateSlideImage">✦ Créer un visuel PLUG ART</button>
+            <button class="wide-action muted" id="illustrateSlideBtn">Créer une illustration abstraite</button>
           </div>
         </div>
 
@@ -316,6 +350,6 @@
 </div>
 
 <div class="modal" id="simpleModal"><div class="modal-card"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
-<script defer src="/static/dashboard_v65_core.js?v=66.20260921.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=66.20260921.1"></script>
+<script defer src="/static/dashboard_v65_core.js?v=67.20260921.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=67.20260921.1"></script>
 </body>
 </html>
