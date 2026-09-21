@@ -19,7 +19,8 @@ function view(id,opt={}){
   qa('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
   const t=q('#pageTitle'),s=q('#pageSub'),crumb=q('#crumbCurrent');
   if(t)t.textContent=meta[id][0];if(s)s.textContent=meta[id][1];if(crumb)crumb.textContent=meta[id][0];
-  document.body.dataset.view=id;
+  document.body.dataset.view=id;document.title='PLUG ART · '+meta[id][0];
+  qa('[data-view]').forEach(b=>{if(b.dataset.view===id)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   if(!opt.fromHistory){const url='#'+id;if(location.hash!==url)history.pushState({view:id,from:previous},'',url);else if(!history.state?.view)history.replaceState({view:id,from:previous},'',url)}
   window.scrollTo({top:0,behavior:opt.instant?'auto':'smooth'});
 }
@@ -27,6 +28,14 @@ qa('[data-view]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();v
 function goBack(){if(history.length>1)history.back();else view('dashboard')}
 q('#navBack')?.addEventListener('click',goBack);q('#routePrev')?.addEventListener('click',goBack);
 addEventListener('popstate',e=>view(e.state?.view||location.hash.slice(1)||'dashboard',{fromHistory:true,instant:true}));
+addEventListener('keydown',e=>{
+  const tag=(e.target?.tagName||'').toLowerCase(),typing=['input','textarea','select'].includes(tag);
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();q('#quickGo')?.click();return}
+  if(e.key==='Escape'){q('#simpleModal')?.classList.remove('open');q('#plugyChat')?.classList.remove('open');return}
+  if(typing||e.metaKey||e.ctrlKey||e.altKey)return;
+  const map={1:'dashboard',2:'radar',3:'opencalls',4:'studio',5:'social',6:'network',7:'workspace'};
+  if(map[e.key])view(map[e.key]);
+});
 
 const cut=(s,n=170)=>{s=String(s||'').replace(/\s+/g,' ').trim();return s.length>n?s.slice(0,n-1).replace(/\s+\S*$/,'')+'…':s};
 const fmt=v=>{if(!v)return'—';try{return new Date(v).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}catch{return String(v)}};
