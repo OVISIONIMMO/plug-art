@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/dashboard_v65.css?v=69.20260921.1">
+<link rel="stylesheet" href="/static/dashboard_v65.css?v=70.20260921.1">
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
 </head>
 <body>
@@ -21,10 +21,10 @@
 <aside class="side-rail">
   <button class="brand" data-view="dashboard"><strong>PLUG</strong><span>ART</span><i></i></button>
   <nav>
-    <button class="rail-item active" data-view="dashboard"><b>⌂</b><span>Vue</span></button>
+    <button class="rail-item active" data-view="dashboard"><b>⌂</b><span>Accueil</span></button>
     <button class="rail-item" data-view="radar"><b>◎</b><span>Radar</span></button>
-    <button class="rail-item" data-view="opencalls"><b>◫</b><span>Calls</span></button>
-    <button class="rail-item" data-view="studio"><b>✦</b><span>Studio</span></button>
+    <button class="rail-item" data-view="opencalls"><b>◫</b><span>Open Calls</span></button>
+    <button class="rail-item" data-view="studio"><b>✦</b><span>Contenu</span></button>
     <button class="rail-item" data-view="social"><b>◌</b><span>Instagram</span></button>
     <button class="rail-item" data-view="network"><b>◉</b><span>Réseau</span></button>
     <button class="rail-item" data-view="workspace"><b>▦</b><span>Suivi</span></button>
@@ -37,47 +37,34 @@
     <div class="top-leading">
       <button class="nav-icon" id="navBack" aria-label="Retour" title="Retour">←</button>
       <button class="nav-icon" data-view="dashboard" aria-label="Accueil" title="Accueil">⌂</button>
-      <div class="top-title"><strong id="pageTitle">Vue générale</strong><span id="pageSub">PLUG ART interne</span></div>
+      <div class="top-title"><strong id="pageTitle">Accueil</strong></div>
     </div>
     <nav class="top-nav">
-      <button class="active" data-view="dashboard">Vue</button>
+      <button class="active" data-view="dashboard">Accueil</button>
       <button data-view="radar">Radar</button>
       <button data-view="opencalls">Open Calls</button>
-      <button data-view="studio">Studio</button>
+      <button data-view="studio">Contenu</button>
       <button data-view="social">Instagram</button>
       <button data-view="network">Réseau</button>
       <button data-view="workspace">Suivi</button>
     </nav>
     <div class="top-right">
-      <button class="command-button" data-view="opencalls">Explorer</button>
-      <button class="command-button primary" data-view="studio">＋ Créer</button>
+      <button class="command-button" data-view="opencalls">Open Calls</button>
+      <button class="command-button primary" data-view="studio">＋ Contenu</button>
       <span class="sync"><i></i> live</span>
       <button class="mini-button" id="quickGo" aria-label="Navigation rapide">⌕</button>
     </div>
   </header>
-  <div class="route-bar">
-    <div class="breadcrumbs"><button data-view="dashboard">PLUG ART</button><span>/</span><strong id="crumbCurrent">Vue générale</strong></div>
-    <div class="route-shortcuts">
-      <button id="routePrev">← Retour</button>
-      <button data-view="dashboard">Accueil</button>
-      <button data-view="radar">Radar</button>
-      <button data-view="opencalls">Open Calls</button>
-      <button data-view="studio">Studio</button>
-      <button data-view="social">Instagram</button>
-      <button data-view="network">Réseau</button>
-      <button data-view="workspace">Suivi</button>
-    </div>
-  </div>
 
   <section class="view active" id="view-dashboard">
     <div class="bento">
       <article class="card card-priorities glass">
-        <div class="card-head"><div><small>PRIORITÉS</small><strong>À traiter maintenant</strong></div><button data-view="radar">ouvrir</button></div>
+        <div class="card-head"><strong>Priorités</strong><button data-view="radar">Ouvrir</button></div>
         <div class="priority-stack" id="dashCalls"></div>
       </article>
 
       <article class="card card-radar glass">
-        <div class="card-head"><div><small>RADAR</small><strong>Activité</strong></div><span class="status-dot"><i></i> actif</span></div>
+        <div class="card-head"><strong>Radar</strong><span class="status-dot"><i></i> actif</span></div>
         <div class="radar-kpis">
           <div><b id="dashOpp">—</b><span>Open Calls</span></div>
           <div><b id="dashRadar">—</b><span>sources</span></div>
@@ -92,43 +79,43 @@
       </article>
 
       <article class="card card-plugy glass">
-        <div class="card-head"><div><small>PLUGY</small><strong>Assistant</strong></div><span class="status-dot"><i></i> en ligne</span></div>
+        <div class="card-head"><strong>PLUGY</strong><span class="status-dot"><i></i> en ligne</span></div>
         <div class="plugy-stage">
           <div class="plugy-floor"></div>
-          <model-viewer id="plugyModel" src="/static/PLUGY_final_animated.glb?v=69.20260921.1" camera-orbit="-8deg 76deg 4.0m" camera-target="0m 1m -.05m" field-of-view="29deg" interaction-prompt="none" disable-zoom shadow-intensity=".06" shadow-softness="1" exposure="1.08" environment-image="neutral" loading="eager" reveal="auto" animation-crossfade-duration="240"></model-viewer>
+          <model-viewer id="plugyModel" src="/static/PLUGY_final_animated.glb?v=70.20260921.1" camera-orbit="-8deg 76deg 4.0m" camera-target="0m 1m -.05m" field-of-view="29deg" interaction-prompt="none" disable-zoom shadow-intensity=".06" shadow-softness="1" exposure="1.08" environment-image="neutral" loading="eager" reveal="auto" animation-crossfade-duration="240"></model-viewer>
         </div>
         <div class="plugy-controls"><button data-anim="Happy">☺</button><button data-anim="Think">…</button><button id="askPlugy">Ouvrir</button></div>
       </article>
 
       <article class="card card-studio glass">
-        <div class="card-head"><div><small>STUDIO</small><strong>Contenus</strong></div><button data-view="studio">ouvrir</button></div>
+        <div class="card-head"><strong>Contenu</strong><button data-view="studio">Ouvrir</button></div>
         <div class="studio-summary">
           <div class="mini-poster"><span>PLUG ART</span><strong id="dashDraftTitle">Carrousel</strong><small id="dashDraftMeta">aucun brouillon</small></div>
           <div class="studio-shortcuts">
             <button data-view="studio">＋ Nouveau carrousel</button>
-            <button id="homeAiStudio">✦ Générer avec PLUGY</button>
+            <button id="homeAiStudio">PLUGY</button>
           </div>
         </div>
       </article>
 
       <article class="card card-verify glass">
-        <div class="card-head"><div><small>À VÉRIFIER</small><strong>Pistes Radar</strong></div><button data-view="workspace">ouvrir</button></div>
+        <div class="card-head"><strong>À vérifier</strong><button data-view="workspace">Ouvrir</button></div>
         <div class="compact-list" id="dashCandidates"></div>
       </article>
 
       <article class="card card-network glass">
-        <div class="card-head"><div><small>RÉSEAU</small><strong>Artistes suivis</strong></div><button data-view="network">ouvrir</button></div>
+        <div class="card-head"><strong>Réseau</strong><button data-view="network">Ouvrir</button></div>
         <div class="network-count"><b id="dashArtistCount">—</b><span>profils actifs</span></div>
         <div class="avatar-row" id="dashArtists"></div>
       </article>
 
       <article class="card card-agenda glass">
-        <div class="card-head"><div><small>AGENDA</small><strong>À venir</strong></div><button data-view="network">ouvrir</button></div>
+        <div class="card-head"><strong>Agenda</strong><button data-view="network">Ouvrir</button></div>
         <div class="compact-list" id="dashEvents"></div>
       </article>
 
       <article class="card card-map glass">
-        <div class="card-head"><div><small>CARTE</small><strong>Zones actives</strong></div></div>
+        <div class="card-head"><strong>Carte</strong></div>
         <div class="mini-map" id="miniMap"></div>
       </article>
     </div>
@@ -136,32 +123,32 @@
 
   <section class="view" id="view-radar">
     <div class="section-bar">
-      <div><small>RADAR</small><h1>Radar & plan d’action</h1></div>
-      <div class="section-actions"><button class="glass-button primary" id="runRadar">Lancer le Radar</button></div>
+      <h1>Radar</h1>
+      <div class="section-actions"><button class="glass-button primary" id="runRadar">Relancer</button></div>
     </div>
 
     <div class="radar-category-grid">
-      <article class="radar-category glass"><span>01</span><strong>Priorité</strong><b id="radarPriorityCount">0</b><p>Scores élevés et opportunités directement exploitables.</p></article>
-      <article class="radar-category glass"><span>02</span><strong>Urgent</strong><b id="radarUrgentCount">0</b><p>Deadlines proches à traiter avant le reste.</p></article>
-      <article class="radar-category glass"><span>03</span><strong>Accessible</strong><b id="radarAccessibleCount">0</b><p>Gratuit ou coût raisonnable pour artistes émergents.</p></article>
-      <article class="radar-category glass"><span>04</span><strong>Collectif</strong><b id="radarCollectiveCount">0</b><p>Expositions collectives et appels adaptés aux émergents.</p></article>
+      <article class="radar-category glass"><strong>Priorité</strong><b id="radarPriorityCount">0</b><p>Scores élevés et opportunités directement exploitables.</p></article>
+      <article class="radar-category glass"><strong>Urgent</strong><b id="radarUrgentCount">0</b><p>Deadlines proches à traiter avant le reste.</p></article>
+      <article class="radar-category glass"><strong>Accessible</strong><b id="radarAccessibleCount">0</b><p>Gratuit ou coût raisonnable pour artistes émergents.</p></article>
+      <article class="radar-category glass"><strong>Collectif</strong><b id="radarCollectiveCount">0</b><p>Expositions collectives et appels adaptés aux émergents.</p></article>
     </div>
 
     <div class="radar-plan-grid">
       <article class="radar-panel glass">
-        <div class="panel-title"><div><small>PLAN</small><h2>Prochaines actions</h2></div><span id="radarLast">—</span></div>
+        <div class="panel-title"><h2>Actions</h2><span id="radarLast">—</span></div>
         <div id="radarPlan" class="action-plan"></div>
       </article>
       <article class="radar-panel glass">
-        <div class="panel-title"><div><small>VALIDATION</small><h2>À vérifier</h2></div><span id="radarInfo">—</span></div>
+        <div class="panel-title"><h2>À vérifier</h2><span id="radarInfo">—</span></div>
         <div id="radarCandidateList" class="verification-list"></div>
       </article>
       <article class="radar-panel glass">
-        <div class="panel-title"><div><small>SOURCES</small><h2>Sources actives</h2></div></div>
+        <div class="panel-title"><h2>Sources</h2></div>
         <div id="radarSources" class="source-stack"></div>
       </article>
       <article class="radar-panel radar-dna glass">
-        <div class="panel-title"><div><small>ADN RADAR</small><h2>Ce que PLUG ART cherche vraiment</h2></div><span>V8</span></div>
+        <div class="panel-title"><h2>Critères</h2></div>
         <div class="dna-matrix">
           <span class="plus">Émergent <b>+18</b></span><span class="plus">Collectif <b>+14</b></span><span class="plus">Exposition <b>+12</b></span>
           <span class="plus">Peinture / photo <b>+9</b></span><span class="plus">Paris / 93 <b>+15</b></span><span class="plus">France <b>+10</b></span>
@@ -175,7 +162,7 @@
 
   <section class="view" id="view-opencalls">
     <div class="section-bar">
-      <div><small>OPEN CALLS</small><h1>Opportunités</h1></div>
+      <h1>Open Calls</h1>
       <div class="section-actions"><button class="glass-button" id="refreshOpenCalls">Actualiser</button></div>
     </div>
     <div class="open-calls-shell">
@@ -192,19 +179,19 @@
 
   <section class="view" id="view-studio">
     <div class="section-bar">
-      <div><small>CRÉATION</small><h1>Studio carrousel</h1></div>
+      <h1>Contenu</h1>
       <div class="section-actions">
         <button class="glass-button ai" id="plugyCarouselBtn">✦ Générer avec PLUGY</button>
-        <button class="glass-button" id="generateAllImagesBtn">◫ Générer les images</button>
-        <button class="glass-button" id="saveDraftBtn">Sauvegarder</button>
-        <button class="glass-button" id="queueInstagramBtn">→ Instagram</button>
+        <button class="glass-button" id="generateAllImagesBtn">Images</button>
+        <button class="glass-button" id="saveDraftBtn">Enregistrer</button>
+        <button class="glass-button" id="queueInstagramBtn">Instagram</button>
         <button class="glass-button primary" id="exportSlideBtn">Exporter</button>
       </div>
     </div>
 
     <div class="studio-grid">
       <aside class="studio-sidebar glass">
-        <div class="side-title"><span>01</span><strong>Projet</strong></div>
+        <div class="side-title"><strong>Projet</strong></div>
         <label>Source<select id="studioSource"><option value="">Brief libre</option></select></label>
         <label>Objectif<select id="studioObjective"><option value="inform">Informer</option><option value="apply">Faire candidater</option><option value="promote">Promouvoir</option><option value="storytell">Storytelling</option></select></label>
         <label>Format<select id="studioFormat"><option value="portrait">Instagram 4:5</option><option value="square">Carré 1:1</option><option value="story">Story / Reel 9:16</option></select></label>
@@ -287,23 +274,23 @@
 
   <section class="view" id="view-social">
     <div class="section-bar">
-      <div><small>INSTAGRAM</small><h1>Contenu & publication</h1></div>
-      <div class="section-actions"><button class="glass-button primary" id="addLatestDraft">Ajouter le dernier brouillon</button></div>
+      <h1>Instagram</h1>
+      <div class="section-actions"><button class="glass-button primary" id="addLatestDraft">Ajouter un brouillon</button></div>
     </div>
     <div class="social-grid">
       <article class="social-card social-queue-card glass">
-        <div class="panel-title"><div><small>FILE</small><h2>Publications</h2></div><span>pilotage interne</span></div>
+        <div class="panel-title"><h2>Publications</h2></div>
         <div class="social-kpis"><div><b id="socialTotal">0</b><span>Total</span></div><div><b id="socialReady">0</b><span>Prêtes</span></div><div><b id="socialPublished">0</b><span>Publiées</span></div></div>
         <div id="socialQueue" class="social-queue"></div>
       </article>
       <article class="social-card glass">
-        <div class="panel-title"><div><small>PLUGY</small><h2>Kit Instagram</h2></div></div>
+        <div class="panel-title"><h2>Assistant</h2></div>
         <label>Brief<textarea id="socialBrief" placeholder="Open call, artiste, exposition, annonce…"></textarea></label>
         <button class="wide-action ai" id="socialKitBtn">✦ Générer légende + hashtags</button>
         <textarea id="socialKitOutput" class="social-output" placeholder="Le kit apparaîtra ici."></textarea>
       </article>
       <article class="social-card glass">
-        <div class="panel-title"><div><small>DA</small><h2>Règles PLUG ART</h2></div></div>
+        <div class="panel-title"><h2>Règles</h2></div>
         <div class="brand-rules">
           <span>Fond blanc / bleu PLUG ART</span>
           <span>Typographie forte, lecture immédiate</span>
@@ -313,7 +300,7 @@
         </div>
       </article>
       <article class="social-card glass">
-        <div class="panel-title"><div><small>CHECK</small><h2>Avant publication</h2></div></div>
+        <div class="panel-title"><h2>Vérification</h2></div>
         <div id="socialChecklist" class="social-checklist">
           <label><input type="checkbox" data-social-check="source"> Source officielle vérifiée</label>
           <label><input type="checkbox" data-social-check="deadline"> Deadline confirmée</label>
@@ -327,26 +314,26 @@
   </section>
 
   <section class="view" id="view-network">
-    <div class="section-bar"><div><small>RÉSEAU</small><h1>Artistes, événements, lieux</h1></div></div>
+    <div class="section-bar"><h1>Réseau</h1></div>
     <div class="network-grid">
-      <article class="network-panel glass"><div class="card-head"><div><small>ARTISTES</small><strong>Profils</strong></div></div><div class="network-list" id="artistList"></div></article>
-      <article class="network-panel glass"><div class="card-head"><div><small>ÉVÉNEMENTS</small><strong>Agenda</strong></div></div><div class="network-list" id="eventList"></div></article>
-      <article class="network-panel glass"><div class="card-head"><div><small>CARTE</small><strong>Territoires</strong></div></div><div class="world-map" id="worldMap"></div></article>
+      <article class="network-panel glass"><div class="card-head"><strong>Artistes</strong></div><div class="network-list" id="artistList"></div></article>
+      <article class="network-panel glass"><div class="card-head"><strong>Événements</strong></div><div class="network-list" id="eventList"></div></article>
+      <article class="network-panel glass"><div class="card-head"><strong>Carte</strong></div><div class="world-map" id="worldMap"></div></article>
     </div>
   </section>
 
   <section class="view" id="view-workspace">
-    <div class="section-bar"><div><small>SUIVI</small><h1>Actions & contacts</h1></div></div>
+    <div class="section-bar"><h1>Suivi</h1></div>
     <div class="workspace-grid">
-      <article class="work-panel glass"><div class="card-head"><div><small>NOTES</small><strong>Actions</strong></div><button id="newNote">+ ajouter</button></div><div id="notesList"></div></article>
-      <article class="work-panel glass"><div class="card-head"><div><small>CONTACTS</small><strong>Suivi</strong></div><button id="newContact">+ ajouter</button></div><div id="contactsList"></div></article>
-      <article class="work-panel glass"><div class="card-head"><div><small>RADAR</small><strong>Pistes à vérifier</strong></div></div><div id="workspaceCandidates"></div></article>
+      <article class="work-panel glass"><div class="card-head"><strong>Notes</strong><button id="newNote">+ Ajouter</button></div><div id="notesList"></div></article>
+      <article class="work-panel glass"><div class="card-head"><strong>Contacts</strong><button id="newContact">+ Ajouter</button></div><div id="contactsList"></div></article>
+      <article class="work-panel glass"><div class="card-head"><strong>Radar</strong></div><div id="workspaceCandidates"></div></article>
     </div>
   </section>
 </main>
 
 <nav class="mobile-dock glass">
-  <button class="active" data-view="dashboard"><b>⌂</b><span>Vue</span></button><button data-view="radar"><b>◎</b><span>Radar</span></button><button data-view="opencalls"><b>◫</b><span>Calls</span></button><button data-view="studio"><b>✦</b><span>Studio</span></button><button data-view="social"><b>◌</b><span>Insta</span></button><button data-view="network"><b>◉</b><span>Réseau</span></button><button data-view="workspace"><b>▦</b><span>Suivi</span></button>
+  <button class="active" data-view="dashboard"><b>⌂</b><span>Accueil</span></button><button data-view="radar"><b>◎</b><span>Radar</span></button><button data-view="opencalls"><b>◫</b><span>Calls</span></button><button data-view="studio"><b>✦</b><span>Contenu</span></button><button data-view="social"><b>◌</b><span>Insta</span></button><button data-view="network"><b>◉</b><span>Réseau</span></button><button data-view="workspace"><b>▦</b><span>Suivi</span></button>
 </nav>
 
 <div class="plugy-chat" id="plugyChat">
@@ -356,6 +343,6 @@
 </div>
 
 <div class="modal" id="simpleModal"><div class="modal-card"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
-<script defer src="/static/dashboard_v65_core.js?v=69.20260921.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=69.20260921.1"></script>
+<script defer src="/static/dashboard_v65_core.js?v=70.20260921.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=70.20260921.1"></script>
 </body>
 </html>

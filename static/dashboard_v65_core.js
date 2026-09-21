@@ -6,7 +6,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;"
 const api=async(url,opt={})=>{const r=await fetch(url,{cache:'no-store',...opt});if(!r.ok)throw new Error((await r.text())||String(r.status));const ct=r.headers.get('content-type')||'';return ct.includes('json')?r.json():r.text()};
 const store={get(k,d=[]){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){localStorage.setItem(k,JSON.stringify(v))}};
 const state={stats:{},opps:[],artists:[],events:[],map:[],radar:{},candidates:[]};
-const meta={dashboard:['Vue générale','PLUG ART interne'],radar:['Radar','Détection & plan d’action'],opencalls:['Open Calls','Opportunités vérifiées'],studio:['Création','Studio carrousel'],social:['Instagram','Contenu & publication'],network:['Réseau','Artistes, événements, lieux'],workspace:['Suivi','Actions & contacts']};
+const meta={dashboard:['Accueil'],radar:['Radar'],opencalls:['Open Calls'],studio:['Contenu'],social:['Instagram'],network:['Réseau'],workspace:['Suivi']};
 let notes=store.get('plugart_v65_notes',store.get('plugart_v64_notes',[]));
 let contacts=store.get('plugart_v65_contacts',store.get('plugart_v64_contacts',[]));
 let socialQueue=store.get('plugart_v66_social_queue',[]);
@@ -17,8 +17,8 @@ function view(id,opt={}){
   const previous=currentView;currentView=id;
   qa('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+id));
   qa('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
-  const t=q('#pageTitle'),s=q('#pageSub'),crumb=q('#crumbCurrent');
-  if(t)t.textContent=meta[id][0];if(s)s.textContent=meta[id][1];if(crumb)crumb.textContent=meta[id][0];
+  const t=q('#pageTitle');
+  if(t)t.textContent=meta[id][0];
   document.body.dataset.view=id;document.title='PLUG ART · '+meta[id][0];
   qa('[data-view]').forEach(b=>{if(b.dataset.view===id)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   if(!opt.fromHistory){const url='#'+id;if(location.hash!==url)history.pushState({view:id,from:previous},'',url);else if(!history.state?.view)history.replaceState({view:id,from:previous},'',url)}
@@ -99,11 +99,11 @@ function renderRadar(){
   const drafts=store.get('plugart_v65_drafts',[]);
   const plan=q('#radarPlan');
   if(plan)plan.innerHTML=[
-    ['01','Vérifier les nouvelles pistes',state.candidates.length+' à contrôler','radar'],
-    ['02','Traiter les deadlines proches',urgent.length+' avant 14 jours','opencalls'],
-    ['03','Sélectionner les appels accessibles',accessible.length+' compatibles budget','opencalls'],
-    ['04','Transformer les meilleurs appels en contenus',drafts.length+' brouillon(s) enregistré(s)','studio']
-  ].map(x=>'<button class="plan-step" data-plan-view="'+x[3]+'"><b>'+x[0]+'</b><span><strong>'+esc(x[1])+'</strong><small>'+esc(x[2])+'</small></span><i>→</i></button>').join('');
+    ['Vérifier les nouvelles pistes',state.candidates.length+' à contrôler','radar'],
+    ['Traiter les deadlines proches',urgent.length+' avant 14 jours','opencalls'],
+    ['Sélectionner les appels accessibles',accessible.length+' compatibles budget','opencalls'],
+    ['Transformer les meilleurs appels en contenus',drafts.length+' brouillon(s) enregistré(s)','studio']
+  ].map(x=>'<button class="plan-step" data-plan-view="'+x[2]+'"><span><strong>'+esc(x[0])+'</strong><small>'+esc(x[1])+'</small></span><i>→</i></button>').join('');
   qa('[data-plan-view]').forEach(b=>b.onclick=()=>view(b.dataset.planView));
   const cand=q('#radarCandidateList');
   if(cand)cand.innerHTML=state.candidates.slice(0,8).map(c=>'<article class="verify-item"><div><strong>'+esc(c.title||'Piste')+'</strong><span>'+esc(c.source_name||'Source')+' · '+Number(c.candidate_score||0)+'/100</span></div><div><button data-promote-candidate="'+esc(c.id)+'">Valider</button><button class="ghost" data-reject-candidate="'+esc(c.id)+'">Écarter</button></div></article>').join('')||'<div class="empty-line">Aucune piste en attente.</div>';
@@ -212,7 +212,7 @@ function modal(html){const c=q('#modalContent'),m=q('#simpleModal');if(c&&m){c.i
 q('#modalClose')?.addEventListener('click',closeModal);q('#simpleModal')?.addEventListener('click',e=>{if(e.target===q('#simpleModal'))closeModal()});
 q('#newNote')?.addEventListener('click',()=>modal('<h3>Nouvelle note</h3><label>Titre<input id="mTitle"></label><label>Note<textarea id="mBody"></textarea></label><button class="save" id="mSaveNote">Enregistrer</button>'));
 q('#newContact')?.addEventListener('click',()=>modal('<h3>Nouveau contact</h3><label>Nom<input id="mName"></label><label>Information<textarea id="mInfo"></textarea></label><label>Statut<select id="mStatus"><option>À contacter</option><option>Contacté</option><option>Relance</option><option>Partenaire</option></select></label><button class="save" id="mSaveContact">Enregistrer</button>'));
-q('#quickGo')?.addEventListener('click',()=>modal('<h3>Navigation</h3><div class="modal-nav"><button data-go="dashboard">Vue générale</button><button data-go="radar">Radar</button><button data-go="opencalls">Open Calls</button><button data-go="studio">Studio</button><button data-go="social">Instagram</button><button data-go="network">Réseau</button><button data-go="workspace">Suivi</button></div>'));
+q('#quickGo')?.addEventListener('click',()=>modal('<h3>Navigation</h3><div class="modal-nav"><button data-go="dashboard">Accueil</button><button data-go="radar">Radar</button><button data-go="opencalls">Open Calls</button><button data-go="studio">Contenu</button><button data-go="social">Instagram</button><button data-go="network">Réseau</button><button data-go="workspace">Suivi</button></div>'));
 q('#modalContent')?.addEventListener('click',e=>{if(e.target.id==='mSaveNote'){notes.unshift({id:Date.now(),title:q('#mTitle').value,body:q('#mBody').value,date:new Date().toLocaleString('fr-FR')});store.set('plugart_v65_notes',notes);renderNotes();closeModal()}else if(e.target.id==='mSaveContact'){contacts.unshift({id:Date.now(),name:q('#mName').value,info:q('#mInfo').value,status:q('#mStatus').value});store.set('plugart_v65_contacts',contacts);renderContacts();closeModal()}else if(e.target.dataset.go){view(e.target.dataset.go);closeModal()}});
 
 function openChat(){q('#plugyChat')?.classList.add('open');playPlugy('Happy',true)}function closeChat(){q('#plugyChat')?.classList.remove('open')}
