@@ -5,15 +5,18 @@ from urllib.parse import urljoin
 import hashlib,re,time,html as html_lib,requests
 import app as core
 import app_extra_v43 as v43
-from build_plugy_final_v57 import build_plugy_final_v57
 
 app=v43.app
-app.version='70.0'
+app.version='71.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'dashboard_v65.html'
 GLB=BASE/'static'/'PLUGY_final_animated.glb'
-RESULT=build_plugy_final_v57(GLB)
-VERSION='70.20260921.1'
+# Preserve the historical V57 head-only mascot exactly as stored in Git.
+# Do not rebuild or overwrite it at startup: later procedural rebuilds changed its look.
+PLUGY_REFERENCE_SHA256='b12a7b223b3b9cf50bbcd9580302ced992c38dbb8522f9479b96bb7e26cee1bf'
+PLUGY_REFERENCE_ANIMATIONS=['Idle','SoftTurn','Think','Curious','Present','Bounce','Happy','Attentive','Wave','Dance','Blink']
+RESULT={'animations':PLUGY_REFERENCE_ANIMATIONS,'source':'historical-v57-head-only','expected_sha256':PLUGY_REFERENCE_SHA256}
+VERSION='71.20260922.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -28,8 +31,8 @@ def root_v65():
       'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma':'no-cache',
       'Expires':'0',
-      'X-Plug-Art-Version':'70.0',
-      'X-Plug-Art-UI':'standard-product-navigation'
+      'X-Plug-Art-Version':'71.0',
+      'X-Plug-Art-UI':'standard-product-navigation-v71'
     })
 
 @app.middleware('http')
@@ -110,13 +113,14 @@ def opportunity_thumbnail_v67(oid:int):
 @app.get('/api/v68/status')
 @app.get('/api/v69/status')
 @app.get('/api/v70/status')
-def status_v70():
+@app.get('/api/v71/status')
+def status_v71():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'70.0',
-      'ui':'standard-product-navigation',
-      'reference_direction':'standard product navigation with single-label sections, simplified cards and direct action bars',
+      'version':'71.0',
+      'ui':'standard-product-navigation-v71',
+      'reference_direction':'standard product navigation with restored historical PLUGY V57 head-only mascot',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -124,6 +128,9 @@ def status_v70():
       'typography':'Archivo + Inter Tight + IBM Plex Mono',
       'legacy_index_served':False,
       'single_mascot':True,
+      'plugy_reference':'historical-v57-head-only',
+      'plugy_expected_sha256':PLUGY_REFERENCE_SHA256,
+      'plugy_reference_match':hashlib.sha256(raw).hexdigest()==PLUGY_REFERENCE_SHA256 if raw else False,
       'plugy_bytes':len(raw),
       'plugy_sha256':hashlib.sha256(raw).hexdigest() if raw else '',
       'plugy_animations':RESULT.get('animations',[]),
@@ -134,4 +141,4 @@ def status_v70():
       'background':'responsive editorial workspace with simplified standard navigation and direct actions'
     }
 
-print(f"PLUG_ART_V70_READY ui=standard_product_navigation internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V71_READY ui=standard_product_navigation_v71 plugy=historical_v57_head internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
