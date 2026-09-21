@@ -39,7 +39,7 @@ function renderStudio(){
   q('#artKicker').textContent=s.kicker||'';q('#artTitle').textContent=s.title||'';q('#artBody').textContent=s.body||'';q('#artCta').textContent=s.cta||'';
   q('#artPhoto').style.backgroundImage=s.image?'url("'+s.image+'")':'linear-gradient(135deg,#72c9c4,#7b70d6,#d07da9)';q('#artPhoto').style.backgroundPosition=s.position||'center';q('#artPhotoSecondary').style.backgroundImage=s.image2?'url("'+s.image2+'")':(s.image?'url("'+s.image+'")':'linear-gradient(135deg,#d07da9,#7b70d6)');
   art.className='carousel-art theme-'+(s.theme||'editorial')+' layout-'+(s.layout||'top')+' cut-'+(s.cut||'none')+' align-'+(s.align||'left')+' font-'+(s.font||'sans')+' accent-'+(s.accent||'violet');
-  art.style.setProperty('--title-scale',Number(s.titleScale||100)/100);art.style.setProperty('--preview-zoom',state.zoom||1);
+  art.style.setProperty('--title-scale',Number(s.titleScale||100)/100);art.style.setProperty('--preview-zoom',state.zoom||1);const format=q('#studioFormat')?.value||'portrait';art.style.aspectRatio=format==='square'?'1 / 1':format==='story'?'9 / 16':'4 / 5';
   const vals={editKicker:s.kicker,editTitle:s.title,editBody:s.body,editCta:s.cta,editImage:(s.image||'').startsWith('/api/')?'':s.image||'',editImage2:s.image2||'',layoutSelect:s.layout||'top',cutSelect:s.cut||'none',fontSelect:s.font||'sans',imagePosition:s.position||'center',imagePrompt:s.prompt||'',titleSize:s.titleScale||100};
   Object.entries(vals).forEach(([id,v])=>{const e=q('#'+id);if(e)e.value=v});q('#titleSizeValue').textContent=(s.titleScale||100)+'%';
   qa('[data-align]').forEach(b=>b.classList.toggle('active',b.dataset.align===(s.align||'left')));qa('[data-theme]').forEach(b=>b.classList.toggle('active',b.dataset.theme===(s.theme||'editorial')));qa('[data-accent]').forEach(b=>b.classList.toggle('active',b.dataset.accent===(s.accent||'violet')));
@@ -50,7 +50,7 @@ function renderStudio(){
 function caption(){const o=currentOpp(),title=o?.title||state.slides[0]?.title||'Nouvelle opportunité',city=[o?.city,o?.country].filter(Boolean).join(', ');q('#captionText').value='🎨 '+title+'\n\n'+cut(o?.summary||q('#studioBrief').value||state.slides[0]?.body,300)+'\n\n'+(city?'📍 '+city+'\n':'')+(o?.deadline?'⏳ '+o.deadline+'\n':'')+'\n#PlugArt #OpenCall #ArtEmergent #Exposition'}
 
 function bind(){
-  q('#studioSource').onchange=()=>{syncBrief();buildSlides()};q('#studioCount').oninput=()=>q('#studioCountValue').textContent=q('#studioCount').value;
+  q('#studioSource').onchange=()=>{syncBrief();buildSlides()};q('#studioCount').oninput=()=>q('#studioCountValue').textContent=q('#studioCount').value;q('#studioFormat').onchange=renderStudio;
   qa('[data-preset]').forEach(b=>b.onclick=()=>{state.preset=b.dataset.preset;qa('[data-preset]').forEach(x=>x.classList.toggle('active',x===b));buildSlides()});
   q('#generateStudio').onclick=buildSlides;q('#prevStudio').onclick=()=>{state.slide=(state.slide-1+state.slides.length)%state.slides.length;renderStudio()};q('#nextStudio').onclick=()=>{state.slide=(state.slide+1)%state.slides.length;renderStudio()};
   [['editKicker','kicker'],['editTitle','title'],['editBody','body'],['editCta','cta'],['editImage','image'],['editImage2','image2'],['layoutSelect','layout'],['cutSelect','cut'],['fontSelect','font'],['imagePosition','position'],['imagePrompt','prompt']].forEach(([id,key])=>{q('#'+id).oninput=()=>{slide()[key]=q('#'+id).value;renderStudio()}});
@@ -77,7 +77,18 @@ function queueInstagram(){
   queue.unshift({id:Date.now(),title,caption:q('#captionText')?.value||'',status:'À préparer',scheduled:'',format:q('#studioFormat')?.value||'portrait'});
   store.set(qkey,queue.slice(0,40));P.renderSocial?.();view('social');
 }
-async function exportSlide(){const s=slide(),W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),dark=['impact','night'].includes(s.theme),bg={editorial:['#f2efe8','#e5e1da'],glass:['#eef5f1','#eadfea'],impact:['#22282a','#3a3f42'],paper:['#f4eee3','#e9dfcf'],night:['#161b22','#25302e'],color:['#d6dcff','#edcee3']}[s.theme]||['#f2efe8','#e5e1da'];let g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,bg[0]);g.addColorStop(1,bg[1]);x.fillStyle=g;x.fillRect(0,0,W,H);await drawImage(x,s.image,0,0,W,520);x.fillStyle=dark?'#f6f5f0':'#202824';x.font='900 '+Math.round(68*(s.titleScale||100)/100)+'px Arial';wrap(x,s.title,72,640,936,74,4);x.fillStyle=dark?'#c3cbc7':'#68726f';x.font='400 31px Arial';wrap(x,s.body,72,910,936,44,5);x.fillStyle=dark?'#fff':'#202824';x.font='900 25px Arial';x.fillText('PLUG ART',72,1260);x.textAlign='right';x.fillText(s.cta||'',1008,1260);const blob=await new Promise(r=>c.toBlob(r,'image/png')),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='PLUG_ART_slide_'+String(state.slide+1).padStart(2,'0')+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+async function exportSlide(){
+  const s=slide(),format=q('#studioFormat')?.value||'portrait',W=1080,H=format==='square'?1080:format==='story'?1920:1350,c=document.createElement('canvas');
+  c.width=W;c.height=H;
+  const x=c.getContext('2d'),dark=['impact','night'].includes(s.theme),bg={editorial:['#f2efe8','#e5e1da'],glass:['#eef5f1','#eadfea'],impact:['#22282a','#3a3f42'],paper:['#f4eee3','#e9dfcf'],night:['#161b22','#25302e'],color:['#d6dcff','#edcee3']}[s.theme]||['#f2efe8','#e5e1da'];
+  let g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,bg[0]);g.addColorStop(1,bg[1]);x.fillStyle=g;x.fillRect(0,0,W,H);
+  const mediaH=Math.round(H*(format==='story'?.36:.385)),titleY=mediaH+Math.round(H*.09),bodyY=titleY+Math.round(H*(format==='story'?.16:.20)),footerY=H-Math.round(H*.065);
+  await drawImage(x,s.image,0,0,W,mediaH);
+  x.fillStyle=dark?'#f6f5f0':'#202824';x.font='900 '+Math.round((format==='story'?76:68)*(s.titleScale||100)/100)+'px Arial';wrap(x,s.title,72,titleY,936,format==='story'?82:74,format==='story'?5:4);
+  x.fillStyle=dark?'#c3cbc7':'#68726f';x.font='400 '+(format==='story'?34:31)+'px Arial';wrap(x,s.body,72,bodyY,936,format==='story'?48:44,format==='story'?8:5);
+  x.fillStyle=dark?'#fff':'#202824';x.font='900 25px Arial';x.textAlign='left';x.fillText('PLUG ART',72,footerY);x.textAlign='right';x.fillText(s.cta||'',1008,footerY);
+  const blob=await new Promise(r=>c.toBlob(r,'image/png')),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='PLUG_ART_'+format+'_slide_'+String(state.slide+1).padStart(2,'0')+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)
+}
 async function drawImage(ctx,src,x,y,w,h){if(!src){const g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,'#72c9c4');g.addColorStop(.5,'#7b70d6');g.addColorStop(1,'#d07da9');ctx.fillStyle=g;ctx.fillRect(x,y,w,h);return}await new Promise(res=>{const im=new Image();im.crossOrigin='anonymous';im.onload=()=>{const r=Math.max(w/im.width,h/im.height),dw=im.width*r,dh=im.height*r;ctx.drawImage(im,x+(w-dw)/2,y+(h-dh)/2,dw,dh);res()};im.onerror=res;im.src=src})}
 function wrap(ctx,t,x,y,w,lh,max){const words=String(t||'').split(/\s+/),lines=[];let line='';for(const word of words){const n=line?line+' '+word:word;if(ctx.measureText(n).width>w&&line){lines.push(line);line=word}else line=n}if(line)lines.push(line);lines.slice(0,max).forEach((l,i)=>ctx.fillText(l,x,y+i*lh))}
 
