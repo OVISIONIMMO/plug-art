@@ -8,12 +8,12 @@ import app_extra_v43 as v43
 from build_plugy_final_v57 import build_plugy_final_v57
 
 app=v43.app
-app.version='68.0'
+app.version='69.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'dashboard_v65.html'
 GLB=BASE/'static'/'PLUGY_final_animated.glb'
 RESULT=build_plugy_final_v57(GLB)
-VERSION='68.20260921.1'
+VERSION='69.20260921.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -28,8 +28,8 @@ def root_v65():
       'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma':'no-cache',
       'Expires':'0',
-      'X-Plug-Art-Version':'68.0',
-      'X-Plug-Art-UI':'editorial-product-workspace'
+      'X-Plug-Art-Version':'69.0',
+      'X-Plug-Art-UI':'editorial-product-responsive'
     })
 
 @app.middleware('http')
@@ -108,13 +108,14 @@ def opportunity_thumbnail_v67(oid:int):
 @app.get('/api/v66/status')
 @app.get('/api/v67/status')
 @app.get('/api/v68/status')
-def status_v68():
+@app.get('/api/v69/status')
+def status_v69():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'68.0',
-      'ui':'editorial-product-workspace',
-      'reference_direction':'human-crafted editorial product workspace with preserved PLUG ART tools',
+      'version':'69.0',
+      'ui':'editorial-product-responsive',
+      'reference_direction':'human-crafted editorial product workspace with dedicated desktop, tablet and smartphone compositions',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -129,7 +130,7 @@ def status_v68():
       'layouts':['top','cover','left','right','band','collage','minimal'],
       'cuts':['none','diagonal','curve','wave'],
       'themes':['editorial','glass','impact','paper','night','color'],
-      'background':'editorial light workspace with dark brand rail, asymmetric hierarchy and restrained depth'
+      'background':'responsive editorial workspace with tablet two-column mode, mobile single-column mode and touch navigation'
     }
 
-print(f"PLUG_ART_V68_READY ui=editorial_product_workspace internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V69_READY ui=editorial_product_responsive internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
