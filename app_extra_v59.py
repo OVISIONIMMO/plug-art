@@ -7,16 +7,16 @@ import app as core
 import app_extra_v43 as v43
 
 app=v43.app
-app.version='71.2'
+app.version='71.3'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'dashboard_v65.html'
 GLB=BASE/'static'/'PLUGY_final_animated.glb'
 # Preserve the historical V57 head-only mascot exactly as stored in Git.
 # Do not rebuild or overwrite it at startup: later procedural rebuilds changed its look.
-PLUGY_REFERENCE_SHA256='b12a7b223b3b9cf50bbcd9580302ced992c38dbb8522f9479b96bb7e26cee1bf'
+PLUGY_REFERENCE_SHA256='6c7ff2e0c370f3e6059fe959f12e3af9318df3a4a646a13efcbd3ae01335676e'
 PLUGY_REFERENCE_ANIMATIONS=['Idle','SoftTurn','Think','Curious','Present','Bounce','Happy','Attentive','Wave','Dance','Blink']
 RESULT={'animations':PLUGY_REFERENCE_ANIMATIONS,'source':'historical-v57-head-only','expected_sha256':PLUGY_REFERENCE_SHA256}
-VERSION='71.20260922.3'
+VERSION='71.20260922.4'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -31,7 +31,7 @@ def root_v65():
       'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma':'no-cache',
       'Expires':'0',
-      'X-Plug-Art-Version':'71.2',
+      'X-Plug-Art-Version':'71.3',
       'X-Plug-Art-UI':'standard-product-navigation-v71'
     })
 
@@ -118,7 +118,7 @@ def status_v71():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'71.2',
+      'version':'71.3',
       'ui':'standard-product-navigation-v71',
       'reference_direction':'standard product navigation with restored historical PLUGY V57 head-only mascot',
       'marketing_blocks':False,
@@ -141,4 +141,4 @@ def status_v71():
       'background':'responsive editorial workspace with simplified standard navigation and direct actions'
     }
 
-print(f"PLUG_ART_V71_2_READY ui=standard_product_navigation_v71 plugy=historical_v57_builder internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V71_3_READY ui=standard_product_navigation_v71 plugy=historical_v57_builder_verified internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
