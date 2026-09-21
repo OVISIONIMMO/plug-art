@@ -2,15 +2,22 @@ from pathlib import Path
 from fastapi import Request
 import hashlib,re
 import app_extra_v42 as v42
-from build_plugy_final_v57 import build_plugy_final_v57
 
 app=v42.app
-app.version="61.0"
+app.version="61.1"
 BASE=Path(__file__).resolve().parent
 GLB=BASE/"static"/"PLUGY_final_animated.glb"
 INDEX=BASE/"static"/"index.html"
 
-result=build_plugy_final_v57(GLB)
+# Preserve the original historical V57 head-only GLB committed in Git.
+# Never procedurally rebuild this asset at application startup.
+result={
+    "animations":['Idle','SoftTurn','Think','Curious','Present','Bounce','Happy','Attentive','Wave','Dance','Blink'],
+    "nodes":75,
+    "design":"historical-v57-pearl-cyan-pink-head",
+    "body":False,
+    "source":"git-blob-b483e3fb9673ccf9cee126f7bcd3846b8693fd95"
+}
 raw=GLB.read_bytes()
 digest=hashlib.sha256(raw).hexdigest()
 ANIMS=result.get("animations",[])
@@ -38,7 +45,7 @@ if INDEX.exists():
     page=page.replace("</body>",scripts+"\n</body>",1)
     INDEX.write_text(page,encoding="utf-8")
 
-print(f"PLUGY_V61_READY bytes={len(raw)} nodes={result.get('nodes')} animations={','.join(ANIMS)} sha256={digest}",flush=True)
+print(f"PLUGY_V61_1_READY bytes={len(raw)} nodes={result.get('nodes')} animations={','.join(ANIMS)} sha256={digest} source=historical-v57",flush=True)
 print("PLUG_ART_STUDIO_V61_READY ui=signal_room layout=control_center navigation=rail+command+mobile studio=progressive plugy=reference_matched duplicate=off",flush=True)
 
 @app.middleware("http")
@@ -57,8 +64,8 @@ def v43_status():
     page=INDEX.read_text(encoding="utf-8") if INDEX.exists() else ""
     return {
         "ok":bool(current and current[:4]==b"glTF"),
-        "version":"61.0",
-        "plugy":"reference-matched-polished",
+        "version":"61.1",
+        "plugy":"historical-v57-head-preserved",
         "design":result.get("design"),
         "body":False,
         "bytes":len(current),
