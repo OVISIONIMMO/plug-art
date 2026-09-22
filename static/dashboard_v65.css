@@ -1056,3 +1056,110 @@ body[data-plugy-state="idle"] .plugy-energy-layer,
 body[data-plugy-state="minimized"] .plugy-energy-layer{
   opacity:.94;
 }
+
+
+/* V84 — master-strict PLUGY visual + stronger interface presence */
+.plugy-float{
+  --plugy-size:126px;
+  --plugy-edge:24px;
+  z-index:92!important;
+  overflow:visible!important;
+}
+.plugy-float[data-mode="hero"]{
+  --plugy-size:clamp(210px,16vw,252px);
+  --plugy-edge:30px;
+  bottom:clamp(52px,9vh,104px)!important;
+}
+.plugy-float[data-mode="assistant"]{
+  --plugy-size:clamp(164px,12vw,196px);
+  right:404px!important;
+  bottom:42px!important;
+}
+.plugy-float[data-mode="mini"]{
+  --plugy-size:clamp(102px,8vw,122px);
+  --plugy-edge:20px;
+  bottom:32px!important;
+}
+body[data-plugy-scrolling="1"] .plugy-float{
+  --plugy-size:96px!important;
+  opacity:.94!important;
+}
+
+/* Local visual support, not a card. */
+.plugy-float:before{
+  content:"";
+  position:absolute;
+  z-index:-2;
+  left:50%;top:50%;
+  width:128%;height:128%;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 40% 38%,rgba(255,255,255,.64),rgba(255,255,255,.18) 32%,transparent 62%),
+    radial-gradient(circle at 62% 52%,rgba(231,181,246,.15),transparent 54%);
+  filter:blur(13px);
+  opacity:.72;
+  pointer-events:none;
+}
+.plugy-float:after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  left:50%;bottom:-4%;
+  width:74%;height:18%;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:radial-gradient(ellipse,rgba(116,90,169,.20),rgba(223,140,207,.11) 45%,transparent 72%);
+  filter:blur(12px);
+  opacity:.56;
+  pointer-events:none;
+}
+.plugy-float-visual{
+  opacity:0;
+  transform:translateY(14px) scale(.92);
+  filter:drop-shadow(0 18px 34px rgba(66,45,92,.17)) drop-shadow(0 0 18px rgba(179,110,205,.08))!important;
+}
+.plugy-float.is-ready .plugy-float-visual{
+  opacity:1;
+  animation:plugyV84Arrive .78s cubic-bezier(.18,.82,.22,1) both,plugyV84Breathe 5.6s ease-in-out .9s infinite;
+}
+.plugy-float-visual model-viewer{
+  filter:saturate(.92) contrast(1.015) brightness(1.035)!important;
+}
+@keyframes plugyV84Arrive{
+  0%{opacity:0;transform:translateY(20px) scale(.88)}
+  65%{opacity:1;transform:translateY(-3px) scale(1.025)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes plugyV84Breathe{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-4px) scale(1.012)}
+}
+
+/* Presence gets stronger only when PLUGY is active. */
+body[data-plugy-state="listening"] .plugy-float:before,
+body[data-plugy-state="thinking"] .plugy-float:before,
+body[data-plugy-state="speaking"] .plugy-float:before{opacity:.92}
+body[data-plugy-state="idle"] .plugy-energy-layer,
+body[data-plugy-state="minimized"] .plugy-energy-layer{opacity:.42!important}
+
+@media(max-width:1240px){
+  .plugy-float[data-mode="hero"]{--plugy-size:188px;right:18px!important}
+  .plugy-float[data-mode="assistant"]{--plugy-size:150px;right:20px!important;bottom:96px!important}
+  .plugy-float[data-mode="mini"]{--plugy-size:108px}
+}
+@media(max-width:920px){
+  .plugy-float{right:12px!important;left:auto!important}
+  .plugy-float[data-mode="hero"]{--plugy-size:138px;bottom:calc(86px + env(safe-area-inset-bottom))!important}
+  .plugy-float[data-mode="assistant"]{--plugy-size:124px;bottom:calc(92px + env(safe-area-inset-bottom))!important}
+  .plugy-float[data-mode="mini"]{--plugy-size:96px;bottom:calc(82px + env(safe-area-inset-bottom))!important}
+  body[data-plugy-scrolling="1"] .plugy-float{--plugy-size:86px!important}
+}
+@media(max-width:620px){
+  .plugy-float[data-mode="hero"]{--plugy-size:126px}
+  .plugy-float[data-mode="assistant"]{--plugy-size:116px}
+  .plugy-float[data-mode="mini"]{--plugy-size:90px}
+}
+@media(prefers-reduced-motion:reduce){
+  .plugy-float.is-ready .plugy-float-visual{animation:none!important;opacity:1;transform:none}
+}

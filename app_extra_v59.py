@@ -5,17 +5,17 @@ from urllib.parse import urljoin
 import hashlib,re,time,html as html_lib,requests
 import app as core
 import app_extra_v43 as v43
-from build_plugy_official_v83 import build_plugy_official_v83
+from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='83.0'
+app.version='84.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'dashboard_v65.html'
-GLB=BASE/'static'/'plugy_official_v83.glb'
-RESULT=build_plugy_official_v83(GLB)
+GLB=BASE/'static'/'plugy_official_v84.glb'
+RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='83.20260922.1'
+VERSION='84.20260922.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -30,15 +30,15 @@ def root_v65():
       'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma':'no-cache',
       'Expires':'0',
-      'X-Plug-Art-Version':'83.0',
-      'X-Plug-Art-UI':'plugy-official-v83'
+      'X-Plug-Art-Version':'84.0',
+      'X-Plug-Art-UI':'plugy-official-v84-master'
     })
 
 @app.middleware('http')
 async def v65_headers(request:Request,call_next):
     response=await call_next(request)
     p=request.url.path
-    if p in ('/','/static/dashboard_v65.html','/static/dashboard_v65.css','/static/dashboard_v65_core.js','/static/dashboard_v65_studio.js','/static/plugy_assistant_v83.js','/static/plugy_official_v83.glb') or p.startswith('/api/v32/content/image'):
+    if p in ('/','/static/dashboard_v65.html','/static/dashboard_v65.css','/static/dashboard_v65_core.js','/static/dashboard_v65_studio.js','/static/plugy_assistant_v84.js','/static/plugy_official_v84.glb') or p.startswith('/api/v32/content/image'):
         response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
         response.headers['Pragma']='no-cache'
         response.headers['Expires']='0'
@@ -124,13 +124,14 @@ def opportunity_thumbnail_v67(oid:int):
 @app.get('/api/v81/status')
 @app.get('/api/v82/status')
 @app.get('/api/v83/status')
-def status_v83():
+@app.get('/api/v84/status')
+def status_v84():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'83.0',
-      'ui':'plugy-official-v83',
-      'reference_direction':'metallic dark rose-violet PLUGY with deep glossy black eyes and straighter authentic plug prongs',
+      'version':'84.0',
+      'ui':'plugy-official-v84-master',
+      'reference_direction':'strict master rebuild: square-rounded pearl white rose PLUGY, flat readable face, integrated plug prongs, black-indigo eyes and stronger global presence',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -138,10 +139,10 @@ def status_v83():
       'typography':'Archivo + Inter Tight + IBM Plex Mono',
       'legacy_index_served':False,
       'single_mascot':True,
-      'plugy_reference':'official-v83-metallic-black-eyes',
+      'plugy_reference':'official-v84-master-strict',
       'plugy_expected_sha256':PLUGY_REFERENCE_SHA256,
       'plugy_reference_match':hashlib.sha256(raw).hexdigest()==PLUGY_REFERENCE_SHA256 if raw else False,
-      'plugy_model_path':'/static/plugy_official_v83.glb',
+      'plugy_model_path':'/static/plugy_official_v84.glb',
       'plugy_material':RESULT.get('material'),
       'plugy_official_base':RESULT.get('official_base','V26'),
       'plugy_profile':RESULT.get('profile'),
@@ -156,4 +157,4 @@ def status_v83():
       'background':'responsive editorial workspace with simplified standard navigation and direct actions'
     }
 
-print(f"PLUG_ART_V83_READY ui=plugy_official_v83 plugy=dark_rose_violet_metal_black_eyes voice=browser_stt_tts state_machine=on mini=on internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V84_READY ui=plugy_official_v84_master plugy=master_strict_pearl_white_rose voice=browser_stt_tts state_machine=on mini=on internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
