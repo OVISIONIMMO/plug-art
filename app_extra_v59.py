@@ -2,20 +2,20 @@ from pathlib import Path
 from fastapi import Request, HTTPException
 from fastapi.responses import HTMLResponse, Response
 from urllib.parse import urljoin
-import hashlib,re,time,html as html_lib,requests
+import hashlib,re,time,html as html_lib,requests,json
 import app as core
 import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='84.0'
+app.version='85.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'dashboard_v65.html'
 GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='84.20260922.1'
+VERSION='85.20260922.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -30,18 +30,27 @@ def root_v65():
       'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma':'no-cache',
       'Expires':'0',
-      'X-Plug-Art-Version':'84.0',
-      'X-Plug-Art-UI':'plugy-official-v84-master'
+      'X-Plug-Art-Version':'85.0',
+      'X-Plug-Art-UI':'internal-control-center-v85'
     })
 
+from fastapi.middleware.gzip import GZipMiddleware
+try:
+    app.add_middleware(GZipMiddleware, minimum_size=900)
+except Exception:
+    pass
+
 @app.middleware('http')
-async def v65_headers(request:Request,call_next):
+async def v85_headers(request:Request,call_next):
     response=await call_next(request)
     p=request.url.path
-    if p in ('/','/static/dashboard_v65.html','/static/dashboard_v65.css','/static/dashboard_v65_core.js','/static/dashboard_v65_studio.js','/static/plugy_assistant_v84.js','/static/plugy_official_v84.glb') or p.startswith('/api/v32/content/image'):
+    if p=='/':
         response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
         response.headers['Pragma']='no-cache'
-        response.headers['Expires']='0'
+    elif p.startswith('/static/') and any(p.endswith(ext) for ext in ('.css','.js','.glb','.png','.jpg','.jpeg','.webp','.svg')):
+        response.headers['Cache-Control']='public, max-age=31536000, immutable'
+    elif p.startswith('/api/'):
+        response.headers.setdefault('Cache-Control','no-store')
     return response
 
 
@@ -106,6 +115,97 @@ def opportunity_thumbnail_v67(oid:int):
         except Exception:pass
     return Response(status_code=404)
 
+
+# V85 internal control center.
+_c=core.conn()
+_c.executescript("""
+CREATE TABLE IF NOT EXISTS crm_leads(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT DEFAULT '',
+  organization TEXT DEFAULT '',
+  kind TEXT DEFAULT 'Galerie',
+  city TEXT DEFAULT '',
+  country TEXT DEFAULT '',
+  email TEXT DEFAULT '',
+  instagram TEXT DEFAULT '',
+  website TEXT DEFAULT '',
+  status TEXT DEFAULT 'lead',
+  priority TEXT DEFAULT 'normal',
+  next_action TEXT DEFAULT '',
+  next_date TEXT DEFAULT '',
+  notes TEXT DEFAULT '',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_crm_status_priority ON crm_leads(status,priority,updated_at DESC);
+""")
+_c.commit()
+_c.close()
+
+def _now_v85():
+    return time.strftime('%Y-%m-%dT%H:%M:%S')
+
+@app.get('/api/v85/map')
+def map_v85():
+    return core.rows("""select id,title,'' venue,city,country,lat,lon,deadline date,deadline,coalesce(radar_score,score,0) score,source_url,'opportunity' kind from opportunities where lat is not null and lon is not null and status in ('open','rolling')""") + core.rows("""select id,title,venue,city,country,lat,lon,start date,start deadline,0 score,source_url,'exhibition' kind from exhibitions where lat is not null and lon is not null""")
+
+@app.get('/api/v85/crm')
+def crm_list_v85():
+    return core.rows("""select * from crm_leads order by case priority when 'high' then 0 when 'normal' then 1 else 2 end, updated_at desc, id desc""")
+
+@app.post('/api/v85/crm')
+def crm_create_v85(body:dict):
+    allowed=['name','organization','kind','city','country','email','instagram','website','status','priority','next_action','next_date','notes']
+    data={k:str(body.get(k,'')).strip() for k in allowed}
+    if not data['name'] and not data['organization']:raise HTTPException(400,'Nom ou structure requis')
+    now=_now_v85();cols=allowed+['created_at','updated_at'];vals=[data[k] for k in allowed]+[now,now]
+    c=core.conn();cur=c.execute(f"insert into crm_leads ({','.join(cols)}) values ({','.join('?' for _ in cols)})",vals);c.commit();lid=cur.lastrowid;c.close()
+    return core.one('select * from crm_leads where id=?',(lid,))
+
+@app.patch('/api/v85/crm/{lid}')
+def crm_update_v85(lid:int,body:dict):
+    allowed={'name','organization','kind','city','country','email','instagram','website','status','priority','next_action','next_date','notes'}
+    data={k:str(v).strip() for k,v in body.items() if k in allowed}
+    if not data:return core.one('select * from crm_leads where id=?',(lid,))
+    data['updated_at']=_now_v85();sets=','.join(f"{k}=?" for k in data)
+    c=core.conn();cur=c.execute(f"update crm_leads set {sets} where id=?",(*data.values(),lid));c.commit();c.close()
+    if not cur.rowcount:raise HTTPException(404,'Contact introuvable')
+    return core.one('select * from crm_leads where id=?',(lid,))
+
+@app.delete('/api/v85/crm/{lid}')
+def crm_delete_v85(lid:int):
+    c=core.conn();cur=c.execute('delete from crm_leads where id=?',(lid,));c.commit();c.close()
+    if not cur.rowcount:raise HTTPException(404,'Contact introuvable')
+    return {'ok':True}
+
+@app.post('/api/v85/artists')
+def artist_create_v85(body:dict):
+    name=str(body.get('name','')).strip()
+    if not name:raise HTTPException(400,'Nom requis')
+    allowed=['real_name','city','country','discipline','bio','website','instagram','email','notes']
+    slug=core.slugify(name+'-'+str(int(time.time())))
+    cols=['slug','name']+allowed+['tags','milestones']
+    vals=[slug,name]+[str(body.get(k,'')).strip() for k in allowed]+[json.dumps(body.get('tags') or [],ensure_ascii=False),json.dumps(body.get('milestones') or [],ensure_ascii=False)]
+    c=core.conn();cur=c.execute(f"insert into artists ({','.join(cols)}) values ({','.join('?' for _ in cols)})",vals);c.commit();aid=cur.lastrowid;c.close()
+    return core.one('select * from artists where id=?',(aid,))
+
+@app.patch('/api/v85/artists/{aid}')
+def artist_update_v85(aid:int,body:dict):
+    allowed={'name','real_name','city','country','discipline','bio','website','instagram','email','notes'}
+    data={k:str(v).strip() for k,v in body.items() if k in allowed}
+    if 'tags' in body:data['tags']=json.dumps(body.get('tags') or [],ensure_ascii=False)
+    if 'milestones' in body:data['milestones']=json.dumps(body.get('milestones') or [],ensure_ascii=False)
+    if not data:return core.one('select * from artists where id=?',(aid,))
+    sets=','.join(f"{k}=?" for k in data);c=core.conn();cur=c.execute(f"update artists set {sets} where id=?",(*data.values(),aid));c.commit();c.close()
+    if not cur.rowcount:raise HTTPException(404,'Artiste introuvable')
+    a=core.one('select * from artists where id=?',(aid,));a['tags']=json.loads(a.get('tags') or '[]');a['milestones']=json.loads(a.get('milestones') or '[]');return a
+
+@app.delete('/api/v85/artists/{aid}')
+def artist_delete_v85(aid:int):
+    c=core.conn();cur=c.execute('delete from artists where id=?',(aid,));c.commit();c.close()
+    if not cur.rowcount:raise HTTPException(404,'Artiste introuvable')
+    return {'ok':True}
+
 @app.get('/api/v65/status')
 @app.get('/api/v66/status')
 @app.get('/api/v67/status')
@@ -125,13 +225,14 @@ def opportunity_thumbnail_v67(oid:int):
 @app.get('/api/v82/status')
 @app.get('/api/v83/status')
 @app.get('/api/v84/status')
-def status_v84():
+@app.get('/api/v85/status')
+def status_v85():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'84.0',
-      'ui':'plugy-official-v84-master',
-      'reference_direction':'strict master rebuild: square-rounded pearl white rose PLUGY, flat readable face, integrated plug prongs, black-indigo eyes and stronger global presence',
+      'version':'85.0',
+      'ui':'internal-control-center-v85',
+      'reference_direction':'V84 master PLUGY retained; V85 adds internal map, CRM, artist profiles, free-layer social studio and low-latency loading',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -157,4 +258,4 @@ def status_v84():
       'background':'responsive editorial workspace with simplified standard navigation and direct actions'
     }
 
-print(f"PLUG_ART_V84_READY ui=plugy_official_v84_master plugy=master_strict_pearl_white_rose voice=browser_stt_tts state_machine=on mini=on internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V85_READY ui=internal_control_center map=lazy crm=persistent artists=editable studio=free_layers plugy=agent voice=browser_stt_tts state_machine=on mini=on internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
