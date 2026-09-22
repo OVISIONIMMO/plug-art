@@ -928,3 +928,16 @@ body:not([data-view="dashboard"]) .plugy-float,.plugy-float[data-mode="assistant
   .plugy-energy-layer *{animation:none!important}
   [data-plugy-state="thinking"] .plugy-arc,[data-plugy-state="transcribing"] .plugy-arc{opacity:.22!important}
 }
+
+/* V80 — restored PLUGY V26 interaction */
+.plugy-stage model-viewer,.plugy-float-visual model-viewer{touch-action:pan-y;cursor:grab}
+.plugy-stage model-viewer:active,.plugy-float-visual model-viewer:active{cursor:grabbing}
+.plugy-rotate-hint{
+  position:absolute;left:50%;bottom:13px;z-index:7;transform:translateX(-50%);
+  padding:7px 11px;border-radius:999px;border:1px solid rgba(88,104,190,.12);
+  background:rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  color:#5b6794;font-size:9px;font-weight:780;letter-spacing:.1px;pointer-events:none;
+  box-shadow:0 7px 20px rgba(62,77,150,.07)
+}
+.plugy-float[data-mode="mini"] .plugy-rotate-hint{display:none}
+@media(max-width:720px){.plugy-rotate-hint{bottom:7px;font-size:8px;padding:6px 9px}}

@@ -221,11 +221,11 @@ const plugyModels=()=>[q('#plugyModel'),q('#plugyFloatModel')].filter(Boolean);
 let animTimer;
 function playPlugy(name,once=true){
   const list=plugyModels();if(!list.length)return;
-  list.forEach(mv=>{const go=()=>{const a=mv.availableAnimations||[];if(!a.includes(name))return;try{mv.animationName=name;mv.play({repetitions:once?1:Infinity})}catch{}};if(mv.loaded)go();else mv.addEventListener('load',go,{once:true})});
-  if(once)setTimeout(()=>playPlugy('Idle',false),name==='Blink'?450:1250);
+  list.forEach(mv=>{const go=()=>{const a=mv.availableAnimations||[];const target=a.includes(name)?name:(a.includes('IdleBlink')?'IdleBlink':(a.includes('Idle')?'Idle':a[0]));if(!target)return;try{mv.animationName=target;mv.play({repetitions:target==='IdleBlink'?Infinity:(once?1:Infinity)})}catch{}};if(mv.loaded)go();else mv.addEventListener('load',go,{once:true})});
+  if(once)setTimeout(()=>playPlugy('IdleBlink',false),name==='Blink'?450:1250);
 }
 function schedulePlugy(){clearTimeout(animTimer);animTimer=setTimeout(()=>{if(!window.PlugyAssistant?.state?.conversation)playPlugy(['Blink','Curious','SoftTurn','Happy','Attentive'][Math.floor(Math.random()*5)],true);schedulePlugy()},7000+Math.random()*5000)}
-q('#plugyModel')?.addEventListener('load',()=>{playPlugy('Idle',false);schedulePlugy()},{once:true});qa('[data-anim]').forEach(b=>b.onclick=()=>playPlugy(b.dataset.anim,true));
+q('#plugyModel')?.addEventListener('load',()=>{playPlugy('IdleBlink',false);schedulePlugy()},{once:true});qa('[data-anim]').forEach(b=>b.onclick=()=>playPlugy(b.dataset.anim,true));
 
 async function loadAll(){
   const specs=[['/api/stats',{}],['/api/opportunities',[]],['/api/artists',[]],['/api/exhibitions',[]],['/api/map',[]],['/api/radar/status',{}],['/api/radar/candidates',[]]];
