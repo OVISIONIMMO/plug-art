@@ -5,18 +5,17 @@ from urllib.parse import urljoin
 import hashlib,re,time,html as html_lib,requests
 import app as core
 import app_extra_v43 as v43
+from build_plugy_canonical_v72 import build_plugy_canonical_v72
 
 app=v43.app
-app.version='71.3'
+app.version='72.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'dashboard_v65.html'
-GLB=BASE/'static'/'PLUGY_final_animated.glb'
-# Preserve the historical V57 head-only mascot exactly as stored in Git.
-# Do not rebuild or overwrite it at startup: later procedural rebuilds changed its look.
-PLUGY_REFERENCE_SHA256='6c7ff2e0c370f3e6059fe959f12e3af9318df3a4a646a13efcbd3ae01335676e'
-PLUGY_REFERENCE_ANIMATIONS=['Idle','SoftTurn','Think','Curious','Present','Bounce','Happy','Attentive','Wave','Dance','Blink']
-RESULT={'animations':PLUGY_REFERENCE_ANIMATIONS,'source':'historical-v57-head-only','expected_sha256':PLUGY_REFERENCE_SHA256}
-VERSION='71.20260922.4'
+GLB=BASE/'static'/'plugy_canonical_v72.glb'
+RESULT=build_plugy_canonical_v72(GLB)
+PLUGY_REFERENCE_ANIMATIONS=RESULT.get('animations',[])
+PLUGY_REFERENCE_SHA256=RESULT.get('sha256','')
+VERSION='72.20260922.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -31,15 +30,15 @@ def root_v65():
       'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma':'no-cache',
       'Expires':'0',
-      'X-Plug-Art-Version':'71.3',
-      'X-Plug-Art-UI':'standard-product-navigation-v71'
+      'X-Plug-Art-Version':'72.0',
+      'X-Plug-Art-UI':'standard-product-navigation-v72'
     })
 
 @app.middleware('http')
 async def v65_headers(request:Request,call_next):
     response=await call_next(request)
     p=request.url.path
-    if p in ('/','/static/dashboard_v65.html','/static/dashboard_v65.css','/static/dashboard_v65_core.js','/static/dashboard_v65_studio.js','/static/PLUGY_final_animated.glb') or p.startswith('/api/v32/content/image'):
+    if p in ('/','/static/dashboard_v65.html','/static/dashboard_v65.css','/static/dashboard_v65_core.js','/static/dashboard_v65_studio.js','/static/plugy_canonical_v72.glb') or p.startswith('/api/v32/content/image'):
         response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
         response.headers['Pragma']='no-cache'
         response.headers['Expires']='0'
@@ -114,13 +113,14 @@ def opportunity_thumbnail_v67(oid:int):
 @app.get('/api/v69/status')
 @app.get('/api/v70/status')
 @app.get('/api/v71/status')
-def status_v71():
+@app.get('/api/v72/status')
+def status_v72():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'71.3',
-      'ui':'standard-product-navigation-v71',
-      'reference_direction':'standard product navigation with restored historical PLUGY V57 head-only mascot',
+      'version':'72.0',
+      'ui':'standard-product-navigation-v72',
+      'reference_direction':'canonical PLUGY head-only model matching the pearl-white plug reference',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -128,9 +128,12 @@ def status_v71():
       'typography':'Archivo + Inter Tight + IBM Plex Mono',
       'legacy_index_served':False,
       'single_mascot':True,
-      'plugy_reference':'historical-v57-head-only',
+      'plugy_reference':'canonical-v72-pearl-plug-head',
       'plugy_expected_sha256':PLUGY_REFERENCE_SHA256,
       'plugy_reference_match':hashlib.sha256(raw).hexdigest()==PLUGY_REFERENCE_SHA256 if raw else False,
+      'plugy_model_path':'/static/plugy_canonical_v72.glb',
+      'plugy_material':RESULT.get('material'),
+      'legacy_model_refs_in_dashboard':sum(DASH.read_text(encoding='utf-8').count(x) for x in ('PLUGY_final_animated.glb','/static/plugy.glb')) if DASH.exists() else -1,
       'plugy_bytes':len(raw),
       'plugy_sha256':hashlib.sha256(raw).hexdigest() if raw else '',
       'plugy_animations':RESULT.get('animations',[]),
