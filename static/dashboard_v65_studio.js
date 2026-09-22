@@ -71,15 +71,37 @@ function parseJSON(txt){txt=String(txt||'').replace(/\x60\x60\x60json|\x60\x60\x
 async function plugyCarousel(){const b=q('#plugyCarouselBtn'),old=b.textContent;b.disabled=true;b.textContent='PLUGY travaille…';const o=currentOpp(),count=Number(q('#studioCount').value||5),facts={title:o?.title||'',summary:o?.summary||q('#studioBrief').value||'',city:o?.city||'',country:o?.country||'',deadline:o?.deadline||'',fee:o?.fee||'',type:o?.type||'',eligibility:o?.eligibility||'',radar_reason:o?.radar_reason||''};const prompt='Crée un carrousel PLUG ART de '+count+' slides. N’invente rien. Utilise uniquement ces faits: '+JSON.stringify(facts)+'. Objectif: '+q('#studioObjective').value+'. Format: '+(q('#studioFormat')?.value||'portrait')+'. Direction artistique: '+(q('#studioBrand')?.value||'plug-clean')+'. Les visuels doivent rester sobres, éditoriaux, lisibles et utiliser des photos officielles quand elles existent. Réponds uniquement en JSON valide: {"slides":[{"kicker":"","title":"","body":"","cta":"","image_prompt":"","layout":"cover|left|top|collage|collage3|grid4|frame|poster|right|minimal|text|artfield|band","theme":"editorial|glass|impact|paper|color|night"}]}. Chaque slide doit être concise et visuelle.';try{const r=await api('/api/v32/plugy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:prompt,page:'content',mode:'deep'})});const p=parseJSON(r.answer);if(!Array.isArray(p.slides)||!p.slides.length)throw new Error('Aucune slide');const base=o?oppImg(o):'';state.slides=p.slides.slice(0,count).map(x=>{const s=mk(x.kicker||'PLUG ART',x.title||'',x.body||'',x.cta||'Découvrir →',base);s.prompt=x.image_prompt||'';s.layout=['cover','left','top','collage','collage3','grid4','frame','poster','right','minimal','text','artfield','band'].includes(x.layout)?x.layout:'top';s.theme=['editorial','glass','impact','paper','color','night'].includes(x.theme)?x.theme:'editorial';return s});while(state.slides.length<count)state.slides.push(mk('À SAVOIR','Point clé '+(state.slides.length+1),'À compléter.','Continuer →',base));state.slide=0;renderStudio();caption();playPlugy('Happy',true)}catch(e){buildSlides();alert('PLUGY a utilisé la structure locale de secours : '+e.message)}finally{b.disabled=false;b.textContent=old}}
 async function improve(){openChat();const box=q('#chatStream');if(box){const d=document.createElement('div');d.className='bot-msg';d.textContent='Je relis le carrousel…';box.appendChild(d)}const text=state.slides.map((s,i)=>(i+1)+'. '+s.title+' — '+s.body).join('\n');try{const r=await api('/api/v32/plugy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'Relis ce carrousel PLUG ART sans inventer d’informations. Donne uniquement les corrections prioritaires slide par slide: '+text,page:'content',mode:'fast'})});const d=document.createElement('div');d.className='bot-msg';d.textContent=r.answer||'Analyse terminée.';box?.appendChild(d)}catch(e){alert(e.message)}}
 function saveDraft(){drafts.unshift({id:Date.now(),name:currentOpp()?.title||state.slides[0]?.title||'Carrousel',slides:JSON.parse(JSON.stringify(state.slides)),caption:q('#captionText').value,format:q('#studioFormat')?.value||'portrait',brand:q('#studioBrand')?.value||'plug-clean',date:new Date().toLocaleString('fr-FR')});drafts=drafts.slice(0,15);store.set('plugart_v65_drafts',drafts);P.renderDashboard();const b=q('#saveDraftBtn'),old=b.textContent;b.textContent='Sauvegardé ✓';setTimeout(()=>b.textContent=old,900)}
-function queueInstagram(){
-  saveDraft();
-  const qkey='plugart_v66_social_queue',queue=store.get(qkey,[]),o=currentOpp(),title=o?.title||state.slides[0]?.title||'Publication PLUG ART';
-  const media_urls=state.slides.map(x=>String(x.image||'').trim()).filter(Boolean).map(u=>/^https?:\/\//i.test(u)?u:(u.startsWith('/')?location.origin+u:'')).filter(Boolean).slice(0,10);
-  queue.unshift({id:Date.now(),title,caption:q('#captionText')?.value||'',status:media_urls.length?'Prêt':'À préparer',scheduled:'',format:q('#studioFormat')?.value||'portrait',media_urls,slide_count:state.slides.length,source_opportunity_id:o?.id||null});
-  store.set(qkey,queue.slice(0,40));P.renderSocial?.();const b=q('#queueInstagramBtn'),old=b?.textContent;if(b){b.textContent=media_urls.length?'Prêt pour Instagram ✓':'Ajouté · génère les visuels';setTimeout(()=>b.textContent=old,1400)}
+async function blobDataURL(blob){return await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||''));r.onerror=reject;r.readAsDataURL(blob)})}
+async function uploadInstagramRender(blob,index){
+  const data_url=await blobDataURL(blob);
+  const r=await api('/api/v87/instagram/upload-render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data_url,index,format:q('#studioFormat')?.value||'portrait'})});
+  return r.url?location.origin+r.url:'';
 }
-async function exportSlide(){
-  const s=slide(),format=q('#studioFormat')?.value||'portrait',W=1080,H=format==='square'?1080:format==='story'?1920:1350,c=document.createElement('canvas');
+async function queueInstagram(){
+  saveDraft();
+  const button=q('#queueInstagramBtn'),old=button?.textContent,qkey='plugart_v66_social_queue',queue=store.get(qkey,[]),o=currentOpp(),title=o?.title||state.slides[0]?.title||'Publication PLUG ART';
+  if(button){button.disabled=true;button.textContent='Préparation Instagram…'}
+  try{
+    const media_urls=[];
+    const total=Math.min(state.slides.length,10);
+    for(let i=0;i<total;i++){
+      if(button)button.textContent='Rendu '+(i+1)+'/'+total;
+      const blob=await renderSlideBlob(i);
+      if(!blob)throw new Error('Rendu image impossible pour la slide '+(i+1));
+      const url=await uploadInstagramRender(blob,i);
+      if(url)media_urls.push(url);
+    }
+    if(!media_urls.length)throw new Error('Aucun visuel final généré');
+    queue.unshift({id:Date.now(),title,caption:q('#captionText')?.value||'',status:'Prêt',scheduled:'',format:q('#studioFormat')?.value||'portrait',media_urls,slide_count:total,source_opportunity_id:o?.id||null,rendered_final:true});
+    store.set(qkey,queue.slice(0,40));P.renderSocial?.();
+    if(button){button.textContent='Prêt pour Instagram ✓';setTimeout(()=>button.textContent=old,1400)}
+  }catch(e){
+    if(button)button.textContent=old;
+    alert('Préparation Instagram : '+e.message);
+  }finally{if(button)button.disabled=false}
+}
+async function renderSlideBlob(index=state.slide){
+  const s=state.slides[index]||slide(),format=q('#studioFormat')?.value||'portrait',W=1080,H=format==='square'?1080:format==='story'?1920:1350,c=document.createElement('canvas');
   c.width=W;c.height=H;
   const x=c.getContext('2d'),dark=['impact','night'].includes(s.theme),bg={editorial:['#f2efe8','#e5e1da'],glass:['#eef5f1','#eadfea'],impact:['#22282a','#3a3f42'],paper:['#f4eee3','#e9dfcf'],night:['#161b22','#25302e'],color:['#d6dcff','#edcee3']}[s.theme]||['#f2efe8','#e5e1da'];
   let g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,bg[0]);g.addColorStop(1,bg[1]);x.fillStyle=g;x.fillRect(0,0,W,H);
@@ -89,7 +111,11 @@ async function exportSlide(){
   x.fillStyle=dark?'#c3cbc7':'#68726f';x.font='400 '+Math.round((format==='story'?34:31)*(s.bodyScale||100)/100)+'px Arial';wrap(x,s.body,72,bodyY,936,format==='story'?48:44,format==='story'?8:5);
   x.fillStyle=dark?'#fff':'#202824';x.font='900 25px Arial';x.textAlign='left';x.fillText('PLUG ART',72,footerY);x.textAlign='right';x.fillText(s.cta||'',1008,footerY);
   await drawFreeLayers(x,s,W,H);
-  const blob=await new Promise(r=>c.toBlob(r,'image/png')),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='PLUG_ART_'+format+'_slide_'+String(state.slide+1).padStart(2,'0')+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)
+  return await new Promise((resolve,reject)=>{try{c.toBlob(b=>b?resolve(b):reject(new Error('Canvas vide')),'image/png')}catch(err){reject(err)}});
+}
+async function exportSlide(){
+  const format=q('#studioFormat')?.value||'portrait',blob=await renderSlideBlob(state.slide),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='PLUG_ART_'+format+'_slide_'+String(state.slide+1).padStart(2,'0')+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
 }
 async function drawFreeLayers(ctx,s,W,H){
   const layers=Array.isArray(s.layers)?s.layers:[];

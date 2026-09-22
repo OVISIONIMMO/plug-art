@@ -2,7 +2,7 @@ from pathlib import Path
 from fastapi import Request, HTTPException
 from fastapi.responses import HTMLResponse, Response, RedirectResponse
 from urllib.parse import urljoin, urlencode
-import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets
+import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64
 import app as core
 import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
@@ -15,7 +15,7 @@ GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='87.20260922.1'
+VERSION='87.20260922.2'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -467,6 +467,44 @@ def artist_work_delete_v86(aid:int,wid:int):
 
 
 # V87 Instagram bridge. Uses Meta Graph API with Facebook Login for Instagram professional accounts.
+SOCIAL_RENDER_DIR=Path(os.getenv('PLUGART_SOCIAL_RENDER_DIR',str(Path(os.getenv('PLUGART_DB','/data/plugart.db')).parent/'instagram-renders')))
+SOCIAL_RENDER_DIR.mkdir(parents=True,exist_ok=True)
+
+@app.post('/api/v87/instagram/upload-render')
+def instagram_upload_render_v87(body:dict):
+    data_url=str((body or {}).get('data_url') or '')
+    if ',' not in data_url or not data_url.startswith('data:image/png;base64,'):
+        raise HTTPException(400,'Rendu PNG invalide.')
+    encoded=data_url.split(',',1)[1]
+    if len(encoded)>18_000_000:
+        raise HTTPException(413,'Rendu trop volumineux.')
+    try:
+        raw=base64.b64decode(encoded,validate=True)
+    except Exception:
+        raise HTTPException(400,'Rendu PNG illisible.')
+    if not raw.startswith(b'\x89PNG\r\n\x1a\n'):
+        raise HTTPException(400,'Le fichier généré n’est pas un PNG valide.')
+    token=hashlib.sha256(raw+str(time.time_ns()).encode()).hexdigest()[:24]
+    name=f'plugart_instagram_{token}.png'
+    (SOCIAL_RENDER_DIR/name).write_bytes(raw)
+    cutoff=time.time()-14*86400
+    try:
+        for old in SOCIAL_RENDER_DIR.glob('plugart_instagram_*.png'):
+            if old.stat().st_mtime<cutoff:
+                old.unlink(missing_ok=True)
+    except Exception:
+        pass
+    return {'ok':True,'url':'/api/v87/instagram/rendered/'+name,'bytes':len(raw)}
+
+@app.get('/api/v87/instagram/rendered/{filename}')
+def instagram_rendered_v87(filename:str):
+    if not re.fullmatch(r'plugart_instagram_[a-f0-9]{24}\.png',filename):
+        raise HTTPException(404,'Fichier introuvable')
+    path=SOCIAL_RENDER_DIR/filename
+    if not path.exists() or not path.is_file():
+        raise HTTPException(404,'Fichier introuvable')
+    return Response(path.read_bytes(),media_type='image/png',headers={'Cache-Control':'public, max-age=1209600, immutable'})
+
 _igc=core.conn()
 _igc.executescript("""
 CREATE TABLE IF NOT EXISTS instagram_connection(
