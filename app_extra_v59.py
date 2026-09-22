@@ -8,14 +8,14 @@ import app_extra_v43 as v43
 from build_plugy_pink_v75 import build_plugy_pink_v75
 
 app=v43.app
-app.version='78.0'
+app.version='79.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'dashboard_v65.html'
 GLB=BASE/'static'/'plugy_pink_v75.glb'
 RESULT=build_plugy_pink_v75(GLB)
 PLUGY_REFERENCE_ANIMATIONS=RESULT.get('animations',[])
 PLUGY_REFERENCE_SHA256=RESULT.get('sha256','')
-VERSION='78.20260922.1'
+VERSION='79.20260922.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -30,15 +30,15 @@ def root_v65():
       'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma':'no-cache',
       'Expires':'0',
-      'X-Plug-Art-Version':'78.0',
-      'X-Plug-Art-UI':'plugy-assistant-runtime-v78'
+      'X-Plug-Art-Version':'79.0',
+      'X-Plug-Art-UI':'plugy-assistant-runtime-v79'
     })
 
 @app.middleware('http')
 async def v65_headers(request:Request,call_next):
     response=await call_next(request)
     p=request.url.path
-    if p in ('/','/static/dashboard_v65.html','/static/dashboard_v65.css','/static/dashboard_v65_core.js','/static/dashboard_v65_studio.js','/static/plugy_assistant_v78.js','/static/plugy_pink_v75.glb') or p.startswith('/api/v32/content/image'):
+    if p in ('/','/static/dashboard_v65.html','/static/dashboard_v65.css','/static/dashboard_v65_core.js','/static/dashboard_v65_studio.js','/static/plugy_assistant_v79.js','/static/plugy_pink_v75.glb') or p.startswith('/api/v32/content/image'):
         response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
         response.headers['Pragma']='no-cache'
         response.headers['Expires']='0'
@@ -119,13 +119,14 @@ def opportunity_thumbnail_v67(oid:int):
 @app.get('/api/v75/status')
 @app.get('/api/v77/status')
 @app.get('/api/v78/status')
-def status_v78():
+@app.get('/api/v79/status')
+def status_v79():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'78.0',
-      'ui':'plugy-assistant-runtime-v78',
-      'reference_direction':'V75 visual identity plus PLUGY runtime with contextual UI actions, voice and mini-mode',
+      'version':'79.0',
+      'ui':'plugy-assistant-runtime-v79',
+      'reference_direction':'V75 visual identity plus reactive listening/thinking/speaking energy layer and contextual movement',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -149,4 +150,4 @@ def status_v78():
       'background':'responsive editorial workspace with simplified standard navigation and direct actions'
     }
 
-print(f"PLUG_ART_V78_READY ui=plugy_assistant_runtime_v78 plugy=pink_lavender_plug_head voice=browser_stt_tts state_machine=on mini=on internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V79_READY ui=plugy_assistant_runtime_v79 plugy=pink_lavender_plug_head voice=browser_stt_tts state_machine=on mini=on internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
