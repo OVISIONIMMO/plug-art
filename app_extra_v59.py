@@ -5,17 +5,17 @@ from urllib.parse import urljoin
 import hashlib,re,time,html as html_lib,requests
 import app as core
 import app_extra_v43 as v43
-from build_plugy_canonical_v72 import build_plugy_canonical_v72
+from build_plugy_glossy_v73 import build_plugy_glossy_v73
 
 app=v43.app
-app.version='72.0'
+app.version='73.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'dashboard_v65.html'
-GLB=BASE/'static'/'plugy_canonical_v72.glb'
-RESULT=build_plugy_canonical_v72(GLB)
+GLB=BASE/'static'/'plugy_glossy_v73.glb'
+RESULT=build_plugy_glossy_v73(GLB)
 PLUGY_REFERENCE_ANIMATIONS=RESULT.get('animations',[])
 PLUGY_REFERENCE_SHA256=RESULT.get('sha256','')
-VERSION='72.20260922.1'
+VERSION='73.20260922.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -30,15 +30,15 @@ def root_v65():
       'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma':'no-cache',
       'Expires':'0',
-      'X-Plug-Art-Version':'72.0',
-      'X-Plug-Art-UI':'standard-product-navigation-v72'
+      'X-Plug-Art-Version':'73.0',
+      'X-Plug-Art-UI':'standard-product-navigation-v73'
     })
 
 @app.middleware('http')
 async def v65_headers(request:Request,call_next):
     response=await call_next(request)
     p=request.url.path
-    if p in ('/','/static/dashboard_v65.html','/static/dashboard_v65.css','/static/dashboard_v65_core.js','/static/dashboard_v65_studio.js','/static/plugy_canonical_v72.glb') or p.startswith('/api/v32/content/image'):
+    if p in ('/','/static/dashboard_v65.html','/static/dashboard_v65.css','/static/dashboard_v65_core.js','/static/dashboard_v65_studio.js','/static/plugy_glossy_v73.glb') or p.startswith('/api/v32/content/image'):
         response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
         response.headers['Pragma']='no-cache'
         response.headers['Expires']='0'
@@ -114,13 +114,14 @@ def opportunity_thumbnail_v67(oid:int):
 @app.get('/api/v70/status')
 @app.get('/api/v71/status')
 @app.get('/api/v72/status')
-def status_v72():
+@app.get('/api/v73/status')
+def status_v73():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'72.0',
-      'ui':'standard-product-navigation-v72',
-      'reference_direction':'canonical PLUGY head-only model matching the pearl-white plug reference',
+      'version':'73.0',
+      'ui':'standard-product-navigation-v73',
+      'reference_direction':'cute ultra-glossy pearl PLUGY head-only model matching the final reference',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -128,10 +129,10 @@ def status_v72():
       'typography':'Archivo + Inter Tight + IBM Plex Mono',
       'legacy_index_served':False,
       'single_mascot':True,
-      'plugy_reference':'canonical-v72-pearl-plug-head',
+      'plugy_reference':'glossy-v73-pearl-plug-head',
       'plugy_expected_sha256':PLUGY_REFERENCE_SHA256,
       'plugy_reference_match':hashlib.sha256(raw).hexdigest()==PLUGY_REFERENCE_SHA256 if raw else False,
-      'plugy_model_path':'/static/plugy_canonical_v72.glb',
+      'plugy_model_path':'/static/plugy_glossy_v73.glb',
       'plugy_material':RESULT.get('material'),
       'legacy_model_refs_in_dashboard':sum(DASH.read_text(encoding='utf-8').count(x) for x in ('PLUGY_final_animated.glb','/static/plugy.glb')) if DASH.exists() else -1,
       'plugy_bytes':len(raw),
@@ -144,4 +145,4 @@ def status_v72():
       'background':'responsive editorial workspace with simplified standard navigation and direct actions'
     }
 
-print(f"PLUG_ART_V71_3_READY ui=standard_product_navigation_v71 plugy=historical_v57_builder_verified internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V73_READY ui=standard_product_navigation_v73 plugy=glossy_cute_pearl_head internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
