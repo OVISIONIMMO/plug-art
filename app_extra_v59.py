@@ -2,20 +2,20 @@ from pathlib import Path
 from fastapi import Request, HTTPException
 from fastapi.responses import HTMLResponse, Response, RedirectResponse
 from urllib.parse import urljoin, urlencode
-import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64
+import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64,hmac
 import app as core
 import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='87.0'
+app.version='88.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'dashboard_v65.html'
 GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='87.20260922.2'
+VERSION='88.20260922.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -30,8 +30,8 @@ def root_v65():
       'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma':'no-cache',
       'Expires':'0',
-      'X-Plug-Art-Version':'87.0',
-      'X-Plug-Art-UI':'internal-control-center-v87'
+      'X-Plug-Art-Version':'88.0',
+      'X-Plug-Art-UI':'internal-control-center-v88'
     })
 
 from fastapi.middleware.gzip import GZipMiddleware
@@ -538,8 +538,8 @@ def _ig_redirect_uri(request:Request):
         return override
     host=os.getenv('RAILWAY_PUBLIC_DOMAIN','').strip()
     if host:
-        return f"https://{host}/api/v87/instagram/callback"
-    return str(request.base_url).rstrip('/')+'/api/v87/instagram/callback'
+        return f"https://{host}/api/v88/instagram/callback"
+    return str(request.base_url).rstrip('/')+'/api/v88/instagram/callback'
 
 def _ig_configured():
     return bool(os.getenv('META_APP_ID','').strip() and os.getenv('META_APP_SECRET','').strip())
@@ -738,6 +738,162 @@ def instagram_publish_v87(body:dict):
         pass
     return {'ok':True,'media_id':media_id,'permalink':permalink,'count':len(urls)}
 
+
+# V88 Instagram control center: setup diagnostics, comments and Meta webhooks.
+_ig88=core.conn()
+_ig88.execute("""CREATE TABLE IF NOT EXISTS instagram_webhook_events(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  object_type TEXT DEFAULT '',
+  event_json TEXT DEFAULT '',
+  received_at TEXT DEFAULT ''
+)""")
+_ig88.commit()
+_ig88.close()
+
+def _ig_app_domain(request:Request):
+    host=os.getenv('RAILWAY_PUBLIC_DOMAIN','').strip()
+    if host:
+        return host
+    return request.url.hostname or ''
+
+def _ig_webhook_url(request:Request):
+    host=os.getenv('RAILWAY_PUBLIC_DOMAIN','').strip()
+    if host:
+        return f"https://{host}/api/v88/meta/webhook"
+    return str(request.base_url).rstrip('/')+'/api/v88/meta/webhook'
+
+def _ig_webhook_token():
+    return os.getenv('META_WEBHOOK_VERIFY_TOKEN','').strip()
+
+@app.get('/api/v88/instagram/status')
+def instagram_status_v88(request:Request):
+    row=_ig_row()
+    app_id=bool(os.getenv('META_APP_ID','').strip())
+    app_secret=bool(os.getenv('META_APP_SECRET','').strip())
+    webhook=bool(_ig_webhook_token())
+    return {
+      'ok':True,
+      'configured':bool(app_id and app_secret),
+      'connected':bool(row.get('ig_user_id') and row.get('page_access_token')),
+      'app_id_configured':app_id,
+      'app_secret_configured':app_secret,
+      'webhook_token_configured':webhook,
+      'username':row.get('username',''),
+      'profile_picture_url':row.get('profile_picture_url',''),
+      'followers_count':row.get('followers_count',0) or 0,
+      'media_count':row.get('media_count',0) or 0,
+      'page_name':row.get('page_name',''),
+      'connected_at':row.get('connected_at',''),
+      'graph_version':_ig_graph_version(),
+      'app_domain':_ig_app_domain(request),
+      'redirect_uri':_ig_redirect_uri(request),
+      'webhook_url':_ig_webhook_url(request),
+      'webhook_verify_token':_ig_webhook_token(),
+      'required_variables':['META_APP_ID','META_APP_SECRET','META_GRAPH_VERSION','META_WEBHOOK_VERIFY_TOKEN'],
+      'required_permissions':['pages_show_list','instagram_basic','instagram_content_publish','pages_read_engagement','instagram_manage_comments'],
+      'optional_permissions':['instagram_manage_insights'],
+      'connection_mode':'facebook-login-professional-account'
+    }
+
+@app.get('/api/v88/instagram/login')
+def instagram_login_v88(request:Request):
+    return instagram_login_v87(request)
+
+@app.get('/api/v88/instagram/callback')
+def instagram_callback_v88(request:Request,code:str='',state:str='',error:str='',error_description:str=''):
+    return instagram_callback_v87(request,code,state,error,error_description)
+
+@app.post('/api/v88/instagram/disconnect')
+def instagram_disconnect_v88():
+    return instagram_disconnect_v87()
+
+@app.get('/api/v88/instagram/media')
+def instagram_media_v88(limit:int=30):
+    return instagram_media_v87(limit)
+
+@app.post('/api/v88/instagram/publish')
+def instagram_publish_v88(body:dict):
+    return instagram_publish_v87(body)
+
+@app.get('/api/v88/instagram/media/{media_id}/comments')
+def instagram_comments_v88(media_id:str):
+    row=_ig_row()
+    token=row.get('page_access_token','')
+    if not token:
+        raise HTTPException(409,'Instagram n’est pas connecté.')
+    data=_ig_request('GET',f"{media_id}/comments",token,params={
+      'fields':'id,text,username,timestamp,like_count',
+      'limit':50
+    })
+    return {'ok':True,'items':data.get('data') or []}
+
+@app.post('/api/v88/instagram/comments/{comment_id}/reply')
+def instagram_reply_comment_v88(comment_id:str,body:dict):
+    row=_ig_row()
+    token=row.get('page_access_token','')
+    if not token:
+        raise HTTPException(409,'Instagram n’est pas connecté.')
+    message=str((body or {}).get('message') or '').strip()
+    if not message:
+        raise HTTPException(400,'Réponse vide.')
+    result=_ig_request('POST',f"{comment_id}/replies",token,data={'message':message[:1000]},timeout=25)
+    return {'ok':True,'id':result.get('id','')}
+
+@app.get('/api/v88/instagram/diagnostic')
+def instagram_diagnostic_v88(request:Request):
+    row=_ig_row()
+    checks=[
+      {'label':'META_APP_ID','ok':bool(os.getenv('META_APP_ID','').strip())},
+      {'label':'META_APP_SECRET','ok':bool(os.getenv('META_APP_SECRET','').strip())},
+      {'label':'OAuth Redirect URI','ok':bool(_ig_redirect_uri(request))},
+      {'label':'Webhook Verify Token','ok':bool(_ig_webhook_token())},
+      {'label':'Compte Instagram autorisé','ok':bool(row.get('ig_user_id') and row.get('page_access_token'))}
+    ]
+    profile_ok=False
+    if checks[-1]['ok']:
+        try:
+            _ig_request('GET',str(row.get('ig_user_id')),row.get('page_access_token'),params={'fields':'id,username'},timeout=12)
+            profile_ok=True
+        except Exception:
+            profile_ok=False
+        checks.append({'label':'Jeton Meta valide','ok':profile_ok})
+    return {'ok':all(x['ok'] for x in checks[:4]),'checks':checks,'graph_version':_ig_graph_version()}
+
+@app.get('/api/v88/meta/webhook')
+def meta_webhook_verify_v88(request:Request):
+    mode=request.query_params.get('hub.mode','')
+    token=request.query_params.get('hub.verify_token','')
+    challenge=request.query_params.get('hub.challenge','')
+    expected=_ig_webhook_token()
+    if mode=='subscribe' and expected and hmac.compare_digest(token,expected):
+        return Response(content=challenge,media_type='text/plain')
+    raise HTTPException(403,'Webhook Meta non vérifié.')
+
+@app.post('/api/v88/meta/webhook')
+async def meta_webhook_receive_v88(request:Request):
+    raw=await request.body()
+    secret=os.getenv('META_APP_SECRET','').encode()
+    signature=request.headers.get('x-hub-signature-256','')
+    if secret and signature.startswith('sha256='):
+        expected='sha256='+hmac.new(secret,raw,hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(signature,expected):
+            raise HTTPException(403,'Signature Meta invalide.')
+    try:
+        payload=json.loads(raw.decode('utf-8') or '{}')
+    except Exception:
+        raise HTTPException(400,'Payload webhook invalide.')
+    c=core.conn()
+    c.execute('insert into instagram_webhook_events(object_type,event_json,received_at) values(?,?,?)',
+              (str(payload.get('object') or ''),json.dumps(payload,ensure_ascii=False)[:120000],time.strftime('%Y-%m-%dT%H:%M:%S')))
+    c.commit()
+    c.close()
+    return {'ok':True}
+
+@app.get('/api/v88/meta/webhook/events')
+def meta_webhook_events_v88(limit:int=40):
+    limit=max(1,min(int(limit or 40),100))
+    return core.rows('select id,object_type,event_json,received_at from instagram_webhook_events order by id desc limit ?',(limit,))
+
 @app.get('/api/v65/status')
 @app.get('/api/v66/status')
 @app.get('/api/v67/status')
@@ -760,13 +916,14 @@ def instagram_publish_v87(body:dict):
 @app.get('/api/v85/status')
 @app.get('/api/v86/status')
 @app.get('/api/v87/status')
-def status_v87():
+@app.get('/api/v88/status')
+def status_v88():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'87.0',
-      'ui':'internal-control-center-v87',
-      'reference_direction':'V87 fixes PLUGY hero rendering and viewer scope; adds first-class Instagram OAuth, media import and publishing bridge',
+      'version':'88.0',
+      'ui':'internal-control-center-v88',
+      'reference_direction':'V88 Instagram control center with live feed, planner, comments, Meta setup diagnostics and webhooks; PLUGY social context',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -792,4 +949,4 @@ def status_v87():
       'background':'responsive editorial workspace with simplified standard navigation and direct actions'
     }
 
-print(f"PLUG_ART_V87_READY ui=internal_control_center plugy=hero_visible viewer_scope=fixed instagram=oauth_bridge graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V88_READY ui=internal_control_center plugy=hero_visible viewer_scope=fixed instagram=control_center graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)

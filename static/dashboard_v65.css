@@ -1287,3 +1287,69 @@ body[data-view="dashboard"] .plugy-float[data-mode="hero"]{z-index:79}
 .ig-setup-steps{display:grid;gap:8px;margin:12px 0}.ig-setup-steps p{margin:0}.ig-setup-steps code{display:block;padding:8px;border-radius:8px;background:#f3f5f7;overflow-wrap:anywhere}.ig-doc-link{display:inline-flex;margin-top:8px;padding:9px 11px;border-radius:9px;background:#171d27;color:#fff;text-decoration:none;font-size:8px}
 @media(max-width:1180px){.social-grid-v87{grid-template-columns:1fr}.instagram-media-card{grid-column:auto}.instagram-media{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:720px){.instagram-bridge{align-items:flex-start;flex-direction:column}.instagram-media{grid-template-columns:1fr 1fr}.social-item-controls{grid-template-columns:1fr 1fr}.social-publish-btn{min-height:32px}}
+
+/* V88 — Instagram control center */
+.instagram-command{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:18px 20px;margin-bottom:10px;border-radius:17px!important;background:linear-gradient(115deg,rgba(255,255,255,.96),rgba(248,244,255,.96) 50%,rgba(239,247,255,.96))!important;border:1px solid #e2e6ee!important}
+.instagram-command-main small{font:650 7px var(--mono);letter-spacing:.12em;color:#7a55c7}.instagram-command-main h2{margin:5px 0 6px;font:790 21px/1.02 var(--display);letter-spacing:-.95px;color:#161c25}.instagram-command-main p{max-width:760px;margin:0;font-size:9px;line-height:1.55;color:#727d89}
+.instagram-command-state{display:flex;align-items:center;gap:7px;flex:0 0 auto}.instagram-command-state button{border:1px solid #dde2ea;background:#fff;border-radius:10px;padding:8px 10px;font:650 8px var(--ui);color:#45505d}
+
+.instagram-tabs{display:flex;gap:3px;align-items:center;padding:4px;margin-bottom:10px;border-radius:13px!important;overflow-x:auto;scrollbar-width:none}.instagram-tabs::-webkit-scrollbar{display:none}
+.instagram-tabs button{border:0;background:transparent;padding:9px 12px;border-radius:9px;font:650 8px var(--ui);color:#737d89;white-space:nowrap}.instagram-tabs button.active{background:#171c24;color:#fff;box-shadow:0 4px 12px rgba(22,28,36,.11)}
+.instagram-panel{display:none}.instagram-panel.active{display:block;animation:igPanelIn .14s ease}@keyframes igPanelIn{from{opacity:.32;transform:translateY(3px)}to{opacity:1;transform:none}}
+.ig-card{padding:15px;border-radius:16px!important;min-width:0}.instagram-overview-grid{display:grid;grid-template-columns:.95fr 1.05fr;gap:10px}.ig-performance-card,.ig-mini-feed-card{min-height:280px}
+.ig-account-card,.ig-actions-card{min-height:235px}
+
+.ig-create-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.ig-create-grid button{display:grid;grid-template-columns:36px 1fr;grid-template-rows:auto auto;column-gap:8px;text-align:left;border:1px solid #e5e9ef;background:#fafbfc;border-radius:12px;padding:11px;color:#242c37}.ig-create-grid button:hover{background:#fff;border-color:#d8dee7;transform:translateY(-1px)}
+.ig-create-grid b{grid-row:1/3;width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#edf2ff,#f5e8f6);display:grid;place-items:center;font-size:14px;color:#6655b1}.ig-create-grid strong{font-size:9px}.ig-create-grid span{font-size:7px;color:#8a94a0;margin-top:2px}
+
+.ig-performance-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.ig-performance-kpis div{padding:10px;border:1px solid #e8ecf1;background:#fafbfc;border-radius:11px}.ig-performance-kpis b{display:block;font:800 20px var(--display);letter-spacing:-.7px}.ig-performance-kpis span{display:block;margin-top:3px;font-size:7px;color:#84909b}
+.ig-top-post{margin-top:10px;padding:10px;border-radius:11px;background:#f5f6f8;font-size:8px;color:#67727e;line-height:1.45}.ig-top-post strong{display:block;color:#252c35;margin-bottom:3px}
+
+.instagram-feed-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;background:#eef1f4;border-radius:13px;overflow:hidden;min-height:220px}.instagram-feed-grid.mini{min-height:250px}.instagram-feed-grid.future{min-height:300px}
+.ig-feed-tile{position:relative;aspect-ratio:1/1;background:#e8ebef;overflow:hidden;cursor:pointer}.ig-feed-tile img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .18s ease}.ig-feed-tile:hover img{transform:scale(1.025)}
+.ig-feed-tile:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 52%,rgba(10,15,20,.58));opacity:0;transition:opacity .18s}.ig-feed-tile:hover:after{opacity:1}
+.ig-feed-tile .ig-tile-meta{position:absolute;left:7px;right:7px;bottom:6px;z-index:2;display:flex;justify-content:space-between;color:#fff;font-size:7px;opacity:0}.ig-feed-tile:hover .ig-tile-meta{opacity:1}
+.ig-feed-tile .ig-type{position:absolute;right:6px;top:6px;z-index:2;border-radius:7px;padding:4px 5px;background:rgba(12,18,25,.62);color:#fff;font:600 6px var(--mono)}
+.ig-feed-tile.planned{outline:2px dashed rgba(119,82,209,.55);outline-offset:-3px}.ig-feed-tile.planned:before{content:"PLANIFIÉ";position:absolute;left:6px;top:6px;z-index:3;padding:4px 5px;border-radius:6px;background:#765ad0;color:#fff;font:650 6px var(--mono)}
+.instagram-feed-grid .empty-line{grid-column:1/-1;align-self:center;background:#fff;margin:8px;border-radius:10px}
+
+.ig-feed-layout{display:grid;grid-template-columns:minmax(0,1.55fr) 330px;gap:10px}.ig-feed-main{min-height:720px}.ig-feed-side{position:sticky;top:92px;height:max-content}
+.ig-feed-controls{display:flex;align-items:center;gap:4px}.ig-feed-controls button,.ig-feed-controls select{border:1px solid #e3e7ed;background:#fff;border-radius:8px;padding:7px 8px;font-size:7px;color:#697481}.ig-feed-controls button.active{background:#20262f;color:#fff;border-color:#20262f}
+.ig-feed-analysis{display:grid;gap:8px;font-size:9px;line-height:1.55;color:#687480}.ig-feed-analysis .analysis-row{padding:9px;border-radius:10px;background:#f7f8fa;border:1px solid #e9edf2}.ig-feed-analysis b{color:#232b35}
+
+.ig-planner-grid{display:grid;grid-template-columns:1.4fr .8fr;gap:10px}.ig-queue-card{grid-row:span 2;min-height:620px}.ig-calendar-card{min-height:305px}
+.instagram-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.ig-day{min-height:78px;border:1px solid #e8ebf0;border-radius:10px;padding:7px;background:#fafbfc}.ig-day.today{border-color:#9b83e0;background:#faf8ff}.ig-day strong{display:block;font-size:8px}.ig-day span{font-size:6px;color:#89939e}.ig-day i{display:block;width:7px;height:7px;border-radius:50%;background:#785fd1;margin-top:7px}
+.ig-schedule-tools{display:flex;gap:5px;margin-top:9px}.ig-schedule-tools button{flex:1;border:1px solid #e3e7ed;background:#fff;border-radius:8px;padding:7px;font-size:7px}
+.social-item-controls{grid-template-columns:92px 145px 58px 28px}.social-item-controls input{min-width:0}
+
+.ig-comments-layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:10px}.ig-comment-media-list,.ig-comments-list{display:grid;gap:6px;max-height:690px;overflow:auto}
+.ig-comment-media{display:grid;grid-template-columns:48px 1fr auto;gap:8px;align-items:center;border:1px solid #e6eaf0;background:#fafbfc;border-radius:11px;padding:7px;text-align:left}.ig-comment-media.active{border-color:#8068d3;background:#f8f5ff}.ig-comment-media img{width:48px;height:48px;border-radius:8px;object-fit:cover}.ig-comment-media strong{display:block;font-size:8px}.ig-comment-media span{font-size:7px;color:#8a94a0}
+.ig-comment{padding:10px;border:1px solid #e7ebf0;background:#fafbfc;border-radius:11px}.ig-comment-head{display:flex;justify-content:space-between;gap:8px}.ig-comment-head strong{font-size:8px}.ig-comment-head span{font-size:7px;color:#8b95a0}.ig-comment p{font-size:9px;line-height:1.45;margin:6px 0;color:#4f5a66}.ig-comment-actions{display:flex;gap:5px}.ig-comment-actions button{border:0;border-radius:7px;padding:6px 7px;background:#eef1f5;font-size:7px;color:#56616d}
+.ig-comment-reply{display:flex;gap:5px;margin-top:7px}.ig-comment-reply input{flex:1;border:1px solid #e1e5eb;border-radius:8px;padding:7px;font-size:8px}.ig-comment-reply button{border:0;border-radius:8px;background:#20262f;color:#fff;padding:7px 9px;font-size:7px}
+
+.ig-setup-layout{display:grid;grid-template-columns:1.1fr .9fr;gap:10px}.ig-setup-card{grid-row:span 2;min-height:500px}
+.ig-setup-checklist{display:grid;gap:7px}.ig-setup-step{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:10px;border:1px solid #e7ebf0;border-radius:11px;background:#fafbfc}.ig-setup-step>i{width:28px;height:28px;border-radius:9px;background:#edf0f4;display:grid;place-items:center;font:750 9px var(--mono);font-style:normal;color:#7f8995}.ig-setup-step.done>i{background:#e5f6ed;color:#26815a}.ig-setup-step strong,.ig-setup-step span{display:block}.ig-setup-step strong{font-size:9px}.ig-setup-step span{font-size:7px;color:#87919d;margin-top:2px}.ig-setup-step b{font:650 7px var(--mono);color:#a26b21}.ig-setup-step.done b{color:#31805d}
+.ig-setup-actions{display:flex;gap:7px;margin-top:12px}.ig-setup-actions button,.ig-setup-actions a{border:1px solid #e1e5eb;border-radius:9px;background:#fff;color:#4f5965;text-decoration:none;padding:9px 10px;font-size:8px}.ig-setup-actions .primary{background:#171d26;color:#fff;border-color:#171d26}
+.ig-copy-stack{display:grid;gap:9px}.ig-copy-stack label{font:550 7px var(--mono);color:#87919c}.ig-copy-stack label>div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px;margin-top:4px}.ig-copy-stack code{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:8px;border-radius:8px;background:#f5f7f9;color:#4d5865;font-size:7px}.ig-copy-stack button{border:0;border-radius:8px;background:#eef1f4;padding:7px;font-size:7px}
+.ig-permission-list{display:flex;flex-wrap:wrap;gap:5px}.ig-permission-list code{padding:6px 7px;border-radius:7px;background:#f3effc;color:#6f54ae;font-size:7px}.ig-note{font-size:8px;line-height:1.55;color:#7f8995;margin-top:12px}
+.ig-meta-diagnostic{display:grid;gap:6px}.ig-diag-row{display:flex;justify-content:space-between;gap:10px;padding:8px;border-radius:9px;background:#f7f8fa;font-size:8px}.ig-diag-row b.ok{color:#21805a}.ig-diag-row b.wait{color:#a66b23}
+
+.ig-hidden-compat{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;opacity:0!important;pointer-events:none!important}
+.ig-toolbox{display:grid;grid-template-columns:1fr 1fr;gap:7px}.ig-toolbox button{border:1px solid #e5e9ef;background:#fafbfc;border-radius:10px;padding:9px;font-size:8px;text-align:left}
+.ig-tool-output{margin-top:8px;width:100%;min-height:120px;border:1px solid #e3e7ed;border-radius:10px;background:#fafbfc;padding:9px;font-size:8px;resize:vertical}
+
+@media(max-width:1280px){
+  .instagram-overview-grid,.ig-setup-layout{grid-template-columns:1fr}
+  .ig-feed-layout{grid-template-columns:minmax(0,1fr) 280px}
+  .ig-performance-kpis{grid-template-columns:1fr 1fr}
+}
+@media(max-width:980px){
+  .ig-feed-layout,.ig-planner-grid,.ig-comments-layout{grid-template-columns:1fr}
+  .ig-queue-card{grid-row:auto}.ig-feed-side{position:static}.instagram-calendar{grid-template-columns:repeat(4,1fr)}
+}
+@media(max-width:720px){
+  .instagram-command{align-items:flex-start;flex-direction:column}.instagram-command-state{width:100%;justify-content:space-between}
+  .instagram-overview-grid{grid-template-columns:1fr}.ig-create-grid{grid-template-columns:1fr 1fr}.instagram-feed-grid{gap:2px}
+  .ig-performance-kpis{grid-template-columns:1fr 1fr}.instagram-calendar{grid-template-columns:repeat(2,1fr)}
+  .ig-feed-controls{flex-wrap:wrap}.ig-feed-controls select{width:100%}.social-item-controls{grid-template-columns:1fr 1fr}
+}

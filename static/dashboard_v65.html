@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/dashboard_v65.css?v=87.20260922.2">
+<link rel="stylesheet" href="/static/dashboard_v65.css?v=88.20260922.1">
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
 </head>
 <body>
@@ -283,60 +283,186 @@
     <div class="section-bar">
       <h1>Instagram</h1>
       <div class="section-actions">
-        <button class="glass-button" id="instagramStudioBridge">Créer dans le Studio</button>
+        <button class="glass-button" id="instagramQuickCreate">＋ Créer</button>
         <button class="glass-button" id="instagramRefresh">Actualiser</button>
-        <button class="glass-button primary" id="addLatestDraft">Ajouter un brouillon</button>
+        <button class="glass-button primary" id="instagramConnectTop">Connecter Meta</button>
       </div>
     </div>
 
-    <div class="instagram-bridge glass">
-      <div>
-        <small>PONT PLUG ART ↔ INSTAGRAM</small>
-        <h2>Création, validation et publication au même endroit.</h2>
-        <p>Le Studio prépare les contenus. La file Instagram les contrôle. PLUGY peut t’aider à écrire, organiser et retrouver les publications sans poster à ta place par accident.</p>
+    <div class="instagram-command glass">
+      <div class="instagram-command-main">
+        <small>PLUG ART SOCIAL CONTROL</small>
+        <h2>Ton feed, tes contenus et Meta dans le même tableau de bord.</h2>
+        <p>Prépare dans le Studio, prévisualise le feed, programme la file, contrôle les commentaires et publie depuis PLUG ART.</p>
       </div>
-      <span id="instagramConnectionBadge" class="instagram-connection-badge">Instagram à configurer</span>
+      <div class="instagram-command-state">
+        <span id="instagramConnectionBadge" class="instagram-connection-badge">Instagram à configurer</span>
+        <button id="instagramOpenSetup">Configuration Meta</button>
+      </div>
     </div>
 
-    <div class="social-grid social-grid-v87">
-      <article class="social-card instagram-account-card glass">
-        <div class="panel-title"><h2>Compte</h2><span>Meta Graph API</span></div>
-        <div id="instagramAccount"></div>
-      </article>
+    <nav class="instagram-tabs glass" aria-label="Rubriques Instagram">
+      <button class="active" data-ig-panel="overview">Vue d’ensemble</button>
+      <button data-ig-panel="feed">Feed</button>
+      <button data-ig-panel="planner">Planning</button>
+      <button data-ig-panel="comments">Commentaires</button>
+      <button data-ig-panel="setup">Connexion Meta</button>
+    </nav>
 
-      <article class="social-card social-queue-card glass">
-        <div class="panel-title"><h2>File de publication</h2><span>Studio → Instagram</span></div>
-        <div class="social-kpis"><div><b id="socialTotal">0</b><span>Total</span></div><div><b id="socialReady">0</b><span>Prêtes</span></div><div><b id="socialPublished">0</b><span>Publiées</span></div></div>
-        <div id="socialQueue" class="social-queue"></div>
-      </article>
+    <div class="instagram-panel active" id="ig-panel-overview">
+      <div class="instagram-overview-grid">
+        <article class="ig-card ig-account-card glass">
+          <div class="panel-title"><h2>Compte</h2><span>Meta Graph API</span></div>
+          <div id="instagramAccount"></div>
+        </article>
 
-      <article class="social-card instagram-media-card glass">
-        <div class="panel-title"><h2>Derniers posts</h2><span>Compte connecté</span></div>
-        <div id="instagramMedia" class="instagram-media"><div class="empty-line">Connecte Instagram pour afficher les dernières publications.</div></div>
-      </article>
+        <article class="ig-card ig-actions-card glass">
+          <div class="panel-title"><h2>Créer rapidement</h2><span>Studio PLUG ART</span></div>
+          <div class="ig-create-grid">
+            <button data-ig-create="carousel"><b>▦</b><strong>Carrousel</strong><span>4:5 · jusqu’à 10 slides</span></button>
+            <button data-ig-create="post"><b>□</b><strong>Publication</strong><span>4:5 ou carré</span></button>
+            <button data-ig-create="story"><b>▯</b><strong>Story</strong><span>9:16 · export rapide</span></button>
+            <button data-ig-create="plugy"><b>✦</b><strong>Avec PLUGY</strong><span>Brief → contenu</span></button>
+          </div>
+        </article>
 
-      <article class="social-card glass">
-        <div class="panel-title"><h2>PLUGY · Contenu</h2><span>Légende + hashtags</span></div>
-        <label>Brief<textarea id="socialBrief" placeholder="Open call, artiste, exposition, annonce…"></textarea></label>
-        <button class="wide-action ai" id="socialKitBtn">✦ Générer légende + hashtags</button>
-        <textarea id="socialKitOutput" class="social-output" placeholder="Le kit apparaîtra ici."></textarea>
-      </article>
+        <article class="ig-card ig-performance-card glass">
+          <div class="panel-title"><h2>Performance récente</h2><span>Derniers contenus chargés</span></div>
+          <div class="ig-performance-kpis">
+            <div><b id="igPerfPosts">0</b><span>posts analysés</span></div>
+            <div><b id="igPerfLikes">0</b><span>likes</span></div>
+            <div><b id="igPerfComments">0</b><span>commentaires</span></div>
+            <div><b id="igPerfAvg">0</b><span>interactions / post</span></div>
+          </div>
+          <div id="igTopPost" class="ig-top-post"><span>Connecte le compte pour analyser le feed.</span></div>
+        </article>
 
-      <article class="social-card glass">
-        <div class="panel-title"><h2>Checklist avant publication</h2></div>
-        <div id="socialChecklist" class="social-checklist">
-          <label><input type="checkbox" data-social-check="source"> Source officielle vérifiée</label>
-          <label><input type="checkbox" data-social-check="deadline"> Deadline confirmée</label>
-          <label><input type="checkbox" data-social-check="image"> Image réelle / officielle</label>
-          <label><input type="checkbox" data-social-check="cta"> CTA PLUG présent</label>
-          <label><input type="checkbox" data-social-check="format"> Format Instagram contrôlé</label>
-        </div>
-        <div class="brand-rules compact">
-          <span>CTA : Commente PLUG 🔌 pour être branché et recevoir le lien de candidature</span>
-          <span>Photos officielles dès qu’elles existent</span>
-          <span>Carrousels lisibles avant d’être décoratifs</span>
-        </div>
-      </article>
+        <article class="ig-card ig-mini-feed-card glass">
+          <div class="panel-title"><h2>Aperçu du feed</h2><button data-ig-go="feed">Ouvrir le feed</button></div>
+          <div id="instagramFeedMini" class="instagram-feed-grid mini"><div class="empty-line">Le feed apparaîtra ici après connexion.</div></div>
+        </article>
+
+        <article class="ig-card ig-content-tools-card glass">
+          <div class="panel-title"><h2>Outils contenu</h2><span>PLUGY + raccourcis</span></div>
+          <label class="ig-brief-label">Brief<textarea id="socialBrief" placeholder="Exposition, artiste, open call, annonce…"></textarea></label>
+          <div class="ig-toolbox">
+            <button id="socialKitBtn">✦ Légende + hashtags</button>
+            <button id="igRewriteShort">Version courte</button>
+            <button id="igAddCTA">Ajouter CTA PLUG</button>
+            <button id="igCopyCaption">Copier le texte</button>
+          </div>
+          <textarea id="socialKitOutput" class="ig-tool-output" placeholder="Le résultat PLUGY apparaîtra ici."></textarea>
+        </article>
+      </div>
+    </div>
+
+    <div class="instagram-panel" id="ig-panel-feed">
+      <div class="ig-feed-layout">
+        <article class="ig-card ig-feed-main glass">
+          <div class="panel-title">
+            <div><h2>Feed Instagram</h2><span id="igFeedIdentity">Compte non connecté</span></div>
+            <div class="ig-feed-controls">
+              <button class="active" data-feed-view="actual">Actuel</button>
+              <button data-feed-view="future">Avec prochains posts</button>
+              <select id="igFeedFilter"><option value="">Tous</option><option value="IMAGE">Images</option><option value="CAROUSEL_ALBUM">Carrousels</option><option value="VIDEO">Vidéos / Reels</option></select>
+            </div>
+          </div>
+          <div id="instagramFeed" class="instagram-feed-grid"><div class="empty-line">Connecte Instagram pour afficher directement ton feed.</div></div>
+        </article>
+
+        <aside class="ig-card ig-feed-side glass">
+          <div class="panel-title"><h2>Lecture du feed</h2><span>PLUGY</span></div>
+          <div id="igFeedAnalysis" class="ig-feed-analysis">
+            <p>PLUGY utilisera le contenu chargé pour résumer les formats, les interactions et les rythmes de publication.</p>
+          </div>
+          <button class="wide-action ai" id="igAskPlugyFeed">✦ Analyser mon feed</button>
+          <button class="wide-action" id="igCopyFeedPlan">Copier le prochain plan</button>
+        </aside>
+      </div>
+    </div>
+
+    <div class="instagram-panel" id="ig-panel-planner">
+      <div class="ig-planner-grid">
+        <article class="ig-card ig-queue-card glass">
+          <div class="panel-title"><h2>File de publication</h2><span>Studio → Instagram</span></div>
+          <div class="social-kpis"><div><b id="socialTotal">0</b><span>Total</span></div><div><b id="socialReady">0</b><span>Prêtes</span></div><div><b id="socialPublished">0</b><span>Publiées</span></div></div>
+          <div id="socialQueue" class="social-queue"></div>
+        </article>
+
+        <article class="ig-card ig-calendar-card glass">
+          <div class="panel-title"><h2>Planning</h2><span>7 prochains jours</span></div>
+          <div id="instagramCalendar" class="instagram-calendar"></div>
+          <div class="ig-schedule-tools">
+            <button id="igScheduleMorning">Matin</button>
+            <button id="igScheduleNoon">Midi</button>
+            <button id="igScheduleEvening">Soir</button>
+          </div>
+        </article>
+
+        <article class="ig-card glass">
+          <div class="panel-title"><h2>Prévisualisation future</h2><span>Feed + brouillons</span></div>
+          <div id="instagramFutureFeed" class="instagram-feed-grid future"><div class="empty-line">Ajoute un contenu depuis le Studio.</div></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="instagram-panel" id="ig-panel-comments">
+      <div class="ig-comments-layout">
+        <article class="ig-card glass">
+          <div class="panel-title"><h2>Publications</h2><span>Choisis un post</span></div>
+          <div id="igCommentMediaList" class="ig-comment-media-list"><div class="empty-line">Connecte Instagram.</div></div>
+        </article>
+        <article class="ig-card glass">
+          <div class="panel-title"><h2>Commentaires</h2><button id="igRefreshComments">Actualiser</button></div>
+          <div id="igCommentsList" class="ig-comments-list"><div class="empty-line">Sélectionne une publication.</div></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="instagram-panel" id="ig-panel-setup">
+      <div class="ig-setup-layout">
+        <article class="ig-card ig-setup-card glass">
+          <div class="panel-title"><h2>Connexion Meta for Developers</h2><span id="igSetupProgress">0/5</span></div>
+          <div id="igSetupChecklist" class="ig-setup-checklist"></div>
+          <div class="ig-setup-actions">
+            <button class="primary" id="instagramConnect">Connecter Instagram</button>
+            <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta for Developers ↗</a>
+          </div>
+        </article>
+
+        <article class="ig-card glass">
+          <div class="panel-title"><h2>Valeurs à copier dans Meta</h2><span>Production</span></div>
+          <div class="ig-copy-stack">
+            <label>Domaine de l’app<div><code id="igAppDomain">—</code><button data-copy-id="igAppDomain">Copier</button></div></label>
+            <label>OAuth Redirect URI<div><code id="igRedirectUri">—</code><button data-copy-id="igRedirectUri">Copier</button></div></label>
+            <label>Webhook Callback URL<div><code id="igWebhookUrl">—</code><button data-copy-id="igWebhookUrl">Copier</button></div></label>
+            <label>Webhook Verify Token<div><code id="igWebhookToken">—</code><button data-copy-id="igWebhookToken">Copier</button></div></label>
+          </div>
+        </article>
+
+        <article class="ig-card glass">
+          <div class="panel-title"><h2>Permissions utilisées</h2><span>Facebook Login</span></div>
+          <div id="igPermissionList" class="ig-permission-list"></div>
+          <p class="ig-note">Le flux actuel utilise un compte Instagram professionnel relié à une Page Facebook. La publication directe d’images et carrousels passe par l’API officielle Meta.</p>
+        </article>
+
+        <article class="ig-card glass">
+          <div class="panel-title"><h2>Diagnostic</h2><button id="igTestMeta">Tester</button></div>
+          <div id="igMetaDiagnostic" class="ig-meta-diagnostic"><span>Le diagnostic vérifiera la configuration et la connexion du compte.</span></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="ig-hidden-compat" aria-hidden="true">
+      <button id="instagramStudioBridge"></button><button id="addLatestDraft"></button>
+      <div id="instagramMedia"></div>
+      <div id="socialChecklist">
+        <label><input type="checkbox" data-social-check="source"></label>
+        <label><input type="checkbox" data-social-check="deadline"></label>
+        <label><input type="checkbox" data-social-check="image"></label>
+        <label><input type="checkbox" data-social-check="cta"></label>
+        <label><input type="checkbox" data-social-check="format"></label>
+      </div>
     </div>
   </section>
 
@@ -361,7 +487,7 @@
 
 <div class="plugy-float" id="plugyFloat" data-mode="hero">
   <div class="plugy-float-visual" id="plugyFloatVisual" data-plugy-state="idle" role="button" tabindex="0" aria-label="PLUGY, double-cliquer ou maintenir pour parler">
-    <model-viewer id="plugyFloatModel" src="/static/plugy_official_v84.glb?v=87.20260922.2" alt="PLUGY, assistant officiel PLUG ART nacré blanc rose aux reflets violet cyan" camera-controls auto-rotate auto-rotate-delay="1250" rotation-per-second="2.7deg" camera-orbit="-7deg 77deg 2.90m" camera-target="0m .18m 0m" field-of-view="25deg" interaction-prompt="none" disable-pan disable-zoom shadow-intensity=".19" shadow-softness=".98" environment-image="neutral" exposure="1.18" tone-mapping="commerce" loading="eager" reveal="auto"></model-viewer><div class="plugy-model-fallback"><strong>PLUGY</strong><span>Assistant PLUG ART</span></div>
+    <model-viewer id="plugyFloatModel" src="/static/plugy_official_v84.glb?v=88.20260922.1" alt="PLUGY, assistant officiel PLUG ART nacré blanc rose aux reflets violet cyan" camera-controls auto-rotate auto-rotate-delay="1250" rotation-per-second="2.7deg" camera-orbit="-7deg 77deg 2.90m" camera-target="0m .18m 0m" field-of-view="25deg" interaction-prompt="none" disable-pan disable-zoom shadow-intensity=".19" shadow-softness=".98" environment-image="neutral" exposure="1.18" tone-mapping="commerce" loading="eager" reveal="auto"></model-viewer><div class="plugy-model-fallback"><strong>PLUGY</strong><span>Assistant PLUG ART</span></div>
   </div>
   <button class="plugy-float-voice" id="plugyFloatVoice" aria-label="Parler à PLUGY">⌁</button>
 </div>
@@ -376,11 +502,11 @@
 </div>
 
 <div class="modal" id="simpleModal"><div class="modal-card"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
-<script defer src="/static/dashboard_v65_core.js?v=87.20260922.2"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=87.20260922.2"></script>\n<script defer src="/static/plugy_assistant_v87.js?v=87.20260922.2"></script>
-<script defer src="/static/dashboard_v86_map.js?v=87.20260922.2"></script>
-<script defer src="/static/dashboard_v86_people.js?v=87.20260922.2"></script>
-<script defer src="/static/dashboard_v86_editor.js?v=87.20260922.2"></script>
-<script defer src="/static/dashboard_v86_quality.js?v=87.20260922.2"></script>
-<script defer src="/static/dashboard_v87_instagram.js?v=87.20260922.2"></script>
+<script defer src="/static/dashboard_v65_core.js?v=88.20260922.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=88.20260922.1"></script>\n<script defer src="/static/plugy_assistant_v88.js?v=88.20260922.1"></script>
+<script defer src="/static/dashboard_v86_map.js?v=88.20260922.1"></script>
+<script defer src="/static/dashboard_v86_people.js?v=88.20260922.1"></script>
+<script defer src="/static/dashboard_v86_editor.js?v=88.20260922.1"></script>
+<script defer src="/static/dashboard_v86_quality.js?v=88.20260922.1"></script>
+<script defer src="/static/dashboard_v88_instagram.js?v=88.20260922.1"></script>
 </body>
 </html>
