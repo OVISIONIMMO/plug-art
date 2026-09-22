@@ -1043,3 +1043,16 @@ body[data-plugy-state="idle"] .plugy-aurora,
 body[data-plugy-state="minimized"] .plugy-aurora,
 body[data-plugy-state="sleep"] .plugy-aurora{opacity:0!important}
 body[data-plugy-state="hover"] .plugy-aurora{opacity:.16!important}
+
+
+/* V83 — darker metallic rose/violet finish + stronger black eyes */
+.plugy-float-visual{
+  filter:drop-shadow(0 16px 25px rgba(54,16,72,.22)) drop-shadow(0 0 12px rgba(143,44,127,.08))!important;
+}
+.plugy-float-visual model-viewer{
+  filter:saturate(1.045) contrast(1.035) brightness(.985);
+}
+body[data-plugy-state="idle"] .plugy-energy-layer,
+body[data-plugy-state="minimized"] .plugy-energy-layer{
+  opacity:.94;
+}
