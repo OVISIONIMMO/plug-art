@@ -793,3 +793,145 @@ button,a,.open-call-card,.priority-item{transition-duration:.15s!important}
   .card-head>strong{font-size:14px!important}
   .mobile-dock button span{font-size:6.5px!important}
 }
+
+
+/* V76 — continuous scroll workspace */
+html{scroll-behavior:smooth}
+body.scroll-workspace{overflow-x:hidden}
+.scroll-workspace .shell{padding-bottom:110px!important}
+.scroll-workspace .view{
+  display:block!important;
+  animation:none!important;
+  scroll-margin-top:104px;
+  content-visibility:auto;
+  contain-intrinsic-size:900px;
+  position:relative;
+}
+.scroll-workspace .view+ .view{
+  margin-top:34px;
+  padding-top:28px;
+  border-top:1px solid #e1e4df;
+}
+.scroll-workspace .view.active:before{
+  content:"";
+  position:absolute;
+  left:-10px;
+  top:28px;
+  width:3px;
+  height:34px;
+  border-radius:3px;
+  background:#111317;
+  opacity:.78;
+}
+.scroll-workspace #view-dashboard{content-visibility:visible;contain-intrinsic-size:auto}
+.scroll-workspace #view-dashboard:before{top:4px}
+
+/* One page = one scrollbar. */
+.scroll-workspace .studio-sidebar,
+.scroll-workspace .studio-editor{
+  max-height:none!important;
+  overflow:visible!important;
+}
+.scroll-workspace .social-queue,
+.scroll-workspace .network-list{
+  max-height:none!important;
+  overflow:visible!important;
+}
+.scroll-workspace .filter-panel,
+.scroll-workspace .open-call-filters{
+  position:static!important;
+  top:auto!important;
+}
+.scroll-workspace .studio-sidebar,
+.scroll-workspace .studio-editor,
+.scroll-workspace .filter-panel{
+  align-self:start;
+}
+
+/* Section titles become soft sticky landmarks on larger screens. */
+@media(min-width:921px){
+  .scroll-workspace .section-bar{
+    position:sticky!important;
+    top:88px!important;
+    z-index:24!important;
+    padding-top:10px!important;
+    background:linear-gradient(180deg,rgba(244,244,242,.98) 0%,rgba(244,244,242,.95) 72%,rgba(244,244,242,0) 100%)!important;
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+  }
+}
+
+/* Tiny progress indicator under the persistent header. */
+.scroll-workspace .top-pill{position:sticky!important}
+.scroll-progress{
+  position:absolute;
+  left:14px;
+  right:14px;
+  bottom:-1px;
+  height:2px;
+  overflow:hidden;
+  border-radius:99px;
+  pointer-events:none;
+}
+.scroll-progress i{
+  display:block;
+  width:100%;
+  height:100%;
+  transform:scaleX(0);
+  transform-origin:0 50%;
+  background:linear-gradient(90deg,#111317 0%,#8e63ef 56%,#e789c8 100%);
+  transition:transform .12s linear;
+}
+
+/* The scroll version needs slightly calmer section spacing. */
+.scroll-workspace .section-bar{margin-bottom:14px!important}
+.scroll-workspace .radar-category-grid,
+.scroll-workspace .radar-plan-grid,
+.scroll-workspace .open-calls-shell,
+.scroll-workspace .studio-grid,
+.scroll-workspace .social-grid,
+.scroll-workspace .network-grid,
+.scroll-workspace .workspace-grid{
+  scroll-margin-top:145px;
+}
+
+/* Current section feedback without turning the page into a Christmas tree. */
+.scroll-workspace .rail-item,
+.scroll-workspace .top-nav button,
+.scroll-workspace .mobile-dock button{
+  transition:background .18s ease,color .18s ease,transform .18s ease;
+}
+
+/* Tablet: full continuous flow, no nested sticky/filter behavior. */
+@media(max-width:1240px){
+  .scroll-workspace .view{scroll-margin-top:88px}
+  .scroll-workspace .view+.view{margin-top:26px;padding-top:24px}
+  .scroll-workspace .view.active:before{left:-5px}
+}
+
+/* Mobile: slightly tighter rhythm and no sticky section headers. */
+@media(max-width:920px){
+  .scroll-workspace .view{
+    scroll-margin-top:76px;
+    content-visibility:auto;
+    contain-intrinsic-size:760px;
+  }
+  .scroll-workspace .view+.view{
+    margin-top:18px;
+    padding-top:18px;
+  }
+  .scroll-workspace .view.active:before{display:none}
+  .scroll-workspace .section-bar{
+    position:static!important;
+    top:auto!important;
+    background:transparent!important;
+    backdrop-filter:none!important;
+  }
+  .scroll-workspace .shell{padding-bottom:118px!important}
+}
+@media(max-width:720px){
+  .scroll-workspace .view{scroll-margin-top:68px}
+  .scroll-workspace .view+.view{margin-top:14px;padding-top:16px}
+  .scroll-workspace .section-bar{margin-bottom:11px!important}
+  .scroll-progress{left:8px;right:8px}
+}
