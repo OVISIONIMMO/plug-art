@@ -12,33 +12,22 @@ let contacts=store.get('plugart_v65_contacts',store.get('plugart_v64_contacts',[
 let socialQueue=store.get('plugart_v66_social_queue',[]);
 
 let currentView=null;
-function setActiveSection(id,{replaceHash=false}={}){
-  if(!meta[id])id='dashboard';
-  currentView=id;
-  qa('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+id));
-  qa('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
-  const t=q('#pageTitle');if(t)t.textContent=meta[id][0];
-  document.body.dataset.view=id;
-  document.title='PLUG ART · '+meta[id][0];
-  qa('[data-view]').forEach(b=>{if(b.dataset.view===id)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
-  if(replaceHash&&location.hash!=='#'+id)history.replaceState({...history.state,view:id},'','#'+id);
-}
 function view(id,opt={}){
   if(!meta[id])id='dashboard';
-  const previous=currentView;
-  setActiveSection(id);
-  if(!opt.fromHistory){
-    const url='#'+id;
-    if(location.hash!==url)history.pushState({view:id,from:previous},'',url);
-    else if(!history.state?.view)history.replaceState({view:id,from:previous},'',url);
-  }
-  const target=q('#view-'+id);
-  if(target)target.scrollIntoView({behavior:opt.instant?'auto':'smooth',block:'start'});
+  const previous=currentView;currentView=id;
+  qa('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+id));
+  qa('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
+  const t=q('#pageTitle');
+  if(t)t.textContent=meta[id][0];
+  document.body.dataset.view=id;document.title='PLUG ART · '+meta[id][0];
+  qa('[data-view]').forEach(b=>{if(b.dataset.view===id)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  if(!opt.fromHistory){const url='#'+id;if(location.hash!==url)history.pushState({view:id,from:previous},'',url);else if(!history.state?.view)history.replaceState({view:id,from:previous},'',url)}
+  window.scrollTo({top:0,behavior:opt.instant?'auto':'smooth'});
 }
 qa('[data-view]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();view(b.dataset.view)}));
 function goBack(){if(history.length>1)history.back();else view('dashboard')}
 q('#navBack')?.addEventListener('click',goBack);q('#routePrev')?.addEventListener('click',goBack);
-addEventListener('popstate',e=>view(e.state?.view||location.hash.slice(1)||'dashboard',{fromHistory:true,instant:false}));
+addEventListener('popstate',e=>view(e.state?.view||location.hash.slice(1)||'dashboard',{fromHistory:true,instant:true}));
 addEventListener('keydown',e=>{
   const tag=(e.target?.tagName||'').toLowerCase(),typing=['input','textarea','select'].includes(tag);
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();q('#quickGo')?.click();return}
@@ -240,30 +229,6 @@ async function loadAll(){
   renderDashboard();renderRadar();renderOpenCalls();renderSocial();renderNetwork();renderWorkspace();return state;
 }
 window.PLUG65={q,qa,esc,api,store,state,view,cut,fmt,oppImg,playPlugy,openChat,renderDashboard,renderSocial,loadAll};
-const scrollSections=qa('.view');
-const sectionObserver=new IntersectionObserver(entries=>{
-  const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
-  if(!visible)return;
-  const id=visible.target.id.replace('view-','');
-  if(meta[id]&&id!==currentView)setActiveSection(id,{replaceHash:true});
-},{root:null,rootMargin:'-18% 0px -68% 0px',threshold:[0,.05,.15,.3,.5]});
-scrollSections.forEach(s=>sectionObserver.observe(s));
-
-let progressRAF=0;
-function updateScrollProgress(){
-  if(progressRAF)return;
-  progressRAF=requestAnimationFrame(()=>{
-    progressRAF=0;
-    const max=Math.max(1,document.documentElement.scrollHeight-innerHeight);
-    const ratio=Math.max(0,Math.min(1,scrollY/max));
-    const bar=q('#scrollProgress');if(bar)bar.style.transform='scaleX('+ratio+')';
-  });
-}
-addEventListener('scroll',updateScrollProgress,{passive:true});
-addEventListener('resize',updateScrollProgress,{passive:true});
-
-const initialView=meta[location.hash.slice(1)]?location.hash.slice(1):'dashboard';
-history.replaceState({view:initialView},'','#'+initialView);
-requestAnimationFrame(()=>{view(initialView,{fromHistory:true,instant:true});updateScrollProgress()});
+const initialView=location.hash.slice(1)||'dashboard';history.replaceState({view:initialView},'','#'+initialView);view(initialView,{fromHistory:true,instant:true});
 window.PLUG65.ready=loadAll();
 })();
