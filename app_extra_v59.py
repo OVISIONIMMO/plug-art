@@ -8,14 +8,14 @@ import app_extra_v43 as v43
 from build_plugy_pink_v75 import build_plugy_pink_v75
 
 app=v43.app
-app.version='75.0'
+app.version='77.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'dashboard_v65.html'
 GLB=BASE/'static'/'plugy_pink_v75.glb'
 RESULT=build_plugy_pink_v75(GLB)
 PLUGY_REFERENCE_ANIMATIONS=RESULT.get('animations',[])
 PLUGY_REFERENCE_SHA256=RESULT.get('sha256','')
-VERSION='75.20260922.1'
+VERSION='77.20260922.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -30,8 +30,8 @@ def root_v65():
       'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma':'no-cache',
       'Expires':'0',
-      'X-Plug-Art-Version':'75.0',
-      'X-Plug-Art-UI':'standard-product-navigation-v75'
+      'X-Plug-Art-Version':'77.0',
+      'X-Plug-Art-UI':'plugy-assistant-runtime-v77'
     })
 
 @app.middleware('http')
@@ -116,14 +116,14 @@ def opportunity_thumbnail_v67(oid:int):
 @app.get('/api/v72/status')
 @app.get('/api/v73/status')
 @app.get('/api/v74/status')
-@app.get('/api/v75/status')
-def status_v75():
+@app.get('/api/v75/status')\n@app.get('/api/v77/status')
+def status_v77():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'75.0',
-      'ui':'standard-product-navigation-v75',
-      'reference_direction':'pink lavender plug-shaped PLUGY with black inverted-V eyes and wider framing',
+      'version':'77.0',
+      'ui':'plugy-assistant-runtime-v77',
+      'reference_direction':'V75 visual identity plus independent PLUGY assistant runtime with voice, states and actions',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -147,4 +147,4 @@ def status_v75():
       'background':'responsive editorial workspace with simplified standard navigation and direct actions'
     }
 
-print(f"PLUG_ART_V75_READY ui=standard_product_navigation_v75 plugy=pink_lavender_plug_head internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V77_READY ui=plugy_assistant_runtime_v77 plugy=pink_lavender_plug_head voice=browser_stt_tts state_machine=on mini=on internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)

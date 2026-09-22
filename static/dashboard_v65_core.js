@@ -215,12 +215,17 @@ q('#newContact')?.addEventListener('click',()=>modal('<h3>Nouveau contact</h3><l
 q('#quickGo')?.addEventListener('click',()=>modal('<h3>Navigation</h3><div class="modal-nav"><button data-go="dashboard">Accueil</button><button data-go="radar">Radar</button><button data-go="opencalls">Open Calls</button><button data-go="studio">Contenu</button><button data-go="social">Instagram</button><button data-go="network">Réseau</button><button data-go="workspace">Suivi</button></div>'));
 q('#modalContent')?.addEventListener('click',e=>{if(e.target.id==='mSaveNote'){notes.unshift({id:Date.now(),title:q('#mTitle').value,body:q('#mBody').value,date:new Date().toLocaleString('fr-FR')});store.set('plugart_v65_notes',notes);renderNotes();closeModal()}else if(e.target.id==='mSaveContact'){contacts.unshift({id:Date.now(),name:q('#mName').value,info:q('#mInfo').value,status:q('#mStatus').value});store.set('plugart_v65_contacts',contacts);renderContacts();closeModal()}else if(e.target.dataset.go){view(e.target.dataset.go);closeModal()}});
 
-function openChat(){q('#plugyChat')?.classList.add('open');playPlugy('Happy',true)}function closeChat(){q('#plugyChat')?.classList.remove('open')}
-q('#openPlugy')?.addEventListener('click',openChat);q('#askPlugy')?.addEventListener('click',openChat);q('#closeChat')?.addEventListener('click',closeChat);
-const mv=q('#plugyModel');let animTimer;function playPlugy(name,once=true){if(!mv)return;const go=()=>{const a=mv.availableAnimations||[];if(!a.includes(name))return;try{mv.animationName=name;mv.play({repetitions:once?1:Infinity});if(once)setTimeout(()=>playPlugy('Idle',false),name==='Blink'?450:1250)}catch{}};if(mv.loaded)go();else mv.addEventListener('load',go,{once:true})}
-mv?.addEventListener('load',()=>{playPlugy('Idle',false);schedulePlugy()},{once:true});qa('[data-anim]').forEach(b=>b.onclick=()=>playPlugy(b.dataset.anim,true));function schedulePlugy(){clearTimeout(animTimer);animTimer=setTimeout(()=>{playPlugy(['Blink','Curious','SoftTurn','Happy','Attentive'][Math.floor(Math.random()*5)],true);schedulePlugy()},7000+Math.random()*5000)}
-function addChat(t,who='bot'){const box=q('#chatStream');if(!box)return;const d=document.createElement('div');d.className=who==='user'?'user-msg':'bot-msg';d.textContent=t;box.appendChild(d);box.scrollTop=box.scrollHeight}
-q('#chatForm')?.addEventListener('submit',async e=>{e.preventDefault();const input=q('#chatInput'),msg=input.value.trim();if(!msg)return;input.value='';addChat(msg,'user');playPlugy('Think',false);try{const r=await api('/api/v32/plugy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,page:location.hash.slice(1)||'dashboard',mode:'fast'})});addChat(r.answer||'Analyse terminée.');playPlugy('Happy',true)}catch{addChat('PLUGY est momentanément indisponible.');playPlugy('Idle',false)}});
+function openChat(){q('#plugyChat')?.classList.add('open');window.PlugyAssistant?.setMode?.('assistant')}
+function closeChat(){q('#plugyChat')?.classList.remove('open')}
+const plugyModels=()=>[q('#plugyModel'),q('#plugyFloatModel')].filter(Boolean);
+let animTimer;
+function playPlugy(name,once=true){
+  const list=plugyModels();if(!list.length)return;
+  list.forEach(mv=>{const go=()=>{const a=mv.availableAnimations||[];if(!a.includes(name))return;try{mv.animationName=name;mv.play({repetitions:once?1:Infinity})}catch{}};if(mv.loaded)go();else mv.addEventListener('load',go,{once:true})});
+  if(once)setTimeout(()=>playPlugy('Idle',false),name==='Blink'?450:1250);
+}
+function schedulePlugy(){clearTimeout(animTimer);animTimer=setTimeout(()=>{if(!window.PlugyAssistant?.state?.conversation)playPlugy(['Blink','Curious','SoftTurn','Happy','Attentive'][Math.floor(Math.random()*5)],true);schedulePlugy()},7000+Math.random()*5000)}
+q('#plugyModel')?.addEventListener('load',()=>{playPlugy('Idle',false);schedulePlugy()},{once:true});qa('[data-anim]').forEach(b=>b.onclick=()=>playPlugy(b.dataset.anim,true));
 
 async function loadAll(){
   const specs=[['/api/stats',{}],['/api/opportunities',[]],['/api/artists',[]],['/api/exhibitions',[]],['/api/map',[]],['/api/radar/status',{}],['/api/radar/candidates',[]]];

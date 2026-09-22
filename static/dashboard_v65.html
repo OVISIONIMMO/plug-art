@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/dashboard_v65.css?v=75.20260922.1">
+<link rel="stylesheet" href="/static/dashboard_v65.css?v=77.20260922.1">
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
 </head>
 <body>
@@ -80,9 +80,9 @@
 
       <article class="card card-plugy glass">
         <div class="card-head"><strong>PLUGY</strong><span class="status-dot"><i></i> en ligne</span></div>
-        <div class="plugy-stage">
+        <div class="plugy-stage" data-plugy-state="idle">
           <div class="plugy-floor"></div>
-          <model-viewer id="plugyModel" src="/static/plugy_pink_v75.glb?v=75.20260922.1" alt="PLUGY, petite mascotte en forme de prise électrique" camera-orbit="-12deg 73deg 4.15m" camera-target="0m .66m .03m" field-of-view="30deg" interaction-prompt="none" disable-zoom shadow-intensity=".16" shadow-softness=".92" exposure="1.18" environment-image="neutral" tone-mapping="commerce" loading="eager" reveal="auto" animation-crossfade-duration="260"></model-viewer>
+          <model-viewer id="plugyModel" src="/static/plugy_pink_v75.glb?v=77.20260922.1" alt="PLUGY, petite mascotte en forme de prise électrique" camera-orbit="-12deg 73deg 4.15m" camera-target="0m .66m .03m" field-of-view="30deg" interaction-prompt="none" disable-zoom shadow-intensity=".16" shadow-softness=".92" exposure="1.18" environment-image="neutral" tone-mapping="commerce" loading="eager" reveal="auto" animation-crossfade-duration="260"></model-viewer>
         </div>
         <div class="plugy-controls"><button data-anim="Happy">☺</button><button data-anim="Think">…</button><button id="askPlugy">Ouvrir</button></div>
       </article>
@@ -332,17 +332,25 @@
   </section>
 </main>
 
+<div class="plugy-float" id="plugyFloat" data-mode="hero">
+  <div class="plugy-float-visual" id="plugyFloatVisual" data-plugy-state="idle" role="button" tabindex="0" aria-label="PLUGY, double-cliquer ou maintenir pour parler">
+    <model-viewer id="plugyFloatModel" src="/static/plugy_pink_v75.glb?v=77.20260922.1" alt="PLUGY, assistant PLUG ART" camera-orbit="-12deg 73deg 4.55m" camera-target="0m .66m .03m" field-of-view="31deg" interaction-prompt="none" disable-zoom shadow-intensity=".10" shadow-softness=".95" exposure="1.16" environment-image="neutral" tone-mapping="commerce" loading="eager" reveal="auto" animation-crossfade-duration="260"></model-viewer>
+  </div>
+  <button class="plugy-float-voice" id="plugyFloatVoice" aria-label="Parler à PLUGY">⌁</button>
+</div>
+
 <nav class="mobile-dock glass">
   <button class="active" data-view="dashboard"><b>⌂</b><span>Accueil</span></button><button data-view="radar"><b>◎</b><span>Radar</span></button><button data-view="opencalls"><b>◫</b><span>Calls</span></button><button data-view="studio"><b>✦</b><span>Contenu</span></button><button data-view="social"><b>◌</b><span>Insta</span></button><button data-view="network"><b>◉</b><span>Réseau</span></button><button data-view="workspace"><b>▦</b><span>Suivi</span></button>
 </nav>
 
 <div class="plugy-chat" id="plugyChat">
-  <div class="chat-head"><div><i></i><strong>PLUGY</strong><span>assistant interne</span></div><button id="closeChat">×</button></div>
-  <div class="chat-stream" id="chatStream"><div class="bot-msg">Prêt. Donne-moi la tâche.</div></div>
-  <form id="chatForm"><input id="chatInput" placeholder="Demande à PLUGY…"><button>↑</button></form>
+  <div class="chat-head"><div><i></i><strong>PLUGY</strong><span id="plugyVoiceStatus">Disponible</span></div><div class="chat-head-actions"><button id="plugyVoiceBtn" aria-label="Conversation vocale">⌁</button><button id="closeChat" aria-label="Fermer">×</button></div></div>
+  <div class="plugy-live-transcript" id="plugyLiveTranscript">Double-clique sur PLUGY ou maintiens-le pour parler.</div>
+  <div class="chat-stream" id="chatStream"><div class="bot-msg">Je suis prêt.</div></div>
+  <form id="chatForm"><input id="chatInput" autocomplete="off" placeholder="Demande à PLUGY…"><button aria-label="Envoyer">↑</button></form>
 </div>
 
 <div class="modal" id="simpleModal"><div class="modal-card"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
-<script defer src="/static/dashboard_v65_core.js?v=75.20260922.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=75.20260922.1"></script>
+<script defer src="/static/dashboard_v65_core.js?v=77.20260922.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=77.20260922.1"></script>\n<script defer src="/static/plugy_assistant_v77.js?v=77.20260922.1"></script>
 </body>
 </html>
