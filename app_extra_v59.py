@@ -1,21 +1,21 @@
 from pathlib import Path
 from fastapi import Request, HTTPException
-from fastapi.responses import HTMLResponse, Response
-from urllib.parse import urljoin
-import hashlib,re,time,html as html_lib,requests,json,threading
+from fastapi.responses import HTMLResponse, Response, RedirectResponse
+from urllib.parse import urljoin, urlencode
+import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets
 import app as core
 import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='86.0'
+app.version='87.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'dashboard_v65.html'
 GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='86.20260922.1'
+VERSION='87.20260922.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -30,8 +30,8 @@ def root_v65():
       'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma':'no-cache',
       'Expires':'0',
-      'X-Plug-Art-Version':'86.0',
-      'X-Plug-Art-UI':'internal-control-center-v86'
+      'X-Plug-Art-Version':'87.0',
+      'X-Plug-Art-UI':'internal-control-center-v87'
     })
 
 from fastapi.middleware.gzip import GZipMiddleware
@@ -465,6 +465,241 @@ def artist_work_delete_v86(aid:int,wid:int):
         raise HTTPException(404,'Œuvre introuvable')
     return {'ok':True}
 
+
+# V87 Instagram bridge. Uses Meta Graph API with Facebook Login for Instagram professional accounts.
+_igc=core.conn()
+_igc.executescript("""
+CREATE TABLE IF NOT EXISTS instagram_connection(
+  id INTEGER PRIMARY KEY CHECK(id=1),
+  ig_user_id TEXT DEFAULT '',
+  username TEXT DEFAULT '',
+  profile_picture_url TEXT DEFAULT '',
+  followers_count INTEGER DEFAULT 0,
+  media_count INTEGER DEFAULT 0,
+  page_id TEXT DEFAULT '',
+  page_name TEXT DEFAULT '',
+  page_access_token TEXT DEFAULT '',
+  connected_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS instagram_oauth_state(
+  state TEXT PRIMARY KEY,
+  created_at INTEGER DEFAULT 0
+);
+""")
+_igc.commit()
+_igc.close()
+
+def _ig_graph_version():
+    raw=os.getenv('META_GRAPH_VERSION','v26.0').strip() or 'v26.0'
+    return raw if raw.startswith('v') else 'v'+raw
+
+def _ig_redirect_uri(request:Request):
+    override=os.getenv('META_REDIRECT_URI','').strip()
+    if override:
+        return override
+    host=os.getenv('RAILWAY_PUBLIC_DOMAIN','').strip()
+    if host:
+        return f"https://{host}/api/v87/instagram/callback"
+    return str(request.base_url).rstrip('/')+'/api/v87/instagram/callback'
+
+def _ig_configured():
+    return bool(os.getenv('META_APP_ID','').strip() and os.getenv('META_APP_SECRET','').strip())
+
+def _ig_row():
+    return core.one('select * from instagram_connection where id=1') or {}
+
+def _ig_error(response):
+    try:
+        data=response.json()
+        err=data.get('error') or {}
+        return err.get('message') or data.get('error_message') or response.text[:400]
+    except Exception:
+        return response.text[:400]
+
+def _ig_request(method,path,token,params=None,data=None,timeout=30):
+    url=f"https://graph.facebook.com/{_ig_graph_version()}/{path.lstrip('/')}"
+    params=dict(params or {})
+    params['access_token']=token
+    rr=requests.request(method,url,params=params,data=data,timeout=timeout)
+    if not rr.ok:
+        raise HTTPException(rr.status_code if rr.status_code<500 else 502,_ig_error(rr))
+    return rr.json()
+
+@app.get('/api/v87/instagram/status')
+def instagram_status_v87(request:Request):
+    row=_ig_row()
+    return {
+      'ok':True,
+      'configured':_ig_configured(),
+      'connected':bool(row.get('ig_user_id') and row.get('page_access_token')),
+      'username':row.get('username',''),
+      'profile_picture_url':row.get('profile_picture_url',''),
+      'followers_count':row.get('followers_count',0) or 0,
+      'media_count':row.get('media_count',0) or 0,
+      'page_name':row.get('page_name',''),
+      'connected_at':row.get('connected_at',''),
+      'graph_version':_ig_graph_version(),
+      'redirect_uri':_ig_redirect_uri(request),
+      'required_variables':['META_APP_ID','META_APP_SECRET','META_GRAPH_VERSION'],
+      'required_permissions':['pages_show_list','instagram_basic','instagram_content_publish','pages_read_engagement','instagram_manage_comments'],
+      'connection_mode':'facebook-login-professional-account'
+    }
+
+@app.get('/api/v87/instagram/login')
+def instagram_login_v87(request:Request):
+    app_id=os.getenv('META_APP_ID','').strip()
+    if not _ig_configured():
+        raise HTTPException(503,'Configuration Meta incomplète : ajoute META_APP_ID et META_APP_SECRET sur Railway.')
+    state=secrets.token_urlsafe(28)
+    now=int(time.time())
+    c=core.conn()
+    c.execute('delete from instagram_oauth_state where created_at<?',(now-1800,))
+    c.execute('insert or replace into instagram_oauth_state(state,created_at) values(?,?)',(state,now))
+    c.commit()
+    c.close()
+    params={
+      'client_id':app_id,
+      'redirect_uri':_ig_redirect_uri(request),
+      'state':state,
+      'response_type':'code',
+      'scope':'pages_show_list,instagram_basic,instagram_content_publish,pages_read_engagement,instagram_manage_comments'
+    }
+    return RedirectResponse('https://www.facebook.com/'+_ig_graph_version()+'/dialog/oauth?'+urlencode(params),status_code=302)
+
+@app.get('/api/v87/instagram/callback')
+def instagram_callback_v87(request:Request,code:str='',state:str='',error:str='',error_description:str=''):
+    if error:
+        return RedirectResponse('/?instagram_error='+urlencode({'e':error_description or error})[2:]+'#social',status_code=302)
+    saved=core.one('select state,created_at from instagram_oauth_state where state=?',(state,))
+    if not saved or int(saved.get('created_at') or 0)<int(time.time())-1800:
+        raise HTTPException(400,'Session de connexion Instagram expirée. Relance la connexion.')
+    app_id=os.getenv('META_APP_ID','').strip()
+    secret=os.getenv('META_APP_SECRET','').strip()
+    redirect=_ig_redirect_uri(request)
+    if not code or not app_id or not secret:
+        raise HTTPException(400,'Code OAuth ou configuration Meta manquante.')
+    token_url='https://graph.facebook.com/'+_ig_graph_version()+'/oauth/access_token'
+    rr=requests.get(token_url,params={'client_id':app_id,'client_secret':secret,'redirect_uri':redirect,'code':code},timeout=20)
+    if not rr.ok:
+        raise HTTPException(400,'Échange OAuth Meta impossible : '+_ig_error(rr))
+    short_token=(rr.json() or {}).get('access_token','')
+    if not short_token:
+        raise HTTPException(400,'Meta n’a pas retourné de jeton.')
+    lr=requests.get(token_url,params={'grant_type':'fb_exchange_token','client_id':app_id,'client_secret':secret,'fb_exchange_token':short_token},timeout=20)
+    user_token=(lr.json() or {}).get('access_token') if lr.ok else short_token
+    pages=_ig_request('GET','me/accounts',user_token,params={'fields':'id,name,access_token,tasks,instagram_business_account'})
+    candidates=[p for p in (pages.get('data') or []) if (p.get('instagram_business_account') or {}).get('id') and p.get('access_token')]
+    if not candidates:
+        raise HTTPException(400,'Aucun compte Instagram professionnel lié à une Page Facebook n’a été trouvé pour ce compte Meta.')
+    page=candidates[0]
+    ig_id=str((page.get('instagram_business_account') or {}).get('id') or '')
+    page_token=page.get('access_token','')
+    profile=_ig_request('GET',ig_id,page_token,params={'fields':'id,username,name,profile_picture_url,followers_count,media_count'})
+    now_txt=time.strftime('%Y-%m-%dT%H:%M:%S')
+    c=core.conn()
+    c.execute("""insert or replace into instagram_connection
+      (id,ig_user_id,username,profile_picture_url,followers_count,media_count,page_id,page_name,page_access_token,connected_at,updated_at)
+      values(1,?,?,?,?,?,?,?,?,?,?)""",
+      (ig_id,profile.get('username',''),profile.get('profile_picture_url',''),int(profile.get('followers_count') or 0),
+       int(profile.get('media_count') or 0),str(page.get('id') or ''),page.get('name',''),page_token,now_txt,now_txt))
+    c.execute('delete from instagram_oauth_state where state=?',(state,))
+    c.commit()
+    c.close()
+    return RedirectResponse('/#social',status_code=302)
+
+@app.post('/api/v87/instagram/disconnect')
+def instagram_disconnect_v87():
+    c=core.conn()
+    c.execute('delete from instagram_connection where id=1')
+    c.commit()
+    c.close()
+    return {'ok':True}
+
+@app.get('/api/v87/instagram/media')
+def instagram_media_v87(limit:int=12):
+    row=_ig_row()
+    token=row.get('page_access_token','')
+    ig_id=row.get('ig_user_id','')
+    if not token or not ig_id:
+        raise HTTPException(409,'Instagram n’est pas connecté.')
+    limit=max(1,min(int(limit or 12),24))
+    data=_ig_request('GET',f"{ig_id}/media",token,params={
+      'fields':'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count',
+      'limit':limit
+    })
+    return {'ok':True,'items':data.get('data') or []}
+
+def _ig_wait_container(container_id,token,seconds=28):
+    end=time.time()+seconds
+    last={}
+    while time.time()<end:
+        last=_ig_request('GET',container_id,token,params={'fields':'status_code,status'},timeout=15)
+        code=str(last.get('status_code') or '').upper()
+        if code=='FINISHED':
+            return last
+        if code in {'ERROR','EXPIRED'}:
+            raise HTTPException(502,'Instagram n’a pas pu préparer le média : '+str(last.get('status') or code))
+        time.sleep(1.4)
+    raise HTTPException(504,'Instagram prépare encore le média. Réessaie dans quelques instants.')
+
+def _ig_create_container(ig_id,token,url,caption='',carousel_item=False):
+    low=url.lower().split('?')[0]
+    is_video=low.endswith(('.mp4','.mov','.m4v'))
+    payload={'is_carousel_item':'true'} if carousel_item else {}
+    if is_video:
+        payload.update({'media_type':'VIDEO' if carousel_item else 'REELS','video_url':url})
+    else:
+        payload['image_url']=url
+    if caption and not carousel_item:
+        payload['caption']=caption
+    data=_ig_request('POST',f"{ig_id}/media",token,data=payload,timeout=35)
+    cid=str(data.get('id') or '')
+    if not cid:
+        raise HTTPException(502,'Instagram n’a pas créé le conteneur média.')
+    if is_video:
+        _ig_wait_container(cid,token)
+    return cid
+
+@app.post('/api/v87/instagram/publish')
+def instagram_publish_v87(body:dict):
+    row=_ig_row()
+    token=row.get('page_access_token','')
+    ig_id=row.get('ig_user_id','')
+    if not token or not ig_id:
+        raise HTTPException(409,'Instagram n’est pas connecté.')
+    caption=str((body or {}).get('caption') or '').strip()[:2200]
+    urls=[]
+    for u in ((body or {}).get('media_urls') or []):
+        u=str(u or '').strip()
+        if u.startswith(('https://','http://')) and u not in urls:
+            urls.append(u)
+    urls=urls[:10]
+    if not urls:
+        raise HTTPException(400,'Ajoute au moins un média public au brouillon.')
+    if len(urls)==1:
+        creation_id=_ig_create_container(ig_id,token,urls[0],caption,False)
+    else:
+        children=[_ig_create_container(ig_id,token,u,'',True) for u in urls]
+        parent=_ig_request('POST',f"{ig_id}/media",token,data={
+          'media_type':'CAROUSEL',
+          'children':','.join(children),
+          'caption':caption
+        },timeout=35)
+        creation_id=str(parent.get('id') or '')
+        if not creation_id:
+            raise HTTPException(502,'Instagram n’a pas créé le carrousel.')
+    published=_ig_request('POST',f"{ig_id}/media_publish",token,data={'creation_id':creation_id},timeout=35)
+    media_id=str(published.get('id') or '')
+    if not media_id:
+        raise HTTPException(502,'Instagram n’a pas confirmé la publication.')
+    permalink=''
+    try:
+        permalink=(_ig_request('GET',media_id,token,params={'fields':'permalink'},timeout=15) or {}).get('permalink','')
+    except Exception:
+        pass
+    return {'ok':True,'media_id':media_id,'permalink':permalink,'count':len(urls)}
+
 @app.get('/api/v65/status')
 @app.get('/api/v66/status')
 @app.get('/api/v67/status')
@@ -486,13 +721,14 @@ def artist_work_delete_v86(aid:int,wid:int):
 @app.get('/api/v84/status')
 @app.get('/api/v85/status')
 @app.get('/api/v86/status')
-def status_v86():
+@app.get('/api/v87/status')
+def status_v87():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'86.0',
-      'ui':'internal-control-center-v86',
-      'reference_direction':'V86 production polish: geocoded international map, CRM reminders/history, artist portfolios, pro social editor, streaming voice PLUGY and calibrated desktop UI',
+      'version':'87.0',
+      'ui':'internal-control-center-v87',
+      'reference_direction':'V87 fixes PLUGY hero rendering and viewer scope; adds first-class Instagram OAuth, media import and publishing bridge',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -518,4 +754,4 @@ def status_v86():
       'background':'responsive editorial workspace with simplified standard navigation and direct actions'
     }
 
-print(f"PLUG_ART_V86_READY ui=internal_control_center map=auto_geocode crm=history_reminders artists=portfolio studio=pro_layers plugy=stream_voice desktop=calibrated voice=browser_stt_tts state_machine=on mini=on internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V87_READY ui=internal_control_center plugy=hero_visible viewer_scope=fixed instagram=oauth_bridge graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)

@@ -74,8 +74,9 @@ function saveDraft(){drafts.unshift({id:Date.now(),name:currentOpp()?.title||sta
 function queueInstagram(){
   saveDraft();
   const qkey='plugart_v66_social_queue',queue=store.get(qkey,[]),o=currentOpp(),title=o?.title||state.slides[0]?.title||'Publication PLUG ART';
-  queue.unshift({id:Date.now(),title,caption:q('#captionText')?.value||'',status:'À préparer',scheduled:'',format:q('#studioFormat')?.value||'portrait'});
-  store.set(qkey,queue.slice(0,40));P.renderSocial?.();const b=q('#queueInstagramBtn'),old=b?.textContent;if(b){b.textContent='Ajouté ✓';setTimeout(()=>b.textContent=old,900)}
+  const media_urls=state.slides.map(x=>String(x.image||'').trim()).filter(Boolean).map(u=>/^https?:\/\//i.test(u)?u:(u.startsWith('/')?location.origin+u:'')).filter(Boolean).slice(0,10);
+  queue.unshift({id:Date.now(),title,caption:q('#captionText')?.value||'',status:media_urls.length?'Prêt':'À préparer',scheduled:'',format:q('#studioFormat')?.value||'portrait',media_urls,slide_count:state.slides.length,source_opportunity_id:o?.id||null});
+  store.set(qkey,queue.slice(0,40));P.renderSocial?.();const b=q('#queueInstagramBtn'),old=b?.textContent;if(b){b.textContent=media_urls.length?'Prêt pour Instagram ✓':'Ajouté · génère les visuels';setTimeout(()=>b.textContent=old,1400)}
 }
 async function exportSlide(){
   const s=slide(),format=q('#studioFormat')?.value||'portrait',W=1080,H=format==='square'?1080:format==='story'?1920:1350,c=document.createElement('canvas');

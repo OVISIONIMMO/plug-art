@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/dashboard_v65.css?v=86.20260922.1">
+<link rel="stylesheet" href="/static/dashboard_v65.css?v=87.20260922.1">
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
 </head>
 <body>
@@ -25,6 +25,7 @@
     <button class="rail-item" data-view="radar"><b>◎</b><span>Radar</span></button>
     <button class="rail-item" data-view="opencalls"><b>◫</b><span>Open Calls</span></button>
     <button class="rail-item" data-view="studio"><b>✦</b><span>Studio</span></button>
+    <button class="rail-item" data-view="social"><b>◎</b><span>Instagram</span></button>
     <button class="rail-item" data-view="map"><b>◎</b><span>Carte</span></button>
     <button class="rail-item" data-view="artists"><b>◉</b><span>Artistes</span></button>
     <button class="rail-item" data-view="crm"><b>▦</b><span>CRM</span></button>
@@ -44,6 +45,7 @@
       <button data-view="radar">Radar</button>
       <button data-view="opencalls">Open Calls</button>
       <button data-view="studio">Studio</button>
+      <button data-view="social">Instagram</button>
       <button data-view="map">Carte</button>
       <button data-view="artists">Artistes</button>
       <button data-view="crm">CRM</button>
@@ -277,35 +279,51 @@
     <div class="section-bar"><h1>CRM Prospection</h1><div class="section-actions"><button class="glass-button primary" id="addLeadBtn">+ Nouveau contact</button></div></div>
     <div class="crm-tools glass"><input id="crmSearch" placeholder="Galerie, lieu, contact, ville…"><select id="crmPriority"><option value="">Toutes priorités</option><option value="high">Haute</option><option value="normal">Normale</option><option value="low">Basse</option></select><button id="crmDueOnly" class="crm-due-filter">À relancer <b id="crmDueCount">0</b></button><span id="crmCount">0 contacts</span></div><div class="crm-board" id="crmBoard"></div>
   </section>
-  <section class="view legacy-view" id="view-social">
+  <section class="view" id="view-social">
     <div class="section-bar">
       <h1>Instagram</h1>
-      <div class="section-actions"><button class="glass-button primary" id="addLatestDraft">Ajouter un brouillon</button></div>
+      <div class="section-actions">
+        <button class="glass-button" id="instagramStudioBridge">Créer dans le Studio</button>
+        <button class="glass-button" id="instagramRefresh">Actualiser</button>
+        <button class="glass-button primary" id="addLatestDraft">Ajouter un brouillon</button>
+      </div>
     </div>
-    <div class="social-grid">
+
+    <div class="instagram-bridge glass">
+      <div>
+        <small>PONT PLUG ART ↔ INSTAGRAM</small>
+        <h2>Création, validation et publication au même endroit.</h2>
+        <p>Le Studio prépare les contenus. La file Instagram les contrôle. PLUGY peut t’aider à écrire, organiser et retrouver les publications sans poster à ta place par accident.</p>
+      </div>
+      <span id="instagramConnectionBadge" class="instagram-connection-badge">Instagram à configurer</span>
+    </div>
+
+    <div class="social-grid social-grid-v87">
+      <article class="social-card instagram-account-card glass">
+        <div class="panel-title"><h2>Compte</h2><span>Meta Graph API</span></div>
+        <div id="instagramAccount"></div>
+      </article>
+
       <article class="social-card social-queue-card glass">
-        <div class="panel-title"><h2>Publications</h2></div>
+        <div class="panel-title"><h2>File de publication</h2><span>Studio → Instagram</span></div>
         <div class="social-kpis"><div><b id="socialTotal">0</b><span>Total</span></div><div><b id="socialReady">0</b><span>Prêtes</span></div><div><b id="socialPublished">0</b><span>Publiées</span></div></div>
         <div id="socialQueue" class="social-queue"></div>
       </article>
+
+      <article class="social-card instagram-media-card glass">
+        <div class="panel-title"><h2>Derniers posts</h2><span>Compte connecté</span></div>
+        <div id="instagramMedia" class="instagram-media"><div class="empty-line">Connecte Instagram pour afficher les dernières publications.</div></div>
+      </article>
+
       <article class="social-card glass">
-        <div class="panel-title"><h2>Assistant</h2></div>
+        <div class="panel-title"><h2>PLUGY · Contenu</h2><span>Légende + hashtags</span></div>
         <label>Brief<textarea id="socialBrief" placeholder="Open call, artiste, exposition, annonce…"></textarea></label>
         <button class="wide-action ai" id="socialKitBtn">✦ Générer légende + hashtags</button>
         <textarea id="socialKitOutput" class="social-output" placeholder="Le kit apparaîtra ici."></textarea>
       </article>
+
       <article class="social-card glass">
-        <div class="panel-title"><h2>Règles</h2></div>
-        <div class="brand-rules">
-          <span>Fond blanc / bleu PLUG ART</span>
-          <span>Typographie forte, lecture immédiate</span>
-          <span>Photos officielles dès qu’elles existent</span>
-          <span>Informations pratiques avant le décoratif</span>
-          <span>CTA : Commente PLUG 🔌 pour être branché et recevoir le lien de candidature</span>
-        </div>
-      </article>
-      <article class="social-card glass">
-        <div class="panel-title"><h2>Vérification</h2></div>
+        <div class="panel-title"><h2>Checklist avant publication</h2></div>
         <div id="socialChecklist" class="social-checklist">
           <label><input type="checkbox" data-social-check="source"> Source officielle vérifiée</label>
           <label><input type="checkbox" data-social-check="deadline"> Deadline confirmée</label>
@@ -313,7 +331,11 @@
           <label><input type="checkbox" data-social-check="cta"> CTA PLUG présent</label>
           <label><input type="checkbox" data-social-check="format"> Format Instagram contrôlé</label>
         </div>
-        <p class="integration-note">Publication directe non connectée à Meta pour l’instant. Ce module prépare et suit les contenus sans prétendre publier par magie, ce qui est déjà une victoire contre les faux boutons.</p>
+        <div class="brand-rules compact">
+          <span>CTA : Commente PLUG 🔌 pour être branché et recevoir le lien de candidature</span>
+          <span>Photos officielles dès qu’elles existent</span>
+          <span>Carrousels lisibles avant d’être décoratifs</span>
+        </div>
       </article>
     </div>
   </section>
@@ -339,12 +361,12 @@
 
 <div class="plugy-float" id="plugyFloat" data-mode="hero">
   <div class="plugy-float-visual" id="plugyFloatVisual" data-plugy-state="idle" role="button" tabindex="0" aria-label="PLUGY, double-cliquer ou maintenir pour parler">
-    <model-viewer id="plugyFloatModel" src="/static/plugy_official_v84.glb?v=86.20260922.1" alt="PLUGY, assistant officiel PLUG ART nacré blanc rose aux reflets violet cyan" camera-controls auto-rotate auto-rotate-delay="1250" rotation-per-second="2.7deg" camera-orbit="-7deg 77deg 2.90m" camera-target="0m .18m 0m" field-of-view="25deg" interaction-prompt="none" disable-pan disable-zoom shadow-intensity=".19" shadow-softness=".98" environment-image="neutral" exposure="1.18" tone-mapping="commerce" loading="eager" reveal="auto"></model-viewer>
+    <model-viewer id="plugyFloatModel" src="/static/plugy_official_v84.glb?v=87.20260922.1" alt="PLUGY, assistant officiel PLUG ART nacré blanc rose aux reflets violet cyan" camera-controls auto-rotate auto-rotate-delay="1250" rotation-per-second="2.7deg" camera-orbit="-7deg 77deg 2.90m" camera-target="0m .18m 0m" field-of-view="25deg" interaction-prompt="none" disable-pan disable-zoom shadow-intensity=".19" shadow-softness=".98" environment-image="neutral" exposure="1.18" tone-mapping="commerce" loading="eager" reveal="auto"></model-viewer><div class="plugy-model-fallback"><strong>PLUGY</strong><span>Assistant PLUG ART</span></div>
   </div>
   <button class="plugy-float-voice" id="plugyFloatVoice" aria-label="Parler à PLUGY">⌁</button>
 </div>
 
-<nav class="mobile-dock glass"><button class="active" data-view="dashboard"><b>⌂</b><span>Accueil</span></button><button data-view="radar"><b>◎</b><span>Radar</span></button><button data-view="map"><b>◉</b><span>Carte</span></button><button data-view="studio"><b>✦</b><span>Studio</span></button><button data-view="crm"><b>▦</b><span>CRM</span></button></nav>
+<nav class="mobile-dock glass"><button class="active" data-view="dashboard"><b>⌂</b><span>Accueil</span></button><button data-view="radar"><b>◎</b><span>Radar</span></button><button data-view="studio"><b>✦</b><span>Studio</span></button><button data-view="social"><b>◎</b><span>Instagram</span></button><button data-view="crm"><b>▦</b><span>CRM</span></button></nav>
 
 <div class="plugy-chat" id="plugyChat">
   <div class="chat-head"><div><i></i><strong>PLUGY</strong><span id="plugyVoiceStatus">Disponible</span></div><div class="chat-head-actions"><button id="plugyVoiceBtn" aria-label="Conversation vocale">⌁</button><button id="closeChat" aria-label="Fermer">×</button></div></div>
@@ -354,10 +376,11 @@
 </div>
 
 <div class="modal" id="simpleModal"><div class="modal-card"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
-<script defer src="/static/dashboard_v65_core.js?v=86.20260922.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=86.20260922.1"></script>\n<script defer src="/static/plugy_assistant_v86.js?v=86.20260922.1"></script>
-<script defer src="/static/dashboard_v86_map.js?v=86.20260922.1"></script>
-<script defer src="/static/dashboard_v86_people.js?v=86.20260922.1"></script>
-<script defer src="/static/dashboard_v86_editor.js?v=86.20260922.1"></script>
-<script defer src="/static/dashboard_v86_quality.js?v=86.20260922.1"></script>
+<script defer src="/static/dashboard_v65_core.js?v=87.20260922.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=87.20260922.1"></script>\n<script defer src="/static/plugy_assistant_v87.js?v=87.20260922.1"></script>
+<script defer src="/static/dashboard_v86_map.js?v=87.20260922.1"></script>
+<script defer src="/static/dashboard_v86_people.js?v=87.20260922.1"></script>
+<script defer src="/static/dashboard_v86_editor.js?v=87.20260922.1"></script>
+<script defer src="/static/dashboard_v86_quality.js?v=87.20260922.1"></script>
+<script defer src="/static/dashboard_v87_instagram.js?v=87.20260922.1"></script>
 </body>
 </html>

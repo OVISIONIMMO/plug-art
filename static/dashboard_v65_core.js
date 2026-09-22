@@ -173,10 +173,12 @@ function renderSocial(){
   const box=q('#socialQueue');if(!box)return;
   const set=(id,v)=>{const e=q('#'+id);if(e)e.textContent=v};
   set('socialTotal',socialQueue.length);set('socialReady',socialQueue.filter(x=>x.status==='Prêt').length);set('socialPublished',socialQueue.filter(x=>x.status==='Publié').length);
-  box.innerHTML=socialQueue.map(x=>'<article class="social-item" data-social-id="'+x.id+'"><div><small>'+esc(x.format||'Instagram')+'</small><strong>'+esc(x.title||'Publication')+'</strong><p>'+esc(cut(x.caption||'',120))+'</p></div><div class="social-item-controls"><select data-social-status="'+x.id+'"><option'+(x.status==='À préparer'?' selected':'')+'>À préparer</option><option'+(x.status==='Prêt'?' selected':'')+'>Prêt</option><option'+(x.status==='À publier'?' selected':'')+'>À publier</option><option'+(x.status==='Publié'?' selected':'')+'>Publié</option></select><input type="datetime-local" value="'+esc(x.scheduled||'')+'" data-social-date="'+x.id+'"><button data-social-delete="'+x.id+'">×</button></div></article>').join('')||'<div class="empty-line">Aucune publication dans la file.</div>';
+  box.innerHTML=socialQueue.map(x=>'<article class="social-item" data-social-id="'+x.id+'"><div><small>'+esc(x.format||'Instagram')+'</small><strong>'+esc(x.title||'Publication')+'</strong><p>'+esc(cut(x.caption||'',120))+'</p><div class="social-media-count">'+((x.media_urls||[]).length?((x.media_urls||[]).length+' média'+((x.media_urls||[]).length>1?'s':'')):'Visuel à préparer')+'</div></div><div class="social-item-controls"><select data-social-status="'+x.id+'"><option'+(x.status==='À préparer'?' selected':'')+'>À préparer</option><option'+(x.status==='Prêt'?' selected':'')+'>Prêt</option><option'+(x.status==='À publier'?' selected':'')+'>À publier</option><option'+(x.status==='Publié'?' selected':'')+'>Publié</option></select><input type="datetime-local" value="'+esc(x.scheduled||'')+'" data-social-date="'+x.id+'"><button class="social-publish-btn" data-social-publish="'+x.id+'">Publier</button><button data-social-delete="'+x.id+'">×</button></div></article>').join('')||'<div class="empty-line">Aucune publication dans la file.</div>';
   qa('[data-social-status]').forEach(e=>e.onchange=()=>{const x=socialQueue.find(v=>String(v.id)===String(e.dataset.socialStatus));if(x){x.status=e.value;persistSocial();renderSocial()}});
   qa('[data-social-date]').forEach(e=>e.onchange=()=>{const x=socialQueue.find(v=>String(v.id)===String(e.dataset.socialDate));if(x){x.scheduled=e.value;persistSocial()}});
   qa('[data-social-delete]').forEach(b=>b.onclick=()=>{socialQueue=socialQueue.filter(v=>String(v.id)!==String(b.dataset.socialDelete));persistSocial();renderSocial()});
+  qa('[data-social-publish]').forEach(b=>b.onclick=()=>window.PLUGInstagram?.publishQueueItem?.(b.dataset.socialPublish));
+  window.dispatchEvent(new CustomEvent('plugart:social-rendered'));
   const checks=store.get('plugart_v66_social_checks',{});
   qa('[data-social-check]').forEach(e=>{e.checked=!!checks[e.dataset.socialCheck];e.onchange=()=>{checks[e.dataset.socialCheck]=e.checked;store.set('plugart_v66_social_checks',checks)}});
 }
@@ -212,7 +214,7 @@ function modal(html){const c=q('#modalContent'),m=q('#simpleModal');if(c&&m){c.i
 q('#modalClose')?.addEventListener('click',closeModal);q('#simpleModal')?.addEventListener('click',e=>{if(e.target===q('#simpleModal'))closeModal()});
 q('#newNote')?.addEventListener('click',()=>modal('<h3>Nouvelle note</h3><label>Titre<input id="mTitle"></label><label>Note<textarea id="mBody"></textarea></label><button class="save" id="mSaveNote">Enregistrer</button>'));
 q('#newContact')?.addEventListener('click',()=>modal('<h3>Nouveau contact</h3><label>Nom<input id="mName"></label><label>Information<textarea id="mInfo"></textarea></label><label>Statut<select id="mStatus"><option>À contacter</option><option>Contacté</option><option>Relance</option><option>Partenaire</option></select></label><button class="save" id="mSaveContact">Enregistrer</button>'));
-q('#quickGo')?.addEventListener('click',()=>modal('<h3>Navigation</h3><div class="modal-nav"><button data-go="dashboard">Accueil</button><button data-go="radar">Radar</button><button data-go="opencalls">Open Calls</button><button data-go="studio">Studio Social</button><button data-go="map">Carte</button><button data-go="artists">Artistes</button><button data-go="crm">CRM</button></div>'));
+q('#quickGo')?.addEventListener('click',()=>modal('<h3>Navigation</h3><div class="modal-nav"><button data-go="dashboard">Accueil</button><button data-go="radar">Radar</button><button data-go="opencalls">Open Calls</button><button data-go="studio">Studio Social</button><button data-go="social">Instagram</button><button data-go="map">Carte</button><button data-go="artists">Artistes</button><button data-go="crm">CRM</button></div>'));
 q('#modalContent')?.addEventListener('click',e=>{if(e.target.id==='mSaveNote'){notes.unshift({id:Date.now(),title:q('#mTitle').value,body:q('#mBody').value,date:new Date().toLocaleString('fr-FR')});store.set('plugart_v65_notes',notes);renderNotes();closeModal()}else if(e.target.id==='mSaveContact'){contacts.unshift({id:Date.now(),name:q('#mName').value,info:q('#mInfo').value,status:q('#mStatus').value});store.set('plugart_v65_contacts',contacts);renderContacts();closeModal()}else if(e.target.dataset.go){view(e.target.dataset.go);closeModal()}});
 
 function openChat(){q('#plugyChat')?.classList.add('open');window.PlugyAssistant?.setMode?.('assistant')}
@@ -241,7 +243,7 @@ async function loadAll(){
   if('requestIdleCallback'in window)requestIdleCallback(()=>hydrate(),{timeout:900});else setTimeout(hydrate,80);
   return state;
 }
-window.PLUG65={q,qa,esc,api,store,state,view,cut,fmt,oppImg,playPlugy,openChat,openOppDetails,filterOpenCalls,renderDashboard,renderSocial,modal,closeModal,loadAll};
+window.PLUG65={q,qa,esc,api,store,state,view,cut,fmt,oppImg,playPlugy,openChat,openOppDetails,filterOpenCalls,renderDashboard,renderSocial,modal,closeModal,loadAll,getSocialQueue:()=>socialQueue,setSocialQueue:(items)=>{socialQueue=Array.isArray(items)?items:[];persistSocial();renderSocial()}};
 const initialView=location.hash.slice(1)||'dashboard';history.replaceState({view:initialView},'','#'+initialView);view(initialView,{fromHistory:true,instant:true});
 window.PLUG65.ready=loadAll();
 })();
