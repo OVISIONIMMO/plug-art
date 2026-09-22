@@ -233,7 +233,7 @@ async function loadAll(){
   state.stats=vals[0]||{};state.opps=Array.isArray(vals[1])?vals[1]:[];state.artists=Array.isArray(vals[2])?vals[2]:[];state.events=Array.isArray(vals[3])?vals[3]:[];state.map=Array.isArray(vals[4])?vals[4]:[];state.radar=vals[5]||{};state.candidates=Array.isArray(vals[6])?vals[6]:[];
   renderDashboard();renderRadar();renderOpenCalls();renderSocial();renderNetwork();renderWorkspace();return state;
 }
-window.PLUG65={q,qa,esc,api,store,state,view,cut,fmt,oppImg,playPlugy,openChat,renderDashboard,renderSocial,loadAll};
+window.PLUG65={q,qa,esc,api,store,state,view,cut,fmt,oppImg,playPlugy,openChat,openOppDetails,filterOpenCalls,renderDashboard,renderSocial,loadAll};
 const initialView=location.hash.slice(1)||'dashboard';history.replaceState({view:initialView},'','#'+initialView);view(initialView,{fromHistory:true,instant:true});
 window.PLUG65.ready=loadAll();
 })();

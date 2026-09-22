@@ -823,3 +823,29 @@ body[data-plugy-state="listening"] .plugy-float-voice{background:#201a2d;color:#
 .plugy-chat form{min-height:42px;border:1px solid #e0e2df!important;background:#fff!important;border-radius:12px!important}.plugy-chat input{color:#1e2229!important;font-size:10px!important}.plugy-chat form button{background:#1b1d22!important;color:#fff!important}
 @media(max-width:920px){.plugy-float{width:105px;height:105px;right:10px;bottom:calc(72px + env(safe-area-inset-bottom))}.plugy-float[data-mode="assistant"]{width:150px;height:150px;bottom:calc(82px + env(safe-area-inset-bottom))}.plugy-chat{left:8px!important;right:8px!important;bottom:calc(70px + env(safe-area-inset-bottom))!important;width:auto!important;max-height:62dvh!important;border-radius:15px!important}}
 @media(prefers-reduced-motion:reduce){[data-plugy-state="listening"]:after,[data-plugy-state="thinking"]:before,[data-plugy-state="thinking"]:after,[data-plugy-state="speaking"]:before{animation:none!important}.plugy-float{transition:opacity .15s ease!important}}
+
+
+/* V78 — PLUGY assistant action/runtime polish */
+.plugy-float[data-mode="mini"]{
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:auto!important;
+  width:118px;
+  height:118px;
+  transform:translate3d(var(--plugy-x),var(--plugy-y),0) scale(1)!important;
+}
+body[data-plugy-state="sleep"] .plugy-float[data-mode="mini"]{
+  opacity:.48!important;
+  transform:translate3d(var(--plugy-x),calc(var(--plugy-y) + 5px),0) scale(.94)!important;
+}
+.plugy-action-focus{
+  position:relative;
+  z-index:3;
+  outline:2px solid rgba(137,91,238,.52)!important;
+  outline-offset:3px!important;
+  box-shadow:0 0 0 7px rgba(236,112,205,.10),0 18px 44px rgba(73,46,110,.12)!important;
+  transition:outline-color .2s ease,box-shadow .2s ease!important;
+}
+@media(max-width:920px){
+  .plugy-float[data-mode="mini"]{width:96px;height:96px}
+}
