@@ -3,7 +3,8 @@
 'use strict';
 const q=(s,r=document)=>r.querySelector(s), qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const api=async(url,opt={})=>{const r=await fetch(url,{cache:'no-store',...opt});if(!r.ok)throw new Error((await r.text())||String(r.status));const ct=r.headers.get('content-type')||'';return ct.includes('json')?r.json():r.text()};
+const apiMemo=new Map();
+const api=async(url,opt={})=>{const method=String(opt.method||'GET').toUpperCase(),memoable=method==='GET'&&/^\/api\/(stats|opportunities|artists|exhibitions|v86\/map)(?:\?|$)/.test(url),now=performance.now(),hit=apiMemo.get(url);if(memoable&&hit&&now-hit.t<3200)return hit.v;const r=await fetch(url,{cache:memoable?'default':'no-store',...opt});if(!r.ok)throw new Error((await r.text())||String(r.status));const ct=r.headers.get('content-type')||'',v=ct.includes('json')?await r.json():await r.text();if(memoable)apiMemo.set(url,{t:now,v});if(method!=='GET')apiMemo.clear();return v};
 const store={get(k,d=[]){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){localStorage.setItem(k,JSON.stringify(v))}};
 const state={stats:{},opps:[],artists:[],events:[],map:[],radar:{},candidates:[]};
 const meta={dashboard:['Accueil'],radar:['Radar'],opencalls:['Open Calls'],studio:['Studio Social'],map:['Carte internationale'],artists:['Artistes'],crm:['CRM Prospection'],social:['Instagram'],network:['Réseau'],workspace:['Suivi']};
@@ -14,15 +15,14 @@ let socialQueue=store.get('plugart_v66_social_queue',[]);
 let currentView=null;
 function view(id,opt={}){
   if(!meta[id])id='dashboard';
-  const previous=currentView;currentView=id;
+  const previous=currentView;currentView=id;document.body.classList.add('view-switching');
   qa('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+id));
   qa('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
-  const t=q('#pageTitle');
-  if(t)t.textContent=meta[id][0];
+  const t=q('#pageTitle');if(t)t.textContent=meta[id][0];
   document.body.dataset.view=id;document.title='PLUG ART · '+meta[id][0];
   qa('[data-view]').forEach(b=>{if(b.dataset.view===id)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   if(!opt.fromHistory){const url='#'+id;if(location.hash!==url)history.pushState({view:id,from:previous},'',url);else if(!history.state?.view)history.replaceState({view:id,from:previous},'',url)}
-  window.scrollTo({top:0,behavior:opt.instant?'auto':'smooth'});
+  window.scrollTo({top:0,behavior:'auto'});dispatchEvent(new CustomEvent('plugart:view',{detail:{id,previous}}));requestAnimationFrame(()=>requestAnimationFrame(()=>document.body.classList.remove('view-switching')));
 }
 qa('[data-view]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();view(b.dataset.view)}));
 function goBack(){if(history.length>1)history.back();else view('dashboard')}
@@ -233,7 +233,7 @@ async function loadAll(){
   state.stats=vals[0]||{};state.opps=Array.isArray(vals[1])?vals[1]:[];state.radar=vals[2]||{};state.candidates=Array.isArray(vals[3])?vals[3]:[];
   renderDashboard();renderRadar();renderOpenCalls();renderWorkspace();
   const hydrate=async()=>{
-    const deferred=[['/api/artists',[]],['/api/exhibitions',[]],['/api/v85/map',[]]];
+    const deferred=[['/api/artists',[]],['/api/exhibitions',[]],['/api/v86/map',[]]];
     const more=await Promise.all(deferred.map(async s=>{try{return await api(s[0])}catch{return s[1]}}));
     state.artists=Array.isArray(more[0])?more[0]:[];state.events=Array.isArray(more[1])?more[1]:[];state.map=Array.isArray(more[2])?more[2]:[];
     renderDashboard();renderNetwork();window.dispatchEvent(new CustomEvent('plugart:hydrated'));

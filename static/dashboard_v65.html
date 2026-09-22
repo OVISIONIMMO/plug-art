@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/dashboard_v65.css?v=85.20260922.1">
+<link rel="stylesheet" href="/static/dashboard_v65.css?v=86.20260922.1">
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
 </head>
 <body>
@@ -52,7 +52,7 @@
       <button class="command-button" data-view="opencalls">Open Calls</button>
       <button class="command-button primary" data-view="studio">＋ Créer</button>
       <span class="sync"><i></i> live</span>
-      <button class="mini-button" id="quickGo" aria-label="Navigation rapide">⌕</button>
+      <button class="mini-button layout-health" id="layoutHealth" aria-label="Diagnostic interface" title="Diagnostic interface">✓</button><button class="mini-button" id="quickGo" aria-label="Navigation rapide">⌕</button>
     </div>
   </header>
 
@@ -90,18 +90,18 @@
       </article>
 
       <article class="card card-verify glass">
-        <div class="card-head"><strong>À vérifier</strong><button data-view="workspace">Ouvrir</button></div>
+        <div class="card-head"><strong>À vérifier</strong><button data-view="crm">Ouvrir</button></div>
         <div class="compact-list" id="dashCandidates"></div>
       </article>
 
       <article class="card card-network glass">
-        <div class="card-head"><strong>Réseau</strong><button data-view="network">Ouvrir</button></div>
+        <div class="card-head"><strong>Réseau</strong><button data-view="artists">Ouvrir</button></div>
         <div class="network-count"><b id="dashArtistCount">—</b><span>profils actifs</span></div>
         <div class="avatar-row" id="dashArtists"></div>
       </article>
 
       <article class="card card-agenda glass">
-        <div class="card-head"><strong>Agenda</strong><button data-view="network">Ouvrir</button></div>
+        <div class="card-head"><strong>Agenda</strong><button data-view="artists">Ouvrir</button></div>
         <div class="compact-list" id="dashEvents"></div>
       </article>
 
@@ -198,7 +198,7 @@
       </aside>
 
       <section class="studio-canvas glass">
-        <div class="canvas-toolbar"><div><small>APERÇU</small><strong id="studioCounter">Slide 1 / 5</strong></div><div class="studio-free-tools"><button id="freeModeToggle" class="active">Mode libre</button><button id="addTextLayer">+ Texte</button><button id="addRectLayer">▭</button><button id="addCircleLayer">○</button><button id="addImageLayer">+ Image</button><input id="freeImageUpload" type="file" accept="image/*" hidden></div><div class="zoom-controls"><button id="zoomOut">−</button><span id="zoomLabel">100%</span><button id="zoomIn">+</button></div></div>
+        <div class="canvas-toolbar"><div><small>APERÇU</small><strong id="studioCounter">Slide 1 / 5</strong></div><div class="studio-free-tools"><button id="layerUndo" title="Annuler">↶</button><button id="layerRedo" title="Rétablir">↷</button><select id="studioTemplate" title="Template"><option value="none">Template</option><option value="open">Open Call</option><option value="deadline">Deadline</option><option value="artist">Artiste</option></select><button id="freeModeToggle" class="active">Libre</button><button id="addTextLayer">+ Texte</button><button id="addRectLayer">▭</button><button id="addCircleLayer">○</button><button id="addImageLayer">+ Image</button><input id="freeImageUpload" type="file" accept="image/*" hidden></div><div class="zoom-controls"><button id="zoomOut">−</button><span id="zoomLabel">100%</span><button id="zoomIn">+</button></div></div>
         <div class="carousel-stage">
           <article class="carousel-art theme-editorial layout-top cut-none align-left font-sans accent-violet" id="carouselArt">
             <div class="art-media" id="artMedia"><div class="art-photo" id="artPhoto"></div><div class="art-photo-secondary" id="artPhotoSecondary"></div><div class="art-photo-third" id="artPhotoThird"></div><div class="art-photo-fourth" id="artPhotoFourth"></div></div>
@@ -249,7 +249,7 @@
           </div>
         </div>
 
-        <div class="editor-pane" data-pane="layers"><div class="layer-toolbar-note">Ajoute puis déplace directement les éléments sur le visuel.</div><div id="layerList" class="layer-list"></div><label>Texte / nom<input id="layerText" placeholder="Texte du calque"></label><label>Couleur<input id="layerColor" type="color" value="#111111"></label><label>Taille<input id="layerFontSize" type="range" min="18" max="180" value="64"></label><label>Largeur<input id="layerWidth" type="range" min="8" max="95" value="40"></label><label>Hauteur<input id="layerHeight" type="range" min="5" max="80" value="18"></label><label>Opacité<input id="layerOpacity" type="range" min="10" max="100" value="100"></label><div class="layer-actions"><button id="layerBack">↓ Derrière</button><button id="layerFront">↑ Devant</button><button id="layerDelete">Supprimer</button></div></div>
+        <div class="editor-pane" data-pane="layers"><div class="layer-toolbar-note">Ajoute puis déplace directement les éléments sur le visuel.</div><div id="layerList" class="layer-list"></div><label>Texte / nom<input id="layerText" placeholder="Texte du calque"></label><label>Couleur<input id="layerColor" type="color" value="#111111"></label><label>Taille<input id="layerFontSize" type="range" min="18" max="180" value="64"></label><label>Largeur<input id="layerWidth" type="range" min="8" max="95" value="40"></label><label>Hauteur<input id="layerHeight" type="range" min="5" max="80" value="18"></label><label>Opacité<input id="layerOpacity" type="range" min="10" max="100" value="100"></label><label>Rotation<input id="layerRotation" type="range" min="-180" max="180" value="0"></label><div class="layer-actions"><button id="layerBack">↓ Derrière</button><button id="layerFront">↑ Devant</button><button id="layerDuplicate">Dupliquer</button><button id="layerLock">Verrouiller</button><button id="layerDelete">Supprimer</button></div></div>
         <div class="editor-pane" data-pane="style">
           <label>Thème<div class="theme-grid"><button class="active" data-theme="editorial">Éditorial</button><button data-theme="glass">Glass</button><button data-theme="impact">Impact</button><button data-theme="paper">Papier</button><button data-theme="night">Night</button><button data-theme="color">Color</button></div></label>
           <label>Accent<div class="accent-grid"><button class="active" data-accent="violet"></button><button data-accent="cyan"></button><button data-accent="pink"></button><button data-accent="gold"></button><button data-accent="ink"></button></div></label>
@@ -266,8 +266,8 @@
 
 
   <section class="view" id="view-map">
-    <div class="section-bar"><h1>Carte internationale</h1><div class="section-actions"><button class="glass-button" id="fitGeoMap">Tout voir</button><button class="glass-button primary" id="refreshGeoMap">Actualiser</button></div></div>
-    <div class="geo-shell"><aside class="geo-filters glass"><label>Recherche<input id="geoSearch" placeholder="Ville, pays, exposition…"></label><label>Type<select id="geoKind"><option value="">Tout</option><option value="opportunity">Open Calls</option><option value="exhibition">Expositions</option></select></label><label>Pays<select id="geoCountry"><option value="">Tous les pays</option></select></label><div class="geo-kpis"><div><b id="geoVisible">0</b><span>points visibles</span></div><div><b id="geoCountries">0</b><span>pays</span></div></div><p>Zoome, déplace la carte et ouvre directement les repères utiles.</p></aside><div class="geo-map-panel glass"><div id="geoMap" class="geo-map"><div class="geo-loading">Chargement de la carte…</div></div></div><aside class="geo-results glass"><div class="panel-title"><h2>Repères</h2></div><div id="geoResultList" class="geo-result-list"></div></aside></div>
+    <div class="section-bar"><h1>Carte internationale</h1><div class="section-actions"><button class="glass-button" id="fitGeoMap">Tout voir</button><button class="glass-button" id="geoGeocode">Compléter la carte</button><button class="glass-button primary" id="refreshGeoMap">Actualiser</button></div></div>
+    <div class="geo-shell"><aside class="geo-filters glass"><label>Recherche<input id="geoSearch" placeholder="Ville, pays, exposition…"></label><label>Type<select id="geoKind"><option value="">Tout</option><option value="opportunity">Open Calls</option><option value="exhibition">Expositions</option></select></label><label>Pays<select id="geoCountry"><option value="">Tous les pays</option></select></label><div class="geo-kpis"><div><b id="geoVisible">0</b><span>points visibles</span></div><div><b id="geoCountries">0</b><span>pays</span></div></div><div class="geo-status" id="geoStatus">Vérification géographique…</div><p>Zoome, déplace la carte et ouvre directement les repères utiles.</p></aside><div class="geo-map-panel glass"><div id="geoMap" class="geo-map"><div class="geo-loading">Chargement de la carte…</div></div></div><aside class="geo-results glass"><div class="panel-title"><h2>Repères</h2></div><div id="geoResultList" class="geo-result-list"></div></aside></div>
   </section>
   <section class="view" id="view-artists">
     <div class="section-bar"><h1>Artistes</h1><div class="section-actions"><button class="glass-button primary" id="addArtistBtn">+ Ajouter un artiste</button></div></div>
@@ -275,7 +275,7 @@
   </section>
   <section class="view" id="view-crm">
     <div class="section-bar"><h1>CRM Prospection</h1><div class="section-actions"><button class="glass-button primary" id="addLeadBtn">+ Nouveau contact</button></div></div>
-    <div class="crm-tools glass"><input id="crmSearch" placeholder="Galerie, lieu, contact, ville…"><select id="crmPriority"><option value="">Toutes priorités</option><option value="high">Haute</option><option value="normal">Normale</option><option value="low">Basse</option></select><span id="crmCount">0 contacts</span></div><div class="crm-board" id="crmBoard"></div>
+    <div class="crm-tools glass"><input id="crmSearch" placeholder="Galerie, lieu, contact, ville…"><select id="crmPriority"><option value="">Toutes priorités</option><option value="high">Haute</option><option value="normal">Normale</option><option value="low">Basse</option></select><button id="crmDueOnly" class="crm-due-filter">À relancer <b id="crmDueCount">0</b></button><span id="crmCount">0 contacts</span></div><div class="crm-board" id="crmBoard"></div>
   </section>
   <section class="view legacy-view" id="view-social">
     <div class="section-bar">
@@ -339,7 +339,7 @@
 
 <div class="plugy-float" id="plugyFloat" data-mode="hero">
   <div class="plugy-float-visual" id="plugyFloatVisual" data-plugy-state="idle" role="button" tabindex="0" aria-label="PLUGY, double-cliquer ou maintenir pour parler">
-    <model-viewer id="plugyFloatModel" src="/static/plugy_official_v84.glb?v=85.20260922.1" alt="PLUGY, assistant officiel PLUG ART nacré blanc rose aux reflets violet cyan" camera-controls auto-rotate auto-rotate-delay="1250" rotation-per-second="2.7deg" camera-orbit="-7deg 77deg 2.90m" camera-target="0m .18m 0m" field-of-view="25deg" interaction-prompt="none" disable-pan disable-zoom shadow-intensity=".19" shadow-softness=".98" environment-image="neutral" exposure="1.18" tone-mapping="commerce" loading="eager" reveal="auto"></model-viewer>
+    <model-viewer id="plugyFloatModel" src="/static/plugy_official_v84.glb?v=86.20260922.1" alt="PLUGY, assistant officiel PLUG ART nacré blanc rose aux reflets violet cyan" camera-controls auto-rotate auto-rotate-delay="1250" rotation-per-second="2.7deg" camera-orbit="-7deg 77deg 2.90m" camera-target="0m .18m 0m" field-of-view="25deg" interaction-prompt="none" disable-pan disable-zoom shadow-intensity=".19" shadow-softness=".98" environment-image="neutral" exposure="1.18" tone-mapping="commerce" loading="eager" reveal="auto"></model-viewer>
   </div>
   <button class="plugy-float-voice" id="plugyFloatVoice" aria-label="Parler à PLUGY">⌁</button>
 </div>
@@ -354,9 +354,10 @@
 </div>
 
 <div class="modal" id="simpleModal"><div class="modal-card"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
-<script defer src="/static/dashboard_v65_core.js?v=85.20260922.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=85.20260922.1"></script>\n<script defer src="/static/plugy_assistant_v85.js?v=85.20260922.1"></script>
-<script defer src="/static/dashboard_v85_map.js?v=85.20260922.1"></script>
-<script defer src="/static/dashboard_v85_people.js?v=85.20260922.1"></script>
-<script defer src="/static/dashboard_v85_editor.js?v=85.20260922.1"></script>
+<script defer src="/static/dashboard_v65_core.js?v=86.20260922.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=86.20260922.1"></script>\n<script defer src="/static/plugy_assistant_v86.js?v=86.20260922.1"></script>
+<script defer src="/static/dashboard_v86_map.js?v=86.20260922.1"></script>
+<script defer src="/static/dashboard_v86_people.js?v=86.20260922.1"></script>
+<script defer src="/static/dashboard_v86_editor.js?v=86.20260922.1"></script>
+<script defer src="/static/dashboard_v86_quality.js?v=86.20260922.1"></script>
 </body>
 </html>

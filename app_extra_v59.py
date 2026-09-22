@@ -2,20 +2,20 @@ from pathlib import Path
 from fastapi import Request, HTTPException
 from fastapi.responses import HTMLResponse, Response
 from urllib.parse import urljoin
-import hashlib,re,time,html as html_lib,requests,json
+import hashlib,re,time,html as html_lib,requests,json,threading
 import app as core
 import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='85.0'
+app.version='86.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'dashboard_v65.html'
 GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='85.20260922.1'
+VERSION='86.20260922.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -30,8 +30,8 @@ def root_v65():
       'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma':'no-cache',
       'Expires':'0',
-      'X-Plug-Art-Version':'85.0',
-      'X-Plug-Art-UI':'internal-control-center-v85'
+      'X-Plug-Art-Version':'86.0',
+      'X-Plug-Art-UI':'internal-control-center-v86'
     })
 
 from fastapi.middleware.gzip import GZipMiddleware
@@ -206,6 +206,265 @@ def artist_delete_v85(aid:int):
     if not cur.rowcount:raise HTTPException(404,'Artiste introuvable')
     return {'ok':True}
 
+
+# V86 operational layer: geographic completion, CRM history/reminders and artist portfolios.
+_c=core.conn()
+core.addcol(_c,'crm_leads','last_contact',"TEXT DEFAULT ''")
+core.addcol(_c,'artists','portfolio_url',"TEXT DEFAULT ''")
+core.addcol(_c,'artists','featured_image',"TEXT DEFAULT ''")
+core.addcol(_c,'artists','statement',"TEXT DEFAULT ''")
+core.addcol(_c,'artists','updated_at',"TEXT DEFAULT ''")
+_c.executescript("""
+CREATE TABLE IF NOT EXISTS crm_history(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  lead_id INTEGER,
+  action TEXT DEFAULT '',
+  details TEXT DEFAULT '',
+  created_at TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_crm_history_lead ON crm_history(lead_id,id DESC);
+CREATE TABLE IF NOT EXISTS artist_works(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  artist_id INTEGER,
+  title TEXT DEFAULT '',
+  year TEXT DEFAULT '',
+  medium TEXT DEFAULT '',
+  dimensions TEXT DEFAULT '',
+  image_url TEXT DEFAULT '',
+  notes TEXT DEFAULT '',
+  created_at TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_artist_works_artist ON artist_works(artist_id,id DESC);
+""")
+_c.commit()
+_c.close()
+
+_GEOCODE_LOCK=threading.Lock()
+_GEOCODE_STATE={'running':False,'last_run':'','updated':0,'errors':0}
+
+def _missing_geo_v86(limit=60):
+    opp=core.rows("""select 'opportunity' kind,id,title,'' venue,city,country from opportunities
+                     where status in ('open','rolling') and (lat is null or lon is null)
+                     and (coalesce(city,'')!='' or coalesce(country,'')!='') limit ?""",(limit,))
+    expo=core.rows("""select 'exhibition' kind,id,title,venue,city,country from exhibitions
+                      where (lat is null or lon is null)
+                      and (coalesce(city,'')!='' or coalesce(country,'')!='') limit ?""",(limit,))
+    return opp+expo
+
+def _geocode_worker_v86():
+    if not _GEOCODE_LOCK.acquire(blocking=False):
+        return
+    _GEOCODE_STATE.update({'running':True,'updated':0,'errors':0})
+    try:
+        for row in _missing_geo_v86(12):
+            query=', '.join(x for x in (row.get('venue'),row.get('city'),row.get('country')) if x)
+            if not query:
+                continue
+            try:
+                rr=requests.get(
+                    'https://nominatim.openstreetmap.org/search',
+                    params={'q':query,'format':'jsonv2','limit':1},
+                    headers={'User-Agent':'PLUG-ART-internal-map/1.0'},
+                    timeout=8
+                )
+                arr=rr.json() if rr.ok else []
+                if arr:
+                    lat=float(arr[0]['lat'])
+                    lon=float(arr[0]['lon'])
+                    table='opportunities' if row['kind']=='opportunity' else 'exhibitions'
+                    c=core.conn()
+                    c.execute(f'update {table} set lat=?,lon=? where id=?',(lat,lon,row['id']))
+                    c.commit()
+                    c.close()
+                    _GEOCODE_STATE['updated']+=1
+                else:
+                    _GEOCODE_STATE['errors']+=1
+            except Exception:
+                _GEOCODE_STATE['errors']+=1
+            time.sleep(1.05)
+    finally:
+        _GEOCODE_STATE['running']=False
+        _GEOCODE_STATE['last_run']=time.strftime('%Y-%m-%dT%H:%M:%S')
+        _GEOCODE_LOCK.release()
+
+@app.get('/api/v86/map')
+def map_v86(refresh:int=0):
+    return core.rows("""select id,title,'' venue,city,country,lat,lon,deadline date,deadline,
+                        coalesce(radar_score,score,0) score,source_url,'opportunity' kind
+                        from opportunities where lat is not null and lon is not null
+                        and status in ('open','rolling')""") + core.rows("""select id,title,venue,city,country,lat,lon,start date,start deadline,
+                        0 score,source_url,'exhibition' kind from exhibitions
+                        where lat is not null and lon is not null""")
+
+@app.get('/api/v86/geocode/status')
+def geocode_status_v86():
+    return {**_GEOCODE_STATE,'missing':len(_missing_geo_v86(500))}
+
+@app.post('/api/v86/geocode/run')
+def geocode_run_v86():
+    if _GEOCODE_STATE['running']:
+        return {'started':False,**_GEOCODE_STATE}
+    threading.Thread(target=_geocode_worker_v86,daemon=True).start()
+    return {'started':True,'missing':len(_missing_geo_v86(500))}
+
+def _crm_history_v86(lead_id,action,details=''):
+    c=core.conn()
+    c.execute('insert into crm_history(lead_id,action,details,created_at) values(?,?,?,?)',
+              (lead_id,action,str(details or '')[:900],_now_v85()))
+    c.commit()
+    c.close()
+
+@app.get('/api/v86/crm')
+def crm_list_v86():
+    return core.rows("""select * from crm_leads
+                        order by case priority when 'high' then 0 when 'normal' then 1 else 2 end,
+                        case when next_date!='' then next_date else '9999-12-31' end,
+                        updated_at desc,id desc""")
+
+@app.get('/api/v86/crm/{lid}/history')
+def crm_history_list_v86(lid:int):
+    return core.rows('select * from crm_history where lead_id=? order by id desc limit 80',(lid,))
+
+@app.post('/api/v86/crm')
+def crm_create_v86(body:dict):
+    allowed=['name','organization','kind','city','country','email','instagram','website',
+             'status','priority','next_action','next_date','last_contact','notes']
+    data={k:str(body.get(k,'')).strip() for k in allowed}
+    if not data['name'] and not data['organization']:
+        raise HTTPException(400,'Nom ou structure requis')
+    now=_now_v85()
+    cols=allowed+['created_at','updated_at']
+    vals=[data[k] for k in allowed]+[now,now]
+    c=core.conn()
+    cur=c.execute(f"insert into crm_leads ({','.join(cols)}) values ({','.join('?' for _ in cols)})",vals)
+    c.commit()
+    lid=cur.lastrowid
+    c.close()
+    _crm_history_v86(lid,'Création','Contact ajouté au CRM')
+    return core.one('select * from crm_leads where id=?',(lid,))
+
+@app.patch('/api/v86/crm/{lid}')
+def crm_update_v86(lid:int,body:dict):
+    old=core.one('select * from crm_leads where id=?',(lid,))
+    if not old:
+        raise HTTPException(404,'Contact introuvable')
+    allowed={'name','organization','kind','city','country','email','instagram','website',
+             'status','priority','next_action','next_date','last_contact','notes'}
+    data={k:str(v).strip() for k,v in body.items() if k in allowed}
+    if not data:
+        return old
+    data['updated_at']=_now_v85()
+    sets=','.join(f"{k}=?" for k in data)
+    c=core.conn()
+    c.execute(f"update crm_leads set {sets} where id=?",(*data.values(),lid))
+    c.commit()
+    c.close()
+    changed=[]
+    for k,v in data.items():
+        if k!='updated_at' and str(old.get(k) or '')!=str(v):
+            changed.append(f"{k}: {str(old.get(k) or '')[:70]} -> {str(v)[:70]}")
+    _crm_history_v86(lid,'Mise à jour',' · '.join(changed[:8]) or 'Informations mises à jour')
+    return core.one('select * from crm_leads where id=?',(lid,))
+
+@app.delete('/api/v86/crm/{lid}')
+def crm_delete_v86(lid:int):
+    c=core.conn()
+    cur=c.execute('delete from crm_leads where id=?',(lid,))
+    c.execute('delete from crm_history where lead_id=?',(lid,))
+    c.commit()
+    c.close()
+    if not cur.rowcount:
+        raise HTTPException(404,'Contact introuvable')
+    return {'ok':True}
+
+def _artist_out_v86(a):
+    if not a:
+        return a
+    a['tags']=json.loads(a.get('tags') or '[]')
+    a['milestones']=json.loads(a.get('milestones') or '[]')
+    return a
+
+@app.post('/api/v86/artists')
+def artist_create_v86(body:dict):
+    name=str(body.get('name','')).strip()
+    if not name:
+        raise HTTPException(400,'Nom requis')
+    allowed=['real_name','city','country','discipline','bio','website','instagram','email','notes',
+             'portfolio_url','featured_image','statement']
+    slug=core.slugify(name+'-'+str(int(time.time())))
+    cols=['slug','name']+allowed+['tags','milestones','updated_at']
+    vals=[slug,name]+[str(body.get(k,'')).strip() for k in allowed]+[
+        json.dumps(body.get('tags') or [],ensure_ascii=False),
+        json.dumps(body.get('milestones') or [],ensure_ascii=False),
+        _now_v85()
+    ]
+    c=core.conn()
+    cur=c.execute(f"insert into artists ({','.join(cols)}) values ({','.join('?' for _ in cols)})",vals)
+    c.commit()
+    aid=cur.lastrowid
+    c.close()
+    return _artist_out_v86(core.one('select * from artists where id=?',(aid,)))
+
+@app.patch('/api/v86/artists/{aid}')
+def artist_update_v86(aid:int,body:dict):
+    allowed={'name','real_name','city','country','discipline','bio','website','instagram','email','notes',
+             'portfolio_url','featured_image','statement'}
+    data={k:str(v).strip() for k,v in body.items() if k in allowed}
+    if 'tags' in body:
+        data['tags']=json.dumps(body.get('tags') or [],ensure_ascii=False)
+    if 'milestones' in body:
+        data['milestones']=json.dumps(body.get('milestones') or [],ensure_ascii=False)
+    data['updated_at']=_now_v85()
+    sets=','.join(f"{k}=?" for k in data)
+    c=core.conn()
+    cur=c.execute(f"update artists set {sets} where id=?",(*data.values(),aid))
+    c.commit()
+    c.close()
+    if not cur.rowcount:
+        raise HTTPException(404,'Artiste introuvable')
+    return _artist_out_v86(core.one('select * from artists where id=?',(aid,)))
+
+@app.delete('/api/v86/artists/{aid}')
+def artist_delete_v86(aid:int):
+    c=core.conn()
+    cur=c.execute('delete from artists where id=?',(aid,))
+    c.execute('delete from artist_works where artist_id=?',(aid,))
+    c.commit()
+    c.close()
+    if not cur.rowcount:
+        raise HTTPException(404,'Artiste introuvable')
+    return {'ok':True}
+
+@app.get('/api/v86/artists/{aid}/works')
+def artist_works_v86(aid:int):
+    return core.rows('select * from artist_works where artist_id=? order by id desc',(aid,))
+
+@app.post('/api/v86/artists/{aid}/works')
+def artist_work_create_v86(aid:int,body:dict):
+    if not core.one('select id from artists where id=?',(aid,)):
+        raise HTTPException(404,'Artiste introuvable')
+    allowed=['title','year','medium','dimensions','image_url','notes']
+    vals=[str(body.get(k,'')).strip() for k in allowed]
+    c=core.conn()
+    cur=c.execute(
+        f"insert into artist_works(artist_id,{','.join(allowed)},created_at) values(?,{','.join('?' for _ in allowed)},?)",
+        [aid,*vals,_now_v85()]
+    )
+    c.commit()
+    wid=cur.lastrowid
+    c.close()
+    return core.one('select * from artist_works where id=?',(wid,))
+
+@app.delete('/api/v86/artists/{aid}/works/{wid}')
+def artist_work_delete_v86(aid:int,wid:int):
+    c=core.conn()
+    cur=c.execute('delete from artist_works where id=? and artist_id=?',(wid,aid))
+    c.commit()
+    c.close()
+    if not cur.rowcount:
+        raise HTTPException(404,'Œuvre introuvable')
+    return {'ok':True}
+
 @app.get('/api/v65/status')
 @app.get('/api/v66/status')
 @app.get('/api/v67/status')
@@ -226,13 +485,14 @@ def artist_delete_v85(aid:int):
 @app.get('/api/v83/status')
 @app.get('/api/v84/status')
 @app.get('/api/v85/status')
-def status_v85():
+@app.get('/api/v86/status')
+def status_v86():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'85.0',
-      'ui':'internal-control-center-v85',
-      'reference_direction':'V84 master PLUGY retained; V85 adds internal map, CRM, artist profiles, free-layer social studio and low-latency loading',
+      'version':'86.0',
+      'ui':'internal-control-center-v86',
+      'reference_direction':'V86 production polish: geocoded international map, CRM reminders/history, artist portfolios, pro social editor, streaming voice PLUGY and calibrated desktop UI',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -258,4 +518,4 @@ def status_v85():
       'background':'responsive editorial workspace with simplified standard navigation and direct actions'
     }
 
-print(f"PLUG_ART_V85_READY ui=internal_control_center map=lazy crm=persistent artists=editable studio=free_layers plugy=agent voice=browser_stt_tts state_machine=on mini=on internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V86_READY ui=internal_control_center map=auto_geocode crm=history_reminders artists=portfolio studio=pro_layers plugy=stream_voice desktop=calibrated voice=browser_stt_tts state_machine=on mini=on internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)

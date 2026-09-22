@@ -75,7 +75,7 @@ function queueInstagram(){
   saveDraft();
   const qkey='plugart_v66_social_queue',queue=store.get(qkey,[]),o=currentOpp(),title=o?.title||state.slides[0]?.title||'Publication PLUG ART';
   queue.unshift({id:Date.now(),title,caption:q('#captionText')?.value||'',status:'À préparer',scheduled:'',format:q('#studioFormat')?.value||'portrait'});
-  store.set(qkey,queue.slice(0,40));P.renderSocial?.();view('social');
+  store.set(qkey,queue.slice(0,40));P.renderSocial?.();const b=q('#queueInstagramBtn'),old=b?.textContent;if(b){b.textContent='Ajouté ✓';setTimeout(()=>b.textContent=old,900)}
 }
 async function exportSlide(){
   const s=slide(),format=q('#studioFormat')?.value||'portrait',W=1080,H=format==='square'?1080:format==='story'?1920:1350,c=document.createElement('canvas');
@@ -93,8 +93,8 @@ async function exportSlide(){
 async function drawFreeLayers(ctx,s,W,H){
   const layers=Array.isArray(s.layers)?s.layers:[];
   for(const l of layers){
-    const px=W*(Number(l.x||0)/100),py=H*(Number(l.y||0)/100),pw=W*(Number(l.w||20)/100),ph=H*(Number(l.h||12)/100),op=Math.max(.05,Math.min(1,Number(l.opacity??1)));
-    ctx.save();ctx.globalAlpha=op;
+    const px=W*(Number(l.x||0)/100),py=H*(Number(l.y||0)/100),pw=W*(Number(l.w||20)/100),ph=H*(Number(l.h||12)/100),op=Math.max(.05,Math.min(1,Number(l.opacity??1))),rot=Number(l.rotation||0)*Math.PI/180;
+    ctx.save();ctx.globalAlpha=op;ctx.translate(px+pw/2,py+ph/2);ctx.rotate(rot);ctx.translate(-(px+pw/2),-(py+ph/2));
     if(l.type==='rect'||l.type==='circle'){ctx.fillStyle=l.color||'#2255ff';if(l.type==='circle'){ctx.beginPath();ctx.ellipse(px+pw/2,py+ph/2,pw/2,ph/2,0,0,Math.PI*2);ctx.fill()}else ctx.fillRect(px,py,pw,ph)}
     else if(l.type==='image'&&l.src){await drawImage(ctx,l.src,px,py,pw,ph)}
     else if(l.type==='text'){ctx.fillStyle=l.color||'#111111';ctx.textAlign='left';ctx.textBaseline='top';ctx.font='800 '+Math.max(12,Number(l.fontSize||64))+'px Arial';wrap(ctx,l.text||'Texte',px,py,pw,Math.max(18,Number(l.fontSize||64)*1.08),12)}
