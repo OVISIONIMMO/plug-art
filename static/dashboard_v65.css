@@ -1032,3 +1032,14 @@ body[data-view="opencalls"] .plugy-float[data-mode="mini"]{
 .plugy-arc.a3{width:61%!important;height:61%!important}
 .plugy-prong-glow{top:9%!important;height:18%!important;width:9%!important}
 .plugy-prong-glow.left{left:35%!important}.plugy-prong-glow.right{right:35%!important}
+
+
+/* V82 — visual fidelity to approved pink reference */
+.plugy-float-visual{
+  filter:drop-shadow(0 15px 24px rgba(95,48,118,.14)) drop-shadow(0 0 15px rgba(244,142,222,.06))!important;
+}
+.plugy-float-visual model-viewer{filter:saturate(.96) contrast(.995)}
+body[data-plugy-state="idle"] .plugy-aurora,
+body[data-plugy-state="minimized"] .plugy-aurora,
+body[data-plugy-state="sleep"] .plugy-aurora{opacity:0!important}
+body[data-plugy-state="hover"] .plugy-aurora{opacity:.16!important}

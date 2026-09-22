@@ -5,17 +5,17 @@ from urllib.parse import urljoin
 import hashlib,re,time,html as html_lib,requests
 import app as core
 import app_extra_v43 as v43
-from build_plugy_official_v81 import build_plugy_official_v81
+from build_plugy_official_v82 import build_plugy_official_v82
 
 app=v43.app
-app.version='81.0'
+app.version='82.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'dashboard_v65.html'
-GLB=BASE/'static'/'plugy_official_v81.glb'
-RESULT=build_plugy_official_v81(GLB)
+GLB=BASE/'static'/'plugy_official_v82.glb'
+RESULT=build_plugy_official_v82(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='81.20260922.1'
+VERSION='82.20260922.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -30,15 +30,15 @@ def root_v65():
       'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma':'no-cache',
       'Expires':'0',
-      'X-Plug-Art-Version':'81.0',
-      'X-Plug-Art-UI':'plugy-official-v81'
+      'X-Plug-Art-Version':'82.0',
+      'X-Plug-Art-UI':'plugy-official-v82'
     })
 
 @app.middleware('http')
 async def v65_headers(request:Request,call_next):
     response=await call_next(request)
     p=request.url.path
-    if p in ('/','/static/dashboard_v65.html','/static/dashboard_v65.css','/static/dashboard_v65_core.js','/static/dashboard_v65_studio.js','/static/plugy_assistant_v81.js','/static/plugy_official_v81.glb') or p.startswith('/api/v32/content/image'):
+    if p in ('/','/static/dashboard_v65.html','/static/dashboard_v65.css','/static/dashboard_v65_core.js','/static/dashboard_v65_studio.js','/static/plugy_assistant_v82.js','/static/plugy_official_v82.glb') or p.startswith('/api/v32/content/image'):
         response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
         response.headers['Pragma']='no-cache'
         response.headers['Expires']='0'
@@ -122,13 +122,14 @@ def opportunity_thumbnail_v67(oid:int):
 @app.get('/api/v79/status')
 @app.get('/api/v80/status')
 @app.get('/api/v81/status')
-def status_v81():
+@app.get('/api/v82/status')
+def status_v82():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'81.0',
-      'ui':'plugy-official-v81',
-      'reference_direction':'official V26-derived PLUGY, slimmer rose-lavender iridescent body, integrated prongs and global adaptive assistant',
+      'version':'82.0',
+      'ui':'plugy-official-v82',
+      'reference_direction':'reference-matched PLUGY with rose pearl resin, glossy black eyes, softer iridescence and integrated plug prongs',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -136,10 +137,10 @@ def status_v81():
       'typography':'Archivo + Inter Tight + IBM Plex Mono',
       'legacy_index_served':False,
       'single_mascot':True,
-      'plugy_reference':'official-v81-v26-derived',
+      'plugy_reference':'official-v82-reference-matched',
       'plugy_expected_sha256':PLUGY_REFERENCE_SHA256,
       'plugy_reference_match':hashlib.sha256(raw).hexdigest()==PLUGY_REFERENCE_SHA256 if raw else False,
-      'plugy_model_path':'/static/plugy_official_v81.glb',
+      'plugy_model_path':'/static/plugy_official_v82.glb',
       'plugy_material':RESULT.get('material'),
       'plugy_official_base':RESULT.get('official_base','V26'),
       'plugy_profile':RESULT.get('profile'),
@@ -154,4 +155,4 @@ def status_v81():
       'background':'responsive editorial workspace with simplified standard navigation and direct actions'
     }
 
-print(f"PLUG_ART_V81_READY ui=plugy_official_v81 plugy=official_v81_rose_lavender voice=browser_stt_tts state_machine=on mini=on internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V82_READY ui=plugy_official_v82 plugy=rose_pearl_black_eyes voice=browser_stt_tts state_machine=on mini=on internal=on marketing=off studio=advanced plugy=on clean_shell=on legacy=off plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
