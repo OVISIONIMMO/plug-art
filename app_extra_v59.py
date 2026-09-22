@@ -116,7 +116,8 @@ def opportunity_thumbnail_v67(oid:int):
 @app.get('/api/v72/status')
 @app.get('/api/v73/status')
 @app.get('/api/v74/status')
-@app.get('/api/v75/status')\n@app.get('/api/v77/status')
+@app.get('/api/v75/status')
+@app.get('/api/v77/status')
 def status_v77():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
