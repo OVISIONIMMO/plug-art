@@ -46,3 +46,38 @@ body[data-plugy-motion="Curious"] .plugy-stage model-viewer{transform:rotate(-1.
 body[data-plugy-motion="Attentive"] .plugy-energy.e1{opacity:.42;transform:scale(1.12)}
 body[data-plugy-motion="Attentive"] .plugy-energy.e2{opacity:.40;transform:scale(1.18)}
 .plugy-energy{transition:opacity .32s ease,transform .42s cubic-bezier(.2,.8,.2,1)}
+
+
+/* V107.2 · denser internal-workspace rhythm */
+#view-dashboard .panel{padding:16px}
+#view-dashboard .panel-head{margin-bottom:11px}
+#view-dashboard .quick-grid button{min-height:98px;padding:13px}
+#view-dashboard .quick-grid strong{font-size:11px}
+#view-dashboard .priority-row{padding:7px}
+#view-dashboard .priority-thumb{width:46px;height:46px}
+#view-dashboard .compact-row{padding:8px 0}
+#view-dashboard .metric-grid div{padding:11px}
+
+/* One PLUGY only: energy reacts around the single mounted model */
+.plugy-stage:before,.plugy-stage:after{
+  content:"";position:absolute;z-index:2;left:50%;top:50%;pointer-events:none;opacity:0;
+  width:190px;height:190px;border-radius:50%;transform:translate(-50%,-50%);
+  border:1px solid rgba(118,87,255,.0);
+}
+body[data-plugy-motion="Think"] .plugy-stage:before{
+  opacity:.8;border-color:rgba(118,87,255,.34);
+  border-left-color:transparent;border-bottom-color:transparent;
+  animation:plugyElectricOrbit 1.15s linear infinite;
+  box-shadow:0 0 18px rgba(118,87,255,.14),inset 0 0 16px rgba(87,220,230,.08);
+}
+body[data-plugy-motion="Think"] .plugy-stage:after{
+  opacity:.58;width:225px;height:225px;border-color:rgba(87,220,230,.28);
+  border-right-color:transparent;border-top-color:transparent;
+  animation:plugyElectricOrbitReverse 1.7s linear infinite;
+}
+@keyframes plugyElectricOrbit{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes plugyElectricOrbitReverse{to{transform:translate(-50%,-50%) rotate(-360deg)}}
+@media(prefers-reduced-motion:reduce){
+  body[data-plugy-motion="Think"] .plugy-stage:before,
+  body[data-plugy-motion="Think"] .plugy-stage:after{animation:none}
+}
