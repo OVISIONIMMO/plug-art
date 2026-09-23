@@ -590,10 +590,10 @@ function installCreationModes(){
   bar.innerHTML='<button class="active" data-create-mode="text">Texte</button><button data-create-mode="carousel">Carrousel</button><button data-create-mode="visual">Visuel</button><span class="mode-spacer"></span><select id="draftPicker"><option value="">Brouillons</option></select><button id="draftSave">Enregistrer</button><button id="draftDelete" title="Supprimer le brouillon">×</button>';
   toolbar.insertAdjacentElement('afterend',bar);
   const carousel=document.createElement('section');carousel.id='carouselCreationPanel';carousel.className='creation-mode-panel';
-  carousel.innerHTML='<div class="carousel-controls panel"><div class="panel-head"><div><small>CARROUSEL</small><h2>Structure éditoriale</h2></div></div><label>Source<select id="carouselSource"><option value="">Brief libre</option></select></label><label>Nombre de slides<select id="carouselCount"><option>4</option><option selected>5</option><option>6</option><option>7</option></select></label><label>Format<select id="carouselFormat"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><label>Brief<textarea id="carouselBrief" rows="7" placeholder="Angle, informations essentielles, CTA…"></textarea></label><button class="primary-btn wide" id="carouselGenerate">✦ Générer la structure</button><button class="secondary-btn wide" id="carouselGenerateImage">Générer l’image de la slide</button><button class="secondary-btn wide" id="carouselGenerateAll">Générer toutes les images</button><button class="secondary-btn wide" id="carouselToBureau">▤ Envoyer au Bureau</button></div><div class="carousel-preview panel"><div class="carousel-canvas" id="carouselCanvas"><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Ton carrousel apparaîtra ici</h3><p id="carouselBody">Choisis une source ou écris un brief.</p><b id="carouselCta">Découvrir →</b></div></div><div class="carousel-edit"><input id="slideKicker" placeholder="Kicker"><input id="slideTitle" placeholder="Titre"><textarea id="slideBody" rows="4" placeholder="Texte"></textarea><input id="slideCta" placeholder="CTA"></div></div><aside class="carousel-strip panel"><div class="panel-head"><div><small>SLIDES</small><h2 id="carouselCounter">0 slide</h2></div></div><div id="carouselSlides"></div></aside>';
+  carousel.innerHTML='<div class="carousel-controls panel"><div class="panel-head"><div><small>CARROUSEL</small><h2>Structure éditoriale</h2></div></div><label>Source<select id="carouselSource"><option value="">Brief libre</option></select></label><label>Nombre de slides<select id="carouselCount"><option>4</option><option selected>5</option><option>6</option><option>7</option></select></label><label>Format<select id="carouselFormat"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><label>Brief<textarea id="carouselBrief" rows="7" placeholder="Angle, informations essentielles, CTA…"></textarea></label><button class="primary-btn wide" id="carouselGenerate">✦ Générer la structure</button><button class="secondary-btn wide" id="carouselGenerateImage">Générer l’image de la slide</button><button class="secondary-btn wide" id="carouselGenerateAll">Générer toutes les images</button><button class="secondary-btn wide" id="carouselExport">Exporter la slide PNG</button><button class="secondary-btn wide" id="carouselExportAll">Exporter toutes les slides</button><button class="secondary-btn wide" id="carouselToBureau">▤ Envoyer au Bureau</button></div><div class="carousel-preview panel"><div class="carousel-canvas" id="carouselCanvas"><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Ton carrousel apparaîtra ici</h3><p id="carouselBody">Choisis une source ou écris un brief.</p><b id="carouselCta">Découvrir →</b></div></div><div class="carousel-edit"><input id="slideKicker" placeholder="Kicker"><input id="slideTitle" placeholder="Titre"><textarea id="slideBody" rows="4" placeholder="Texte"></textarea><input id="slideCta" placeholder="CTA"></div></div><aside class="carousel-strip panel"><div class="panel-head"><div><small>SLIDES</small><h2 id="carouselCounter">0 slide</h2></div></div><div id="carouselSlides"></div></aside>';
   view.appendChild(carousel);
   const visual=document.createElement('section');visual.id='visualCreationPanel';visual.className='creation-mode-panel';
-  visual.innerHTML='<div class="visual-controls panel"><div class="panel-head"><div><small>VISUEL</small><h2>Génération d’image</h2></div></div><label>Prompt<textarea id="visualPrompt" rows="9" placeholder="Décris le visuel à créer…"></textarea></label><label>Style<select id="visualStyle"><option value="gallery">Galerie / éditorial</option><option value="editorial">Éditorial</option><option value="art">Art contemporain</option><option value="photo">Photographique</option></select></label><label>Format<select id="visualRatio"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><button class="primary-btn wide" id="visualGenerate">✦ Générer le visuel</button><button class="secondary-btn wide" id="visualToBureau">▤ Envoyer au Bureau</button></div><div class="visual-preview panel"><div id="visualImage"><span>Le visuel apparaîtra ici.</span></div></div>';
+  visual.innerHTML='<div class="visual-controls panel"><div class="panel-head"><div><small>VISUEL</small><h2>Génération d’image</h2></div></div><label>Prompt<textarea id="visualPrompt" rows="9" placeholder="Décris le visuel à créer…"></textarea></label><label>Style<select id="visualStyle"><option value="gallery">Galerie / éditorial</option><option value="editorial">Éditorial</option><option value="art">Art contemporain</option><option value="photo">Photographique</option></select></label><label>Format<select id="visualRatio"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><button class="primary-btn wide" id="visualGenerate">✦ Générer le visuel</button><button class="secondary-btn wide" id="visualDownload">Télécharger le visuel</button><button class="secondary-btn wide" id="visualToBureau">▤ Envoyer au Bureau</button></div><div class="visual-preview panel"><div id="visualImage"><span>Le visuel apparaîtra ici.</span></div></div>';
   view.appendChild(visual);
   const st=document.createElement('style');st.textContent=`
   .creation-mode-bar{display:flex;gap:6px;margin:0 0 12px;align-items:center}.creation-mode-bar .mode-spacer{flex:1}.creation-mode-bar select{border:1px solid #e0e2e8;background:#fff;border-radius:999px;padding:8px 11px;font-size:9px;max-width:220px}.creation-mode-bar button{border:1px solid #e0e2e8;background:#fff;border-radius:999px;padding:9px 13px;font-size:10px;font-weight:800}.creation-mode-bar button.active{background:#111318;color:#fff;border-color:#111318}.creation-mode-panel{display:none}.creation-mode-panel.active{display:grid}.carouselCreationPanel{}.carousel-controls,.visual-controls{display:grid;gap:11px;align-self:start}.carousel-controls label,.visual-controls label{display:grid;gap:5px;font-size:8px;color:#90939e;font-weight:800;text-transform:uppercase;letter-spacing:.65px}.carousel-controls input,.carousel-controls select,.carousel-controls textarea,.visual-controls select,.visual-controls textarea{padding:10px;font-size:10px;text-transform:none;letter-spacing:0}.wide{width:100%}#carouselCreationPanel{grid-template-columns:260px minmax(0,1fr) 210px;gap:14px}.carousel-preview{min-height:650px;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:14px;align-items:center}.carousel-canvas{position:relative;overflow:hidden;aspect-ratio:4/5;border-radius:24px;background:linear-gradient(145deg,#eef1ff,#e4dcff 48%,#f3d2e3);box-shadow:0 25px 60px rgba(30,34,56,.12)}.carousel-image{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.72}.carousel-image:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.88) 70%)}.carousel-copy{position:absolute;z-index:2;left:7%;right:7%;bottom:6%;color:#17181e}.carousel-copy small{font-size:9px;font-weight:900;letter-spacing:1.1px}.carousel-copy h3{font-size:clamp(28px,3vw,50px);line-height:.95;letter-spacing:-2px;margin:10px 0 13px}.carousel-copy p{font-size:11px;line-height:1.45;max-width:85%}.carousel-copy b{font-size:10px}.carousel-edit{display:grid;gap:8px}.carousel-edit input,.carousel-edit textarea{padding:10px;font-size:10px}.carousel-strip{align-self:start;max-height:650px;overflow:auto}.carousel-slide-thumb{width:100%;border:1px solid #e4e5ea;background:#f8f9fa;border-radius:13px;padding:10px;text-align:left;margin-bottom:7px}.carousel-slide-thumb.active{border-color:#bfb6f4;background:#f8f6ff}.carousel-slide-thumb b,.carousel-slide-thumb span{display:block}.carousel-slide-thumb b{font-size:9px}.carousel-slide-thumb span{font-size:8px;color:#9295a0;margin-top:3px}#visualCreationPanel{grid-template-columns:300px 1fr;gap:14px}.visual-preview{min-height:660px;display:grid;place-items:center}.visual-preview #visualImage{width:min(540px,100%);aspect-ratio:4/5;border-radius:24px;background:#f0f2f6 center/cover no-repeat;display:grid;place-items:center;color:#9295a0;font-size:10px;box-shadow:0 24px 60px rgba(30,34,50,.08)}@media(max-width:1100px){#carouselCreationPanel{grid-template-columns:240px 1fr}.carousel-strip{grid-column:1/-1;display:flex;gap:7px;overflow:auto}.carousel-slide-thumb{min-width:150px}.carousel-preview{grid-template-columns:1fr}}@media(max-width:760px){#carouselCreationPanel,#visualCreationPanel{grid-template-columns:1fr}.carousel-preview{min-height:auto}.carousel-canvas{max-width:440px;margin:auto}.visual-preview{min-height:430px}}
@@ -602,10 +602,10 @@ function installCreationModes(){
   $('#draftPicker').onchange=e=>{if(e.target.value)loadDraft(Number(e.target.value))};
   $('#draftSave').onclick=saveDraft;
   $('#draftDelete').onclick=deleteDraft;
-  $('#carouselSource').onchange=syncCarouselBrief;$('#carouselGenerate').onclick=generateCarousel;$('#carouselGenerateImage').onclick=()=>generateCarouselImage(state.carousel.active);$('#carouselGenerateAll').onclick=generateAllCarouselImages;$('#carouselToBureau').onclick=carouselToBureau;
+  $('#carouselSource').onchange=syncCarouselBrief;$('#carouselGenerate').onclick=generateCarousel;$('#carouselGenerateImage').onclick=()=>generateCarouselImage(state.carousel.active);$('#carouselGenerateAll').onclick=generateAllCarouselImages;$('#carouselExport').onclick=()=>exportCarouselSlide(state.carousel.active);$('#carouselExportAll').onclick=exportAllCarouselSlides;$('#carouselToBureau').onclick=carouselToBureau;
   $('#carouselFormat').onchange=e=>{state.carousel.format=e.target.value;renderCarousel()};
   ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
-  $('#visualGenerate').onclick=generateVisual;$('#visualToBureau').onclick=visualToBureau;
+  $('#visualGenerate').onclick=generateVisual;$('#visualDownload').onclick=downloadVisual;$('#visualToBureau').onclick=visualToBureau;
   setCreationMode('text');fillCreationSources();bindDraftAutosave();
 }
 
@@ -704,6 +704,88 @@ async function generateAllCarouselImages(){
   for(let i=0;i<state.carousel.slides.length;i++){b.textContent='Image '+(i+1)+'/'+state.carousel.slides.length;state.carousel.active=i;renderCarousel();await generateCarouselImage(i)}
   b.disabled=false;b.textContent=old;state.carousel.active=0;renderCarousel();
 }
+
+function exportDimensions(format){
+  if(format==='1:1')return[1080,1080];
+  if(format==='9:16')return[1080,1920];
+  return[1080,1350];
+}
+function canvasTextLines(ctx,text,maxWidth,maxLines=6){
+  const words=String(text||'').trim().split(/\s+/).filter(Boolean),lines=[];let line='';
+  for(const word of words){
+    const test=line?line+' '+word:word;
+    if(ctx.measureText(test).width<=maxWidth||!line)line=test;
+    else{lines.push(line);line=word;if(lines.length>=maxLines-1)break}
+  }
+  if(line&&lines.length<maxLines)lines.push(line);
+  if(lines.length===maxLines&&words.length){
+    let last=lines[lines.length-1];
+    while(ctx.measureText(last+'…').width>maxWidth&&last.length>3)last=last.slice(0,-1);
+    lines[lines.length-1]=last.replace(/[\s,.!?;:]+$/,'')+'…';
+  }
+  return lines;
+}
+function loadCanvasImage(url,timeout=8500){
+  return new Promise(resolve=>{
+    if(!url)return resolve(null);
+    const img=new Image();let done=false;
+    const finish=v=>{if(done)return;done=true;clearTimeout(timer);resolve(v)};
+    const timer=setTimeout(()=>finish(null),timeout);
+    img.crossOrigin='anonymous';img.onload=()=>finish(img);img.onerror=()=>finish(null);img.src=url;
+  });
+}
+function drawCoverImage(ctx,img,w,h){
+  const scale=Math.max(w/img.naturalWidth,h/img.naturalHeight),dw=img.naturalWidth*scale,dh=img.naturalHeight*scale;
+  ctx.drawImage(img,(w-dw)/2,(h-dh)/2,dw,dh);
+}
+function triggerBlobDownload(blob,filename){
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);
+}
+async function exportCarouselSlide(index,quiet=false){
+  const s=state.carousel.slides[index];if(!s){if(!quiet)toast('Aucune slide à exporter');return false}
+  const [w,h]=exportDimensions(state.carousel.format||'4:5'),canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d');
+  const base=ctx.createLinearGradient(0,0,w,h);base.addColorStop(0,'#eef1ff');base.addColorStop(.48,'#e4dcff');base.addColorStop(1,'#f3d2e3');ctx.fillStyle=base;ctx.fillRect(0,0,w,h);
+  const img=await loadCanvasImage(s.image);
+  if(img){ctx.save();ctx.globalAlpha=.74;drawCoverImage(ctx,img,w,h);ctx.restore()}
+  const veil=ctx.createLinearGradient(0,h*.18,0,h);veil.addColorStop(0,'rgba(255,255,255,0)');veil.addColorStop(.56,'rgba(255,255,255,.18)');veil.addColorStop(1,'rgba(255,255,255,.96)');ctx.fillStyle=veil;ctx.fillRect(0,0,w,h);
+  const x=Math.round(w*.075),maxW=Math.round(w*.85),bottom=Math.round(h*.075),scale=h/1350;
+  ctx.fillStyle='#17181e';ctx.textBaseline='top';
+  ctx.font='800 '+Math.max(24,Math.round(27*scale))+'px Arial, sans-serif';ctx.fillText(String(s.kicker||'PLUG ART').toUpperCase(),x,Math.round(h*.60),maxW);
+  ctx.font='800 '+Math.max(52,Math.round(76*scale))+'px Arial, sans-serif';
+  const titleLines=canvasTextLines(ctx,s.title||'Sans titre',maxW,4),titleY=Math.round(h*.64),titleLH=Math.round(Math.max(58,84*scale));
+  titleLines.forEach((line,i)=>ctx.fillText(line,x,titleY+i*titleLH,maxW));
+  let bodyY=titleY+titleLines.length*titleLH+Math.round(28*scale);
+  ctx.font='400 '+Math.max(24,Math.round(31*scale))+'px Arial, sans-serif';ctx.fillStyle='#343741';
+  const bodyLines=canvasTextLines(ctx,s.body||'',Math.round(maxW*.9),5),bodyLH=Math.round(Math.max(32,43*scale));
+  bodyLines.forEach((line,i)=>ctx.fillText(line,x,bodyY+i*bodyLH,Math.round(maxW*.9)));
+  ctx.fillStyle='#17181e';ctx.font='800 '+Math.max(23,Math.round(28*scale))+'px Arial, sans-serif';
+  ctx.fillText(s.cta||'Découvrir →',x,Math.min(h-bottom-Math.round(30*scale),bodyY+bodyLines.length*bodyLH+Math.round(30*scale)),maxW);
+  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png',.96));
+  if(!blob){if(!quiet)toast('Export PNG impossible');return false}
+  triggerBlobDownload(blob,'plug-art-slide-'+String(index+1).padStart(2,'0')+'.png');
+  if(!quiet)toast('Slide PNG exportée');
+  return true;
+}
+async function exportAllCarouselSlides(){
+  if(!state.carousel.slides.length)return toast('Aucune slide à exporter');
+  const b=$('#carouselExportAll'),old=b.textContent;b.disabled=true;
+  for(let i=0;i<state.carousel.slides.length;i++){
+    b.textContent='Export '+(i+1)+'/'+state.carousel.slides.length;
+    await exportCarouselSlide(i,true);
+    await new Promise(r=>setTimeout(r,160));
+  }
+  b.disabled=false;b.textContent=old;toast('Carrousel exporté');
+}
+async function downloadVisual(){
+  if(!state.visual.url)return toast('Génère d’abord un visuel');
+  try{
+    const r=await fetch(state.visual.url,{mode:'cors'});if(!r.ok)throw new Error('download');
+    const blob=await r.blob();triggerBlobDownload(blob,'plug-art-visual.'+((blob.type||'').includes('jpeg')?'jpg':'png'));toast('Visuel téléchargé');
+  }catch{
+    window.open(state.visual.url,'_blank','noopener');toast('Visuel ouvert pour téléchargement');
+  }
+}
+
 async function carouselToBureau(){
   if(!state.carousel.slides.length)return;const sourceId=$('#carouselSource').value,source=opportunityById(sourceId);
   const body=state.carousel.slides.map((s,i)=>'SLIDE '+(i+1)+'\n'+[s.kicker,s.title,s.body,s.cta,s.image?'Visuel : '+s.image:''].filter(Boolean).join('\n')).join('\n\n');
