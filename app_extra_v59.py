@@ -19,7 +19,7 @@ VERSION='112.20260923.3'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
-REALISTIC_PLUGY=Path('/data/plugy_v106_realistic_animated_r2.glb') if Path('/data').exists() else BASE/'static'/'plugy_v106_realistic_animated_r2.glb'
+REALISTIC_PLUGY=Path('/data/plugy_v113_realistic_premium.glb') if Path('/data').exists() else BASE/'static'/'plugy_v113_realistic_premium.glb'
 REALISTIC_PLUGY_LOCK=threading.Lock()
 
 def _v106_pad4(raw:bytes,pad=b' '):
@@ -64,6 +64,38 @@ def _inject_v106_motion(raw:bytes):
         doc.setdefault('bufferViews',[])
         doc.setdefault('accessors',[])
         doc.setdefault('animations',[])
+
+        materials=doc.get('materials') or []
+        if materials:
+            used=doc.setdefault('extensionsUsed',[])
+            for ext_name in ('KHR_materials_clearcoat','KHR_materials_specular','KHR_materials_ior','KHR_materials_iridescence'):
+                if ext_name not in used:used.append(ext_name)
+            for mat in materials:
+                if not isinstance(mat,dict):continue
+                name=str(mat.get('name') or '').lower()
+                pbr=mat.setdefault('pbrMetallicRoughness',{})
+                ext=mat.setdefault('extensions',{})
+                def lower_rough(target):
+                    try:cur=float(pbr.get('roughnessFactor',.5))
+                    except Exception:cur=.5
+                    pbr['roughnessFactor']=max(.04,min(cur,target))
+                if any(k in name for k in ('metal','chrome','prong','pin','antenna','steel','silver')):
+                    pbr['metallicFactor']=max(float(pbr.get('metallicFactor',0) or 0),.88);lower_rough(.16)
+                    ext['KHR_materials_clearcoat']={'clearcoatFactor':.28,'clearcoatRoughnessFactor':.10}
+                    ext['KHR_materials_specular']={'specularFactor':.96,'specularColorFactor':[.98,.99,1.0]}
+                elif any(k in name for k in ('glass','screen','visor','face','black','display')):
+                    pbr['metallicFactor']=max(float(pbr.get('metallicFactor',0) or 0),.28);lower_rough(.10)
+                    ext['KHR_materials_clearcoat']={'clearcoatFactor':.86,'clearcoatRoughnessFactor':.06}
+                    ext['KHR_materials_specular']={'specularFactor':.92,'specularColorFactor':[.88,.96,1.0]}
+                    ext['KHR_materials_ior']={'ior':1.46}
+                else:
+                    try:cur_m=float(pbr.get('metallicFactor',0) or 0)
+                    except Exception:cur_m=0
+                    pbr['metallicFactor']=min(cur_m,.12);lower_rough(.22)
+                    ext['KHR_materials_clearcoat']={'clearcoatFactor':.72,'clearcoatRoughnessFactor':.13}
+                    ext['KHR_materials_specular']={'specularFactor':.74,'specularColorFactor':[.96,.98,1.0]}
+                    ext['KHR_materials_ior']={'ior':1.42}
+                    ext['KHR_materials_iridescence']={'iridescenceFactor':.18,'iridescenceIor':1.3,'iridescenceThicknessMinimum':110,'iridescenceThicknessMaximum':320}
         blob=bytearray(bin_blob)
         while len(blob)%4:blob.append(0)
 
@@ -118,10 +150,23 @@ def _inject_v106_motion(raw:bytes):
         add_anim('Wave',[0,.22,.44,.66,.88,1.16],rotations=[_v106_quat((0,0,1),a) for a in (0,.10,-.085,.09,-.055,0)])
         add_anim('Dance',[0,.28,.56,.84,1.12,1.40],rotations=[_v106_quat((0,0,1),a) for a in (0,.12,-.12,.12,-.12,0)])
         add_anim('Blink',[0,.10,.20,.34],scales=[[1,1,1],[1,.985,1],[1,.995,1],[1,1,1]])
+        add_anim('Listen',[0,.28,.62,.94],
+            [[0,0,0],[0,.018,0],[0,.010,0],[0,0,0]],
+            [_v106_quat((1,0,0),a) for a in (0,-.055,-.028,0)])
+        add_anim('Speak',[0,.14,.28,.42,.56,.70,.88],
+            [[0,0,0],[0,.022,0],[0,.006,0],[0,.026,0],[0,.008,0],[0,.020,0],[0,0,0]],
+            [_v106_quat((0,0,1),a) for a in (0,.018,-.012,.022,-.014,.010,0)])
+        add_anim('Charge',[0,.30,.62,.94,1.24],
+            [[0,0,0],[0,.016,0],[0,.028,0],[0,.012,0],[0,0,0]],
+            [_v106_quat((0,1,0),a) for a in (0,.045,-.038,.024,0)],
+            [[1,1,1],[1.012,1.012,1.012],[1.024,1.024,1.024],[1.010,1.010,1.010],[1,1,1]])
+        add_anim('Travel',[0,.34,.72,1.08,1.42],
+            [[0,0,0],[.075,.025,0],[-.055,.018,0],[.032,.010,0],[0,0,0]],
+            [_v106_quat((0,1,0),a) for a in (0,.10,-.08,.045,0)])
 
         doc['buffers'][0]['byteLength']=len(blob)
         asset=doc.setdefault('asset',{'version':'2.0'})
-        asset['generator']=str(asset.get('generator',''))+' + PLUGAR V106 Motion Layer'
+        asset['generator']=str(asset.get('generator',''))+' + PLUGAR V113 Premium Motion + PBR Layer'
         j=_v106_pad4(json.dumps(doc,separators=(',',':')).encode('utf-8'),b' ')
         b=_v106_pad4(bytes(blob),bytes((0,)))
         chunks=[(b'JSON',j),(bytes((66,73,78,0)),b)]+extras
@@ -147,16 +192,16 @@ def _ensure_realistic_plugy():
         except Exception:
             pass
         try:
-            rr=requests.get(REALISTIC_PLUGY_URL,timeout=45,headers={'User-Agent':'PLUGAR-V106/1.0'},allow_redirects=True)
+            rr=requests.get(REALISTIC_PLUGY_URL,timeout=45,headers={'User-Agent':'PLUGAR-V113/1.0'},allow_redirects=True)
             if rr.ok and len(rr.content)>10000 and rr.content[:4]==b'glTF':
                 REALISTIC_PLUGY.parent.mkdir(parents=True,exist_ok=True)
                 tmp=REALISTIC_PLUGY.with_suffix('.tmp')
                 tmp.write_bytes(_inject_v106_motion(rr.content))
                 tmp.replace(REALISTIC_PLUGY)
-                print(f"PLUGY_V106_REALISTIC_READY bytes={REALISTIC_PLUGY.stat().st_size} motion=embedded",flush=True)
+                print(f"PLUGY_V113_PREMIUM_READY bytes={REALISTIC_PLUGY.stat().st_size} motion=embedded",flush=True)
                 return True
         except Exception as exc:
-            print(f"PLUGY_V106_REALISTIC_FETCH_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
+            print(f"PLUGY_V113_PREMIUM_FETCH_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
         return False
 
 def _prefetch_realistic_plugy():
@@ -164,22 +209,24 @@ def _prefetch_realistic_plugy():
     except Exception:pass
 threading.Thread(target=_prefetch_realistic_plugy,daemon=True).start()
 
+@app.get('/assets/plugy-v113-premium.glb',include_in_schema=False)
 @app.get('/assets/plugy-v106-realistic.glb',include_in_schema=False)
 def plugy_v106_realistic_asset():
     if _ensure_realistic_plugy():
         return FileResponse(REALISTIC_PLUGY,media_type='model/gltf-binary',headers={
           'Cache-Control':'public,max-age=604800,stale-while-revalidate=2592000',
-          'X-PLUGY-Model':'v106-realistic'
+          'X-PLUGY-Model':'v113-premium'
         })
     fallback=BASE/'static'/'PLUGY_final_animated.glb'
     if fallback.exists():
         return FileResponse(fallback,media_type='model/gltf-binary',headers={'Cache-Control':'public,max-age=86400','X-PLUGY-Model':'animated-fallback'})
     return Response(status_code=503)
 
+@app.get('/api/v113/plugy-premium/status')
 @app.get('/api/v106/plugy-realistic/status')
 def plugy_v106_realistic_status():
     ready=REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>10000
-    return {'ok':True,'ready':ready,'bytes':REALISTIC_PLUGY.stat().st_size if ready else 0,'asset':'/assets/plugy-v106-realistic.glb'}
+    return {'ok':True,'ready':ready,'bytes':REALISTIC_PLUGY.stat().st_size if ready else 0,'asset':'/assets/plugy-v113-premium.glb','profile':'premium-pbr-motion-v113'}
 
 for route in list(app.router.routes):
     if getattr(route,'path',None)=='/' and 'GET' in (getattr(route,'methods',set()) or set()):
