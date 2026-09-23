@@ -1,6 +1,6 @@
 from pathlib import Path
 from fastapi import Request, HTTPException
-from fastapi.responses import HTMLResponse, Response, RedirectResponse
+from fastapi.responses import HTMLResponse, Response, RedirectResponse, FileResponse
 from urllib.parse import urljoin, urlencode
 import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64,hmac
 import app as core
@@ -18,6 +18,56 @@ PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exist
 VERSION='105.20260923.3'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
+REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
+REALISTIC_PLUGY=Path('/data/plugy_v106_realistic.glb') if Path('/data').exists() else BASE/'static'/'plugy_v106_realistic.glb'
+REALISTIC_PLUGY_LOCK=threading.Lock()
+
+def _ensure_realistic_plugy():
+    try:
+        if REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>10000:
+            return True
+    except Exception:
+        pass
+    with REALISTIC_PLUGY_LOCK:
+        try:
+            if REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>10000:
+                return True
+        except Exception:
+            pass
+        try:
+            rr=requests.get(REALISTIC_PLUGY_URL,timeout=45,headers={'User-Agent':'PLUGAR-V106/1.0'},allow_redirects=True)
+            if rr.ok and len(rr.content)>10000 and rr.content[:4]==b'glTF':
+                REALISTIC_PLUGY.parent.mkdir(parents=True,exist_ok=True)
+                tmp=REALISTIC_PLUGY.with_suffix('.tmp')
+                tmp.write_bytes(rr.content)
+                tmp.replace(REALISTIC_PLUGY)
+                print(f"PLUGY_V106_REALISTIC_READY bytes={REALISTIC_PLUGY.stat().st_size}",flush=True)
+                return True
+        except Exception as exc:
+            print(f"PLUGY_V106_REALISTIC_FETCH_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
+        return False
+
+def _prefetch_realistic_plugy():
+    try:_ensure_realistic_plugy()
+    except Exception:pass
+threading.Thread(target=_prefetch_realistic_plugy,daemon=True).start()
+
+@app.get('/assets/plugy-v106-realistic.glb',include_in_schema=False)
+def plugy_v106_realistic_asset():
+    if _ensure_realistic_plugy():
+        return FileResponse(REALISTIC_PLUGY,media_type='model/gltf-binary',headers={
+          'Cache-Control':'public,max-age=604800,stale-while-revalidate=2592000',
+          'X-PLUGY-Model':'v106-realistic'
+        })
+    fallback=BASE/'static'/'PLUGY_final_animated.glb'
+    if fallback.exists():
+        return FileResponse(fallback,media_type='model/gltf-binary',headers={'Cache-Control':'public,max-age=86400','X-PLUGY-Model':'animated-fallback'})
+    return Response(status_code=503)
+
+@app.get('/api/v106/plugy-realistic/status')
+def plugy_v106_realistic_status():
+    ready=REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>10000
+    return {'ok':True,'ready':ready,'bytes':REALISTIC_PLUGY.stat().st_size if ready else 0,'asset':'/assets/plugy-v106-realistic.glb'}
 
 for route in list(app.router.routes):
     if getattr(route,'path',None)=='/' and 'GET' in (getattr(route,'methods',set()) or set()):
