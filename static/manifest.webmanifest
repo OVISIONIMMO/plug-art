@@ -1,0 +1,19 @@
+{
+  "name": "PLUG ART OS",
+  "short_name": "PLUG ART",
+  "description": "Workspace créatif pour repérer, organiser, créer et publier avec PLUGY.",
+  "start_url": "/?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f6f6f4",
+  "theme_color": "#101114",
+  "icons": [
+    {
+      "src": "/static/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
