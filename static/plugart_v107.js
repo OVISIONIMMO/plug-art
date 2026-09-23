@@ -4,7 +4,7 @@ const VERSION='108.20260923.4';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,bureau:[],leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,recognition:null,creationMode:'text',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
+const state={view:'dashboard',bootstrap:null,bureau:[],leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,recognition:null,creationMode:'text',radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -176,19 +176,20 @@ function installRadarPresets(){
   $$('[data-radar-preset]',bar).forEach(b=>b.onclick=()=>applyRadarPreset(b.dataset.radarPreset));
 }
 function applyRadarPreset(preset){
+  state.radarPreset=preset||'all';
   const search=$('#radarSearch'),country=$('#radarCountry'),score=$('#radarScore'),type=$('#radarType');
   if(search)search.value='';if(country)country.value='';if(score)score.value='0';if(type)type.value='';
-  if(preset==='paris'&&search)search.value='Paris';
-  if(preset==='europe'&&search)search.value='Europe';
   if(preset==='collective'&&type)type.value='collective';
   if(preset==='accessible'&&type)type.value='accessible';
   if(preset==='urgent'&&type)type.value='urgent';
-  $$('[data-radar-preset]').forEach(b=>b.classList.toggle('active',b.dataset.radarPreset===preset));renderRadar();
+  $('[data-radar-preset]').forEach(b=>b.classList.toggle('active',b.dataset.radarPreset===preset));renderRadar();
 }
 
 function renderRadar(){
   const all=state.bootstrap?.opportunities||[],term=clean($('#radarSearch')?.value).toLowerCase(),country=$('#radarCountry')?.value||'',min=Number($('#radarScore')?.value||0),type=$('#radarType')?.value||'';
-  const rows=all.filter(o=>{const hay=[o.title,o.city,o.country,o.type,o.summary,o.eligibility].join(' ').toLowerCase();const d=daysLeft(o);return(!term||hay.includes(term))&&(!country||o.country===country)&&Number(o.radar_score??o.score??0)>=min&&(!type||(type==='urgent'&&d>=0&&d<=14)||(type==='accessible'&&accessible(o))||(type==='collective'&&collective(o)))});
+  const europe=['france','belgium','belgique','netherlands','pays-bas','spain','espagne','italy','italie','portugal','germany','allemagne','switzerland','suisse','austria','autriche','united kingdom','uk','royaume-uni','ireland','irlande','denmark','danemark','sweden','suède','norway','norvège','finland','finlande','poland','pologne','czech republic','tchéquie','greece','grèce'];
+  const idf=/paris|saint[- ]denis|aubervilliers|montreuil|pantin|bagnolet|rosny|ivry|vitry|clichy|neuilly|nanterre|boulogne|versailles|créteil|creteil|noisy|vincennes|saint-ouen/i;
+  const rows=all.filter(o=>{const hay=[o.title,o.city,o.country,o.type,o.summary,o.eligibility].join(' ').toLowerCase(),d=daysLeft(o),c=String(o.country||'').toLowerCase();const presetOk=state.radarPreset==='paris'?idf.test([o.city,o.title,o.summary].join(' ')):state.radarPreset==='europe'?europe.some(x=>c.includes(x)):true;return presetOk&&(!term||hay.includes(term))&&(!country||o.country===country)&&Number(o.radar_score??o.score??0)>=min&&(!type||(type==='urgent'&&d>=0&&d<=14)||(type==='accessible'&&accessible(o))||(type==='collective'&&collective(o)))});
   $('#radarCount').textContent=rows.length+' opportunité'+(rows.length>1?'s':'');$('#radarGrid').innerHTML=rows.map(o=>oppCard(o,'radar')).join('')||'<div class="empty">Aucun résultat.</div>';bindOppActions($('#radarGrid'));
 }
 function renderOpenCalls(){
