@@ -8,14 +8,14 @@ import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='101.0'
+app.version='102.0'
 BASE=Path(__file__).resolve().parent
-DASH=BASE/'static'/'dashboard_v101.html'
+DASH=BASE/'static'/'dashboard_v102.html'
 GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='101.20260923.1'
+VERSION='102.20260923.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -24,15 +24,19 @@ for route in list(app.router.routes):
         app.router.routes.remove(route)
 
 @app.get('/',response_class=HTMLResponse,include_in_schema=False)
-def root_v65():
+def root_v102(request:Request):
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else '<html><body>PLUG ART workspace unavailable.</body></html>'
-    return HTMLResponse(html,headers={
-      'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
-      'Pragma':'no-cache',
-      'Expires':'0',
-      'X-Plug-Art-Version':'101.0',
-      'X-Plug-Art-UI':'plug-art-os-v101'
-    })
+    digest=hashlib.sha256(html.encode('utf-8')).hexdigest()[:20]
+    etag='"plugart-'+digest+'"'
+    headers={
+      'Cache-Control':'private, no-cache, must-revalidate',
+      'ETag':etag,
+      'X-Plug-Art-Version':'102.0',
+      'X-Plug-Art-UI':'plug-art-os-v102'
+    }
+    if request.headers.get('if-none-match')==etag:
+        return Response(status_code=304,headers=headers)
+    return HTMLResponse(html,headers=headers)
 
 from fastapi.middleware.gzip import GZipMiddleware
 try:
@@ -45,13 +49,31 @@ async def v85_headers(request:Request,call_next):
     response=await call_next(request)
     p=request.url.path
     if p=='/':
-        response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
-        response.headers['Pragma']='no-cache'
+        response.headers['Cache-Control']='private, no-cache, must-revalidate'
     elif p.startswith('/static/') and any(p.endswith(ext) for ext in ('.css','.js','.glb','.png','.jpg','.jpeg','.webp','.svg')):
         response.headers['Cache-Control']='public, max-age=31536000, immutable'
+    elif p=='/api/v102/bootstrap':
+        response.headers['Cache-Control']='private, max-age=8, stale-while-revalidate=30'
     elif p.startswith('/api/'):
         response.headers.setdefault('Cache-Control','no-store')
+    response.headers.setdefault('Vary','Accept-Encoding')
     return response
+
+
+@app.get('/api/v102/bootstrap')
+def bootstrap_v102():
+    """Single round-trip bootstrap for the workspace."""
+    return {
+      'version':'102.0',
+      'generated_at':time.time(),
+      'stats':core.stats(),
+      'opportunities':core.get_opportunities(),
+      'radar':core.radar_status(),
+      'candidates':core.radar_candidates(),
+      'artists':core.get_artists(),
+      'events':core.get_exhibitions(),
+      'map':core.map_data()
+    }
 
 
 def _attr(tag,name):
@@ -68,7 +90,7 @@ def _media_score(url,context='',base=35):
 
 def _official_media(url:str):
     now=time.time();hit=MEDIA_CACHE.get(url)
-    if hit and now-hit[0] < 3600:return hit[1]
+    if hit and now-hit[0] < 14400:return hit[1]
     found={}
     try:
         r=requests.get(url,timeout=10,headers={'User-Agent':'Mozilla/5.0 PLUGART-Media/2.0','Accept':'text/html,application/xhtml+xml'},allow_redirects=True);r.raise_for_status();text=r.text[:1400000]
@@ -103,15 +125,15 @@ def opportunity_media_v67(oid:int):
 @app.get('/api/v67/opportunities/{oid}/thumbnail')
 def opportunity_thumbnail_v67(oid:int):
     item,url,media=_opportunity_media(oid);key=str(oid);now=time.time();cached=MEDIA_BYTES_CACHE.get(key)
-    if cached and now-cached[0]<1800:return Response(content=cached[1],media_type=cached[2],headers={'Cache-Control':'public,max-age=1800'})
+    if cached and now-cached[0]<21600:return Response(content=cached[1],media_type=cached[2],headers={'Cache-Control':'public,max-age=86400,stale-while-revalidate=604800'})
     headers={'User-Agent':'Mozilla/5.0 PLUGART-Media/2.0','Referer':url or 'https://plug-art-live-production.up.railway.app/'}
     for candidate in media[:6]:
         try:
             rr=requests.get(candidate['url'],timeout=9,headers=headers,allow_redirects=True);ct=(rr.headers.get('content-type') or '').split(';')[0].lower()
             if rr.ok and ct.startswith('image/') and 1200<len(rr.content)<9000000:
                 MEDIA_BYTES_CACHE[key]=(now,rr.content,ct)
-                if len(MEDIA_BYTES_CACHE)>40:MEDIA_BYTES_CACHE.pop(next(iter(MEDIA_BYTES_CACHE)))
-                return Response(content=rr.content,media_type=ct,headers={'Cache-Control':'public,max-age=1800','X-PLUG-Image-Source':candidate['source']})
+                if len(MEDIA_BYTES_CACHE)>96:MEDIA_BYTES_CACHE.pop(next(iter(MEDIA_BYTES_CACHE)))
+                return Response(content=rr.content,media_type=ct,headers={'Cache-Control':'public,max-age=86400,stale-while-revalidate=604800','X-PLUG-Image-Source':candidate['source']})
         except Exception:pass
     return Response(status_code=404)
 
@@ -1046,13 +1068,14 @@ def builder_restore_v90(version_id:int):
 @app.get('/api/v90/status')
 @app.get('/api/v100/status')
 @app.get('/api/v101/status')
+@app.get('/api/v102/status')
 def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'101.0',
-      'ui':'plug-art-os-v101',
-      'reference_direction':'V101 PLUG ART OS: stabilized iPhone interactions, safe-area layout, reliable touch targets, focus workspace and preserved production engines',
+      'version':'102.0',
+      'ui':'plug-art-os-v102',
+      'reference_direction':'V102 PLUG ART OS: premium progressive rendering, single-request bootstrap, lazy feature modules, ETag navigation and optimized media delivery',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -1078,4 +1101,4 @@ def status_v90():
       'background':'premium responsive PLUG ART Control Room with agent-centered command workspace and refined editorial surfaces'
     }
 
-print(f"PLUG_ART_V101_READY ui=control_room builder=interface_lab plugy2=15_concepts plugy=hero_centered instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V102_READY ui=control_room builder=interface_lab plugy2=15_concepts plugy=hero_centered instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
