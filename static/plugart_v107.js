@@ -744,19 +744,20 @@ async function generatePackageWithPlugy(){
     pkg=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage))||pkg;
     const packageIds=(pkg.document_ids||[]).map(Number),artistContext=bureauArtistContext(packageIds);
     const docs=packageIds.map(id=>state.bureau.find(n=>Number(n.id)===id)).filter(Boolean).filter(n=>['letter','bio','statement'].includes(packageDocRole(n)));
-    let incomplete=0,generated=0;
+    let incomplete=0,generated=0;const roleState={};
     for(let i=0;i<docs.length;i++){
       const doc=docs[i];if(b)b.textContent='PLUGY · '+(i+1)+'/'+docs.length;
       let result=await generatePackageDocWithPlugy(doc,pkg,artistContext);
       if(result._incomplete)incomplete++;
+      roleState[packageDocRole(doc)]=!result._incomplete;
       const saved=await api('/api/v107/bureau/'+doc.id,{method:'PATCH',body:JSON.stringify({body:result.body})});
       const idx=state.bureau.findIndex(x=>Number(x.id)===Number(saved.id));if(idx>=0)state.bureau[idx]=saved;
       generated++;
     }
     const checklist={...(pkg.checklist||{})};
-    if(docs.some(x=>packageDocRole(x)==='letter'))checklist.letter=true;
-    if(docs.some(x=>packageDocRole(x)==='bio'))checklist.bio=true;
-    if(docs.some(x=>packageDocRole(x)==='statement'))checklist.artist_statement=true;
+    if('letter' in roleState)checklist.letter=!!roleState.letter;
+    if('bio' in roleState)checklist.bio=!!roleState.bio;
+    if('statement' in roleState)checklist.artist_statement=!!roleState.statement;
     const savedPkg=await api('/api/v120/bureau/packages/'+pkg.id,{method:'PATCH',body:JSON.stringify({checklist,notes:pkg.notes||''})});
     const pi=state.bureauPackages.findIndex(x=>Number(x.id)===Number(savedPkg.id));if(pi>=0)state.bureauPackages[pi]=savedPkg;
     if(pkg.opportunity_id)persistWorkflow(pkg.opportunity_id,{workflow_status:'drafting',next_action:incomplete?'Compléter puis relire le dossier':'Relire et finaliser le dossier'}).catch(()=>{});
@@ -1756,6 +1757,11 @@ function handleLocalPlugy(message){
     }
   }
 
+  if(state.view==='bureau'&&state.bureauMode==='packages'&&state.activePackage){
+    if(/(génère|genere|prépare|prepare|rédige|redige|complète|complete).*(dossier|candidature|pack)/.test(m)){
+      generatePackageWithPlugy();return 'Je génère le dossier de candidature avec les sources disponibles dans le Bureau.';
+    }
+  }
   if(state.view==='bureau'&&state.activeDoc){
     if(/(création|creation|studio)/.test(m)&&/(envoie|ouvre|transf|mets)/.test(m)){
       sendCurrentBureauToCreation();return 'J’envoie ce document vers Création.';
