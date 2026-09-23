@@ -824,8 +824,8 @@ function drawCoverImage(ctx,img,w,h){
 function triggerBlobDownload(blob,filename){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);
 }
-async function exportCarouselSlide(index,quiet=false){
-  const s=state.carousel.slides[index];if(!s){if(!quiet)toast('Aucune slide à exporter');return false}
+async function renderCarouselSlideBlob(index){
+  const s=state.carousel.slides[index];if(!s)return null;
   const [w,h]=exportDimensions(state.carousel.format||'4:5'),canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d');
   const base=ctx.createLinearGradient(0,0,w,h);base.addColorStop(0,'#eef1ff');base.addColorStop(.48,'#e4dcff');base.addColorStop(1,'#f3d2e3');ctx.fillStyle=base;ctx.fillRect(0,0,w,h);
   const img=await loadCanvasImage(s.image);
@@ -837,27 +837,47 @@ async function exportCarouselSlide(index,quiet=false){
   ctx.font='800 '+Math.max(52,Math.round(76*scale))+'px Arial, sans-serif';
   const titleLines=canvasTextLines(ctx,s.title||'Sans titre',maxW,4),titleY=Math.round(h*.64),titleLH=Math.round(Math.max(58,84*scale));
   titleLines.forEach((line,i)=>ctx.fillText(line,x,titleY+i*titleLH,maxW));
-  let bodyY=titleY+titleLines.length*titleLH+Math.round(28*scale);
+  const bodyY=titleY+titleLines.length*titleLH+Math.round(28*scale);
   ctx.font='400 '+Math.max(24,Math.round(31*scale))+'px Arial, sans-serif';ctx.fillStyle='#343741';
   const bodyLines=canvasTextLines(ctx,s.body||'',Math.round(maxW*.9),5),bodyLH=Math.round(Math.max(32,43*scale));
   bodyLines.forEach((line,i)=>ctx.fillText(line,x,bodyY+i*bodyLH,Math.round(maxW*.9)));
   ctx.fillStyle='#17181e';ctx.font='800 '+Math.max(23,Math.round(28*scale))+'px Arial, sans-serif';
   ctx.fillText(s.cta||'Découvrir →',x,Math.min(h-bottom-Math.round(30*scale),bodyY+bodyLines.length*bodyLH+Math.round(30*scale)),maxW);
-  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png',.96));
+  return await new Promise(resolve=>canvas.toBlob(resolve,'image/png',.96));
+}
+async function exportCarouselSlide(index,quiet=false){
+  const blob=await renderCarouselSlideBlob(index);
   if(!blob){if(!quiet)toast('Export PNG impossible');return false}
   triggerBlobDownload(blob,'plug-art-slide-'+String(index+1).padStart(2,'0')+'.png');
   if(!quiet)toast('Slide PNG exportée');
   return true;
 }
+
+let zipLibPromise=null;
+async function getZipLib(){
+  if(!zipLibPromise)zipLibPromise=import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm').then(m=>m.default||m);
+  return zipLibPromise;
+}
 async function exportAllCarouselSlides(){
   if(!state.carousel.slides.length)return toast('Aucune slide à exporter');
   const b=$('#carouselExportAll'),old=b.textContent;b.disabled=true;
-  for(let i=0;i<state.carousel.slides.length;i++){
-    b.textContent='Export '+(i+1)+'/'+state.carousel.slides.length;
-    await exportCarouselSlide(i,true);
-    await new Promise(r=>setTimeout(r,160));
-  }
-  b.disabled=false;b.textContent=old;toast('Carrousel exporté');
+  try{
+    const JSZip=await getZipLib(),zip=new JSZip();
+    for(let i=0;i<state.carousel.slides.length;i++){
+      b.textContent='Prépare '+(i+1)+'/'+state.carousel.slides.length;
+      const blob=await renderCarouselSlideBlob(i);
+      if(blob)zip.file('plug-art-slide-'+String(i+1).padStart(2,'0')+'.png',blob);
+    }
+    b.textContent='Création ZIP…';
+    const archive=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}},meta=>{b.textContent='ZIP '+Math.round(meta.percent)+'%'});
+    triggerBlobDownload(archive,'plug-art-carousel.zip');toast('Carrousel ZIP exporté');
+  }catch(err){
+    for(let i=0;i<state.carousel.slides.length;i++){
+      b.textContent='Export '+(i+1)+'/'+state.carousel.slides.length;
+      await exportCarouselSlide(i,true);await new Promise(r=>setTimeout(r,160));
+    }
+    toast('Carrousel exporté en PNG');
+  }finally{b.disabled=false;b.textContent=old}
 }
 async function downloadVisual(){
   if(!state.visual.url)return toast('Génère d’abord un visuel');
