@@ -19,7 +19,7 @@ VERSION='106.20260923.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
-REALISTIC_PLUGY=Path('/data/plugy_v106_realistic_animated.glb') if Path('/data').exists() else BASE/'static'/'plugy_v106_realistic_animated.glb'
+REALISTIC_PLUGY=Path('/data/plugy_v106_realistic_animated_r2.glb') if Path('/data').exists() else BASE/'static'/'plugy_v106_realistic_animated_r2.glb'
 REALISTIC_PLUGY_LOCK=threading.Lock()
 
 def _v106_pad4(raw:bytes,pad=b' '):
