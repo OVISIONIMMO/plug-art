@@ -162,9 +162,36 @@ $('#plugyModel')?.addEventListener('load',()=>playMotion('Idle',true),{once:true
 $('#plugyModel')?.addEventListener('pointerenter',()=>playMotion('Curious'));
 $('#plugyModel')?.addEventListener('dblclick',()=>{openPlugy();playMotion('Attentive')});
 
+
+let plugyWarmPromise=null;
+function warmPlugy3D(reason='intent'){
+  const mv=$('#plugyModel');if(mv)mv.setAttribute('loading','eager');
+  if(plugyWarmPromise)return plugyWarmPromise;
+  plugyWarmPromise=ensureModelViewer()
+    .then(()=>true)
+    .catch(err=>{plugyWarmPromise=null;throw err});
+  return plugyWarmPromise;
+}
+function scheduleSmartPlugyWarm(){
+  const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  if(conn?.saveData||['slow-2g','2g'].includes(String(conn?.effectiveType||'')))return;
+  const warm=()=>{if(document.visibilityState==='visible')warmPlugy3D('idle').catch(()=>{})};
+  if('requestIdleCallback' in window)requestIdleCallback(warm,{timeout:7000});
+  else setTimeout(warm,5200);
+}
+function bindPlugyWarmIntent(){
+  const targets=[$('#sidebarPlugy'),$('#topPlugy'),...$$('[data-open-plugy]')].filter(Boolean);
+  targets.forEach(el=>{
+    el.addEventListener('pointerenter',()=>warmPlugy3D('hover').catch(()=>{}),{passive:true});
+    el.addEventListener('pointerdown',()=>warmPlugy3D('press').catch(()=>{}),{passive:true});
+    el.addEventListener('focus',()=>warmPlugy3D('focus').catch(()=>{}),{passive:true});
+  });
+}
+
 function openPlugy(seed=''){
   $('#plugyDrawer')?.classList.add('open');
-  ensureModelViewer().then(()=>playMotion('Attentive')).catch(()=>{$('#plugyState span').textContent='Mode texte'});
+  const mv=$('#plugyModel');if(mv&&!mv.loaded)$('#plugyState span').textContent='Chargement 3D…';
+  warmPlugy3D('open').then(()=>playMotion('Attentive')).catch(()=>{$('#plugyState span').textContent='Mode texte'});
   if(seed)$('#plugyInput').value=seed;
   setTimeout(()=>$('#plugyInput')?.focus(),160);
 }
@@ -178,7 +205,8 @@ function closePlugy(){
 $('#sidebarPlugy')?.addEventListener('click',()=>openPlugy());
 $('#topPlugy')?.addEventListener('click',()=>openPlugy());
 $('#plugyClose')?.addEventListener('click',closePlugy);
-$$('[data-open-plugy]').forEach(b=>b.addEventListener('click',()=>openPlugy()));
+$('[data-open-plugy]').forEach(b=>b.addEventListener('click',()=>openPlugy()));
+bindPlugyWarmIntent();
 function renderSuggestions(){
   const box=$('#plugySuggestions');if(!box)return;
   box.innerHTML=(contexts[state.view]?.suggestions||[]).map(x=>'<button>'+esc(x)+'</button>').join('');
@@ -1032,5 +1060,5 @@ pm?.addEventListener('pointerdown',()=>{clearTimeout(plugyPressTimer);plugyPress
 startPlugyAmbient();
 
 addEventListener('beforeunload',()=>{if(state.view==='creation'&&state.creationDirty)saveLocalCreationBackup()});
-const initial=location.hash.slice(1)||'dashboard';history.replaceState({view:initial},'','#'+initial);route(initial,false);renderSuggestions();loadAll();
+const initial=location.hash.slice(1)||'dashboard';history.replaceState({view:initial},'','#'+initial);route(initial,false);renderSuggestions();loadAll().finally(scheduleSmartPlugyWarm);
 })();
