@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='119.20260923.1';
+const VERSION='119.20260923.2';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -828,7 +828,7 @@ async function initVoice(){
     if(last?.isFinal&&text.length>1){state.voice=false;askPlugy(text)}
     else if(last?.isFinal){state.voice=false;state.voiceReply=false;$('#plugyState span').textContent='Prêt';playMotion('Idle',true)}
   };
-  rec.onend=()=>{state.voice=false;if(!state.voiceReply){$('#plugyState span').textContent='Prêt';playMotion('Idle',true');resumeConversationListening(500)}};
+  rec.onend=()=>{state.voice=false;if(!state.voiceReply){$('#plugyState span').textContent='Prêt';playMotion('Idle',true);resumeConversationListening(500)}};
   rec.onerror=e=>{
     state.voice=false;state.voiceReply=false;
     const fatal=['not-allowed','service-not-allowed','audio-capture'].includes(e?.error);
