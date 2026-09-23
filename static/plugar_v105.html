@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f6f6f4">
+<title>PLUGAR — L’art se branche</title>
+<meta name="description" content="PLUGAR rassemble opportunités artistiques, création, réseau et PLUGY dans une expérience fluide pensée pour les artistes émergents.">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://ajax.googleapis.com">
+<link rel="stylesheet" href="/static/plugar_v105.css?v=105.20260923.1">
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
+</head>
+<body data-plugy-section="hero">
+<div class="progress" aria-hidden="true"></div>
+
+<header class="plugar-nav" id="topNav">
+  <a class="brand" href="#hero" aria-label="PLUGAR accueil">
+    <span class="brand-mark" aria-hidden="true"></span><span>PLUGAR</span>
+  </a>
+  <nav class="nav-links" aria-label="Navigation principale">
+    <a href="#brief">Découvrir</a>
+    <a href="#radar">Radar</a>
+    <a href="#studio">Créer</a>
+    <a href="#network">Réseau</a>
+    <a href="#voice">PLUGY</a>
+  </nav>
+  <div class="nav-actions">
+    <button class="btn btn-light" data-open-plugy>Parler à PLUGY</button>
+    <a class="btn btn-dark" href="#radar">Entrer</a>
+    <button class="mobile-menu" id="mobileMenu" aria-label="Ouvrir le menu">≡</button>
+  </div>
+</header>
+
+<main class="plugar-page story">
+<section class="chapter hero" id="hero" data-plugy-context="hero">
+  <div class="chapter-inner">
+    <div class="hero-copy reveal">
+      <div class="kicker">PLUGAR · LA NOUVELLE CONNEXION CRÉATIVE</div>
+      <h1 class="title-xl">L’art se branche.<span>Enfin.</span></h1>
+      <p class="copy">Découvre les bons appels à projets, construis tes candidatures, crée tes contenus et développe ton réseau avec PLUGY comme fil conducteur.</p>
+      <div class="hero-actions">
+        <a class="btn btn-dark" href="#radar">Explorer les opportunités</a>
+        <button class="btn btn-light" data-open-plugy>Parler à PLUGY</button>
+      </div>
+      <div class="hero-meta"><i></i><span>Fais défiler. PLUGY avance avec toi.</span></div>
+    </div>
+    <div class="hero-plugy reveal" aria-label="PLUGY, assistant PLUGAR">
+      <model-viewer
+        class="hero-model"
+        src="/static/plugy_official_v84.glb"
+        camera-controls
+        auto-rotate
+        rotation-per-second="7deg"
+        interaction-prompt="none"
+        shadow-intensity="0.55"
+        shadow-softness="1"
+        exposure="1.08"
+        camera-orbit="0deg 78deg 3.25m"
+        field-of-view="28deg"
+        autoplay
+        alt="PLUGY en 3D"></model-viewer>
+      <div class="model-fallback" aria-hidden="true"><i class="eye a"></i><i class="eye b"></i></div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter brief" id="brief" data-plugy-context="brief">
+  <div class="chapter-inner">
+    <div class="brief-head reveal">
+      <div>
+        <div class="kicker">EN BREF</div>
+        <h2 class="title-lg">Tout ce qu’il faut pour passer de l’idée à l’exposition.</h2>
+      </div>
+      <p class="copy">PLUGAR ne te balance pas huit tableaux et douze menus au visage. Chaque outil apparaît au moment où il devient utile.</p>
+    </div>
+    <div class="feature-row">
+      <article class="feature-card reveal"><small>01 · RADAR</small><h3>Les opportunités qui valent ton temps.</h3><p>Appels à candidatures, expositions collectives et projets accessibles, filtrés avant d’arriver devant toi.</p><b>↗</b></article>
+      <article class="feature-card reveal"><small>02 · STUDIO</small><h3>Créer à partir du réel.</h3><p>Transforme une opportunité en carrousel, dossier ou candidature sans recopier les mêmes informations quinze fois.</p><b>↗</b></article>
+      <article class="feature-card reveal"><small>03 · MAP</small><h3>Voir où ça se passe.</h3><p>Paris, proche banlieue et Europe deviennent un territoire lisible plutôt qu’une liste interminable de liens.</p><b>↗</b></article>
+      <article class="feature-card reveal"><small>04 · PLUGY</small><h3>Un agent qui garde le contexte.</h3><p>Il sait dans quelle rubrique tu te trouves et adapte ses actions à ce que tu es réellement en train de faire.</p><b>↗</b></article>
+    </div>
+  </div>
+</section>
+
+<section class="chapter context" id="context" data-plugy-context="context">
+  <div class="chapter-inner">
+    <div class="reveal">
+      <div class="kicker">PLUGY · CONTEXT ENGINE</div>
+      <h2 class="title-lg">Il ne te suit pas.<br><em>Il comprend où tu es.</em></h2>
+      <p class="copy">Dans le Radar, PLUGY filtre. Dans le Studio, il structure et écrit. Sur une fiche artiste, il analyse le profil. Sur une opportunité, il prépare les prochaines actions.</p>
+      <div class="context-chips">
+        <span>Radar actif</span><span>Contexte de rubrique</span><span>Actions directes</span><span>Conversation vocale</span><span>Mémoire de session</span>
+      </div>
+    </div>
+    <div class="context-visual reveal">
+      <div class="energy-lines"></div>
+      <div class="context-caption"><strong>PLUGY adapte son rôle</strong><span id="contextDemo">« Tu es dans le Radar. Je peux filtrer les appels ouverts et préparer ta shortlist. »</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter radar" id="radar" data-plugy-context="radar">
+  <div class="chapter-inner">
+    <div class="radar-head reveal">
+      <div><div class="kicker">RADAR</div><h2 class="title-lg">Les bonnes opportunités.<br>Pas le bruit autour.</h2></div>
+      <p class="copy">Le moteur PLUGAR récupère les pistes, les vérifie et les classe avant de t’encombrer avec elles. Une idée révolutionnaire : ne pas faire perdre du temps aux gens.</p>
+    </div>
+    <div class="radar-grid">
+      <div class="radar-list" id="radarCards">
+        <article class="opportunity-card"><div><small>CHARGEMENT</small><h3>Connexion au Radar…</h3><p>Les opportunités actives arrivent ici.</p></div><button class="go">→</button></article>
+        <article class="opportunity-card"><div><small>PLUGAR</small><h3>Vérification des données</h3><p>Deadline, coût, territoire et source.</p></div><button class="go">→</button></article>
+        <article class="opportunity-card"><div><small>PLUGY</small><h3>Prêt à filtrer pour toi</h3><p>Demande un lieu, une discipline ou un type d’exposition.</p></div><button class="go">→</button></article>
+      </div>
+      <aside class="radar-side reveal">
+        <small>PLUGY · RADAR MODE</small>
+        <h3>Dis-moi ce que tu cherches.</h3>
+        <p>« Montre-moi les expositions collectives accessibles aux peintres émergents autour de Paris. »</p>
+        <button class="btn" data-plugy-prompt="Montre-moi les meilleures expositions collectives accessibles aux artistes émergents autour de Paris.">Lancer avec PLUGY</button>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="chapter map" id="map" data-plugy-context="map">
+  <div class="chapter-inner">
+    <div class="reveal">
+      <div class="kicker">PLUGAR MAP</div>
+      <h2 class="title-lg">L’Europe créative, en un seul regard.</h2>
+      <p class="copy">Visualise les opportunités et les expositions par territoire. PLUGY peut ensuite croiser lieu, deadline et type de projet au lieu de te faire jouer au détective avec vingt onglets.</p>
+      <div class="city-chips">
+        <button data-city="Paris">Paris</button><button data-city="Madrid">Madrid</button><button data-city="Milan">Milan</button><button data-city="Amsterdam">Amsterdam</button><button data-city="London">Londres</button>
+      </div>
+    </div>
+    <div class="map-stage reveal" id="mapStage">
+      <div class="map-grid-lines"></div>
+      <div class="map-legend"><span id="mapLegendText">Opportunités PLUGAR en Europe</span><span>LIVE · RADAR</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter studio" id="studio" data-plugy-context="studio">
+  <div class="chapter-inner">
+    <div class="studio-head reveal">
+      <div><div class="kicker">STUDIO</div><h2 class="title-lg">Créer sans quitter le flux.</h2></div>
+      <p class="copy">Une opportunité trouvée dans le Radar peut devenir directement un carrousel, un dossier ou un texte de candidature. Les données voyagent avec toi.</p>
+    </div>
+    <div class="studio-workbench">
+      <div class="canvas reveal">
+        <div class="canvas-tools">
+          <small>FORMAT</small>
+          <button class="tool active" data-studio-mode="open">Open Call</button>
+          <button class="tool" data-studio-mode="deadline">Deadline</button>
+          <button class="tool" data-studio-mode="artist">Artiste</button>
+          <button class="tool" data-studio-mode="event">Exposition</button>
+        </div>
+        <div class="canvas-preview">
+          <div class="poster" id="studioPoster">
+            <small id="posterKicker">OPEN CALL · PLUGAR</small>
+            <strong id="posterTitle">Une opportunité.<br>Un contenu prêt.</strong>
+            <div class="poster-art"></div>
+          </div>
+        </div>
+      </div>
+      <aside class="studio-agent reveal">
+        <div class="mini-orb"></div>
+        <h3>PLUGY connaît déjà le contexte.</h3>
+        <p>Sélectionne une opportunité depuis le Radar ou pars d’un brief libre. PLUGY structure l’angle, les informations essentielles et le CTA.</p>
+        <button class="btn btn-dark" data-plugy-prompt="Aide-moi à créer un carrousel PLUGAR à partir de la meilleure opportunité actuellement ouverte.">Créer avec PLUGY</button>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="chapter network" id="network" data-plugy-context="network">
+  <div class="chapter-inner">
+    <div class="network-head reveal">
+      <div><div class="kicker">RÉSEAU</div><h2 class="title-lg">Des profils qui racontent un parcours.</h2></div>
+      <p class="copy">Pratique, œuvres, expositions et prochaines étapes sont réunies dans une fiche pensée pour être utile, pas pour ressembler à un formulaire administratif de 2008.</p>
+    </div>
+    <div class="artist-row" id="artistCards">
+      <article class="artist-card reveal"><div class="artist-art"></div><h3>Artiste PLUGAR</h3><p>Profil en chargement</p></article>
+      <article class="artist-card reveal"><div class="artist-art"></div><h3>Réseau créatif</h3><p>Profils émergents</p></article>
+      <article class="artist-card reveal"><div class="artist-art"></div><h3>Portfolio</h3><p>Œuvres et parcours</p></article>
+      <article class="artist-card reveal"><div class="artist-art"></div><h3>Connexion</h3><p>Expositions et contacts</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="chapter voice" id="voice" data-plugy-context="voice">
+  <div class="chapter-inner">
+    <div class="voice-copy reveal">
+      <div class="kicker">PLUGY · VOICE</div>
+      <h2 class="title-lg">Appuie. Parle. Continue.</h2>
+      <p class="copy">Un appui ouvre la conversation dans le contexte exact de la rubrique. Tu peux parler, demander une action puis continuer sans revenir à un menu séparé.</p>
+      <button class="btn btn-glow" id="voiceCta">Démarrer la conversation</button>
+    </div>
+    <div class="voice-stage reveal">
+      <div class="voice-ring"><div class="voice-orb"></div></div>
+      <div class="voice-bars"><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter final" id="final" data-plugy-context="final">
+  <div class="final-glow"></div>
+  <div class="chapter-inner reveal">
+    <div class="kicker">PLUGAR</div>
+    <h2 class="title-lg">Branche ton prochain projet.<br><span>PLUGY garde le fil.</span></h2>
+    <p class="copy">Explorer. Créer. Candidater. Exposer. Une seule expérience, avec les outils au bon moment.</p>
+    <div class="hero-actions"><a class="btn btn-light" href="#radar">Entrer dans PLUGAR</a><button class="btn btn-glow" data-open-plugy>Parler à PLUGY</button></div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">PLUGAR<p>Le réseau-outil nouvelle génération pour artistes émergents.</p></div>
+      <div class="footer-col"><strong>EXPLORER</strong><a href="#radar">Radar</a><a href="#map">Carte</a><a href="#network">Artistes</a></div>
+      <div class="footer-col"><strong>CRÉER</strong><a href="#studio">Studio</a><a href="#voice">PLUGY</a><a href="#brief">Fonctions</a></div>
+      <div class="footer-col"><strong>PLUGAR</strong><a href="#hero">Accueil</a><a href="#context">Intelligence</a><a href="#final">Manifeste</a></div>
+    </div>
+    <div class="footer-bottom"><span>© 2026 PLUGAR</span><span>Paris · Europe</span></div>
+  </div>
+</footer>
+
+<aside class="plugy-guide" id="plugyGuide" aria-live="polite">
+  <button class="plugy-guide-visual" data-open-plugy aria-label="Parler à PLUGY">
+    <model-viewer class="plugy-mini-model" src="/static/plugy_official_v84.glb" auto-rotate rotation-per-second="8deg" interaction-prompt="none" shadow-intensity=".2" camera-orbit="0deg 78deg 3.5m" field-of-view="30deg" autoplay alt="PLUGY"></model-viewer>
+  </button>
+  <div class="plugy-bubble"><b>PLUGY</b><span id="plugyBubbleText">Je garde le contexte de cette rubrique.</span><button data-open-plugy>Me parler →</button></div>
+</aside>
+
+<aside class="chat-panel" id="plugyPanel" aria-label="Conversation PLUGY">
+  <div class="chat-head">
+    <div class="chat-avatar"></div>
+    <div><strong>PLUGY</strong><small id="plugyStatus">Prêt · contexte PLUGAR</small></div>
+    <button class="chat-close" id="chatClose" aria-label="Fermer">×</button>
+  </div>
+  <div class="chat-stream" id="chatStream">
+    <div class="chat-msg bot">Je suis branché au contexte de la page. Demande-moi de filtrer, créer, analyser ou préparer une action.</div>
+  </div>
+  <div class="chat-context" id="chatContext">Contexte : accueil</div>
+  <form class="chat-form" id="chatForm">
+    <button type="button" class="chat-voice" id="chatVoice" aria-label="Parler">◉</button>
+    <input id="chatInput" autocomplete="off" placeholder="Demande quelque chose à PLUGY…">
+    <button type="submit" aria-label="Envoyer">↑</button>
+  </form>
+</aside>
+
+<script src="/static/plugar_v105.js?v=105.20260923.1" defer></script>
+</body>
+</html>
