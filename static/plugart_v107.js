@@ -30,10 +30,23 @@ const contexts={
 };
 
 async function api(url,opt={}){
-  const r=await fetch(url,{cache:'no-store',...opt,headers:{'Accept':'application/json',...(opt.body?{'Content-Type':'application/json'}:{}),...(opt.headers||{})}});
-  if(!r.ok)throw new Error((await r.text())||('HTTP '+r.status));
-  const ct=r.headers.get('content-type')||'';
-  return ct.includes('json')?r.json():r.text();
+  const timeoutMs=Number(opt.timeout||(
+    url.includes('/content/image')?90000:
+    url.includes('/plugy')?60000:
+    url.includes('/radar/run')?120000:15000
+  ));
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),timeoutMs);
+  const {timeout,...fetchOpt}=opt;
+  try{
+    const r=await fetch(url,{cache:'no-store',...fetchOpt,signal:controller.signal,headers:{'Accept':'application/json',...(fetchOpt.body?{'Content-Type':'application/json'}:{}),...(fetchOpt.headers||{})}});
+    if(!r.ok)throw new Error((await r.text())||('HTTP '+r.status));
+    const ct=r.headers.get('content-type')||'';
+    return ct.includes('json')?r.json():r.text();
+  }catch(e){
+    if(e?.name==='AbortError')throw new Error('Délai dépassé');
+    throw e;
+  }finally{clearTimeout(timer)}
 }
 function toast(msg){
   const el=$('#toast');if(!el)return;el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2200);
@@ -302,6 +315,17 @@ function sendCurrentBureauToCreation(){
   setTimeout(()=>{if($('#contentTitle'))$('#contentTitle').value=n.title||'';if($('#contentBrief'))$('#contentBrief').value=n.body||'';if(n.source_type==='opportunity'&&n.source_id&&$('#contentSource')){$('#contentSource').value=String(n.source_id);$('#contentSource').dispatchEvent(new Event('change'))}toast('Document chargé dans Création')},50);
 }
 $('#bureauNew')?.addEventListener('click',clearDoc);$('#bureauSearch')?.addEventListener('input',renderBureau);
+
+
+function syncNetworkState(){
+  const online=navigator.onLine!==false;
+  document.body.dataset.network=online?'online':'offline';
+  if(!online)saveStatus('Hors ligne','error');
+  else if($('#workspaceSaveStatus')?.textContent==='Hors ligne')saveStatus('Connexion rétablie','saved');
+}
+addEventListener('offline',syncNetworkState);
+addEventListener('online',()=>{syncNetworkState();loadAll()});
+syncNetworkState();
 
 function ensureSaveStatus(){
   if($('#workspaceSaveStatus'))return;
