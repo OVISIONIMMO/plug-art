@@ -34,4 +34,5 @@ document.addEventListener('click',e=>{
   }
 },true);
 requestAnimationFrame(calibrate);
+window.PLUGQuality={calibrate};
 })();
