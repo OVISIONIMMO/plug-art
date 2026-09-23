@@ -4,7 +4,7 @@ const VERSION='111.20260923.2';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,bureau:[],leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,recognition:null,creationMode:'text',radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
+const state={view:'dashboard',bootstrap:null,fullBootstrap:false,fullBootstrapPromise:null,bureau:[],leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,recognition:null,creationMode:'text',radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -50,6 +50,28 @@ async function api(url,opt={}){
 function toast(msg){
   const el=$('#toast');if(!el)return;el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2200);
 }
+const fullDataViews=new Set(['radar','opencalls','creation','agenda','network','map']);
+function requiresFullBootstrap(id){return fullDataViews.has(id)}
+async function ensureFullBootstrap(force=false){
+  if(state.fullBootstrapPromise)return state.fullBootstrapPromise;
+  if(state.fullBootstrap&&!force)return state.bootstrap;
+  saveStatus('Chargement des données…','saving');
+  state.fullBootstrapPromise=api('/api/v102/bootstrap',{timeout:30000})
+    .then(boot=>{
+      state.bootstrap=boot;state.fullBootstrap=true;
+      populateCountry($('#radarCountry'),boot.opportunities||[]);
+      populateCountry($('#openCountry'),boot.opportunities||[]);
+      saveStatus('Données chargées','saved');
+      return boot;
+    })
+    .catch(err=>{
+      saveStatus('Données complètes indisponibles','error');
+      throw err;
+    })
+    .finally(()=>{state.fullBootstrapPromise=null});
+  return state.fullBootstrapPromise;
+}
+
 function renderRouteView(id=state.view){
   if(id==='dashboard')return renderDashboard();
   if(id==='radar')return renderRadar();
@@ -78,7 +100,10 @@ function route(id,push=true){
   $('.workspace')?.scrollTo({top:0,behavior:'auto'});
   if(id!=='bureau')document.body.classList.remove('mobile-bureau-editing');
   if(id!=='prospection')$('#leadDetail')?.classList.remove('mobile-open');
-  renderRouteView(id);
+  if(requiresFullBootstrap(id)&&!state.fullBootstrap){
+    renderRouteView(id);
+    ensureFullBootstrap().then(()=>{if(state.view===id)renderRouteView(id)}).catch(()=>{if(state.view===id)toast('Données complètes momentanément indisponibles')});
+  }else renderRouteView(id);
 }
 $$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route)}));
 addEventListener('popstate',()=>route(location.hash.slice(1)||'dashboard',false));
@@ -468,20 +493,24 @@ async function loadAll(){
   const leadsP=api('/api/v86/crm').catch(()=>[]);
   const workflowP=api('/api/v107/open-calls/workflow').catch(()=>[]);
   const draftsP=api('/api/v108/drafts').catch(()=>[]);
+  state.fullBootstrap=false;
   try{
-    const boot=await api('/api/v102/bootstrap');
+    const boot=await api('/api/v112/dashboard-bootstrap',{timeout:12000});
     state.bootstrap=boot;
-    populateCountry($('#radarCountry'),boot.opportunities||[]);populateCountry($('#openCountry'),boot.opportunities||[]);
-    renderDashboard();if(state.view!=='dashboard')renderRouteView(state.view);
+    renderDashboard();
     const [bureau,leads,workflow,drafts]=await Promise.all([bureauP,leadsP,workflowP,draftsP]);
     state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
-    renderDashboard();renderNavBadges();if(state.view!=='dashboard')renderRouteView(state.view);
+    renderDashboard();renderNavBadges();
+    if(requiresFullBootstrap(state.view)){
+      await ensureFullBootstrap(true);
+      renderRouteView(state.view);
+    }else if(state.view!=='dashboard')renderRouteView(state.view);
     toast('Workspace synchronisé');
   }catch(e){
-    console.warn('[PLUG ART V111]',e);
+    console.warn('[PLUG ART V112]',e);
     const [bureau,leads,workflow,drafts]=await Promise.all([bureauP,leadsP,workflowP,draftsP]);
     state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
-    renderNavBadges();renderRouteView(state.view);toast('Le Radar est momentanément indisponible');
+    renderNavBadges();renderRouteView(state.view);toast('Synchronisation partielle');
   }
 }
 
