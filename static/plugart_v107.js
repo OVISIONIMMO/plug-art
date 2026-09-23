@@ -158,7 +158,7 @@ function playMotion(name='Idle',loop=false){
   clearTimeout(playMotion.t);
   if(!loop&&name!=='Idle')playMotion.t=setTimeout(()=>playMotion('Idle',true),(name==='Think'||name==='Charge')?1900:1450);
 }
-$('#plugyModel')?.addEventListener('load',()=>playMotion('Idle',true),{once:true});
+$('#plugyModel')?.addEventListener('load',()=>{if($('#plugyState span'))$('#plugyState span').textContent='Prêt';playMotion('Idle',true)},{once:true});
 $('#plugyModel')?.addEventListener('pointerenter',()=>playMotion('Curious'));
 $('#plugyModel')?.addEventListener('dblclick',()=>{openPlugy();playMotion('Attentive')});
 
