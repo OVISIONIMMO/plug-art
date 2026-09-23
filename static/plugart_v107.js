@@ -4,7 +4,7 @@ const VERSION='107.20260923.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,bureau:[],leads:[],activeDoc:null,activeLead:null,history:[],voice:false};
+const state={view:'dashboard',bootstrap:null,bureau:[],leads:[],workflow:[],activeDoc:null,activeLead:null,history:[],voice:false,recognition:null};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -116,17 +116,33 @@ function daysLeft(o){
 }
 function accessible(o){const f=String(o?.fee||'').toLowerCase();if(/gratuit|free|sans frais/.test(f))return true;const m=f.match(/(\d{1,4})\s*€/);return !!(m&&Number(m[1])<=400)}
 function collective(o){return /collectif|collective|group|emerg|young artist|open exhibition/.test([o?.type,o?.summary,o?.eligibility].join(' ').toLowerCase())}
+function workflowFor(id){return state.workflow.find(x=>String(x.opportunity_id)===String(id))}
+function workflowLabel(s){return({saved:'À lire',working:'À traiter',drafting:'En rédaction',submitted:'Envoyé',followup:'Relance',closed:'Clos'})[s]||'Non suivi'}
 function oppCard(o,mode='radar'){
-  const score=Number(o.radar_score??o.score??0),meta=[o.city,o.country].filter(Boolean).join(' · ')||o.type||'Open Call';
+  const score=Number(o.radar_score??o.score??0),meta=[o.city,o.country].filter(Boolean).join(' · ')||o.type||'Open Call',flow=workflowFor(o.id);
   const cls=mode==='open'?'open-card':'opp-card',media=mode==='open'?'open-media':'opp-media',body=mode==='open'?'open-body':'opp-body';
-  return '<article class="'+cls+'"><div class="'+media+'"><img src="/api/v67/opportunities/'+encodeURIComponent(o.id)+'/thumbnail" alt="" loading="lazy"></div><div class="'+body+'"><small>'+esc(deadline(o.deadline))+'</small><h3>'+esc(o.title||'Opportunité')+'</h3><p>'+esc(meta)+(o.fee?' · '+esc(o.fee):'')+'</p><div class="card-actions"><span class="score">'+score+'/100</span><button class="dark" data-opp-create="'+esc(o.id)+'">Créer</button><button data-opp-plugy="'+esc(o.id)+'">PLUGY</button>'+(o.source_url?'<a href="'+esc(o.source_url)+'" target="_blank" rel="noopener">Source ↗</a>':'')+'</div></div></article>';
+  return '<article class="'+cls+'"><div class="'+media+'"><img src="/api/v67/opportunities/'+encodeURIComponent(o.id)+'/thumbnail" alt="" loading="lazy"></div><div class="'+body+'"><small>'+esc(deadline(o.deadline))+'</small><h3>'+esc(o.title||'Opportunité')+'</h3><p>'+esc(meta)+(o.fee?' · '+esc(o.fee):'')+'</p><div class="card-actions"><span class="score">'+score+'/100</span><button class="dark" data-opp-create="'+esc(o.id)+'">Créer</button><button data-opp-plugy="'+esc(o.id)+'">PLUGY</button>'+(o.source_url?'<a href="'+esc(o.source_url)+'" target="_blank" rel="noopener">Source ↗</a>':'')+'</div>'+(mode==='open'?'<select class="workflow-select" data-opp-workflow="'+esc(o.id)+'"><option value="">Non suivi</option><option value="saved">À lire</option><option value="working">À traiter</option><option value="drafting">En rédaction</option><option value="submitted">Envoyé</option><option value="followup">Relance</option><option value="closed">Clos</option></select>':(flow?'<button class="workflow-mini" data-route="opencalls">Suivi · '+esc(workflowLabel(flow.workflow_status))+'</button>':'<button class="workflow-mini" data-opp-follow="'+esc(o.id)+'">＋ Suivre</button>'))+'</div></article>';
 }
 function bindOppActions(root=document){
-  $$('[data-opp-create]',root).forEach(b=>b.onclick=()=>{route('creation');setTimeout(()=>{const s=$('#contentSource');s.value=String(b.dataset.oppCreate);s.dispatchEvent(new Event('change'))},60)});
-  $$('[data-opp-plugy]',root).forEach(b=>{b.onclick=()=>{const o=(state.bootstrap?.opportunities||[]).find(x=>String(x.id)===String(b.dataset.oppPlugy));askPlugy('Analyse cet Open Call : '+clean(o?.title)+'. Donne-moi les points clés, risques, deadline et prochaine action.')}})
+  $('[data-opp-create]',root).forEach(b=>b.onclick=()=>{route('creation');setTimeout(()=>{const s=$('#contentSource');s.value=String(b.dataset.oppCreate);s.dispatchEvent(new Event('change'))},60)});
+  $('[data-opp-plugy]',root).forEach(b=>{b.onclick=()=>{const o=(state.bootstrap?.opportunities||[]).find(x=>String(x.id)===String(b.dataset.oppPlugy));askPlugy('Analyse cet Open Call : '+clean(o?.title)+'. Donne-moi les points clés, risques, deadline et prochaine action.')}});
+  $('[data-opp-follow]',root).forEach(b=>b.onclick=async()=>{try{const row=await api('/api/v107/open-calls/'+b.dataset.oppFollow+'/workflow',{method:'PUT',body:JSON.stringify({workflow_status:'saved'})});state.workflow=state.workflow.filter(x=>String(x.opportunity_id)!==String(row.opportunity_id));state.workflow.push(row);renderRadar();renderOpenCalls();renderDashboard();toast('Open Call ajouté au suivi')}catch{toast('Suivi impossible')}});
+  $('.workflow-select',root).forEach(sel=>{
+    const flow=workflowFor(sel.dataset.oppWorkflow);sel.value=flow?.workflow_status||'';
+    sel.onchange=async()=>{
+      const id=sel.dataset.oppWorkflow;
+      try{
+        if(!sel.value){await api('/api/v107/open-calls/'+id+'/workflow',{method:'DELETE'});state.workflow=state.workflow.filter(x=>String(x.opportunity_id)!==String(id));}
+        else{const row=await api('/api/v107/open-calls/'+id+'/workflow',{method:'PUT',body:JSON.stringify({workflow_status:sel.value})});state.workflow=state.workflow.filter(x=>String(x.opportunity_id)!==String(row.opportunity_id));state.workflow.push(row);}
+        renderRadar();renderDashboard();toast('Suivi mis à jour')
+      }catch{toast('Mise à jour impossible')}
+    };
+  });
 }
 function renderDashboard(){
-  const b=state.bootstrap||{},stats=b.stats||{},opps=(b.opportunities||[]).slice(0,4);
+  const b=state.bootstrap||{},stats=b.stats||{};
+  const trackedIds=new Set(state.workflow.filter(x=>x.workflow_status!=='closed').map(x=>String(x.opportunity_id)));
+  const opps=(b.opportunities||[]).slice().sort((a,b)=>Number(trackedIds.has(String(b.id)))-Number(trackedIds.has(String(a.id)))||Number(b.radar_score??b.score??0)-Number(a.radar_score??a.score??0)).slice(0,4);
   $('#statOpp').textContent=stats.opportunities??opps.length;$('#statUrgent').textContent=stats.urgent??0;$('#statArtists').textContent=stats.artists??(b.artists||[]).length;$('#statContacts').textContent=state.leads.length;
   const box=$('#dashboardCalls');box.innerHTML=opps.length?opps.map(o=>'<div class="priority-row"><div class="priority-thumb"><img src="/api/v67/opportunities/'+o.id+'/thumbnail" alt="" loading="lazy"></div><button data-dashboard-opp="'+o.id+'" style="border:0;background:transparent;text-align:left"><h3>'+esc(o.title)+'</h3><p>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</p></button><span class="score">'+Number(o.radar_score??o.score??0)+'/100</span></div>').join(''):'<div class="empty">Aucune opportunité active.</div>';
   $$('[data-dashboard-opp]').forEach(x=>x.onclick=()=>{route('opencalls');setTimeout(()=>$('#openSearch').value=(b.opportunities||[]).find(o=>String(o.id)===x.dataset.dashboardOpp)?.title||'',40)});
@@ -239,17 +255,35 @@ $('#plugyVoice')?.addEventListener('click',initVoice);
 
 async function loadAll(){
   try{
-    const [boot,bureau,leads]=await Promise.all([
+    const [boot,bureau,leads,workflow]=await Promise.all([
       api('/api/v102/bootstrap'),
       api('/api/v107/bureau'),
-      api('/api/v86/crm')
+      api('/api/v86/crm'),
+      api('/api/v107/open-calls/workflow')
     ]);
-    state.bootstrap=boot;state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];
+    state.bootstrap=boot;state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];
     populateCountry($('#radarCountry'),boot.opportunities||[]);populateCountry($('#openCountry'),boot.opportunities||[]);
     renderDashboard();renderRadar();renderOpenCalls();renderContentSources();renderBureau();renderLeads();renderArtists();renderMap();
     toast('Workspace synchronisé');
   }catch(e){console.warn('[PLUG ART V107]',e);toast('Certaines données sont indisponibles')}
 }
+
+
+// PLUGY V107.1 interaction layer: one model, richer behavior.
+let plugyAmbientTimer=0,plugyPressTimer=0;
+function startPlugyAmbient(){
+  clearInterval(plugyAmbientTimer);
+  plugyAmbientTimer=setInterval(()=>{
+    if(state.voice||$('#plugyDrawer')?.classList.contains('open')===false)return;
+    const moves=['Blink','Curious','SoftTurn','Bounce'];
+    playMotion(moves[Math.floor(Math.random()*moves.length)]);
+  },7800);
+}
+const pm=$('#plugyModel');
+pm?.addEventListener('click',()=>playMotion(Math.random()>.5?'Happy':'Bounce'));
+pm?.addEventListener('pointerdown',()=>{clearTimeout(plugyPressTimer);plugyPressTimer=setTimeout(()=>{initVoice();playMotion('Attentive',true)},650)});
+['pointerup','pointercancel','pointerleave'].forEach(ev=>pm?.addEventListener(ev,()=>clearTimeout(plugyPressTimer)));
+startPlugyAmbient();
 
 const initial=location.hash.slice(1)||'dashboard';history.replaceState({view:initial},'','#'+initial);route(initial,false);renderSuggestions();loadAll();
 })();
