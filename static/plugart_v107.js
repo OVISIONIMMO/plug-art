@@ -4,7 +4,7 @@ const VERSION='119.20260923.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,recognition:null,creationMode:'text',creationDirty:false,radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
+const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,recognition:null,creationMode:'text',creationDirty:false,radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -76,7 +76,7 @@ async function ensureDataFamily(name,force=false){
     if(name==='artists')state.bootstrap.artists=Array.isArray(data)?data:[];
     if(name==='map')state.bootstrap.map=Array.isArray(data)?data:[];
     if(name==='bureau')state.bureau=Array.isArray(data)?data:[];
-    if(name==='bureauMeta'){state.bureauTemplates=Array.isArray(data?.templates)?data.templates:[];state.bureauPackages=Array.isArray(data?.packages)?data.packages:[]}
+    if(name==='bureauMeta'){state.bureauTemplates=Array.isArray(data?.templates)?data.templates:[];state.bureauPackages=Array.isArray(data?.packages)?data.packages:[];state.bureauSources=Array.isArray(data?.opportunities)?data.opportunities:[]}
     if(name==='leads')state.leads=Array.isArray(data)?data:[];
     if(name==='workflow')state.workflow=Array.isArray(data)?data:[];
     if(name==='drafts')state.drafts=Array.isArray(data)?data:[];
@@ -552,10 +552,183 @@ $('#contentClear')?.addEventListener('click',()=>{['contentObjective','contentBr
 $('#contentCopy')?.addEventListener('click',async()=>{await navigator.clipboard.writeText($('#contentBody').value);toast('Copié')});
 $('#contentToBureau')?.addEventListener('click',async()=>{const sourceId=$('#contentSource').value;const body={title:$('#contentTitle').value||$('#contentType').value,body:$('#contentBody').value,folder:'Contenus',tags:'création, PLUG ART',source_type:sourceId?'opportunity':'',source_id:sourceId||''};try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify(body)});state.bureau.unshift(n);if(sourceId)await persistWorkflow(sourceId,{workflow_status:'drafting',next_action:'Finaliser le document dans le Bureau'});toast('Ajouté au Bureau');route('bureau');selectDoc(n.id)}catch{toast('Enregistrement impossible')}});
 
+
+function bureauPackageStatusLabel(v){return({preparing:'En préparation',ready:'Prêt',submitted:'Envoyé',followup:'Relance',closed:'Clos'})[v]||v||'En préparation'}
+function bureauChecklistLabel(k){return({source_checked:'Source vérifiée',letter:'Lettre',bio:'Bio',artist_statement:'Note artistique',portfolio:'Portfolio',visuals:'Visuels',links:'Liens',submitted:'Envoyé'})[k]||k}
+function installBureauWorkspace(){
+  if($('#bureauModeBar'))return;
+  const view=$('#view-bureau'),toolbar=view?.querySelector('.page-toolbar'),layout=view?.querySelector('.bureau-layout');
+  if(!view||!toolbar||!layout)return;
+  layout.id='bureauDocumentsMode';
+  const bar=document.createElement('div');bar.id='bureauModeBar';bar.className='bureau-mode-bar';
+  bar.innerHTML='<button class="active" data-bureau-mode="documents">Documents</button><button data-bureau-mode="packages">Dossiers</button><button data-bureau-mode="templates">Modèles</button><span></span><button id="bureauQuickNewPackage">＋ Dossier</button><button id="bureauQuickNewTemplate">＋ Modèle</button>';
+  toolbar.insertAdjacentElement('afterend',bar);
+
+  const folders=document.createElement('div');folders.id='bureauFolderBar';folders.className='bureau-folder-bar';
+  layout.querySelector('.bureau-list-panel')?.insertAdjacentElement('afterbegin',folders);
+
+  const packages=document.createElement('section');packages.id='bureauPackagesMode';packages.className='bureau-mode-panel bureau-packages-mode';
+  packages.innerHTML='<aside class="panel bureau-package-list-panel"><div class="bureau-package-create"><select id="packageOpportunitySelect"><option value="">Dossier libre</option></select><button id="packageCreate">＋ Créer</button></div><div id="bureauPackageList" class="bureau-package-list"></div></aside><section class="panel bureau-package-detail" id="bureauPackageDetail"><div class="empty">Sélectionne un dossier de candidature.</div></section>';
+  view.appendChild(packages);
+
+  const templates=document.createElement('section');templates.id='bureauTemplatesMode';templates.className='bureau-mode-panel bureau-templates-mode';
+  templates.innerHTML='<aside class="panel bureau-template-list-panel"><div class="bureau-template-search"><input id="templateSearch" placeholder="Rechercher un modèle…"></div><div id="bureauTemplateList" class="bureau-template-list"></div></aside><section class="panel bureau-template-editor" id="bureauTemplateEditor"><div class="empty">Sélectionne un modèle.</div></section>';
+  view.appendChild(templates);
+
+  if(!$('#bureauWorkspaceStyles')){
+    const st=document.createElement('style');st.id='bureauWorkspaceStyles';st.textContent=`
+      .bureau-mode-bar{display:flex;align-items:center;gap:6px;margin:0 0 12px}.bureau-mode-bar>span{flex:1}.bureau-mode-bar button{border:1px solid #e0e2e8;background:#fff;border-radius:999px;padding:8px 11px;font-size:9px;font-weight:800;color:#666b77}.bureau-mode-bar button.active{background:#111318;color:#fff;border-color:#111318}
+      .bureau-mode-panel{display:none}.bureau-mode-panel.active{display:grid}
+      .bureau-folder-bar{display:flex;gap:5px;flex-wrap:wrap;padding:0 0 9px}.bureau-folder-bar button{border:1px solid #e3e5ea;background:#fafbfc;border-radius:999px;padding:7px 9px;font-size:8px;font-weight:800}.bureau-folder-bar button.active{background:#111318;color:#fff;border-color:#111318}
+      .bureau-packages-mode,.bureau-templates-mode{grid-template-columns:300px minmax(0,1fr);gap:12px}
+      .bureau-package-create{display:grid;grid-template-columns:1fr auto;gap:7px;margin-bottom:10px}.bureau-package-create select,.bureau-package-create button,.bureau-template-search input{padding:9px;border:1px solid #dfe2e8;border-radius:10px;background:#fff;font-size:9px}
+      .bureau-package-list,.bureau-template-list{display:grid;gap:6px}.bureau-package-item,.bureau-template-item{border:1px solid #e6e8ed;background:#fafbfc;border-radius:13px;padding:10px;text-align:left}.bureau-package-item.active,.bureau-template-item.active{border-color:#c7bff2;background:#faf8ff}.bureau-package-item strong,.bureau-package-item span,.bureau-template-item strong,.bureau-template-item span{display:block}.bureau-package-item strong,.bureau-template-item strong{font-size:10px}.bureau-package-item span,.bureau-template-item span{font-size:8px;color:#8e929d;margin-top:3px}
+      .package-detail-head,.template-editor-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding-bottom:10px;border-bottom:1px solid #eceef2}.package-detail-head h3,.template-editor-head h3{margin:2px 0 0;font-size:18px}.package-detail-head small,.template-editor-head small{font-size:8px;color:#969aa5;letter-spacing:.8px}.package-detail-actions{display:flex;gap:6px;flex-wrap:wrap}.package-detail-actions button,.template-editor-actions button{border:1px solid #dfe2e8;background:#fff;border-radius:9px;padding:8px 9px;font-size:8px;font-weight:800}.package-detail-actions .primary,.template-editor-actions .primary{background:#111318;color:#fff;border-color:#111318}
+      .package-source{margin:10px 0;padding:10px;border-radius:12px;background:#f7f8fa}.package-source strong,.package-source span{display:block}.package-source strong{font-size:10px}.package-source span{font-size:8px;color:#8e929d;margin-top:3px}
+      .package-status-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.package-status-row label,.template-editor-grid label{display:grid;gap:5px;font-size:8px;color:#90949f;font-weight:800;text-transform:uppercase}.package-status-row select,.package-status-row textarea,.template-editor-grid input,.template-editor-grid select,.template-editor-grid textarea{padding:9px;border:1px solid #dfe2e8;border-radius:10px;background:#fff;font-size:10px;text-transform:none}
+      .package-checklist{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}.package-check{border:1px solid #e2e4e9;background:#fafbfc;border-radius:11px;padding:9px;text-align:left;font-size:8px;font-weight:800}.package-check.done{background:#f0faf5;border-color:#cce8d9;color:#40775b}
+      .package-docs{display:grid;gap:6px;margin:10px 0}.package-doc-row{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #eceef2;border-radius:11px;padding:8px 10px}.package-doc-row button{border:0;background:transparent;text-align:left;font-size:9px;font-weight:800}.package-create-doc{display:grid;grid-template-columns:1fr auto;gap:7px;margin-top:10px}.package-create-doc select,.package-create-doc button{padding:9px;border:1px solid #dfe2e8;border-radius:10px;background:#fff;font-size:9px}
+      .template-editor-grid{display:grid;gap:9px}.template-editor-grid textarea{min-height:360px;resize:vertical;line-height:1.5}.template-editor-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.template-editor-actions .spacer{flex:1}
+      @media(max-width:820px){.bureau-mode-bar{overflow:auto;padding-bottom:2px}.bureau-mode-bar>span{display:none}.bureau-mode-bar button{white-space:nowrap;min-height:34px}.bureau-packages-mode,.bureau-templates-mode{grid-template-columns:1fr}.bureau-package-detail,.bureau-template-editor{min-height:380px}.package-checklist{grid-template-columns:1fr 1fr}}
+    `;document.head.appendChild(st);
+  }
+
+  $$('[data-bureau-mode]',bar).forEach(b=>b.onclick=()=>setBureauMode(b.dataset.bureauMode));
+  $('#bureauQuickNewPackage').onclick=()=>{setBureauMode('packages');setTimeout(()=>$('#packageOpportunitySelect')?.focus(),30)};
+  $('#bureauQuickNewTemplate').onclick=()=>{setBureauMode('templates');newBureauTemplate()};
+  $('#packageCreate').onclick=createBureauPackage;
+  $('#templateSearch').oninput=renderBureauTemplates;
+  setBureauMode(state.bureauMode||'documents');
+}
+function setBureauMode(mode){
+  state.bureauMode=mode;
+  $$('[data-bureau-mode]').forEach(b=>b.classList.toggle('active',b.dataset.bureauMode===mode));
+  const docs=$('#bureauDocumentsMode'),packages=$('#bureauPackagesMode'),templates=$('#bureauTemplatesMode');
+  if(docs)docs.style.display=mode==='documents'?'grid':'none';
+  packages?.classList.toggle('active',mode==='packages');
+  templates?.classList.toggle('active',mode==='templates');
+  if($('#bureauNew'))$('#bureauNew').style.display=mode==='documents'?'':'none';
+  if(mode==='documents'){renderBureauFolders();renderBureau()}
+  if(mode==='packages')renderBureauPackages();
+  if(mode==='templates')renderBureauTemplates();
+  renderPlugyActions();
+}
+function renderBureauFolders(){
+  const box=$('#bureauFolderBar');if(!box)return;
+  const counts={};state.bureau.forEach(n=>counts[n.folder||'Notes']=(counts[n.folder||'Notes']||0)+1);
+  const folders=['',...Object.keys(counts).sort()];
+  box.innerHTML=folders.map(f=>'<button class="'+(state.bureauFolderFilter===f?'active':'')+'" data-bureau-folder="'+esc(f)+'">'+(f||'Tous')+(f?' · '+counts[f]:'')+'</button>').join('');
+  $$('[data-bureau-folder]',box).forEach(b=>b.onclick=()=>{state.bureauFolderFilter=b.dataset.bureauFolder||'';renderBureauFolders();renderBureau()});
+}
+function renderBureauSources(){
+  const sel=$('#packageOpportunitySelect');if(!sel)return;const cur=sel.value;
+  sel.innerHTML='<option value="">Dossier libre</option>'+state.bureauSources.map(o=>'<option value="'+o.id+'">'+esc(o.title)+'</option>').join('');if(cur)sel.value=cur;
+}
+async function createBureauPackage(){
+  const source=$('#packageOpportunitySelect')?.value||'';const b=$('#packageCreate'),old=b?.textContent;if(b){b.disabled=true;b.textContent='Création…'}
+  try{
+    let pkg;if(source)pkg=await api('/api/v120/bureau/packages/from-opportunity/'+source,{method:'POST'});else pkg=await api('/api/v120/bureau/packages',{method:'POST',body:JSON.stringify({title:'Nouveau dossier'})});
+    state.bureauPackages=state.bureauPackages.filter(x=>Number(x.id)!==Number(pkg.id));state.bureauPackages.unshift(pkg);state.activePackage=pkg.id;renderBureauPackages();toast('Dossier créé');
+  }catch{toast('Création du dossier impossible')}finally{if(b){b.disabled=false;b.textContent=old}}
+}
+function renderBureauPackages(){
+  renderBureauSources();const list=$('#bureauPackageList'),detail=$('#bureauPackageDetail');if(!list||!detail)return;
+  if(state.activePackage&&!state.bureauPackages.some(x=>Number(x.id)===Number(state.activePackage)))state.activePackage=null;
+  if(!state.activePackage&&state.bureauPackages[0])state.activePackage=state.bureauPackages[0].id;
+  list.innerHTML=state.bureauPackages.map(p=>'<button class="bureau-package-item '+(Number(p.id)===Number(state.activePackage)?'active':'')+'" data-package="'+p.id+'"><strong>'+esc(p.title||'Dossier')+'</strong><span>'+esc(bureauPackageStatusLabel(p.status))+(p.opportunity?.deadline?' · '+esc(p.opportunity.deadline):'')+'</span></button>').join('')||'<div class="empty">Aucun dossier.</div>';
+  $$('[data-package]',list).forEach(b=>b.onclick=()=>{state.activePackage=Number(b.dataset.package);renderBureauPackages()});
+  renderBureauPackageDetail();
+}
+function renderBureauPackageDetail(){
+  const box=$('#bureauPackageDetail');if(!box)return;const p=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage));
+  if(!p){box.innerHTML='<div class="empty">Sélectionne un dossier de candidature.</div>';return}
+  const opp=p.opportunity||{},check=p.checklist||{},docs=(p.document_ids||[]).map(id=>state.bureau.find(n=>Number(n.id)===Number(id))).filter(Boolean);
+  box.innerHTML='<div class="package-detail-head"><div><small>DOSSIER DE CANDIDATURE</small><h3>'+esc(p.title||'Dossier')+'</h3></div><div class="package-detail-actions"><button id="packageOpenCall" '+(!opp.id?'disabled':'')+'>Open Call ↗</button><button id="packageToCreation">Vers Création</button><button class="primary" id="packageReady">Marquer prêt</button></div></div>'+
+    (opp.id?'<div class="package-source"><strong>'+esc(opp.title||'Open Call')+'</strong><span>'+esc([opp.city,opp.country,opp.deadline?'Deadline '+opp.deadline:''].filter(Boolean).join(' · '))+'</span></div>':'')+
+    '<div class="package-status-row"><label>Statut<select id="packageStatus">'+['preparing','ready','submitted','followup','closed'].map(v=>'<option value="'+v+'" '+(p.status===v?'selected':'')+'>'+bureauPackageStatusLabel(v)+'</option>').join('')+'</select></label><label>Notes<textarea id="packageNotes" rows="3">'+esc(p.notes||'')+'</textarea></label></div>'+
+    '<div class="package-checklist">'+Object.keys({source_checked:1,letter:1,bio:1,artist_statement:1,portfolio:1,visuals:1,links:1,submitted:1}).map(k=>'<button class="package-check '+(check[k]?'done':'')+'" data-package-check="'+k+'">'+(check[k]?'✓ ':'○ ')+esc(bureauChecklistLabel(k))+'</button>').join('')+'</div>'+
+    '<div class="package-docs">'+(docs.length?docs.map(n=>'<div class="package-doc-row"><button data-package-doc="'+n.id+'">'+esc(n.title||'Document')+'</button><span>'+esc(n.folder||'Candidatures')+'</span></div>').join(''):'<div class="empty">Aucun document lié.</div>')+'</div>'+
+    '<div class="package-create-doc"><select id="packageTemplateSelect">'+state.bureauTemplates.map(t=>'<option value="'+t.id+'">'+esc(t.category+' · '+t.name)+'</option>').join('')+'</select><button id="packageCreateDoc">＋ Créer le document</button></div>'+
+    '<div class="template-editor-actions"><button id="packageSent">Marquer envoyé</button><span class="spacer"></span><button class="danger-text" id="packageDelete">Supprimer le dossier</button></div>';
+  $('#packageStatus').onchange=e=>patchActivePackage({status:e.target.value});
+  let noteT=0;$('#packageNotes').oninput=e=>{clearTimeout(noteT);noteT=setTimeout(()=>patchActivePackage({notes:e.target.value},true),700)};
+  $$('[data-package-check]',box).forEach(b=>b.onclick=()=>{const next={...(p.checklist||{})};next[b.dataset.packageCheck]=!next[b.dataset.packageCheck];patchActivePackage({checklist:next})});
+  $$('[data-package-doc]',box).forEach(b=>b.onclick=()=>{setBureauMode('documents');selectDoc(Number(b.dataset.packageDoc))});
+  $('#packageCreateDoc').onclick=createDocumentFromPackage;
+  $('#packageOpenCall').onclick=()=>{if(opp.id){route('opencalls');setTimeout(()=>openOpportunity(Number(opp.id)),40)}};
+  $('#packageToCreation').onclick=()=>packageToCreation(p);
+  $('#packageReady').onclick=()=>patchActivePackage({status:'ready'});
+  $('#packageSent').onclick=async()=>{const next={...(p.checklist||{}),submitted:true};await patchActivePackage({status:'submitted',checklist:next});if(p.opportunity_id)persistWorkflow(p.opportunity_id,{workflow_status:'submitted',next_action:'Suivre la réponse'}).catch(()=>{});toast('Dossier marqué envoyé')};
+  $('#packageDelete').onclick=deleteActivePackage;
+}
+async function patchActivePackage(patch,silent=false){
+  const p=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage));if(!p)return;
+  try{const saved=await api('/api/v120/bureau/packages/'+p.id,{method:'PATCH',body:JSON.stringify(patch)});const i=state.bureauPackages.findIndex(x=>Number(x.id)===Number(saved.id));if(i>=0)state.bureauPackages[i]=saved;renderBureauPackages();if(!silent)toast('Dossier mis à jour')}catch{if(!silent)toast('Mise à jour impossible')}
+}
+async function deleteActivePackage(){
+  const p=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage));if(!p)return;
+  try{await api('/api/v120/bureau/packages/'+p.id,{method:'DELETE'});state.bureauPackages=state.bureauPackages.filter(x=>Number(x.id)!==Number(p.id));state.activePackage=null;renderBureauPackages();toast('Dossier supprimé')}catch{toast('Suppression impossible')}
+}
+async function createDocumentFromPackage(){
+  const p=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage)),tid=Number($('#packageTemplateSelect')?.value||0);if(!p||!tid)return;
+  const b=$('#packageCreateDoc'),old=b.textContent;b.disabled=true;b.textContent='Création…';
+  try{const out=await api('/api/v120/bureau/packages/'+p.id+'/document',{method:'POST',body:JSON.stringify({template_id:tid})});if(out.document){state.bureau.unshift(out.document);const i=state.bureauPackages.findIndex(x=>Number(x.id)===Number(out.package.id));if(i>=0)state.bureauPackages[i]=out.package;state.activeDoc=out.document.id;setBureauMode('documents');selectDoc(out.document.id);toast('Document créé depuis le modèle')}}catch{toast('Création du document impossible')}finally{b.disabled=false;b.textContent=old}
+}
+function packageToCreation(p){
+  const id=(p.document_ids||[])[0];if(id){state.activeDoc=Number(id);sendCurrentBureauToCreation();return}
+  toast('Crée d’abord un document dans ce dossier');
+}
+function renderBureauTemplates(){
+  const list=$('#bureauTemplateList'),editor=$('#bureauTemplateEditor');if(!list||!editor)return;
+  const term=clean($('#templateSearch')?.value).toLowerCase(),rows=state.bureauTemplates.filter(t=>!term||[t.name,t.category,t.tags,t.body].join(' ').toLowerCase().includes(term));
+  if(state.activeTemplate&&!state.bureauTemplates.some(x=>Number(x.id)===Number(state.activeTemplate)))state.activeTemplate=null;
+  if(!state.activeTemplate&&rows[0])state.activeTemplate=rows[0].id;
+  list.innerHTML=rows.map(t=>'<button class="bureau-template-item '+(Number(t.id)===Number(state.activeTemplate)?'active':'')+'" data-template="'+t.id+'"><strong>'+esc(t.name||'Modèle')+'</strong><span>'+esc(t.category||'Général')+(t.built_in?' · système':'')+'</span></button>').join('')||'<div class="empty">Aucun modèle.</div>';
+  $$('[data-template]',list).forEach(b=>b.onclick=()=>{state.activeTemplate=Number(b.dataset.template);renderBureauTemplates()});
+  renderBureauTemplateEditor();
+}
+function renderBureauTemplateEditor(){
+  const box=$('#bureauTemplateEditor'),t=state.bureauTemplates.find(x=>Number(x.id)===Number(state.activeTemplate));if(!box)return;
+  if(!t){box.innerHTML='<div class="empty">Sélectionne un modèle.</div>';return}
+  box.innerHTML='<div class="template-editor-head"><div><small>MODÈLE '+(t.built_in?'SYSTÈME':'PERSONNALISÉ')+'</small><h3>'+esc(t.name||'Modèle')+'</h3></div></div><div class="template-editor-grid"><label>Nom<input id="templateName" value="'+esc(t.name||'')+'"></label><label>Catégorie<select id="templateCategory">'+['Candidature','Artiste','Contenu','Prospection','Général'].map(x=>'<option '+(t.category===x?'selected':'')+'>'+x+'</option>').join('')+'</select></label><label>Tags<input id="templateTags" value="'+esc(t.tags||'')+'"></label><label>Contenu<textarea id="templateBody">'+esc(t.body||'')+'</textarea></label></div><div class="template-editor-actions"><button id="templateUse">Créer un document</button><button id="templateDuplicate">Dupliquer</button><span class="spacer"></span>'+(t.built_in?'':'<button class="danger-text" id="templateDelete">Supprimer</button>')+'<button class="primary" id="templateSave">Enregistrer</button></div>';
+  $('#templateSave').onclick=saveActiveTemplate;$('#templateDuplicate').onclick=duplicateActiveTemplate;$('#templateUse').onclick=useActiveTemplateAsDocument;$('#templateDelete')?.addEventListener('click',deleteActiveTemplate);
+}
+function newBureauTemplate(){
+  state.activeTemplate=null;const box=$('#bureauTemplateEditor');if(!box)return;
+  box.innerHTML='<div class="template-editor-head"><div><small>NOUVEAU MODÈLE</small><h3>Créer un modèle</h3></div></div><div class="template-editor-grid"><label>Nom<input id="templateName" value="Nouveau modèle"></label><label>Catégorie<select id="templateCategory"><option>Candidature</option><option>Artiste</option><option>Contenu</option><option>Prospection</option><option selected>Général</option></select></label><label>Tags<input id="templateTags"></label><label>Contenu<textarea id="templateBody" placeholder="Structure réutilisable…"></textarea></label></div><div class="template-editor-actions"><span class="spacer"></span><button class="primary" id="templateSave">Créer le modèle</button></div>';
+  $('#templateSave').onclick=saveActiveTemplate;
+}
+async function saveActiveTemplate(){
+  const body={name:$('#templateName')?.value||'Modèle',category:$('#templateCategory')?.value||'Général',tags:$('#templateTags')?.value||'',body:$('#templateBody')?.value||''};
+  try{let t;if(state.activeTemplate)t=await api('/api/v120/bureau/templates/'+state.activeTemplate,{method:'PATCH',body:JSON.stringify(body)});else t=await api('/api/v120/bureau/templates',{method:'POST',body:JSON.stringify(body)});state.bureauTemplates=state.bureauTemplates.filter(x=>Number(x.id)!==Number(t.id));state.bureauTemplates.push(t);state.activeTemplate=t.id;renderBureauTemplates();toast('Modèle enregistré')}catch{toast('Enregistrement du modèle impossible')}
+}
+async function duplicateActiveTemplate(){
+  const t=state.bureauTemplates.find(x=>Number(x.id)===Number(state.activeTemplate));if(!t)return;
+  try{const copy=await api('/api/v120/bureau/templates',{method:'POST',body:JSON.stringify({name:(t.name||'Modèle')+' · copie',category:t.category,body:t.body,tags:t.tags})});state.bureauTemplates.push(copy);state.activeTemplate=copy.id;renderBureauTemplates();toast('Modèle dupliqué')}catch{toast('Duplication impossible')}
+}
+async function deleteActiveTemplate(){
+  const t=state.bureauTemplates.find(x=>Number(x.id)===Number(state.activeTemplate));if(!t||t.built_in)return;
+  try{await api('/api/v120/bureau/templates/'+t.id,{method:'DELETE'});state.bureauTemplates=state.bureauTemplates.filter(x=>Number(x.id)!==Number(t.id));state.activeTemplate=null;renderBureauTemplates();toast('Modèle supprimé')}catch{toast('Suppression impossible')}
+}
+async function useActiveTemplateAsDocument(){
+  const t=state.bureauTemplates.find(x=>Number(x.id)===Number(state.activeTemplate));if(!t)return;
+  try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:t.name,body:t.body,folder:t.category==='Candidature'?'Candidatures':'Notes',tags:t.tags})});state.bureau.unshift(n);state.activeDoc=n.id;setBureauMode('documents');selectDoc(n.id);toast('Document créé depuis le modèle')}catch{toast('Création impossible')}
+}
+async function createPackageForOpportunity(id){
+  try{
+    await ensureViewData('bureau');
+    const pkg=await api('/api/v120/bureau/packages/from-opportunity/'+id,{method:'POST'});
+    state.bureauPackages=state.bureauPackages.filter(x=>Number(x.id)!==Number(pkg.id));state.bureauPackages.unshift(pkg);state.activePackage=pkg.id;
+    route('bureau');setBureauMode('packages');renderBureauPackages();$('#callDrawer')?.classList.remove('open');
+    if(id)persistWorkflow(id,{workflow_status:'drafting',next_action:'Préparer le dossier de candidature'}).catch(()=>{});
+    toast('Dossier de candidature ouvert');
+  }catch{toast('Création du dossier impossible')}
+}
+
 function renderBureau(){
-  const term=clean($('#bureauSearch')?.value).toLowerCase(),rows=state.bureau.filter(n=>!term||[n.title,n.body,n.folder,n.tags].join(' ').toLowerCase().includes(term));
+  const term=clean($('#bureauSearch')?.value).toLowerCase(),rows=state.bureau.filter(n=>(!state.bureauFolderFilter||(n.folder||'Notes')===state.bureauFolderFilter)&&(!term||[n.title,n.body,n.folder,n.tags].join(' ').toLowerCase().includes(term)));
   $('#bureauList').innerHTML=rows.map(n=>'<button class="bureau-item '+(state.activeDoc===n.id?'active':'')+'" data-doc="'+n.id+'"><strong>'+(n.pinned?'★ ':'')+esc(n.title||'Sans titre')+'</strong><span>'+esc(n.folder||'Notes')+' · '+esc((n.updated_at||'').replace('T',' '))+'</span></button>').join('')||'<div class="empty">Aucun document.</div>';
-  $$('[data-doc]').forEach(b=>b.onclick=()=>selectDoc(Number(b.dataset.doc)));
+  $('[data-doc]').forEach(b=>b.onclick=()=>selectDoc(Number(b.dataset.doc)));renderBureauFolders();
 }
 function clearDoc(){state.activeDoc=null;$('#bureauTitle').value='';$('#bureauBody').value='';$('#bureauFolder').value='Notes';$('#bureauTags').value='';$('#bureauPinned').checked=false;renderBureau();renderBureauSource(null)}
 function selectDoc(id){
@@ -1537,6 +1710,7 @@ adaptDashboardForDrafts();
 installRadarPresets();
 installMobileRadarControls();
 installCreationModes();
+installBureauWorkspace();
 ensureBureauBridge();
 injectOperationalUI();
 installCompactDashboard();
