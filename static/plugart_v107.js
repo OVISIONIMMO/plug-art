@@ -180,6 +180,21 @@ function populateCountry(select,items){
   if(!select)return;const cur=select.value;const countries=[...new Set(items.map(x=>x.country).filter(Boolean))].sort();select.innerHTML='<option value="">Tous</option>'+countries.map(c=>'<option>'+esc(c)+'</option>').join('');select.value=cur;
 }
 
+
+function installMobileRadarControls(){
+  if($('#mobileRadarFilters'))return;
+  const view=$('#view-radar'),layout=view?.querySelector('.tool-layout'),filters=view?.querySelector('.filter-panel');
+  if(!view||!layout||!filters)return;
+  const b=document.createElement('button');b.id='mobileRadarFilters';b.className='mobile-radar-filter-toggle';b.innerHTML='<span>Filtres avancés</span><b>＋</b>';
+  layout.insertAdjacentElement('beforebegin',b);
+  b.onclick=()=>{
+    const open=filters.classList.toggle('mobile-expanded');
+    b.classList.toggle('active',open);
+    b.querySelector('span').textContent=open?'Masquer les filtres':'Filtres avancés';
+    b.querySelector('b').textContent=open?'−':'＋';
+  };
+}
+
 function installRadarPresets(){
   if($('#radarPresets'))return;const view=$('#view-radar'),layout=view?.querySelector('.tool-layout');if(!view||!layout)return;
   const bar=document.createElement('div');bar.id='radarPresets';bar.className='radar-presets';
@@ -727,6 +742,7 @@ installAgenda();
 installOpenWorkflowFilters();
 adaptDashboardForDrafts();
 installRadarPresets();
+installMobileRadarControls();
 installCreationModes();
 ensureBureauBridge();
 injectOperationalUI();
