@@ -40,12 +40,13 @@ def root_v102(request:Request):
 
 from fastapi.middleware.gzip import GZipMiddleware
 try:
-    app.add_middleware(GZipMiddleware, minimum_size=900)
+    app.add_middleware(GZipMiddleware, minimum_size=500)
 except Exception:
     pass
 
 @app.middleware('http')
 async def v85_headers(request:Request,call_next):
+    started=time.perf_counter()
     response=await call_next(request)
     p=request.url.path
     if p=='/':
@@ -57,6 +58,7 @@ async def v85_headers(request:Request,call_next):
     elif p.startswith('/api/'):
         response.headers.setdefault('Cache-Control','no-store')
     response.headers.setdefault('Vary','Accept-Encoding')
+    response.headers['Server-Timing']=f"app;dur={(time.perf_counter()-started)*1000:.1f}"
     return response
 
 
