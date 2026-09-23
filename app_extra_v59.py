@@ -1407,6 +1407,14 @@ def bureau_templates_delete_v120(template_id:int):
     c=core.conn();c.execute('delete from bureau_templates where id=?',(template_id,));c.commit();c.close()
     return {'ok':True}
 
+@app.get('/api/v120/bureau/bootstrap')
+def bureau_bootstrap_v120():
+    return {
+      'templates':core.rows("""select * from bureau_templates order by built_in desc,category,name,id"""),
+      'packages':[_v120_package_out(x) for x in core.rows(
+        'select * from application_packages order by updated_at desc,id desc')]
+    }
+
 @app.get('/api/v120/bureau/packages')
 def bureau_packages_list_v120():
     return [_v120_package_out(x) for x in core.rows(
