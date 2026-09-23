@@ -182,7 +182,7 @@ function applyRadarPreset(preset){
   if(preset==='collective'&&type)type.value='collective';
   if(preset==='accessible'&&type)type.value='accessible';
   if(preset==='urgent'&&type)type.value='urgent';
-  $('[data-radar-preset]').forEach(b=>b.classList.toggle('active',b.dataset.radarPreset===preset));renderRadar();
+  $$('[data-radar-preset]').forEach(b=>b.classList.toggle('active',b.dataset.radarPreset===preset));renderRadar();
 }
 
 function renderRadar(){
