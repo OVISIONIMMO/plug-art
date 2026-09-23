@@ -1273,6 +1273,68 @@ def open_call_workflow_delete_v107(opportunity_id:int):
     return {'ok':True}
 
 
+# V108 persistent content drafts.
+_v108d=core.conn()
+_v108d.executescript("""
+CREATE TABLE IF NOT EXISTS content_drafts(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind TEXT DEFAULT 'text',
+  title TEXT DEFAULT '',
+  source_opportunity_id TEXT DEFAULT '',
+  payload_json TEXT DEFAULT '{}',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_content_drafts_updated ON content_drafts(updated_at DESC,id DESC);
+""")
+_v108d.commit();_v108d.close()
+
+def _draft_row_v108(row):
+    if not row:return None
+    out=dict(row)
+    try:out['payload']=json.loads(out.pop('payload_json') or '{}')
+    except Exception:out['payload']={}
+    return out
+
+@app.get('/api/v108/drafts')
+def content_drafts_list_v108():
+    return [_draft_row_v108(x) for x in core.rows('select * from content_drafts order by updated_at desc,id desc limit 80')]
+
+@app.post('/api/v108/drafts')
+def content_drafts_create_v108(body:dict):
+    body=body or {}
+    kind=str(body.get('kind') or 'text').strip().lower()
+    if kind not in {'text','carousel','visual'}:kind='text'
+    title=str(body.get('title') or 'Brouillon').strip()[:240]
+    source=str(body.get('source_opportunity_id') or '').strip()[:120]
+    payload=body.get('payload') if isinstance(body.get('payload'),dict) else {}
+    now=_now_v85()
+    c=core.conn();cur=c.execute("""insert into content_drafts(kind,title,source_opportunity_id,payload_json,created_at,updated_at)
+                                  values(?,?,?,?,?,?)""",(kind,title,source,json.dumps(payload,ensure_ascii=False)[:500000],now,now));c.commit();draft_id=cur.lastrowid;c.close()
+    return _draft_row_v108(core.one('select * from content_drafts where id=?',(draft_id,)))
+
+@app.patch('/api/v108/drafts/{draft_id}')
+def content_drafts_update_v108(draft_id:int,body:dict):
+    row=core.one('select * from content_drafts where id=?',(draft_id,))
+    if not row:raise HTTPException(404,'Brouillon introuvable')
+    body=body or {};data={}
+    if 'kind' in body:
+        kind=str(body.get('kind') or 'text').strip().lower();data['kind']=kind if kind in {'text','carousel','visual'} else 'text'
+    if 'title' in body:data['title']=str(body.get('title') or 'Brouillon').strip()[:240]
+    if 'source_opportunity_id' in body:data['source_opportunity_id']=str(body.get('source_opportunity_id') or '').strip()[:120]
+    if isinstance(body.get('payload'),dict):data['payload_json']=json.dumps(body['payload'],ensure_ascii=False)[:500000]
+    data['updated_at']=_now_v85()
+    sets=','.join(f"{k}=?" for k in data)
+    c=core.conn();c.execute(f"update content_drafts set {sets} where id=?",(*data.values(),draft_id));c.commit();c.close()
+    return _draft_row_v108(core.one('select * from content_drafts where id=?',(draft_id,)))
+
+@app.delete('/api/v108/drafts/{draft_id}')
+def content_drafts_delete_v108(draft_id:int):
+    c=core.conn();cur=c.execute('delete from content_drafts where id=?',(draft_id,));c.commit();c.close()
+    if not cur.rowcount:raise HTTPException(404,'Brouillon introuvable')
+    return {'ok':True}
+
+
 # V90 Interface Lab: persistent design-system configuration and version history.
 _v90c=core.conn()
 _v90c.executescript("""
@@ -1460,4 +1522,4 @@ def status_v90():
       'background':'compact PLUG ART internal workspace with dashboard-first navigation, operational workflow and integrated content studio'
     }
 
-print(f"PLUG_ART_V108_READY ui=internal_dashboard bureau=persistent prospection=crm open_call_workflow=on realistic=on contextual_motion=on plugy=single_drawer instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V108_READY ui=internal_dashboard bureau=persistent prospection=crm open_call_workflow=on drafts=persistent realistic=on contextual_motion=on plugy=single_drawer instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
