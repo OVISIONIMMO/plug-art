@@ -1221,15 +1221,80 @@ async function opportunityToBureau(){
   const body=[o.summary||o.radar_reason||'',o.deadline?'Deadline : '+o.deadline:'',o.fee?'Frais : '+o.fee:'',f.next_action?'Prochaine action : '+f.next_action:'',f.notes||''].filter(Boolean).join('\n\n');
   try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:'Open Call · '+o.title,body,folder:'Candidatures',tags:'open call, candidature',source_type:'opportunity',source_id:String(o.id)})});state.bureau.unshift(n);await persistWorkflow(o.id,{workflow_status:'drafting'});toast('Envoyé au Bureau');route('bureau');selectDoc(n.id);$('#callDrawer').classList.remove('open')}catch{toast('Envoi au Bureau impossible')}
 }
+function isoAfterDays(days=1){
+  const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+days);return d.toISOString().slice(0,10);
+}
+async function quickUpdateLead(id,patch={}){
+  const l=state.leads.find(x=>Number(x.id)===Number(id));if(!l)return false;
+  try{
+    const saved=await api('/api/v86/crm/'+id,{method:'PATCH',body:JSON.stringify({...l,...patch})});
+    Object.assign(l,saved);renderDashboard();renderLeads();renderPlugyActions();return true;
+  }catch{toast('Mise à jour du contact impossible');return false}
+}
+async function openTodayItem(item){
+  if(item.kind==='crm'){
+    route('prospection');
+    try{await ensureViewData('prospection');selectLead(item.id)}catch{}
+  }else openOpportunity(item.id);
+}
+async function handleTodayAction(item,action){
+  if(!item)return;
+  if(item.kind==='call'){
+    if(action==='draft'){await persistWorkflow(item.id,{workflow_status:'drafting',next_action:'Finaliser la candidature'});toast('Passé en rédaction')}
+    if(action==='sent'){await persistWorkflow(item.id,{workflow_status:'submitted',next_action:'Suivre la réponse'});toast('Marqué envoyé')}
+    if(action==='tomorrow'){await persistWorkflow(item.id,{workflow_status:item.workflow_status||'working',next_date:isoAfterDays(1)});toast('Reporté à demain')}
+  }else{
+    if(action==='contacted'){await quickUpdateLead(item.id,{status:'contacted',next_action:'Attendre le retour'});toast('Contact marqué contacté')}
+    if(action==='followup'){await quickUpdateLead(item.id,{status:'followup',next_action:'Relancer la structure',next_date:isoAfterDays(3)});toast('Relance programmée dans 3 jours')}
+    if(action==='tomorrow'){await quickUpdateLead(item.id,{next_date:isoAfterDays(1)});toast('Reporté à demain')}
+  }
+}
+function ensureTodayActionStyles(){
+  if($('#todayActionStyles'))return;
+  const st=document.createElement('style');st.id='todayActionStyles';st.textContent=`
+    .today-task{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:9px;align-items:center;padding:9px 4px;border-bottom:1px solid #eef0f3}
+    .today-task>i{width:7px;height:7px;border-radius:50%;background:#8c91a0}
+    .today-task.urgent>i{background:#e05d68;box-shadow:0 0 0 5px rgba(224,93,104,.08)}
+    .today-task.crm>i{background:#5aaab4}
+    .today-task-copy{min-width:0}
+    .today-task-copy button{display:block;width:100%;border:0;background:transparent;text-align:left;padding:0}
+    .today-task-copy strong,.today-task-copy span{display:block}
+    .today-task-copy strong{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .today-task-copy span{font-size:8px;color:#9295a0;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .today-task-side{display:flex;align-items:center;gap:5px}
+    .today-task-date{font-size:8px;color:#8c909c;white-space:nowrap}
+    .today-task-actions{display:flex;gap:4px}
+    .today-task-actions button{border:1px solid #e3e5ea;background:#fff;border-radius:8px;padding:6px 7px;font-size:8px;font-weight:800;color:#5f6370}
+    .today-task-actions button.primary{background:#111318;color:#fff;border-color:#111318}
+    .today-task-actions button:hover{background:#f7f8fa}
+    @media(max-width:820px){
+      .today-task{grid-template-columns:9px minmax(0,1fr)}
+      .today-task-side{grid-column:2;justify-content:space-between;overflow:auto;padding-bottom:1px}
+      .today-task-actions{flex:0 0 auto}
+      .today-task-actions button{min-height:32px;white-space:nowrap}
+    }
+  `;document.head.appendChild(st);
+}
 function renderToday(){
-  const box=$('#todayList');if(!box)return;
+  const box=$('#todayList');if(!box)return;ensureTodayActionStyles();
   const now=new Date(),today=now.toISOString().slice(0,10),soon=new Date(now.getTime()+7*86400000).toISOString().slice(0,10),items=[];
-  state.workflow.filter(w=>w.workflow_status!=='closed').forEach(w=>{const o=opportunityById(w.opportunity_id);if(!o)return;const due=w.next_date||o.deadline||'';if(!due||due<=soon)items.push({kind:'call',id:o.id,title:o.title,sub:w.next_action||workflowLabel(w.workflow_status),date:due,urgent:due&&due<=today})});
-  state.leads.filter(l=>l.status!=='closed'&&l.next_date&&l.next_date<=soon).forEach(l=>items.push({kind:'crm',id:l.id,title:l.organization||l.name||'Contact',sub:l.next_action||'Relance',date:l.next_date,urgent:l.next_date<=today}));
-  (state.bootstrap?.opportunities||[]).filter(o=>{const d=daysLeft(o);return d>=0&&d<=4&&!workflowFor(o.id)}).slice(0,4).forEach(o=>items.push({kind:'call',id:o.id,title:o.title,sub:'Deadline proche',date:o.deadline,urgent:true}));
-  items.sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
-  box.innerHTML=items.slice(0,6).map((x,i)=>'<button class="today-row '+(x.kind==='crm'?'crm ':'')+(x.urgent?'urgent':'')+'" data-today="'+i+'"><i></i><span><strong>'+esc(x.title)+'</strong><span>'+esc(x.sub)+'</span></span><b>'+esc(x.date||'À traiter')+'</b></button>').join('')||'<div class="empty">Rien d’urgent. Le calme, cette fonctionnalité rare.</div>';
-  $$('[data-today]',box).forEach((b,i)=>b.onclick=async()=>{const x=items[i];if(x.kind==='crm'){route('prospection');try{await ensureViewData('prospection');selectLead(x.id)}catch{}}else openOpportunity(x.id)});
+  state.workflow.filter(w=>w.workflow_status!=='closed').forEach(w=>{
+    const o=opportunityById(w.opportunity_id);if(!o)return;
+    const due=w.next_date||o.deadline||'';
+    if(!due||due<=soon)items.push({kind:'call',id:o.id,title:o.title,sub:w.next_action||workflowLabel(w.workflow_status),date:due,urgent:due&&due<=today,workflow_status:w.workflow_status||'saved'});
+  });
+  state.leads.filter(l=>l.status!=='closed'&&l.next_date&&l.next_date<=soon).forEach(l=>items.push({kind:'crm',id:l.id,title:l.organization||l.name||'Contact',sub:l.next_action||'Relance',date:l.next_date,urgent:l.next_date<=today,status:l.status||'lead'}));
+  (state.bootstrap?.opportunities||[]).filter(o=>{const d=daysLeft(o);return d>=0&&d<=4&&!workflowFor(o.id)}).slice(0,4).forEach(o=>items.push({kind:'call',id:o.id,title:o.title,sub:'Deadline proche',date:o.deadline,urgent:true,workflow_status:'saved'}));
+  items.sort((a,b)=>Number(!!b.urgent)-Number(!!a.urgent)||(a.date||'9999').localeCompare(b.date||'9999'));
+  const visible=items.slice(0,6);
+  box.innerHTML=visible.map((x,i)=>{
+    const actions=x.kind==='crm'
+      ?'<button data-today-action="contacted" data-today-index="'+i+'">Contacté</button><button data-today-action="followup" data-today-index="'+i+'" class="primary">Relance +3j</button><button data-today-action="tomorrow" data-today-index="'+i+'">Demain</button>'
+      :'<button data-today-action="draft" data-today-index="'+i+'">Rédiger</button><button data-today-action="sent" data-today-index="'+i+'" class="primary">Envoyé</button><button data-today-action="tomorrow" data-today-index="'+i+'">Demain</button>';
+    return '<div class="today-task '+(x.kind==='crm'?'crm ':'')+(x.urgent?'urgent':'')+'"><i></i><div class="today-task-copy"><button data-today-open="'+i+'"><strong>'+esc(x.title)+'</strong><span>'+esc(x.sub)+'</span></button></div><div class="today-task-side"><span class="today-task-date">'+esc(x.date||'À traiter')+'</span><div class="today-task-actions">'+actions+'</div></div></div>';
+  }).join('')||'<div class="empty">Rien d’urgent. Pour une fois, le système n’invente pas du travail.</div>';
+  $$('[data-today-open]',box).forEach(b=>b.onclick=()=>openTodayItem(visible[Number(b.dataset.todayOpen)]));
+  $$('[data-today-action]',box).forEach(b=>b.onclick=async e=>{e.stopPropagation();b.disabled=true;try{await handleTodayAction(visible[Number(b.dataset.todayIndex)],b.dataset.todayAction)}finally{b.disabled=false}});
 }
 function handleLocalPlugy(message){
   const m=message.toLowerCase();
