@@ -8,14 +8,14 @@ import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='104.0'
+app.version='105.0'
 BASE=Path(__file__).resolve().parent
-DASH=BASE/'static'/'dashboard_v104.html'
+DASH=BASE/'static'/'plugar_v105.html'
 GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='104.20260923.2'
+VERSION='105.20260923.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -31,8 +31,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'104.0',
-      'X-Plug-Art-UI':'plug-art-os-v104-fast'
+      'X-Plug-Art-Version':'105.0',
+      'X-Plug-Art-UI':'plugar-v105-free-flow'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -1115,13 +1115,14 @@ def builder_restore_v90(version_id:int):
 @app.get('/api/v100/status')
 @app.get('/api/v101/status')
 @app.get('/api/v102/status')
+@app.get('/api/v105/status')
 def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'102.0',
-      'ui':'plug-art-os-v102',
-      'reference_direction':'V102 PLUG ART OS: premium progressive rendering, single-request bootstrap, lazy feature modules, ETag navigation and optimized media delivery',
+      'version':'105.0',
+      'ui':'plugar-v105-free-flow',
+      'reference_direction':'V105 PLUGAR: immersive narrative scroll, contextual PLUGY, live Radar data and premium progressive motion',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -1144,7 +1145,7 @@ def status_v90():
       'layouts':['top','cover','left','right','band','collage','minimal'],
       'cuts':['none','diagonal','curve','wave'],
       'themes':['editorial','glass','impact','paper','night','color'],
-      'background':'premium responsive PLUG ART Control Room with agent-centered command workspace and refined editorial surfaces'
+      'background':'immersive PLUGAR editorial journey with contextual PLUGY and full-screen chapters'
     }
 
-print(f"PLUG_ART_V104_READY ui=control_room builder=interface_lab plugy2=15_concepts plugy=hero_centered instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUGAR_V105_READY ui=free_flow builder=interface_lab plugy2=15_concepts plugy=hero_centered instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
