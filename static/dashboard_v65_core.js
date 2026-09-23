@@ -243,31 +243,50 @@ function applyBootstrap(b){
 }
 async function loadAll(){
   const cacheKey='plugart_v102_bootstrap';
-  let cached=null;
-  try{cached=store.get(cacheKey,null)}catch{}
-  if(cached&&cached.payload&&Date.now()-Number(cached.saved_at||0)<300000){
-    applyBootstrap(cached.payload);
-    document.documentElement.dataset.dataWarm='1';
-  }
+  const applyBoot=payload=>{
+    if(!payload||typeof payload!=='object')return false;
+    state.stats=payload.stats||{};
+    state.opps=Array.isArray(payload.opportunities)?payload.opportunities:[];
+    state.radar=payload.radar||{};
+    state.candidates=Array.isArray(payload.candidates)?payload.candidates:[];
+    state.artists=Array.isArray(payload.artists)?payload.artists:[];
+    state.events=Array.isArray(payload.events)?payload.events:[];
+    state.map=Array.isArray(payload.map)?payload.map:[];
+    renderDashboard();renderRadar();renderOpenCalls();renderWorkspace();renderNetwork();
+    document.documentElement.dataset.dataReady='1';
+    dispatchEvent(new CustomEvent('plugart:hydrated',{detail:{source:payload.__source||'network'}}));
+    return true;
+  };
+  try{
+    const cached=JSON.parse(sessionStorage.getItem(cacheKey)||'null');
+    if(cached&&cached.payload&&Date.now()-Number(cached.time||0)<15*60*1000){
+      cached.payload.__source='cache';
+      applyBoot(cached.payload);
+    }
+  }catch{}
   try{
     const fresh=await api('/api/v102/bootstrap');
-    applyBootstrap(fresh);
-    try{store.set(cacheKey,{saved_at:Date.now(),payload:fresh})}catch{}
-    document.documentElement.dataset.dataReady='1';
-    window.dispatchEvent(new CustomEvent('plugart:hydrated',{detail:{source:'bootstrap'}}));
+    fresh.__source='network';
+    applyBoot(fresh);
+    try{sessionStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),payload:fresh}))}catch{}
     return state;
   }catch(e){
+    if(document.documentElement.dataset.dataReady)return state;
     const critical=[['/api/stats',{}],['/api/opportunities',[]],['/api/radar/status',{}],['/api/radar/candidates',[]]];
     const vals=await Promise.all(critical.map(async s=>{try{return await api(s[0])}catch{return s[1]}}));
     state.stats=vals[0]||{};state.opps=Array.isArray(vals[1])?vals[1]:[];state.radar=vals[2]||{};state.candidates=Array.isArray(vals[3])?vals[3]:[];
     renderDashboard();renderRadar();renderOpenCalls();renderWorkspace();
-    const deferred=[['/api/artists',[]],['/api/exhibitions',[]],['/api/v86/map',[]]];
-    const more=await Promise.all(deferred.map(async s=>{try{return await api(s[0])}catch{return s[1]}}));
-    state.artists=Array.isArray(more[0])?more[0]:[];state.events=Array.isArray(more[1])?more[1]:[];state.map=Array.isArray(more[2])?more[2]:[];
-    renderDashboard();renderNetwork();window.dispatchEvent(new CustomEvent('plugart:hydrated',{detail:{source:'fallback'}}));
+    const hydrate=async()=>{
+      const deferred=[['/api/artists',[]],['/api/exhibitions',[]],['/api/v86/map',[]]];
+      const more=await Promise.all(deferred.map(async s=>{try{return await api(s[0])}catch{return s[1]}}));
+      state.artists=Array.isArray(more[0])?more[0]:[];state.events=Array.isArray(more[1])?more[1]:[];state.map=Array.isArray(more[2])?more[2]:[];
+      renderDashboard();renderNetwork();document.documentElement.dataset.dataReady='1';dispatchEvent(new CustomEvent('plugart:hydrated',{detail:{source:'fallback'}}));
+    };
+    if('requestIdleCallback'in window)requestIdleCallback(()=>hydrate(),{timeout:900});else setTimeout(hydrate,80);
     return state;
   }
 }
+
 window.PLUG65={q,qa,esc,api,store,state,view,cut,fmt,oppImg,playPlugy,openChat,openOppDetails,filterOpenCalls,renderDashboard,renderSocial,modal,closeModal,loadAll,getSocialQueue:()=>socialQueue,setSocialQueue:(items)=>{socialQueue=Array.isArray(items)?items:[];persistSocial();renderSocial()}};
 const initialView=location.hash.slice(1)||'dashboard';history.replaceState({view:initialView},'','#'+initialView);view(initialView,{fromHistory:true,instant:true});
 window.PLUG65.ready=loadAll();
