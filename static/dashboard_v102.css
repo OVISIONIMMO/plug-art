@@ -454,3 +454,91 @@ body.v102-ui .mini-map{contain:layout paint}
   body.v102-ui .v100-tool-deck{gap:7px!important}
   body.v102-ui .v100-tool{min-height:76px!important}
 }
+
+
+/* V102.2 — premium tactile polish */
+body.v102-ui{
+  scrollbar-width:thin;
+  scrollbar-color:#cfd2d8 transparent;
+}
+body.v102-ui ::-webkit-scrollbar{width:9px;height:9px}
+body.v102-ui ::-webkit-scrollbar-track{background:transparent}
+body.v102-ui ::-webkit-scrollbar-thumb{background:#d1d4da;border:3px solid transparent;background-clip:padding-box;border-radius:999px}
+body.v102-ui button,
+body.v102-ui a,
+body.v102-ui [role="button"]{
+  -webkit-user-select:none;
+  user-select:none;
+}
+body.v102-ui button:active,
+body.v102-ui [role="button"]:active{
+  transform:scale(.985);
+}
+body.v102-ui .home-command,
+body.v102-ui .home-surface,
+body.v102-ui .open-call-card,
+body.v102-ui .studio-canvas,
+body.v102-ui .instagram-panel{
+  transform:translateZ(0);
+}
+body.v102-ui .home-command:before{
+  content:"";position:absolute;inset:1px;border-radius:calc(var(--v102-radius-xl) - 1px);
+  pointer-events:none;border:1px solid rgba(255,255,255,.035);
+}
+body.v102-ui .home-surface:after,
+body.v102-ui .home-flow-block:after,
+body.v102-ui .v100-tool:after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.76);
+}
+body.v102-ui .plugy-model-fallback{
+  inset:12%!important;
+  overflow:visible!important;
+  border-radius:34%!important;
+  background:
+    radial-gradient(circle at 32% 24%,rgba(255,255,255,1) 0 13%,rgba(246,247,255,.98) 28%,rgba(219,214,255,.96) 57%,rgba(203,170,225,.95) 78%,rgba(239,178,213,.95) 100%)!important;
+  box-shadow:
+    0 24px 48px rgba(71,56,115,.20),
+    inset 0 2px 0 rgba(255,255,255,.92),
+    inset 0 -12px 28px rgba(101,76,158,.10)!important;
+}
+body.v102-ui .plugy-model-fallback:before,
+body.v102-ui .plugy-model-fallback:after{
+  content:"";position:absolute;top:-28%;width:17%;height:42%;border-radius:999px;
+  background:linear-gradient(180deg,#fff 0%,#efeefe 58%,#cfb8ea 100%);
+  box-shadow:0 8px 18px rgba(66,52,105,.12),inset 0 1px 0 #fff;
+}
+body.v102-ui .plugy-model-fallback:before{left:24%}
+body.v102-ui .plugy-model-fallback:after{right:24%}
+body.v102-ui .plugy-model-fallback strong{
+  position:relative;font-size:0!important;width:44px;height:17px;display:block;
+}
+body.v102-ui .plugy-model-fallback strong:before,
+body.v102-ui .plugy-model-fallback strong:after{
+  content:"";position:absolute;top:4px;width:11px;height:6px;border-radius:999px;
+  background:linear-gradient(90deg,#2d3040,#59506f);
+  box-shadow:0 0 12px rgba(111,97,255,.18);
+}
+body.v102-ui .plugy-model-fallback strong:before{left:5px;transform:rotate(8deg)}
+body.v102-ui .plugy-model-fallback strong:after{right:5px;transform:rotate(-8deg)}
+body.v102-ui .plugy-model-fallback span{
+  font-size:6px!important;letter-spacing:.12em!important;text-transform:uppercase;color:#5e5770!important;
+}
+body.v102-ui .plugy-float.is-ready .plugy-model-fallback{
+  opacity:0!important;visibility:hidden!important;transform:scale(.94);
+}
+body.v102-ui .plugy-float.model-pending .plugy-model-fallback{
+  opacity:1!important;visibility:visible!important;
+}
+@media(hover:hover) and (pointer:fine){
+  body.v102-ui .rail-item:hover,
+  body.v102-ui .v100-tool:hover,
+  body.v102-ui .open-call-card:hover{
+    will-change:transform;
+  }
+}
+@media(max-width:720px){
+  body.v102-ui button:active,
+  body.v102-ui [role="button"]:active{transform:scale(.99)}
+  body.v102-ui .plugy-model-fallback{inset:13%!important}
+}
