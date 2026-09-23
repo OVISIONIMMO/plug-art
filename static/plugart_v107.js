@@ -369,6 +369,85 @@ function adaptDashboardForDrafts(){
   const stat=$('#statArtists')?.parentElement;if(stat){const label=stat.querySelector('span');if(label)label.textContent='Brouillons';stat.style.cursor='pointer';stat.onclick=async()=>{route('creation');try{await ensureViewData('creation');if(state.drafts[0])loadDraft(state.drafts[0].id)}catch{}}}
 }
 
+let dashboardResumeTab='drafts';
+function installCompactDashboard(){
+  if($('#dashboardResumePanel'))return;
+  const grid=$('#view-dashboard .dashboard-grid'),quick=$('#view-dashboard .quick-panel'),plugy=$('#view-dashboard .plugy-home');
+  if(!grid||!quick)return;
+  quick.classList.remove('span-2');quick.classList.add('span-3','dashboard-commandbar');
+  if(plugy)plugy.hidden=true;
+
+  const metric=$('#statOpp')?.closest('.metric-grid'),activity=metric?.closest('.panel');
+  if(metric){metric.classList.add('dashboard-metric-strip');quick.appendChild(metric)}
+  if(activity)activity.hidden=true;
+
+  const bureauPanel=$('#dashboardBureau')?.closest('.panel'),prospectPanel=$('#dashboardProspection')?.closest('.panel');
+  if(bureauPanel)bureauPanel.hidden=true;if(prospectPanel)prospectPanel.hidden=true;
+
+  const today=$('#todayPanel');if(today)today.classList.add('dashboard-today');
+  const calls=$('#dashboardCalls')?.closest('.panel');
+  if(calls){calls.classList.remove('span-2');calls.classList.add('span-3','dashboard-calls-panel')}
+
+  const resume=document.createElement('section');resume.id='dashboardResumePanel';resume.className='panel dashboard-resume';
+  resume.innerHTML='<div class="panel-head"><div><small>À REPRENDRE</small><h2>Travail en cours</h2></div></div><div class="dashboard-resume-tabs"><button data-resume-tab="drafts" class="active">Brouillons</button><button data-resume-tab="bureau">Bureau</button><button data-resume-tab="leads">Relances</button></div><div id="dashboardResumeList" class="compact-list"></div>';
+  if(today)today.insertAdjacentElement('afterend',resume);else quick.insertAdjacentElement('afterend',resume);
+  $$('[data-resume-tab]',resume).forEach(b=>b.onclick=()=>{dashboardResumeTab=b.dataset.resumeTab;$$('[data-resume-tab]',resume).forEach(x=>x.classList.toggle('active',x===b));renderDashboardResume()});
+
+  if(!$('#compactDashboardStyles')){const st=document.createElement('style');st.id='compactDashboardStyles';st.textContent=`
+  #view-dashboard .span-3{grid-column:1/-1}
+  .dashboard-commandbar{padding:14px!important}
+  .dashboard-commandbar .panel-head{margin-bottom:8px!important}
+  .dashboard-commandbar .quick-grid{gap:7px}
+  .dashboard-commandbar .quick-grid button{min-height:68px!important;padding:10px 11px!important;display:grid;grid-template-columns:28px 1fr;grid-template-rows:auto auto;column-gap:8px;align-content:center}
+  .dashboard-commandbar .quick-grid b{grid-row:1/3;align-self:center;margin:0}
+  .dashboard-commandbar .quick-grid strong{align-self:end}
+  .dashboard-commandbar .quick-grid span{align-self:start;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
+  .dashboard-metric-strip{margin-top:8px;grid-template-columns:repeat(4,1fr);gap:6px}
+  .dashboard-metric-strip div{padding:8px 10px!important;background:#f8f9fb;border-radius:12px}
+  .dashboard-metric-strip strong{font-size:18px!important}
+  .dashboard-metric-strip span{font-size:8px!important}
+  .dashboard-resume{min-height:150px}
+  .dashboard-resume-tabs{display:flex;gap:5px;margin:-2px 0 8px}
+  .dashboard-resume-tabs button{border:1px solid #e3e5ea;background:#fafbfc;border-radius:999px;padding:7px 9px;font-size:8px;font-weight:800;color:#737784}
+  .dashboard-resume-tabs button.active{background:#111318;color:#fff;border-color:#111318}
+  .dashboard-resume .compact-row{padding:8px!important}
+  .dashboard-resume .compact-row strong{font-size:10px}
+  .dashboard-resume .compact-row span{font-size:8px}
+  .dashboard-calls-panel .priority-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .dashboard-calls-panel .priority-row{border:1px solid #eef0f3;border-radius:13px}
+  @media(max-width:1200px){.dashboard-today{grid-column:1/-1}.dashboard-resume{grid-column:1/-1}}
+  @media(max-width:820px){
+    .dashboard-commandbar .quick-grid{grid-template-columns:1fr 1fr}
+    .dashboard-commandbar .quick-grid button{min-height:64px!important}
+    .dashboard-commandbar .quick-grid span{display:none}
+    .dashboard-metric-strip{grid-template-columns:repeat(4,1fr)}
+    .dashboard-calls-panel .priority-list{grid-template-columns:1fr}
+    .dashboard-today,.dashboard-resume{grid-column:auto}
+  }
+  `;document.head.appendChild(st)}
+  renderDashboardResume();
+}
+function renderDashboardResume(){
+  const box=$('#dashboardResumeList');if(!box)return;
+  let rows=[];
+  if(dashboardResumeTab==='drafts'){
+    rows=state.drafts.slice(0,4).map(d=>({id:d.id,title:d.title||'Brouillon',sub:(d.kind||'contenu')+' · '+String(d.updated_at||'').replace('T',' '),kind:'draft'}));
+  }else if(dashboardResumeTab==='bureau'){
+    rows=state.bureau.slice(0,4).map(n=>({id:n.id,title:n.title||'Sans titre',sub:(n.folder||'Notes')+' · '+String(n.updated_at||'').replace('T',' '),kind:'doc'}));
+  }else{
+    rows=state.leads.slice().filter(l=>l.status!=='closed').sort((a,b)=>(a.next_date||'9999').localeCompare(b.next_date||'9999')).slice(0,4).map(l=>({id:l.id,title:l.organization||l.name||'Contact',sub:(l.next_action||'À suivre')+(l.next_date?' · '+l.next_date:''),kind:'lead'}));
+  }
+  box.innerHTML=rows.map(r=>'<button class="compact-row" data-resume-kind="'+r.kind+'" data-resume-id="'+r.id+'" style="border:0;background:transparent;text-align:left;width:100%"><strong>'+esc(r.title)+'</strong><span>'+esc(r.sub)+'</span></button>').join('')||'<div class="empty">Rien à reprendre.</div>';
+  $$('[data-resume-kind]',box).forEach(b=>b.onclick=async()=>{
+    const id=Number(b.dataset.resumeId),kind=b.dataset.resumeKind;
+    try{
+      if(kind==='draft'){route('creation');await ensureViewData('creation');loadDraft(id)}
+      if(kind==='doc'){route('bureau');await ensureViewData('bureau');selectDoc(id)}
+      if(kind==='lead'){route('prospection');await ensureViewData('prospection');selectLead(id)}
+    }catch{}
+  });
+}
+
 function renderDashboard(){
   const b=state.bootstrap||{},stats=b.stats||{};
   const trackedIds=new Set(state.workflow.filter(x=>x.workflow_status!=='closed').map(x=>String(x.opportunity_id)));
@@ -381,7 +460,7 @@ function renderDashboard(){
   const leads=state.leads.slice().sort((a,b)=>(a.next_date||'9999').localeCompare(b.next_date||'9999')).slice(0,4);
   $('#dashboardProspection').innerHTML=leads.map(l=>'<button class="compact-row" data-dash-lead="'+l.id+'" style="border:0;background:transparent;text-align:left;width:100%"><strong>'+esc(l.organization||l.name||'Contact')+'</strong><span>'+esc(l.next_action||'À suivre')+(l.next_date?' · '+esc(l.next_date):'')+'</span></button>').join('')||'<div class="empty">Aucune relance.</div>';
   $$('[data-dash-lead]').forEach(b=>b.onclick=async()=>{const id=Number(b.dataset.dashLead);route('prospection');try{await ensureViewData('prospection');selectLead(id)}catch{}});
-  renderToday();
+  renderToday();renderDashboardResume();
 }
 function populateCountry(select,items){
   if(!select)return;const cur=select.value;const countries=[...new Set(items.map(x=>x.country).filter(Boolean))].sort();select.innerHTML='<option value="">Tous</option>'+countries.map(c=>'<option>'+esc(c)+'</option>').join('');select.value=cur;
@@ -1292,6 +1371,7 @@ installMobileRadarControls();
 installCreationModes();
 ensureBureauBridge();
 injectOperationalUI();
+installCompactDashboard();
 
 // PLUGY V107.1 interaction layer: one model, richer behavior.
 let plugyAmbientTimer=0,plugyPressTimer=0;
