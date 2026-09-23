@@ -473,3 +473,10 @@ body.v101-ui .mini-map{max-width:100%!important;overflow:hidden!important}
     transform:none!important;box-shadow:none!important
   }
 }
+
+body.v101-ui[data-keyboard="open"] .mobile-dock{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+body.v101-ui[data-keyboard="open"] .plugy-float{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+body.v101-ui[data-keyboard="open"] .plugy-chat{
+  bottom:max(8px,var(--v101-safe-bottom))!important;
+  max-height:calc(var(--v101-viewport-h,100dvh) - 18px)!important;
+}
