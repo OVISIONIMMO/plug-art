@@ -366,7 +366,19 @@ function bindOppActions(root=document){
 }
 
 function adaptDashboardForDrafts(){
-  const stat=$('#statArtists')?.parentElement;if(stat){const label=stat.querySelector('span');if(label)label.textContent='Brouillons';stat.style.cursor='pointer';stat.onclick=async()=>{route('creation');try{await ensureViewData('creation');if(state.drafts[0])loadDraft(state.drafts[0].id)}catch{}}}
+  const drafts=$('#statArtists')?.parentElement;
+  if(drafts){
+    const label=drafts.querySelector('span');if(label)label.textContent='Brouillons';
+    drafts.dataset.metricAction='drafts';drafts.tabIndex=0;
+    drafts.onclick=async()=>{route('creation');try{await ensureViewData('creation');if(state.drafts[0])loadDraft(state.drafts[0].id)}catch{}};
+  }
+  const opps=$('#statOpp')?.parentElement;
+  if(opps){opps.dataset.metricAction='calls';opps.tabIndex=0;opps.onclick=()=>route('opencalls')}
+  const urgent=$('#statUrgent')?.parentElement;
+  if(urgent){urgent.dataset.metricAction='urgent';urgent.tabIndex=0;urgent.onclick=()=>{route('opencalls');setTimeout(()=>{if($('#openStatus')){$('#openStatus').value='urgent';renderOpenCalls()}},50)}}
+  const contacts=$('#statContacts')?.parentElement;
+  if(contacts){contacts.dataset.metricAction='contacts';contacts.tabIndex=0;contacts.onclick=()=>route('prospection')}
+  $$('[data-metric-action]').forEach(el=>el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click()}});
 }
 
 let dashboardResumeTab='drafts';
@@ -403,7 +415,7 @@ function installCompactDashboard(){
   .dashboard-commandbar .quick-grid strong{align-self:end}
   .dashboard-commandbar .quick-grid span{align-self:start;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
   .dashboard-metric-strip{margin-top:8px;grid-template-columns:repeat(4,1fr);gap:6px}
-  .dashboard-metric-strip div{padding:8px 10px!important;background:#f8f9fb;border-radius:12px}
+  .dashboard-metric-strip div{padding:8px 10px!important;background:#f8f9fb;border-radius:12px;cursor:pointer;transition:background .18s,transform .18s}.dashboard-metric-strip div:hover{background:#fff;transform:translateY(-1px)}.dashboard-metric-strip div:focus-visible{outline:2px solid rgba(118,87,255,.35);outline-offset:2px}
   .dashboard-metric-strip strong{font-size:18px!important}
   .dashboard-metric-strip span{font-size:8px!important}
   .dashboard-resume{min-height:150px}
