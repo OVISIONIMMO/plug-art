@@ -101,7 +101,7 @@ function renderRouteView(id=state.view){
   if(id==='radar')return renderRadar();
   if(id==='opencalls')return renderOpenCalls();
   if(id==='creation'){renderContentSources();fillCreationSources();renderDraftPicker();return}
-  if(id==='bureau')return renderBureau();
+  if(id==='bureau'){installBureauWorkspace();setBureauMode(state.bureauMode||'documents');return}
   if(id==='prospection')return renderLeads();
   if(id==='agenda')return renderAgenda();
   if(id==='network')return renderArtists();
@@ -263,7 +263,8 @@ function plugyActionList(){
     const id=state.activeOpportunity,o=opportunityById(id);
     if(id&&o){
       actions.push([o.favorite?'★ Retirer favori':'☆ Favori',()=>toggleFavorite(id)]);
-      actions.push(['▤ Bureau',()=>opportunityToBureau()]);
+      actions.push(['▤ Note',()=>opportunityToBureau()]);
+      actions.push(['▤ Dossier',()=>createPackageForOpportunity(id)]);
       actions.push(['✦ Carrousel',()=>createCarouselForOpportunity(id),'primary']);
       actions.push(['✓ Envoyé',()=>persistWorkflow(id,{workflow_status:'submitted',next_action:'Suivre la réponse'}).then(()=>renderPlugyActions())]);
       actions.push(['↻ Relance',()=>persistWorkflow(id,{workflow_status:'followup',next_action:'Relancer la structure'}).then(()=>renderPlugyActions())]);
@@ -271,7 +272,16 @@ function plugyActionList(){
       actions.push(['Favoris',()=>{$('#openStatus').value='favorites';renderOpenCalls()}],['En rédaction',()=>{$('#openStatus').value='drafting';renderOpenCalls()}],['À relancer',()=>{$('#openStatus').value='followup';renderOpenCalls()}]);
     }
   }
-  if(state.view==='bureau'&&state.activeDoc){
+  if(state.view==='bureau'&&state.bureauMode==='packages'&&state.activePackage){
+    actions.push(['Documents',()=>setBureauMode('documents')]);
+    actions.push(['Modèles',()=>setBureauMode('templates')]);
+    actions.push(['Créer document',()=>createDocumentFromPackage(),'primary']);
+  }
+  if(state.view==='bureau'&&state.bureauMode==='templates'){
+    actions.push(['Nouveau modèle',()=>newBureauTemplate()]);
+    if(state.activeTemplate)actions.push(['Créer document',()=>useActiveTemplateAsDocument(),'primary']);
+  }
+  if(state.view==='bureau'&&state.bureauMode==='documents'&&state.activeDoc){
     actions.push(['Réécrire',()=>$('#bureauBody')?.value&&askPlugy('Réécris ce document de façon plus fluide et professionnelle sans inventer de faits : '+$('#bureauBody').value,'#bureauBody')]);
     actions.push(['Candidature',()=>$('#bureauBody')?.value&&askPlugy('Transforme ce document en candidature artistique claire, convaincante et factuelle : '+$('#bureauBody').value,'#bureauBody')]);
     actions.push(['✦ Vers Création',()=>sendCurrentBureauToCreation(),'primary']);
@@ -1452,7 +1462,7 @@ function injectOperationalUI(){
   }
   const drawer=document.createElement('aside');
   drawer.className='call-drawer';drawer.id='callDrawer';
-  drawer.innerHTML='<div class="call-head"><div><small>OPEN CALL</small><strong id="callTitle">Détail</strong></div><button id="callClose">×</button></div><div class="call-scroll"><div class="call-meta" id="callMeta"></div><p class="call-summary" id="callSummary"></p><div class="call-fields"><label>Suivi<select id="callStatus"><option value="saved">À lire</option><option value="working">À traiter</option><option value="drafting">En rédaction</option><option value="submitted">Envoyé</option><option value="followup">Relance</option><option value="closed">Clos</option></select></label><label>Prochaine action<input id="callNextAction" placeholder="Ex. préparer le dossier"></label><label>Date<input id="callNextDate" type="date"></label><label>Notes<textarea id="callNotes" rows="7" placeholder="Notes de travail…"></textarea></label></div><div class="call-actions"><button id="callFavorite">☆ Favori</button><button id="callPlugy">✦ PLUGY</button><button id="callBureau">▤ Bureau</button><button class="primary-btn" id="callCreate">Créer</button></div><a class="call-source" id="callSource" target="_blank" rel="noopener">Ouvrir la source ↗</a></div>';
+  drawer.innerHTML='<div class="call-head"><div><small>OPEN CALL</small><strong id="callTitle">Détail</strong></div><button id="callClose">×</button></div><div class="call-scroll"><div class="call-meta" id="callMeta"></div><p class="call-summary" id="callSummary"></p><div class="call-fields"><label>Suivi<select id="callStatus"><option value="saved">À lire</option><option value="working">À traiter</option><option value="drafting">En rédaction</option><option value="submitted">Envoyé</option><option value="followup">Relance</option><option value="closed">Clos</option></select></label><label>Prochaine action<input id="callNextAction" placeholder="Ex. préparer le dossier"></label><label>Date<input id="callNextDate" type="date"></label><label>Notes<textarea id="callNotes" rows="7" placeholder="Notes de travail…"></textarea></label></div><div class="call-actions"><button id="callFavorite">☆ Favori</button><button id="callPlugy">✦ PLUGY</button><button id="callBureau">▤ Note</button><button id="callPackage">▤ Dossier</button><button class="primary-btn" id="callCreate">Créer</button></div><a class="call-source" id="callSource" target="_blank" rel="noopener">Ouvrir la source ↗</a></div>';
   document.body.appendChild(drawer);
   $('#callClose').onclick=()=>drawer.classList.remove('open');
   $('#callStatus').onchange=saveOpportunityDrawer;
@@ -1463,6 +1473,7 @@ function injectOperationalUI(){
   $('#callCreate').onclick=()=>{if(!state.activeOpportunity)return;route('creation');setTimeout(()=>{const s=$('#contentSource');s.value=String(state.activeOpportunity);s.dispatchEvent(new Event('change'))},60);drawer.classList.remove('open')};
   $('#callPlugy').onclick=()=>{const o=opportunityById(state.activeOpportunity);if(o)askPlugy('Analyse cet Open Call et prépare la prochaine action concrète : '+clean(o.title)+'. Deadline : '+clean(o.deadline)+'.')};
   $('#callBureau').onclick=opportunityToBureau;
+  $('#callPackage').onclick=()=>{if(state.activeOpportunity)createPackageForOpportunity(state.activeOpportunity)};
   const st=document.createElement('style');st.id='v107OperationalStyles';st.textContent=`
   .today-panel{min-height:150px}.today-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.today-row{border:1px solid #eceef2;background:#fafbfc;border-radius:15px;padding:10px 11px;display:grid;grid-template-columns:8px 1fr auto;gap:9px;align-items:center;text-align:left}.today-row i{width:8px;height:8px;border-radius:50%;background:#7657ff}.today-row.crm i{background:#57cfcf}.today-row.urgent i{background:#ef6b7a}.today-row strong,.today-row span{display:block}.today-row strong{font-size:10px}.today-row span{font-size:9px;color:#90939d;margin-top:3px}.today-row b{font-size:9px;color:#707480;font-weight:700}.call-drawer{position:fixed;z-index:310;top:12px;right:12px;bottom:12px;width:min(430px,calc(100vw - 24px));background:rgba(255,255,255,.98);border:1px solid #e2e4ea;border-radius:26px;box-shadow:0 30px 90px rgba(20,23,36,.23);transform:translateX(calc(100% + 30px));transition:transform .3s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(22px)}.call-drawer.open{transform:none}.call-head{display:flex;justify-content:space-between;align-items:flex-start;padding:18px;border-bottom:1px solid #eceef2}.call-head small,.call-head strong{display:block}.call-head small{font-size:8px;letter-spacing:1px;color:#999ca7}.call-head strong{font-size:17px;line-height:1.15;margin-top:4px;max-width:330px}.call-head button{border:0;background:#f2f3f6;width:34px;height:34px;border-radius:10px;font-size:18px}.call-scroll{padding:16px;overflow:auto}.call-meta{font-size:9px;color:#777b87;text-transform:uppercase;letter-spacing:.65px}.call-summary{font-size:11px;line-height:1.55;color:#646875;padding:12px 0;margin:0}.call-fields{display:grid;gap:10px}.call-fields label{display:grid;gap:5px;font-size:8px;font-weight:800;color:#91949f;text-transform:uppercase;letter-spacing:.65px}.call-fields input,.call-fields select,.call-fields textarea{padding:10px;font-size:10px;text-transform:none;letter-spacing:0}.call-fields textarea{resize:vertical}.call-actions{display:flex;gap:7px;margin-top:14px}.call-actions button{flex:1;border:1px solid #e1e3e9;background:#fff;border-radius:11px;padding:10px;font-size:9px;font-weight:800}.call-actions .primary-btn{background:#111318;color:#fff;border-color:#111318}.call-source{display:block;margin-top:12px;font-size:9px;color:#686c77;text-decoration:none}.call-source:hover{text-decoration:underline}@media(max-width:820px){.today-list{grid-template-columns:1fr}} `;
   document.head.appendChild(st);
@@ -1580,6 +1591,9 @@ function handleLocalPlugy(message){
     const id=state.activeOpportunity,o=opportunityById(id);
     if(/favori/.test(m)&&!/(affiche|ouvre|liste)/.test(m)){
       toggleFavorite(id);return o?.favorite?'Je retire cet Open Call des favoris.':'Je mets cet Open Call en favori.';
+    }
+    if(/(dossier|candidature)/.test(m)&&/(crée|cree|ouvre|prépare|prepare|fais)/.test(m)){
+      createPackageForOpportunity(id);return 'Je crée le dossier de candidature pour cet Open Call.';
     }
     if(/(bureau|document|note)/.test(m)&&/(envoie|ajoute|mets|transf)/.test(m)){
       opportunityToBureau();return 'J’envoie cet Open Call au Bureau.';
