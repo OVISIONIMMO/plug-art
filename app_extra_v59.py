@@ -40,8 +40,8 @@ def _inject_v106_motion(raw:bytes):
             ln,kind=struct.unpack_from('<I4s',raw,pos);pos+=8
             chunk=raw[pos:pos+ln];pos+=ln
             if kind==b'JSON':
-                doc=json.loads(chunk.decode('utf-8').rstrip(' \\x00'))
-            elif kind==b'BIN\\x00':
+                doc=json.loads(chunk.decode('utf-8').rstrip(' ').rstrip(chr(0)))
+            elif kind==bytes((66,73,78,0)):
                 bin_blob=bytes(chunk)
             else:
                 extras.append((kind,bytes(chunk)))
@@ -123,8 +123,8 @@ def _inject_v106_motion(raw:bytes):
         asset=doc.setdefault('asset',{'version':'2.0'})
         asset['generator']=str(asset.get('generator',''))+' + PLUGAR V106 Motion Layer'
         j=_v106_pad4(json.dumps(doc,separators=(',',':')).encode('utf-8'),b' ')
-        b=_v106_pad4(bytes(blob),b'\\x00')
-        chunks=[(b'JSON',j),(b'BIN\\x00',b)]+extras
+        b=_v106_pad4(bytes(blob),bytes((0,)))
+        chunks=[(b'JSON',j),(bytes((66,73,78,0)),b)]+extras
         total=12+sum(8+len(c) for _,c in chunks)
         out=bytearray(struct.pack('<4sII',b'glTF',version,total))
         for kind,chunk in chunks:
