@@ -748,6 +748,113 @@ function renderCarousel(){
 function syncActiveSlideEdit(){
   const s=state.carousel.slides[state.carousel.active];if(!s)return;s.kicker=$('#slideKicker').value;s.title=$('#slideTitle').value;s.body=$('#slideBody').value;s.cta=$('#slideCta').value;renderCarousel();
 }
+
+function slidePixels(format){
+  if(format==='1:1')return [1080,1080];
+  if(format==='9:16')return [1080,1920];
+  return [1080,1350];
+}
+function slugFile(value,fallback='plug-art'){
+  const s=String(value||fallback).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  return s.slice(0,70)||fallback;
+}
+function wrapCanvasText(ctx,text,maxWidth,maxLines=10){
+  const words=String(text||'').trim().split(/\s+/).filter(Boolean),lines=[];let line='';
+  for(const word of words){
+    const test=line?line+' '+word:word;
+    if(ctx.measureText(test).width<=maxWidth||!line)line=test;
+    else{lines.push(line);line=word;if(lines.length>=maxLines-1)break}
+  }
+  if(line&&lines.length<maxLines)lines.push(line);
+  if(words.length&&lines.length===maxLines){
+    while(ctx.measureText(lines[maxLines-1]+'…').width>maxWidth&&lines[maxLines-1].includes(' '))lines[maxLines-1]=lines[maxLines-1].split(' ').slice(0,-1).join(' ');
+    lines[maxLines-1]=lines[maxLines-1].replace(/[.…]+$/,'')+'…';
+  }
+  return lines;
+}
+async function loadCanvasImage(url){
+  if(!url)return null;
+  const img=new Image();img.decoding='async';
+  const p=new Promise((resolve,reject)=>{img.onload=()=>resolve(img);img.onerror=reject});
+  img.src=url;await p;return img;
+}
+function drawCover(ctx,img,w,h){
+  const scale=Math.max(w/img.naturalWidth,h/img.naturalHeight),dw=img.naturalWidth*scale,dh=img.naturalHeight*scale;
+  ctx.drawImage(img,(w-dw)/2,(h-dh)/2,dw,dh);
+}
+function roundedRectPath(ctx,x,y,w,h,r){
+  const rr=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+rr,y);ctx.arcTo(x+w,y,x+w,y+h,rr);ctx.arcTo(x+w,y+h,x,y+h,rr);ctx.arcTo(x,y+h,x,y,rr);ctx.arcTo(x,y,x+w,y,rr);ctx.closePath();
+}
+async function renderSlideCanvas(slide,index=0){
+  const format=state.carousel.format||'4:5',[w,h]=slidePixels(format),canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+  const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  const base=ctx.createLinearGradient(0,0,w,h);base.addColorStop(0,'#eef2ff');base.addColorStop(.48,'#ddd7ff');base.addColorStop(1,'#f2d5e6');ctx.fillStyle=base;ctx.fillRect(0,0,w,h);
+  if(slide?.image){
+    try{const img=await loadCanvasImage(slide.image);drawCover(ctx,img,w,h)}catch{}
+    ctx.fillStyle='rgba(255,255,255,.08)';ctx.fillRect(0,0,w,h);
+  }
+  const fade=ctx.createLinearGradient(0,h*.22,0,h);fade.addColorStop(0,'rgba(255,255,255,0)');fade.addColorStop(.48,'rgba(255,255,255,.30)');fade.addColorStop(1,'rgba(255,255,255,.96)');ctx.fillStyle=fade;ctx.fillRect(0,0,w,h);
+
+  const pad=Math.round(w*.075),bottom=Math.round(h*.065),maxW=w-pad*2;
+  ctx.textBaseline='alphabetic';ctx.textAlign='left';
+  const kickerSize=Math.round(w*.025);ctx.font=`800 ${kickerSize}px Arial, sans-serif`;ctx.fillStyle='#17181e';ctx.letterSpacing='1px';
+  const kicker=(slide?.kicker||'PLUG ART').toUpperCase();ctx.fillText(kicker,pad,Math.round(h*.66));
+
+  let y=Math.round(h*.70),titleSize=Math.round(w*(format==='9:16'?.078:.072));ctx.font=`800 ${titleSize}px Arial, sans-serif`;ctx.fillStyle='#111318';
+  const titleLines=wrapCanvasText(ctx,slide?.title||'PLUG ART',maxW,format==='9:16'?5:4);
+  const titleLH=Math.round(titleSize*.94);for(const line of titleLines){ctx.fillText(line,pad,y);y+=titleLH}
+  y+=Math.round(w*.025);
+
+  const bodySize=Math.round(w*.030);ctx.font=`500 ${bodySize}px Arial, sans-serif`;ctx.fillStyle='#555b67';
+  const bodyLines=wrapCanvasText(ctx,slide?.body||'',Math.round(maxW*.9),format==='9:16'?8:5),bodyLH=Math.round(bodySize*1.38);
+  for(const line of bodyLines){ctx.fillText(line,pad,y);y+=bodyLH}
+
+  const cta=String(slide?.cta||'Découvrir →');ctx.font=`800 ${Math.round(w*.026)}px Arial, sans-serif`;ctx.fillStyle='#111318';ctx.fillText(cta,pad,h-bottom);
+
+  ctx.textAlign='right';ctx.font=`700 ${Math.round(w*.020)}px Arial, sans-serif`;ctx.fillStyle='rgba(17,19,24,.55)';ctx.fillText(String(index+1).padStart(2,'0')+' / '+String(state.carousel.slides.length).padStart(2,'0'),w-pad,h-bottom);
+  return canvas;
+}
+function canvasBlob(canvas,type='image/png',quality=.96){return new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Export impossible')),type,quality))}
+function downloadBlob(blob,name){
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1800);
+}
+async function exportCarouselSlide(index=0){
+  const slide=state.carousel.slides[index];if(!slide)return toast('Aucune slide à exporter');
+  const b=$('#carouselExportSlide'),old=b?.textContent;if(b){b.disabled=true;b.textContent='Export…'}
+  try{
+    await document.fonts?.ready;const canvas=await renderSlideCanvas(slide,index),blob=await canvasBlob(canvas);
+    const base=slugFile(slide.title||state.carousel.slides[0]?.title||'plug-art-carousel');
+    downloadBlob(blob,`${base}-slide-${String(index+1).padStart(2,'0')}.png`);toast('Slide PNG exportée');
+  }catch(e){console.warn('[PLUG ART export slide]',e);toast('Export PNG impossible')}
+  finally{if(b){b.disabled=false;b.textContent=old}}
+}
+async function exportCarouselAll(){
+  if(!state.carousel.slides.length)return toast('Aucune slide à exporter');
+  const b=$('#carouselExportAll'),old=b?.textContent;if(b)b.disabled=true;
+  const base=slugFile(state.carousel.slides[0]?.title||'plug-art-carousel');
+  try{
+    await document.fonts?.ready;
+    for(let i=0;i<state.carousel.slides.length;i++){
+      if(b)b.textContent=`Export ${i+1}/${state.carousel.slides.length}…`;
+      const canvas=await renderSlideCanvas(state.carousel.slides[i],i),blob=await canvasBlob(canvas);
+      downloadBlob(blob,`${base}-slide-${String(i+1).padStart(2,'0')}.png`);
+      await new Promise(r=>setTimeout(r,180));
+    }
+    toast('Carrousel exporté en PNG');
+  }catch(e){console.warn('[PLUG ART export all]',e);toast('Export du carrousel interrompu')}
+  finally{if(b){b.disabled=false;b.textContent=old}}
+}
+async function downloadGeneratedVisual(){
+  const url=state.visual.url;if(!url)return toast('Génère d’abord un visuel');
+  const b=$('#visualDownload'),old=b?.textContent;if(b){b.disabled=true;b.textContent='Téléchargement…'}
+  try{
+    const r=await fetch(url,{cache:'force-cache'});if(!r.ok)throw new Error('HTTP '+r.status);const blob=await r.blob();
+    const ext=(blob.type||'image/png').includes('jpeg')?'jpg':(blob.type||'').includes('webp')?'webp':'png';
+    downloadBlob(blob,`plug-art-visuel-${Date.now()}.${ext}`);toast('Visuel téléchargé');
+  }catch(e){console.warn('[PLUG ART visual download]',e);toast('Téléchargement impossible')}
+  finally{if(b){b.disabled=false;b.textContent=old}}
+}
+
 async function generateCarouselImage(index){
   const s=state.carousel.slides[index];if(!s)return toast('Génère d’abord les slides');
   const source=opportunityById($('#carouselSource').value),ratio=state.carousel.format||'4:5',btn=$('#carouselGenerateImage'),old=btn.textContent;btn.disabled=true;btn.textContent='Image…';
