@@ -1214,6 +1214,65 @@ def workspace_v107():
     }
 
 
+# V107.1 Open Call workflow tracking.
+_v107w=core.conn()
+_v107w.executescript("""
+CREATE TABLE IF NOT EXISTS opportunity_workspace(
+  opportunity_id INTEGER PRIMARY KEY,
+  workflow_status TEXT DEFAULT 'saved',
+  notes TEXT DEFAULT '',
+  next_action TEXT DEFAULT '',
+  next_date TEXT DEFAULT '',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_opportunity_workspace_status ON opportunity_workspace(workflow_status,updated_at DESC);
+""")
+_v107w.commit();_v107w.close()
+
+@app.get('/api/v107/open-calls/workflow')
+def open_call_workflow_list_v107():
+    return core.rows("""select w.*,o.title,o.city,o.country,o.deadline,o.source_url,
+                        coalesce(o.radar_score,o.score,0) score
+                        from opportunity_workspace w
+                        left join opportunities o on o.id=w.opportunity_id
+                        order by case w.workflow_status
+                          when 'drafting' then 0 when 'working' then 1 when 'followup' then 2
+                          when 'submitted' then 3 when 'saved' then 4 else 5 end,
+                        case when w.next_date!='' then w.next_date else '9999-12-31' end,
+                        w.updated_at desc""")
+
+@app.put('/api/v107/open-calls/{opportunity_id}/workflow')
+def open_call_workflow_upsert_v107(opportunity_id:int,body:dict):
+    if not core.one('select id from opportunities where id=?',(opportunity_id,)):
+        raise HTTPException(404,'Open Call introuvable')
+    body=body or {}
+    allowed_status={'saved','working','drafting','submitted','followup','closed'}
+    status=str(body.get('workflow_status') or 'saved').strip()
+    if status not in allowed_status:status='saved'
+    notes=str(body.get('notes') or '').strip()[:5000]
+    next_action=str(body.get('next_action') or '').strip()[:500]
+    next_date=str(body.get('next_date') or '').strip()[:20]
+    now=_now_v85()
+    c=core.conn()
+    c.execute("""insert into opportunity_workspace(opportunity_id,workflow_status,notes,next_action,next_date,created_at,updated_at)
+                 values(?,?,?,?,?,?,?)
+                 on conflict(opportunity_id) do update set
+                   workflow_status=excluded.workflow_status,
+                   notes=excluded.notes,
+                   next_action=excluded.next_action,
+                   next_date=excluded.next_date,
+                   updated_at=excluded.updated_at""",
+              (opportunity_id,status,notes,next_action,next_date,now,now))
+    c.commit();c.close()
+    return core.one('select * from opportunity_workspace where opportunity_id=?',(opportunity_id,))
+
+@app.delete('/api/v107/open-calls/{opportunity_id}/workflow')
+def open_call_workflow_delete_v107(opportunity_id:int):
+    c=core.conn();c.execute('delete from opportunity_workspace where opportunity_id=?',(opportunity_id,));c.commit();c.close()
+    return {'ok':True}
+
+
 # V90 Interface Lab: persistent design-system configuration and version history.
 _v90c=core.conn()
 _v90c.executescript("""
@@ -1401,4 +1460,4 @@ def status_v90():
       'background':'compact PLUG ART internal workspace with dashboard-first navigation and direct operational tools'
     }
 
-print(f"PLUG_ART_V107_READY ui=internal_dashboard bureau=persistent prospection=crm realistic=on contextual_motion=on builder=interface_lab plugy2=15_concepts plugy=hero_centered instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V107_READY ui=internal_dashboard bureau=persistent prospection=crm open_call_workflow=on realistic=on contextual_motion=on plugy=single_drawer instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
