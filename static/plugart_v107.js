@@ -144,11 +144,16 @@ function bindOppActions(root=document){
     };
   });
 }
+
+function adaptDashboardForDrafts(){
+  const stat=$('#statArtists')?.parentElement;if(stat){const label=stat.querySelector('span');if(label)label.textContent='Brouillons';stat.style.cursor='pointer';stat.onclick=()=>{route('creation');if(state.drafts[0])setTimeout(()=>loadDraft(state.drafts[0].id),40)}}
+}
+
 function renderDashboard(){
   const b=state.bootstrap||{},stats=b.stats||{};
   const trackedIds=new Set(state.workflow.filter(x=>x.workflow_status!=='closed').map(x=>String(x.opportunity_id)));
   const opps=(b.opportunities||[]).slice().sort((a,b)=>Number(trackedIds.has(String(b.id)))-Number(trackedIds.has(String(a.id)))||Number(b.radar_score??b.score??0)-Number(a.radar_score??a.score??0)).slice(0,4);
-  $('#statOpp').textContent=stats.opportunities??opps.length;$('#statUrgent').textContent=stats.urgent??0;$('#statArtists').textContent=stats.artists??(b.artists||[]).length;$('#statContacts').textContent=state.leads.length;
+  $('#statOpp').textContent=stats.opportunities??opps.length;$('#statUrgent').textContent=stats.urgent??0;$('#statArtists').textContent=state.drafts.length;$('#statContacts').textContent=state.leads.length;
   const box=$('#dashboardCalls');box.innerHTML=opps.length?opps.map(o=>'<div class="priority-row"><div class="priority-thumb"><img src="/api/v67/opportunities/'+o.id+'/thumbnail" alt="" loading="lazy"></div><button data-dashboard-opp="'+o.id+'" style="border:0;background:transparent;text-align:left"><h3>'+esc(o.title)+'</h3><p>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</p></button><span class="score">'+Number(o.radar_score??o.score??0)+'/100</span></div>').join(''):'<div class="empty">Aucune opportunité active.</div>';
   $$('[data-dashboard-opp]').forEach(x=>x.onclick=()=>openOpportunity(Number(x.dataset.dashboardOpp)));
   $('#dashboardBureau').innerHTML=state.bureau.slice(0,4).map(n=>'<button class="compact-row" data-dash-doc="'+n.id+'" style="border:0;background:transparent;text-align:left;width:100%"><strong>'+esc(n.title||'Sans titre')+'</strong><span>'+esc(n.folder||'Notes')+' · '+esc((n.updated_at||'').replace('T',' '))+'</span></button>').join('')||'<div class="empty">Aucun document.</div>';
@@ -589,6 +594,7 @@ function handleLocalPlugy(message){
   return '';
 }
 installAgenda();
+adaptDashboardForDrafts();
 installRadarPresets();
 installCreationModes();
 ensureBureauBridge();
