@@ -52,6 +52,8 @@ function route(id,push=true){
   if(mobileMore)mobileMore.classList.toggle('active',['creation','agenda','network','map'].includes(id));
   mobileSheet?.classList.remove('open');
   $('.workspace')?.scrollTo({top:0,behavior:'auto'});
+  if(id!=='bureau')document.body.classList.remove('mobile-bureau-editing');
+  if(id!=='prospection')$('#leadDetail')?.classList.remove('mobile-open');
   if(id==='bureau')renderBureau();
   if(id==='prospection')renderLeads();
   if(id==='creation')renderContentSources();
@@ -244,7 +246,7 @@ function renderBureau(){
 function clearDoc(){state.activeDoc=null;$('#bureauTitle').value='';$('#bureauBody').value='';$('#bureauFolder').value='Notes';$('#bureauTags').value='';$('#bureauPinned').checked=false;renderBureau();renderBureauSource(null)}
 function selectDoc(id){
   const n=state.bureau.find(x=>Number(x.id)===Number(id));if(!n)return;
-  state.activeDoc=n.id;$('#bureauTitle').value=n.title||'';$('#bureauBody').value=n.body||'';$('#bureauFolder').value=n.folder||'Notes';$('#bureauTags').value=n.tags||'';$('#bureauPinned').checked=!!n.pinned;renderBureau();renderBureauSource(n);
+  state.activeDoc=n.id;$('#bureauTitle').value=n.title||'';$('#bureauBody').value=n.body||'';$('#bureauFolder').value=n.folder||'Notes';$('#bureauTags').value=n.tags||'';$('#bureauPinned').checked=!!n.pinned;renderBureau();renderBureauSource(n);openBureauMobileEditor();
 }
 function ensureBureauBridge(){
   if($('#bureauSourceBar'))return;
@@ -271,7 +273,16 @@ function sendCurrentBureauToCreation(){
   route('creation');setCreationMode('text');
   setTimeout(()=>{if($('#contentTitle'))$('#contentTitle').value=n.title||'';if($('#contentBrief'))$('#contentBrief').value=n.body||'';if(n.source_type==='opportunity'&&n.source_id&&$('#contentSource')){$('#contentSource').value=String(n.source_id);$('#contentSource').dispatchEvent(new Event('change'))}toast('Document chargé dans Création')},50);
 }
-$('#bureauNew')?.addEventListener('click',clearDoc);$('#bureauSearch')?.addEventListener('input',renderBureau);
+function ensureBureauMobileBack(){
+  if($('#bureauMobileBack'))return;
+  const editor=$('.bureau-editor');if(!editor)return;
+  const b=document.createElement('button');b.id='bureauMobileBack';b.className='mobile-editor-back';b.innerHTML='‹ Documents';b.onclick=()=>{document.body.classList.remove('mobile-bureau-editing');$('.workspace')?.scrollTo({top:0,behavior:'smooth'})};editor.insertBefore(b,editor.firstChild);
+}
+function openBureauMobileEditor(){
+  ensureBureauMobileBack();
+  if(matchMedia('(max-width:820px)').matches){document.body.classList.add('mobile-bureau-editing');setTimeout(()=>$('#bureauTitle')?.focus({preventScroll:true}),80)}
+}
+$('#bureauNew')?.addEventListener('click',()=>{clearDoc();openBureauMobileEditor()});$('#bureauSearch')?.addEventListener('input',renderBureau);
 async function saveBureau(silent=false){
   const body={title:$('#bureauTitle').value||'Sans titre',body:$('#bureauBody').value,folder:$('#bureauFolder').value,tags:$('#bureauTags').value,pinned:$('#bureauPinned').checked?1:0};
   try{
@@ -311,8 +322,15 @@ function leadForm(l={}){
   return '<div class="lead-form"><h3>'+(l.id?'Fiche contact':'Nouveau contact')+'</h3><label>Nom<input id="lfName" value="'+esc(l.name||'')+'"></label><label>Structure<input id="lfOrg" value="'+esc(l.organization||'')+'"></label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>Type<select id="lfKind">'+['Galerie','Centre d’art','Média','Marque','Lieu','Partenaire','Artiste','Autre'].map(x=>'<option '+(l.kind===x?'selected':'')+'>'+x+'</option>').join('')+'</select></label><label>Statut<select id="lfStatus">'+Object.entries({lead:'À contacter',contacted:'Contacté',waiting:'En attente',followup:'Relance',active:'Échange en cours',hot:'Opportunité chaude',closed:'Clos'}).map(([v,x])=>'<option value="'+v+'" '+((l.status||'lead')===v?'selected':'')+'>'+x+'</option>').join('')+'</select></label></div><label>Email<input id="lfEmail" value="'+esc(l.email||'')+'"></label><label>Instagram<input id="lfInstagram" value="'+esc(l.instagram||'')+'"></label><label>Site<input id="lfWebsite" value="'+esc(l.website||'')+'"></label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>Ville<input id="lfCity" value="'+esc(l.city||'')+'"></label><label>Pays<input id="lfCountry" value="'+esc(l.country||'')+'"></label></div><label>Prochaine action<input id="lfAction" value="'+esc(l.next_action||'')+'"></label><label>Date<input id="lfDate" type="date" value="'+esc(l.next_date||'')+'"></label><label>Notes<textarea id="lfNotes">'+esc(l.notes||'')+'</textarea></label><div class="lead-form-actions"><button class="secondary-btn" id="leadPlugy">✦ Préparer une relance</button><button class="secondary-btn" id="leadToBureau">▤ Envoyer au Bureau</button><span class="spacer"></span>'+(l.id?'<button class="danger-text secondary-btn" id="leadDelete">Supprimer</button>':'')+'<button class="primary-btn" id="leadSave">Enregistrer</button></div><div class="lead-history" id="leadHistory"></div></div>';
 }
 function leadPayload(){return{name:$('#lfName').value,organization:$('#lfOrg').value,kind:$('#lfKind').value,status:$('#lfStatus').value,email:$('#lfEmail').value,instagram:$('#lfInstagram').value,website:$('#lfWebsite').value,city:$('#lfCity').value,country:$('#lfCountry').value,next_action:$('#lfAction').value,next_date:$('#lfDate').value,notes:$('#lfNotes').value,priority:'normal'}}
+function openLeadMobileSheet(){
+  const panel=$('#leadDetail');if(!panel)return;
+  if(!$('#leadMobileClose',panel)){
+    const close=document.createElement('button');close.id='leadMobileClose';close.className='mobile-lead-close';close.textContent='×';close.onclick=()=>panel.classList.remove('mobile-open');panel.prepend(close);
+  }
+  if(matchMedia('(max-width:820px)').matches)panel.classList.add('mobile-open');
+}
 async function selectLead(id){
-  const l=state.leads.find(x=>Number(x.id)===Number(id));if(!l)return;state.activeLead=l.id;$('#leadDetail').innerHTML=leadForm(l);bindLeadForm(l);
+  const l=state.leads.find(x=>Number(x.id)===Number(id));if(!l)return;state.activeLead=l.id;$('#leadDetail').innerHTML=leadForm(l);bindLeadForm(l);openLeadMobileSheet();
   try{const hist=await api('/api/v86/crm/'+l.id+'/history');$('#leadHistory').innerHTML='<h4>Historique</h4>'+hist.slice(0,15).map(h=>'<div class="history-item"><strong>'+esc(h.action)+'</strong> · '+esc(h.created_at)+'<br>'+esc(h.details||'')+'</div>').join('')}catch{}
 }
 function bindLeadForm(l={}){
@@ -321,7 +339,7 @@ function bindLeadForm(l={}){
   $('#leadPlugy').onclick=()=>{const d=leadPayload();askPlugy('Prépare un message de relance professionnel et concis pour '+clean(d.organization||d.name)+'. Contexte : '+clean(d.notes)+'. Prochaine action : '+clean(d.next_action))};
   $('#leadToBureau').onclick=async()=>{const d=leadPayload();try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:'Prospection · '+clean(d.organization||d.name||'Contact'),body:[d.notes,d.next_action?'Prochaine action : '+d.next_action:'',d.email?'Email : '+d.email:'',d.instagram?'Instagram : '+d.instagram:''].filter(Boolean).join('\n\n'),folder:'Prospection',tags:'prospection, contact',source_type:l.id?'crm':'',source_id:l.id?String(l.id):''})});state.bureau.unshift(n);renderDashboard();toast('Contact envoyé au Bureau')}catch{toast('Envoi au Bureau impossible')}};
 }
-$('#leadNew')?.addEventListener('click',()=>{state.activeLead=null;$('#leadDetail').innerHTML=leadForm({status:'lead',kind:'Galerie'});bindLeadForm({})});
+$('#leadNew')?.addEventListener('click',()=>{state.activeLead=null;$('#leadDetail').innerHTML=leadForm({status:'lead',kind:'Galerie'});bindLeadForm({});openLeadMobileSheet()});
 
 function renderArtists(){
   const box=$('#artistGrid'),rows=state.bootstrap?.artists||[],grad=['#6757cf','#d56a9e','#58aab4','#8c6d50'];
