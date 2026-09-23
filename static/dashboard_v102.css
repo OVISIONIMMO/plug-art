@@ -1,3 +1,45 @@
+
+:root{
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  --ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",Arial,sans-serif;
+  --mono:"SFMono-Regular","SF Mono",ui-monospace,Menlo,Monaco,Consolas,monospace;
+}
+body.v102-ui{
+  font-family:var(--ui)!important;
+  font-synthesis:none;
+  font-kerning:normal;
+  font-feature-settings:"kern" 1,"liga" 1,"calt" 1;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+body.v102-ui .home-command h1,
+body.v102-ui .section-bar h1,
+body.v102-ui .card-head strong,
+body.v102-ui .open-call-copy h3,
+body.v102-ui .brand strong{
+  font-family:var(--display)!important;
+}
+body.v102-ui .v89-section-kicker,
+body.v102-ui .nav-group-label,
+body.v102-ui .home-eyebrow,
+body.v102-ui .source-row span,
+body.v102-ui .open-call-meta{
+  font-family:var(--mono)!important;
+}
+body.v102-ui ::selection{background:rgba(111,97,255,.18);color:#101114}
+body.v102-ui img{image-rendering:auto}
+body.v102-ui .priority-thumb:has(img:not([src])){
+  background:linear-gradient(110deg,#eceef2 8%,#f7f8f9 18%,#eceef2 33%)!important;
+  background-size:200% 100%!important;
+  animation:v102Shimmer 1.35s linear infinite!important;
+}
+body.v102-ui img[data-v102-src]:not([src]){opacity:0}
+body.v102-ui img.v102-image-ready{opacity:1;transition:opacity .22s ease}
+body.v102-ui .v102-efficient-motion .plugy-orbit,
+body.v102-ui.v102-efficient-motion .plugy-orbit{animation:none!important}
+body.v102-ui.v102-efficient-motion .home-command:after{display:none!important}
+body.v102-ui.v102-efficient-motion .v100-tool,
+body.v102-ui.v102-efficient-motion .open-call-card{transition:none!important}
 /* PLUG ART V102 — premium performance layer */
 :root{
   --v102-ink:#101114;
