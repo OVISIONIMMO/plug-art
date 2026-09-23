@@ -107,7 +107,30 @@ function bindPlugyIntent(){
   }));
 }
 
+
+let imageObserver=null;
+function hydrateDeferredImages(root=document){
+  const nodes=Array.from(root.querySelectorAll('img[data-v102-src]'));
+  if(!nodes.length)return;
+  if(!('IntersectionObserver'in window)){
+    idle(()=>nodes.forEach(img=>{if(!img.src)img.src=img.dataset.v102Src||''}),350);
+    return;
+  }
+  if(!imageObserver){
+    imageObserver=new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(!entry.isIntersecting)return;
+        const img=entry.target;
+        if(!img.src&&img.dataset.v102Src)img.src=img.dataset.v102Src;
+        imageObserver.unobserve(img);
+      });
+    },{rootMargin:'320px 0px'});
+  }
+  nodes.forEach(img=>imageObserver.observe(img));
+}
+
 function tuneImages(root=document){
+  hydrateDeferredImages(root);
   root.querySelectorAll('img').forEach((img,i)=>{
     if(!img.loading)img.loading=i<2?'eager':'lazy';
     if(!img.decoding)img.decoding='async';
@@ -149,18 +172,18 @@ function premiumRuntime(){
     }
   },{capture:true});
 
-  // PLUGY arrives after first meaningful paint instead of competing with it.
-  idle(()=>ensurePlugy(),650);
+  const coarse=matchMedia('(pointer:coarse)').matches;
+  // PLUGY stays instant on intent, but its 3D engine no longer competes with first paint.
+  idle(()=>ensurePlugy(),coarse?2200:900);
 
-  // Warm likely next features only when the connection can afford it.
+  // Desktop can afford warm modules. Touch devices load them strictly on demand.
   idle(()=>{
     const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
-    if(conn?.saveData||/2g/.test(conn?.effectiveType||''))return;
-    ['studio','social','map'].forEach((id,i)=>setTimeout(()=>ensureRoute(id,true),i*240));
-  },2600);
+    if(coarse||conn?.saveData||/2g/.test(conn?.effectiveType||''))return;
+    ['studio','social','map'].forEach((id,i)=>setTimeout(()=>ensureRoute(id,true),i*260));
+  },3000);
 
   // Runtime quality adaptation: keep visual quality, remove expensive motion on stressed mobile sessions.
-  const coarse=matchMedia('(pointer:coarse)').matches;
   const lowMemory=Number(navigator.deviceMemory||8)<=4;
   if(coarse&&lowMemory)document.body.classList.add('v102-efficient-motion');
 
@@ -182,8 +205,12 @@ function premiumRuntime(){
 
   addEventListener('load',()=>{
     perf.load=Math.round(performance.now());
+    perf.resources=performance.getEntriesByType('resource').length;
     window.PLUGART_V102_PERF=perf;
   },{once:true});
+  addEventListener('pageshow',e=>{
+    if(e.persisted){tuneImages();bindPlugyIntent();}
+  });
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',premiumRuntime,{once:true});
