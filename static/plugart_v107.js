@@ -48,6 +48,9 @@ function route(id,push=true){
   $('#plugyContext').textContent='Contexte : '+contexts[id].label;
   renderSuggestions();playMotion(viewMeta[id][2],id==='dashboard');
   if(push&&location.hash!=='#'+id)history.pushState({view:id},'','#'+id);
+  const mobileMore=$('#mobileMoreButton'),mobileSheet=$('#mobileMoreSheet');
+  if(mobileMore)mobileMore.classList.toggle('active',['creation','agenda','network','map'].includes(id));
+  mobileSheet?.classList.remove('open');
   $('.workspace')?.scrollTo({top:0,behavior:'auto'});
   if(id==='bureau')renderBureau();
   if(id==='prospection')renderLeads();
@@ -639,6 +642,53 @@ function handleLocalPlugy(message){
   if(/(lance|actualise|démarre|demarre).*(radar|recherche)/.test(m)){route('radar');setTimeout(()=>$('#radarRun')?.click(),30);return 'Je lance le Radar.'}
   return '';
 }
+
+function installMobileShell(){
+  if($('#mobileDock'))return;
+  const dock=document.createElement('nav');
+  dock.className='mobile-dock';dock.id='mobileDock';dock.setAttribute('aria-label','Navigation mobile');
+  dock.innerHTML=
+    '<button data-route="dashboard"><b>⌂</b><span>Accueil</span></button>'+
+    '<button data-route="radar"><b>◉</b><span>Radar</span></button>'+
+    '<button data-route="opencalls"><b>◇</b><span>Calls</span></button>'+
+    '<button data-route="bureau"><b>▤</b><span>Bureau</span></button>'+
+    '<button data-route="prospection"><b>◎</b><span>Contacts</span></button>'+
+    '<button class="mobile-more" id="mobileMoreButton"><b>•••</b><span>Plus</span></button>';
+  document.body.appendChild(dock);
+
+  const sheet=document.createElement('div');
+  sheet.className='mobile-more-sheet';sheet.id='mobileMoreSheet';
+  sheet.innerHTML='<div class="mobile-more-grid">'+
+    '<button data-mobile-route="creation"><b>✦</b><span>Création</span></button>'+
+    '<button data-mobile-route="agenda"><b>◷</b><span>Agenda</span></button>'+
+    '<button data-mobile-route="network"><b>◌</b><span>Artistes</span></button>'+
+    '<button data-mobile-route="map"><b>⌖</b><span>Carte</span></button>'+
+    '<button data-mobile-action="search"><b>⌕</b><span>Recherche</span></button>'+
+    '<button data-mobile-action="plugy"><b>⌁</b><span>PLUGY</span></button>'+
+  '</div>';
+  document.body.appendChild(sheet);
+
+  $('[data-route]',dock).forEach(b=>b.onclick=()=>route(b.dataset.route));
+  $('[data-mobile-route]',sheet).forEach(b=>b.onclick=()=>route(b.dataset.mobileRoute));
+  $('[data-mobile-action]',sheet).forEach(b=>b.onclick=()=>{
+    sheet.classList.remove('open');
+    if(b.dataset.mobileAction==='search')openSearch();
+    if(b.dataset.mobileAction==='plugy')openPlugy();
+  });
+  $('#mobileMoreButton').onclick=()=>{
+    const open=!sheet.classList.contains('open');
+    sheet.classList.toggle('open',open);
+    $('#mobileMoreButton').classList.toggle('active',open||['creation','agenda','network','map'].includes(state.view));
+  };
+  document.addEventListener('pointerdown',e=>{
+    if(!sheet.classList.contains('open'))return;
+    if(sheet.contains(e.target)||dock.contains(e.target))return;
+    sheet.classList.remove('open');
+    $('#mobileMoreButton')?.classList.toggle('active',['creation','agenda','network','map'].includes(state.view));
+  });
+}
+
+installMobileShell();
 installAgenda();
 installOpenWorkflowFilters();
 adaptDashboardForDrafts();
