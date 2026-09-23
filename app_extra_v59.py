@@ -51,7 +51,7 @@ async def v85_headers(request:Request,call_next):
     p=request.url.path
     if p=='/':
         response.headers['Cache-Control']='private, no-cache, must-revalidate'
-    elif p.startswith('/static/') and any(p.endswith(ext) for ext in ('.css','.js','.glb','.png','.jpg','.jpeg','.webp','.svg')):
+    elif p.startswith('/static/') and any(p.endswith(ext) for ext in ('.css','.js','.glb','.png','.jpg','.jpeg','.webp','.svg','.webmanifest')):
         response.headers['Cache-Control']='public, max-age=31536000, immutable'
     elif p=='/api/v102/bootstrap':
         response.headers['Cache-Control']='private, max-age=8, stale-while-revalidate=30'
@@ -61,6 +61,12 @@ async def v85_headers(request:Request,call_next):
     response.headers['Server-Timing']=f"app;dur={(time.perf_counter()-started)*1000:.1f}"
     return response
 
+
+@app.get('/favicon.ico',include_in_schema=False)
+def favicon_v102():
+    path=BASE/'static'/'favicon.svg'
+    if not path.exists():return Response(status_code=204)
+    return Response(content=path.read_bytes(),media_type='image/svg+xml',headers={'Cache-Control':'public,max-age=604800'})
 
 @app.get('/api/v102/bootstrap')
 def bootstrap_v102():
