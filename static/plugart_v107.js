@@ -30,14 +30,38 @@ const contexts={
 };
 
 async function api(url,opt={}){
-  const r=await fetch(url,{cache:'no-store',...opt,headers:{'Accept':'application/json',...(opt.body?{'Content-Type':'application/json'}:{}),...(opt.headers||{})}});
-  if(!r.ok)throw new Error((await r.text())||('HTTP '+r.status));
-  const ct=r.headers.get('content-type')||'';
-  return ct.includes('json')?r.json():r.text();
+  const timeoutMs=Number(opt.timeout||(
+    url.includes('/content/image')?90000:
+    url.includes('/plugy')?60000:
+    url.includes('/radar/run')?120000:15000
+  ));
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
+  const {timeout,...fetchOpt}=opt;
+  try{
+    const r=await fetch(url,{cache:'no-store',...fetchOpt,signal:controller.signal,headers:{'Accept':'application/json',...(fetchOpt.body?{'Content-Type':'application/json'}:{}),...(fetchOpt.headers||{})}});
+    if(!r.ok)throw new Error((await r.text())||('HTTP '+r.status));
+    const ct=r.headers.get('content-type')||'';
+    return ct.includes('json')?r.json():r.text();
+  }catch(e){
+    if(e?.name==='AbortError')throw new Error('Délai dépassé');
+    throw e;
+  }finally{clearTimeout(timer)}
 }
 function toast(msg){
   const el=$('#toast');if(!el)return;el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2200);
 }
+function renderRouteView(id=state.view){
+  if(id==='dashboard')return renderDashboard();
+  if(id==='radar')return renderRadar();
+  if(id==='opencalls')return renderOpenCalls();
+  if(id==='creation'){renderContentSources();fillCreationSources();renderDraftPicker();return}
+  if(id==='bureau')return renderBureau();
+  if(id==='prospection')return renderLeads();
+  if(id==='agenda')return renderAgenda();
+  if(id==='network')return renderArtists();
+  if(id==='map')return renderMap();
+}
+
 function route(id,push=true){
   if(!viewMeta[id])id='dashboard';
   state.view=id;document.body.dataset.view=id;
@@ -54,12 +78,23 @@ function route(id,push=true){
   $('.workspace')?.scrollTo({top:0,behavior:'auto'});
   if(id!=='bureau')document.body.classList.remove('mobile-bureau-editing');
   if(id!=='prospection')$('#leadDetail')?.classList.remove('mobile-open');
-  if(id==='bureau')renderBureau();
-  if(id==='prospection')renderLeads();
-  if(id==='creation')renderContentSources();
+  renderRouteView(id);
 }
 $$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route)}));
 addEventListener('popstate',()=>route(location.hash.slice(1)||'dashboard',false));
+
+let modelViewerPromise=null;
+function ensureModelViewer(){
+  if(customElements.get('model-viewer'))return Promise.resolve(true);
+  if(modelViewerPromise)return modelViewerPromise;
+  modelViewerPromise=new Promise((resolve,reject)=>{
+    const s=document.createElement('script');s.type='module';s.src='https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js';
+    s.onload=()=>customElements.whenDefined('model-viewer').then(()=>resolve(true)).catch(()=>resolve(true));
+    s.onerror=()=>{modelViewerPromise=null;reject(new Error('3D indisponible'))};
+    document.head.appendChild(s);
+  });
+  return modelViewerPromise;
+}
 
 function playMotion(name='Idle',loop=false){
   document.body.dataset.plugyMotion=name;
@@ -79,11 +114,18 @@ $('#plugyModel')?.addEventListener('pointerenter',()=>playMotion('Curious'));
 $('#plugyModel')?.addEventListener('dblclick',()=>{openPlugy();playMotion('Attentive')});
 
 function openPlugy(seed=''){
-  $('#plugyDrawer')?.classList.add('open');playMotion('Attentive');
+  $('#plugyDrawer')?.classList.add('open');
+  ensureModelViewer().then(()=>playMotion('Attentive')).catch(()=>{$('#plugyState span').textContent='Mode texte'});
   if(seed)$('#plugyInput').value=seed;
   setTimeout(()=>$('#plugyInput')?.focus(),160);
 }
-function closePlugy(){$('#plugyDrawer')?.classList.remove('open')}
+function closePlugy(){
+  $('#plugyDrawer')?.classList.remove('open');
+  try{if(state.voice)state.recognition?.stop()}catch{}
+  try{if('speechSynthesis' in window)speechSynthesis.cancel()}catch{}
+  state.voice=false;state.voiceReply=false;
+  if($('#plugyState span'))$('#plugyState span').textContent='Prêt';
+}
 $('#sidebarPlugy')?.addEventListener('click',()=>openPlugy());
 $('#topPlugy')?.addEventListener('click',()=>openPlugy());
 $('#plugyClose')?.addEventListener('click',closePlugy);
@@ -111,7 +153,7 @@ async function askPlugy(message,injectTarget=null){
     if(injectTarget){const el=$(injectTarget);if(el)el.value=answer}
     if(state.voiceReply)speakPlugy(answer);
     return answer;
-  }catch(e){wait.textContent='Je n’arrive pas à joindre mon moteur pour le moment.';$('#plugyState span').textContent='Connexion interrompue';playMotion('SoftTurn');}
+  }catch(e){wait.textContent='Je n’arrive pas à joindre mon moteur pour le moment.';$('#plugyState span').textContent='Connexion interrompue';state.voiceReply=false;playMotion('SoftTurn');}
 }
 $('#plugyForm')?.addEventListener('submit',e=>{e.preventDefault();const i=$('#plugyInput'),m=i.value;i.value='';askPlugy(m)});
 $$('[data-plugy-prompt]').forEach(b=>b.addEventListener('click',()=>askPlugy(b.dataset.plugyPrompt)));
@@ -298,12 +340,29 @@ function openBureauMobileEditor(){
   if(matchMedia('(max-width:820px)').matches){document.body.classList.add('mobile-bureau-editing');setTimeout(()=>$('#bureauTitle')?.focus({preventScroll:true}),80)}
 }
 $('#bureauNew')?.addEventListener('click',()=>{clearDoc();openBureauMobileEditor()});$('#bureauSearch')?.addEventListener('input',renderBureau);
+
+function ensureSaveStatus(){
+  if($('#workspaceSaveStatus'))return;
+  const top=$('.top-actions');if(!top)return;
+  const s=document.createElement('span');s.id='workspaceSaveStatus';s.className='save-status';s.textContent='Synchronisé';top.insertBefore(s,top.firstChild);
+  if(!$('#saveStatusStyles')){const st=document.createElement('style');st.id='saveStatusStyles';st.textContent='.save-status{font-size:8px;color:#8c8f99;white-space:nowrap}.save-status.saving{color:#725ad1}.save-status.saved{color:#4e9d78}.save-status.error{color:#ca5a67}@media(max-width:820px){.save-status{display:none}}';document.head.appendChild(st)}
+}
+function saveStatus(text,stateName=''){ensureSaveStatus();const s=$('#workspaceSaveStatus');if(!s)return;s.textContent=text;s.className='save-status '+stateName}
+function syncNetworkState(){
+  const online=navigator.onLine!==false;document.body.dataset.network=online?'online':'offline';
+  if(!online)saveStatus('Hors ligne','error');
+  else if($('#workspaceSaveStatus')?.textContent==='Hors ligne')saveStatus('Connexion rétablie','saved');
+}
+addEventListener('offline',syncNetworkState);
+addEventListener('online',()=>{syncNetworkState();loadAll()});
+
 async function saveBureau(silent=false){
+  saveStatus('Sauvegarde…','saving');
   const body={title:$('#bureauTitle').value||'Sans titre',body:$('#bureauBody').value,folder:$('#bureauFolder').value,tags:$('#bureauTags').value,pinned:$('#bureauPinned').checked?1:0};
   try{
     let n;if(state.activeDoc)n=await api('/api/v107/bureau/'+state.activeDoc,{method:'PATCH',body:JSON.stringify(body)});else n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify(body)});
-    const idx=state.bureau.findIndex(x=>x.id===n.id);if(idx>=0)state.bureau[idx]=n;else state.bureau.unshift(n);state.activeDoc=n.id;renderBureau();renderDashboard();if(!silent)toast('Document enregistré');return n;
-  }catch(e){if(!silent)toast('Erreur d’enregistrement')}
+    const idx=state.bureau.findIndex(x=>x.id===n.id);if(idx>=0)state.bureau[idx]=n;else state.bureau.unshift(n);state.activeDoc=n.id;renderBureau();renderDashboard();saveStatus('Enregistré','saved');if(!silent)toast('Document enregistré');return n;
+  }catch(e){saveStatus('Erreur de sauvegarde','error');if(!silent)toast('Erreur d’enregistrement')}
 }
 $('#bureauSave')?.addEventListener('click',()=>saveBureau(false));
 let bureauAutosaveTimer=0;
@@ -391,26 +450,39 @@ function speakPlugy(text){
 async function initVoice(){
   const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){toast('Reconnaissance vocale indisponible');return}
   if(state.voice){state.recognition?.stop();return}
-  const rec=new R();state.recognition=rec;rec.lang='fr-FR';rec.interimResults=true;rec.continuous=false;state.voice=true;state.voiceReply=true;$('#plugyState span').textContent='Écoute…';playMotion('Attentive',true);
-  rec.onresult=e=>{let text='';for(let i=e.resultIndex;i<e.results.length;i++)text+=e.results[i][0].transcript;if(text)$('#plugyInput').value=text;if(e.results[e.results.length-1].isFinal){state.voice=false;askPlugy(text)}};
-  rec.onend=()=>{state.voice=false;if(!state.voiceReply){$('#plugyState span').textContent='Prêt';playMotion('Idle',true)}};rec.onerror=rec.onend;rec.start()
+  const rec=new R();state.recognition=rec;rec.lang='fr-FR';rec.interimResults=false;rec.continuous=false;rec.maxAlternatives=1;state.voice=true;state.voiceReply=true;$('#plugyState span').textContent='Écoute…';playMotion('Attentive',true);
+  rec.onresult=e=>{
+    const last=e.results?.[e.results.length-1],alt=last?.[0],text=clean(alt?.transcript||'');
+    if(text)$('#plugyInput').value=text;
+    if(last?.isFinal&&text.length>1){state.voice=false;askPlugy(text)}
+    else if(last?.isFinal){state.voice=false;state.voiceReply=false;$('#plugyState span').textContent='Prêt';playMotion('Idle',true)}
+  };
+  rec.onend=()=>{state.voice=false;if(!state.voiceReply){$('#plugyState span').textContent='Prêt';playMotion('Idle',true)}};
+  rec.onerror=()=>{state.voice=false;state.voiceReply=false;$('#plugyState span').textContent='Micro interrompu';playMotion('SoftTurn');setTimeout(()=>{if($('#plugyState span'))$('#plugyState span').textContent='Prêt'},900)};
+  rec.start()
 }
 $('#plugyVoice')?.addEventListener('click',initVoice);
 
 async function loadAll(){
+  const bureauP=api('/api/v107/bureau').catch(()=>[]);
+  const leadsP=api('/api/v86/crm').catch(()=>[]);
+  const workflowP=api('/api/v107/open-calls/workflow').catch(()=>[]);
+  const draftsP=api('/api/v108/drafts').catch(()=>[]);
   try{
-    const [boot,bureau,leads,workflow,drafts]=await Promise.all([
-      api('/api/v102/bootstrap'),
-      api('/api/v107/bureau'),
-      api('/api/v86/crm'),
-      api('/api/v107/open-calls/workflow'),
-      api('/api/v108/drafts')
-    ]);
-    state.bootstrap=boot;state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
+    const boot=await api('/api/v102/bootstrap');
+    state.bootstrap=boot;
     populateCountry($('#radarCountry'),boot.opportunities||[]);populateCountry($('#openCountry'),boot.opportunities||[]);
-    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();fillCreationSources();renderDraftPicker();renderBureau();renderLeads();renderAgenda();renderArtists();renderMap();renderNavBadges();
+    renderDashboard();if(state.view!=='dashboard')renderRouteView(state.view);
+    const [bureau,leads,workflow,drafts]=await Promise.all([bureauP,leadsP,workflowP,draftsP]);
+    state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
+    renderDashboard();renderNavBadges();if(state.view!=='dashboard')renderRouteView(state.view);
     toast('Workspace synchronisé');
-  }catch(e){console.warn('[PLUG ART V107]',e);toast('Certaines données sont indisponibles')}
+  }catch(e){
+    console.warn('[PLUG ART V111]',e);
+    const [bureau,leads,workflow,drafts]=await Promise.all([bureauP,leadsP,workflowP,draftsP]);
+    state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
+    renderNavBadges();renderRouteView(state.view);toast('Le Radar est momentanément indisponible');
+  }
 }
 
 
@@ -486,7 +558,7 @@ function installCreationModes(){
   $('#carouselFormat').onchange=e=>{state.carousel.format=e.target.value;renderCarousel()};
   ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
   $('#visualGenerate').onclick=generateVisual;$('#visualToBureau').onclick=visualToBureau;
-  setCreationMode('text');fillCreationSources();
+  setCreationMode('text');fillCreationSources();bindDraftAutosave();
 }
 
 function renderDraftPicker(){
@@ -498,13 +570,13 @@ function draftSnapshot(){
   if(state.creationMode==='visual')return{kind:'visual',title:'Visuel PLUG ART',source_opportunity_id:'',payload:{url:state.visual.url,prompt:$('#visualPrompt')?.value||state.visual.prompt||'',style:$('#visualStyle')?.value||'gallery',ratio:$('#visualRatio')?.value||'4:5'}};
   return{kind:'text',title:$('#contentTitle')?.value||$('#contentType')?.value||'Texte PLUG ART',source_opportunity_id:$('#contentSource')?.value||'',payload:{type:$('#contentType')?.value||'',objective:$('#contentObjective')?.value||'',brief:$('#contentBrief')?.value||'',body:$('#contentBody')?.value||''}};
 }
-async function saveDraft(){
-  const snap=draftSnapshot();
+async function saveDraft(silent=false){
+  const snap=draftSnapshot();saveStatus('Sauvegarde brouillon…','saving');
   try{
     let d;if(state.currentDraft)d=await api('/api/v108/drafts/'+state.currentDraft,{method:'PATCH',body:JSON.stringify(snap)});
     else d=await api('/api/v108/drafts',{method:'POST',body:JSON.stringify(snap)});
-    state.drafts=state.drafts.filter(x=>x.id!==d.id);state.drafts.unshift(d);state.currentDraft=d.id;renderDraftPicker();toast('Brouillon enregistré');
-  }catch{toast('Enregistrement du brouillon impossible')}
+    state.drafts=state.drafts.filter(x=>x.id!==d.id);state.drafts.unshift(d);state.currentDraft=d.id;renderDraftPicker();saveStatus('Brouillon enregistré','saved');if(!silent)toast('Brouillon enregistré');
+  }catch{saveStatus('Erreur brouillon','error');if(!silent)toast('Enregistrement du brouillon impossible')}
 }
 function loadDraft(id){
   const d=state.drafts.find(x=>Number(x.id)===Number(id));if(!d)return;state.currentDraft=d.id;setCreationMode(d.kind||'text');
@@ -517,6 +589,16 @@ function loadDraft(id){
 async function deleteDraft(){
   if(!state.currentDraft)return toast('Aucun brouillon sélectionné');
   try{await api('/api/v108/drafts/'+state.currentDraft,{method:'DELETE'});state.drafts=state.drafts.filter(x=>x.id!==state.currentDraft);state.currentDraft=null;renderDraftPicker();toast('Brouillon supprimé')}catch{toast('Suppression impossible')}
+}
+
+let draftAutosaveTimer=0;
+function scheduleDraftAutosave(){
+  if(!state.currentDraft)return;
+  clearTimeout(draftAutosaveTimer);draftAutosaveTimer=setTimeout(()=>saveDraft(true),1600);
+}
+function bindDraftAutosave(){
+  ['contentTitle','contentObjective','contentBrief','contentBody','carouselBrief','slideKicker','slideTitle','slideBody','slideCta','visualPrompt'].forEach(id=>$('#'+id)?.addEventListener('input',scheduleDraftAutosave));
+  ['contentType','contentSource','carouselSource','carouselFormat','visualStyle','visualRatio'].forEach(id=>$('#'+id)?.addEventListener('change',scheduleDraftAutosave));
 }
 
 function setCreationMode(mode){
@@ -549,7 +631,7 @@ async function generateCarousel(){
   const prompt='Crée un carrousel PLUG ART de '+count+' slides. N’invente aucun fait. Réponds uniquement en JSON valide : {"slides":[{"kicker":"","title":"","body":"","cta":"","image_prompt":""}]}. Chaque slide doit être concise, éditoriale et utile. Faits : '+JSON.stringify(facts);
   try{const r=await api('/api/v32/plugy',{method:'POST',body:JSON.stringify({message:prompt,page:'content',mode:'deep'})});const parsed=parseLooseJSON(r.answer);if(!Array.isArray(parsed.slides)||!parsed.slides.length)throw new Error('Aucune slide');state.carousel.slides=parsed.slides.slice(0,count).map(x=>({kicker:x.kicker||'PLUG ART',title:x.title||'',body:x.body||'',cta:x.cta||'Découvrir →',image_prompt:x.image_prompt||'',image:''}));}
   catch{state.carousel.slides=fallbackCarousel(count,source,brief)}
-  state.carousel.active=0;state.carousel.format=$('#carouselFormat').value||'4:5';renderCarousel();if(source)persistWorkflow(source.id,{workflow_status:'drafting',next_action:'Finaliser le carrousel'}).catch(()=>{});playMotion('Happy');btn.disabled=false;btn.textContent=old;
+  state.carousel.active=0;state.carousel.format=$('#carouselFormat').value||'4:5';renderCarousel();scheduleDraftAutosave();if(source)persistWorkflow(source.id,{workflow_status:'drafting',next_action:'Finaliser le carrousel'}).catch(()=>{});playMotion('Happy');btn.disabled=false;btn.textContent=old;
 }
 function renderCarousel(){
   const slides=state.carousel.slides,s=slides[state.carousel.active]||{};$('#carouselCounter').textContent=slides.length+' slide'+(slides.length>1?'s':'');
@@ -567,7 +649,7 @@ async function generateCarouselImage(index){
   const s=state.carousel.slides[index];if(!s)return toast('Génère d’abord les slides');
   const source=opportunityById($('#carouselSource').value),ratio=state.carousel.format||'4:5',btn=$('#carouselGenerateImage'),old=btn.textContent;btn.disabled=true;btn.textContent='Image…';
   const prompt=clean((s.image_prompt||'Illustration éditoriale contemporaine pour '+s.title+'. '+s.body)+' Univers PLUG ART, art contemporain émergent, galerie, matière, photographie ou peinture selon le sujet. Aucun texte lisible, aucun logo, aucun watermark.'+(source?' Contexte : '+source.title+'.':''));
-  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt,style:'gallery',ratio,quality:'medium'})});if(r.url){s.image=r.url;renderCarousel();toast('Image générée')}}catch(e){toast('Génération image indisponible')}finally{btn.disabled=false;btn.textContent=old}
+  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt,style:'gallery',ratio,quality:'medium'})});if(r.url){s.image=r.url;renderCarousel();scheduleDraftAutosave();toast('Image générée')}}catch(e){toast('Génération image indisponible')}finally{btn.disabled=false;btn.textContent=old}
 }
 async function generateAllCarouselImages(){
   if(!state.carousel.slides.length)return toast('Génère d’abord les slides');const b=$('#carouselGenerateAll'),old=b.textContent;b.disabled=true;
@@ -581,7 +663,7 @@ async function carouselToBureau(){
 }
 async function generateVisual(){
   const prompt=clean($('#visualPrompt').value);if(!prompt)return toast('Ajoute un prompt');const b=$('#visualGenerate'),old=b.textContent;b.disabled=true;b.textContent='Génération…';playMotion('Think',true);
-  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt:prompt+' Aucun texte lisible, aucun logo, aucun watermark.',style:$('#visualStyle').value||'gallery',ratio:$('#visualRatio').value||'4:5',quality:'medium'})});if(r.url){state.visual={url:r.url,prompt};$('#visualImage').style.backgroundImage='url("'+r.url.replace(/"/g,'%22')+'")';$('#visualImage').innerHTML='';playMotion('Happy')}}catch{toast('Génération image indisponible')}finally{b.disabled=false;b.textContent=old}
+  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt:prompt+' Aucun texte lisible, aucun logo, aucun watermark.',style:$('#visualStyle').value||'gallery',ratio:$('#visualRatio').value||'4:5',quality:'medium'})});if(r.url){state.visual={url:r.url,prompt};scheduleDraftAutosave();$('#visualImage').style.backgroundImage='url("'+r.url.replace(/"/g,'%22')+'")';$('#visualImage').innerHTML='';playMotion('Happy')}}catch{toast('Génération image indisponible')}finally{b.disabled=false;b.textContent=old}
 }
 async function visualToBureau(){
   if(!state.visual.url)return toast('Génère d’abord un visuel');try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:'Visuel PLUG ART',body:'Prompt : '+state.visual.prompt+'\n\nVisuel : '+state.visual.url,folder:'Contenus',tags:'visuel, image, PLUG ART'})});state.bureau.unshift(n);toast('Visuel envoyé au Bureau')}catch{toast('Enregistrement impossible')}
@@ -738,6 +820,7 @@ function installMobileShell(){
 
 installMobileShell();
 installMobileViewportBehavior();
+ensureSaveStatus();syncNetworkState();
 installAgenda();
 installOpenWorkflowFilters();
 adaptDashboardForDrafts();
