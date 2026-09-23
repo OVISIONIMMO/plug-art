@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='110.20260923.1';
+const VERSION='110.20260923.2';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -643,6 +643,21 @@ function handleLocalPlugy(message){
   return '';
 }
 
+
+function installMobileViewportBehavior(){
+  const vv=window.visualViewport;
+  const sync=()=>{
+    const mobile=matchMedia('(max-width:820px)').matches;
+    const keyboard=!!(mobile&&vv&&vv.height<window.innerHeight*.74);
+    document.body.classList.toggle('mobile-keyboard',keyboard);
+    if(keyboard)$('#mobileMoreSheet')?.classList.remove('open');
+  };
+  sync();
+  vv?.addEventListener('resize',sync);
+  vv?.addEventListener('scroll',sync);
+  addEventListener('orientationchange',()=>setTimeout(sync,180));
+}
+
 function installMobileShell(){
   if($('#mobileDock'))return;
   const dock=document.createElement('nav');
@@ -689,6 +704,7 @@ function installMobileShell(){
 }
 
 installMobileShell();
+installMobileViewportBehavior();
 installAgenda();
 installOpenWorkflowFilters();
 adaptDashboardForDrafts();
