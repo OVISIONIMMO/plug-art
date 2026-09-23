@@ -9,7 +9,7 @@ function init(){
   const qa=P.qa||((s,r=document)=>[...r.querySelectorAll(s)]);
   const view=P.view||(()=>{});
 
-  document.body.classList.remove('v89-ui');
+  document.body.classList.add('v89-ui');
   document.body.classList.add('v100-ui');
   document.documentElement.dataset.plugartUi='v100';
   document.title='PLUG ART OS — Workspace';
@@ -121,6 +121,7 @@ function init(){
   });
 
   const observer=new MutationObserver(()=>{
+    document.body.classList.add('v89-ui');
     document.body.classList.add('v100-ui');
     updateChrome();
   });
