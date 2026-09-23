@@ -275,7 +275,8 @@ function plugyActionList(){
   if(state.view==='bureau'&&state.bureauMode==='packages'&&state.activePackage){
     actions.push(['Documents',()=>setBureauMode('documents')]);
     actions.push(['Modèles',()=>setBureauMode('templates')]);
-    actions.push(['Créer document',()=>createDocumentFromPackage(),'primary']);
+    actions.push(['✦ Générer dossier',()=>generatePackageWithPlugy(),'primary']);
+    actions.push(['Créer document',()=>createDocumentFromPackage()]);
   }
   if(state.view==='bureau'&&state.bureauMode==='templates'){
     actions.push(['Nouveau modèle',()=>newBureauTemplate()]);
@@ -653,7 +654,7 @@ function renderBureauPackageDetail(){
   const box=$('#bureauPackageDetail');if(!box)return;const p=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage));
   if(!p){box.innerHTML='<div class="empty">Sélectionne un dossier de candidature.</div>';return}
   const opp=p.opportunity||{},check=p.checklist||{},docs=(p.document_ids||[]).map(id=>state.bureau.find(n=>Number(n.id)===Number(id))).filter(Boolean);
-  box.innerHTML='<div class="package-detail-head"><div><small>DOSSIER DE CANDIDATURE</small><h3>'+esc(p.title||'Dossier')+'</h3></div><div class="package-detail-actions"><button id="packageOpenCall" '+(!opp.id?'disabled':'')+'>Open Call ↗</button><button id="packageStarterPack">Créer le pack de base</button><button id="packageToCreation">Vers Création</button><button class="primary" id="packageReady">Marquer prêt</button></div></div>'+
+  box.innerHTML='<div class="package-detail-head"><div><small>DOSSIER DE CANDIDATURE</small><h3>'+esc(p.title||'Dossier')+'</h3></div><div class="package-detail-actions"><button id="packageOpenCall" '+(!opp.id?'disabled':'')+'>Open Call ↗</button><button id="packageStarterPack">Créer le pack de base</button><button class="primary" id="packageGenerateAI">✦ Générer avec PLUGY</button><button id="packageToCreation">Vers Création</button><button id="packageReady">Marquer prêt</button></div></div>'+
     (opp.id?'<div class="package-source"><strong>'+esc(opp.title||'Open Call')+'</strong><span>'+esc([opp.city,opp.country,opp.deadline?'Deadline '+opp.deadline:''].filter(Boolean).join(' · '))+'</span></div>':'')+
     '<div class="package-status-row"><label>Statut<select id="packageStatus">'+['preparing','ready','submitted','followup','closed'].map(v=>'<option value="'+v+'" '+(p.status===v?'selected':'')+'>'+bureauPackageStatusLabel(v)+'</option>').join('')+'</select></label><label>Notes<textarea id="packageNotes" rows="3">'+esc(p.notes||'')+'</textarea></label></div>'+
     '<div class="package-checklist">'+Object.keys({source_checked:1,letter:1,bio:1,artist_statement:1,portfolio:1,visuals:1,links:1,submitted:1}).map(k=>'<button class="package-check '+(check[k]?'done':'')+'" data-package-check="'+k+'">'+(check[k]?'✓ ':'○ ')+esc(bureauChecklistLabel(k))+'</button>').join('')+'</div>'+
@@ -666,12 +667,106 @@ function renderBureauPackageDetail(){
   $$('[data-package-doc]',box).forEach(b=>b.onclick=()=>{setBureauMode('documents');selectDoc(Number(b.dataset.packageDoc))});
   $('#packageCreateDoc').onclick=createDocumentFromPackage;
   $('#packageStarterPack').onclick=createPackageStarterPack;
+  $('#packageGenerateAI').onclick=generatePackageWithPlugy;
   $('#packageOpenCall').onclick=()=>{if(opp.id){route('opencalls');setTimeout(()=>openOpportunity(Number(opp.id)),40)}};
   $('#packageToCreation').onclick=()=>packageToCreation(p);
   $('#packageReady').onclick=()=>patchActivePackage({status:'ready'});
   $('#packageSent').onclick=async()=>{const next={...(p.checklist||{}),submitted:true};await patchActivePackage({status:'submitted',checklist:next});if(p.opportunity_id)persistWorkflow(p.opportunity_id,{workflow_status:'submitted',next_action:'Suivre la réponse'}).catch(()=>{});toast('Dossier marqué envoyé')};
   $('#packageDelete').onclick=deleteActivePackage;
 }
+
+function bureauArtistContext(excludeIds=[]){
+  const excluded=new Set((excludeIds||[]).map(Number));
+  const sourceDocs=state.bureau.filter(n=>{
+    if(!n?.body||excluded.has(Number(n.id)))return false;
+    const hay=[n.title,n.tags,n.folder].join(' ');
+    return /bio|artiste|artist|d[eé]marche|statement|parcours|pratique|technique|portfolio/i.test(hay);
+  }).slice(0,6);
+  let total='';
+  for(const n of sourceDocs){
+    const part='SOURCE · '+(n.title||'Document')+'\n'+String(n.body||'').slice(0,4500);
+    if((total+'\n\n'+part).length>14000)break;
+    total+=(total?'\n\n':'')+part;
+  }
+  return total.trim();
+}
+function packageDocRole(doc){
+  const t=String(doc?.title||'').toLowerCase();
+  if(t.includes('lettre'))return 'letter';
+  if(t.includes('bio'))return 'bio';
+  if(t.includes('note')||t.includes('artist'))return 'statement';
+  return 'other';
+}
+async function generatePackageDocWithPlugy(doc,pkg,artistContext){
+  const role=packageDocRole(doc),opp=pkg.opportunity||{};
+  const facts={
+    title:opp.title||'',
+    city:opp.city||'',
+    country:opp.country||'',
+    deadline:opp.deadline||'',
+    fee:opp.fee||'',
+    summary:opp.summary||opp.radar_reason||''
+  };
+  let instruction='';
+  if(role==='letter'){
+    instruction='Rédige une lettre de candidature artistique claire et concise pour cet Open Call. Utilise uniquement les faits fournis. Tu peux t’appuyer sur le contexte artiste s’il existe. Ne fabrique aucune exposition, date, prix, parcours ou motivation personnelle. Si une information indispensable manque, écris [À COMPLÉTER].';
+  }else if(role==='bio'){
+    if(!artistContext)return {...doc,body:String(doc.body||'')+'\n\n[À COMPLÉTER — ajoute une bio ou un document de parcours dans le Bureau avant la génération.]',_incomplete:true};
+    instruction='Rédige une bio artistique courte, professionnelle et factuelle uniquement à partir du CONTEXTE ARTISTE fourni. N’ajoute aucune information absente. Si une donnée essentielle manque, écris [À COMPLÉTER].';
+  }else if(role==='statement'){
+    if(!artistContext)return {...doc,body:String(doc.body||'')+'\n\n[À COMPLÉTER — ajoute une note artistique, une démarche ou un document source dans le Bureau avant la génération.]',_incomplete:true};
+    instruction='Rédige une note artistique claire et crédible uniquement à partir du CONTEXTE ARTISTE fourni. Tu peux relier la démarche au contexte de l’Open Call sans inventer d’intention. Si une information manque, écris [À COMPLÉTER].';
+  }else{
+    instruction='Améliore ce document de candidature en restant strictement factuel. N’invente rien. Conserve [À COMPLÉTER] lorsqu’une information manque.';
+  }
+  const prompt=instruction+'\n\nOPEN CALL : '+JSON.stringify(facts)+'\n\nCONTEXTE ARTISTE :\n'+(artistContext||'[Aucun contexte artiste enregistré]')+'\n\nSTRUCTURE ACTUELLE :\n'+String(doc.body||'');
+  const out=await api('/api/v32/plugy',{method:'POST',timeout:70000,body:JSON.stringify({message:prompt,page:'bureau',mode:'deep'})});
+  const answer=String(out.answer||'').trim();
+  if(!answer)throw new Error('Réponse PLUGY vide');
+  return {...doc,body:answer,_incomplete:/\[À COMPLÉTER\]/i.test(answer)};
+}
+async function generatePackageWithPlugy(){
+  let pkg=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage));if(!pkg)return toast('Sélectionne un dossier');
+  const b=$('#packageGenerateAI'),old=b?.textContent;if(b){b.disabled=true;b.textContent='Préparation…'}
+  try{
+    const wanted=['Lettre de candidature','Bio courte','Note artistique'];
+    let existing=new Set((pkg.document_ids||[]).map(id=>state.bureau.find(n=>Number(n.id)===Number(id))?.title).filter(Boolean));
+    const missing=wanted.filter(name=>!existing.has(name));
+    if(missing.length){
+      if(b)b.textContent='Création du pack…';
+      for(const name of missing){
+        const t=state.bureauTemplates.find(x=>x.name===name);if(!t)continue;
+        const out=await api('/api/v120/bureau/packages/'+pkg.id+'/document',{method:'POST',body:JSON.stringify({template_id:t.id,title:t.name})});
+        if(out.document&&!state.bureau.some(x=>Number(x.id)===Number(out.document.id)))state.bureau.unshift(out.document);
+        if(out.package){const i=state.bureauPackages.findIndex(x=>Number(x.id)===Number(out.package.id));if(i>=0)state.bureauPackages[i]=out.package;pkg=out.package}
+      }
+    }
+    pkg=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage))||pkg;
+    const packageIds=(pkg.document_ids||[]).map(Number),artistContext=bureauArtistContext(packageIds);
+    const docs=packageIds.map(id=>state.bureau.find(n=>Number(n.id)===id)).filter(Boolean).filter(n=>['letter','bio','statement'].includes(packageDocRole(n)));
+    let incomplete=0,generated=0;
+    for(let i=0;i<docs.length;i++){
+      const doc=docs[i];if(b)b.textContent='PLUGY · '+(i+1)+'/'+docs.length;
+      let result=await generatePackageDocWithPlugy(doc,pkg,artistContext);
+      if(result._incomplete)incomplete++;
+      const saved=await api('/api/v107/bureau/'+doc.id,{method:'PATCH',body:JSON.stringify({body:result.body})});
+      const idx=state.bureau.findIndex(x=>Number(x.id)===Number(saved.id));if(idx>=0)state.bureau[idx]=saved;
+      generated++;
+    }
+    const checklist={...(pkg.checklist||{})};
+    if(docs.some(x=>packageDocRole(x)==='letter'))checklist.letter=true;
+    if(docs.some(x=>packageDocRole(x)==='bio'))checklist.bio=true;
+    if(docs.some(x=>packageDocRole(x)==='statement'))checklist.artist_statement=true;
+    const savedPkg=await api('/api/v120/bureau/packages/'+pkg.id,{method:'PATCH',body:JSON.stringify({checklist,notes:pkg.notes||''})});
+    const pi=state.bureauPackages.findIndex(x=>Number(x.id)===Number(savedPkg.id));if(pi>=0)state.bureauPackages[pi]=savedPkg;
+    if(pkg.opportunity_id)persistWorkflow(pkg.opportunity_id,{workflow_status:'drafting',next_action:incomplete?'Compléter puis relire le dossier':'Relire et finaliser le dossier'}).catch(()=>{});
+    renderBureauPackages();renderDashboard();
+    toast(incomplete?generated+' documents générés · '+incomplete+' à compléter':generated+' documents générés avec PLUGY');
+  }catch(e){
+    console.warn('[PLUG ART package AI]',e);toast('Génération du dossier interrompue');
+  }finally{if(b){b.disabled=false;b.textContent=old}}
+}
+
 async function patchActivePackage(patch,silent=false){
   const p=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage));if(!p)return;
   try{const saved=await api('/api/v120/bureau/packages/'+p.id,{method:'PATCH',body:JSON.stringify(patch)});const i=state.bureauPackages.findIndex(x=>Number(x.id)===Number(saved.id));if(i>=0)state.bureauPackages[i]=saved;renderBureauPackages();if(!silent)toast('Dossier mis à jour')}catch{if(!silent)toast('Mise à jour impossible')}
