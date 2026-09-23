@@ -193,6 +193,7 @@ function openPlugy(seed=''){
   const mv=$('#plugyModel');if(mv&&!mv.loaded)$('#plugyState span').textContent='Chargement 3D…';
   warmPlugy3D('open').then(()=>playMotion('Attentive')).catch(()=>{$('#plugyState span').textContent='Mode texte'});
   if(seed)$('#plugyInput').value=seed;
+  renderPlugyActions();
   setTimeout(()=>$('#plugyInput')?.focus(),160);
 }
 function closePlugy(){
@@ -207,10 +208,96 @@ $('#topPlugy')?.addEventListener('click',()=>openPlugy());
 $('#plugyClose')?.addEventListener('click',closePlugy);
 $$('[data-open-plugy]').forEach(b=>b.addEventListener('click',()=>openPlugy()));
 bindPlugyWarmIntent();
+function plugyEntityContext(){
+  const bits=['Rubrique : '+(contexts[state.view]?.label||state.view)];
+  if(state.activeOpportunity){
+    const o=opportunityById(state.activeOpportunity),f=workflowFor(state.activeOpportunity);
+    if(o)bits.push('Open Call actif : '+[o.title,o.city,o.country,o.deadline?'deadline '+o.deadline:'',f?'suivi '+workflowLabel(f.workflow_status):''].filter(Boolean).join(' · '));
+  }
+  if(state.view==='prospection'&&state.activeLead){
+    const l=state.leads.find(x=>Number(x.id)===Number(state.activeLead));
+    if(l)bits.push('Contact actif : '+[l.organization||l.name,l.kind,l.status?leadStatusLabel(l.status):'',l.next_action?'prochaine action '+l.next_action:''].filter(Boolean).join(' · '));
+  }
+  if(state.view==='bureau'&&state.activeDoc){
+    const n=state.bureau.find(x=>Number(x.id)===Number(state.activeDoc));
+    if(n)bits.push('Document actif : '+[n.title,n.folder,n.tags].filter(Boolean).join(' · '));
+  }
+  if(state.view==='creation'){
+    const source=opportunityById($('#contentSource')?.value||$('#carouselSource')?.value);
+    if(source)bits.push('Source Création : '+[source.title,source.deadline?'deadline '+source.deadline:''].filter(Boolean).join(' · '));
+  }
+  return bits.join('. ')+'. ';
+}
+function createCarouselForOpportunity(id){
+  const o=opportunityById(id);if(!o)return false;
+  route('creation');setCreationMode('carousel');state.currentDraft=null;
+  setTimeout(()=>{
+    if($('#carouselSource')){$('#carouselSource').value=String(id);syncCarouselBrief()}
+    if($('#carouselBrief')&&!$('#carouselBrief').value)$('#carouselBrief').value=[o.title,o.summary||o.radar_reason,o.deadline?'Deadline : '+o.deadline:''].filter(Boolean).join('\n');
+  },60);
+  return true;
+}
+async function setActiveLeadStatus(status){
+  const l=state.leads.find(x=>Number(x.id)===Number(state.activeLead));if(!l)return false;
+  try{
+    const saved=await api('/api/v86/crm/'+l.id,{method:'PATCH',body:JSON.stringify({status})});
+    Object.assign(l,saved);renderLeads();renderDashboard();selectLead(l.id);renderPlugyActions();toast('Statut contact mis à jour');return true;
+  }catch{return false}
+}
+
+function ensurePlugyActions(){
+  let box=$('#plugyActions');if(box)return box;
+  const suggestions=$('#plugySuggestions');if(!suggestions)return null;
+  box=document.createElement('div');box.id='plugyActions';box.className='plugy-actions';suggestions.insertAdjacentElement('afterend',box);
+  if(!$('#plugyActionStyles')){const st=document.createElement('style');st.id='plugyActionStyles';st.textContent='.plugy-actions{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 10px}.plugy-actions button{border:1px solid rgba(103,87,207,.18);background:#f8f6ff;color:#5d50b0;border-radius:999px;padding:8px 10px;font-size:8px;font-weight:800}.plugy-actions button.primary{background:#111318;color:#fff;border-color:#111318}.plugy-actions:empty{display:none}';document.head.appendChild(st)}
+  return box;
+}
+function plugyActionList(){
+  const actions=[];
+  if(state.view==='radar'){
+    actions.push(['Paris / IDF',()=>applyRadarPreset('paris')],['Urgents',()=>applyRadarPreset('urgent')],['Lancer le Radar',()=>$('#radarRun')?.click(),'primary']);
+  }
+  if(state.view==='opencalls'){
+    const id=state.activeOpportunity,o=opportunityById(id);
+    if(id&&o){
+      actions.push([o.favorite?'★ Retirer favori':'☆ Favori',()=>toggleFavorite(id)]);
+      actions.push(['▤ Bureau',()=>opportunityToBureau()]);
+      actions.push(['✦ Carrousel',()=>createCarouselForOpportunity(id),'primary']);
+      actions.push(['✓ Envoyé',()=>persistWorkflow(id,{workflow_status:'submitted',next_action:'Suivre la réponse'}).then(()=>renderPlugyActions())]);
+      actions.push(['↻ Relance',()=>persistWorkflow(id,{workflow_status:'followup',next_action:'Relancer la structure'}).then(()=>renderPlugyActions())]);
+    }else{
+      actions.push(['Favoris',()=>{$('#openStatus').value='favorites';renderOpenCalls()}],['En rédaction',()=>{$('#openStatus').value='drafting';renderOpenCalls()}],['À relancer',()=>{$('#openStatus').value='followup';renderOpenCalls()}]);
+    }
+  }
+  if(state.view==='bureau'&&state.activeDoc){
+    actions.push(['Réécrire',()=>$('#bureauBody')?.value&&askPlugy('Réécris ce document de façon plus fluide et professionnelle sans inventer de faits : '+$('#bureauBody').value,'#bureauBody')]);
+    actions.push(['Candidature',()=>$('#bureauBody')?.value&&askPlugy('Transforme ce document en candidature artistique claire, convaincante et factuelle : '+$('#bureauBody').value,'#bureauBody')]);
+    actions.push(['✦ Vers Création',()=>sendCurrentBureauToCreation(),'primary']);
+  }
+  if(state.view==='prospection'&&state.activeLead){
+    actions.push(['✦ Préparer relance',()=>$('#leadPlugy')?.click(),'primary']);
+    actions.push(['▤ Bureau',()=>$('#leadToBureau')?.click()]);
+    actions.push(['✓ Contacté',()=>setActiveLeadStatus('contacted')]);
+    actions.push(['↻ Relance',()=>setActiveLeadStatus('followup')]);
+    actions.push(['🔥 Chaud',()=>setActiveLeadStatus('hot')]);
+  }
+  if(state.view==='creation'){
+    actions.push(['Nouveau carrousel',()=>{setCreationMode('carousel');state.currentDraft=null}],['Nouveau visuel',()=>{setCreationMode('visual');state.currentDraft=null}],['Enregistrer',()=>saveDraft(false),'primary']);
+    if(state.creationMode==='carousel'&&state.carousel.slides.length)actions.push(['Légende Instagram',()=>prepareInstagramCaption()]);
+  }
+  if(state.view==='agenda')actions.push(['Urgences',()=>{route('opencalls');setTimeout(()=>{$('#openStatus').value='urgent';renderOpenCalls()},40)}]);
+  return actions;
+}
+function renderPlugyActions(){
+  const box=ensurePlugyActions();if(!box)return;
+  const actions=plugyActionList();box.innerHTML=actions.map((a,i)=>'<button data-plugy-action="'+i+'" class="'+(a[2]||'')+'">'+esc(a[0])+'</button>').join('');
+  $$('[data-plugy-action]',box).forEach((b,i)=>b.onclick=()=>{const fn=actions[i]?.[1];if(fn)fn()});
+}
 function renderSuggestions(){
   const box=$('#plugySuggestions');if(!box)return;
   box.innerHTML=(contexts[state.view]?.suggestions||[]).map(x=>'<button>'+esc(x)+'</button>').join('');
   $$('button',box).forEach(b=>b.onclick=()=>askPlugy(b.textContent));
+  renderPlugyActions();
 }
 function addMsg(text,role='bot'){
   const box=$('#plugyStream');if(!box)return;const d=document.createElement('div');d.className='msg '+role;d.textContent=text;box.appendChild(d);box.scrollTop=box.scrollHeight;return d;
@@ -221,7 +308,7 @@ async function askPlugy(message,injectTarget=null){
   openPlugy();addMsg(message,'user');state.history.push({role:'user',content:message});
   $('#plugyState span').textContent='Réflexion…';playMotion('Charge',true);
   const wait=addMsg('…','bot');
-  const ctx='Contexte PLUG ART : '+contexts[state.view].label+'. ';
+  const ctx='Contexte PLUG ART. '+plugyEntityContext();
   try{
     const data=await api('/api/v32/plugy',{method:'POST',body:JSON.stringify({message:ctx+message,page:state.view,mode:'fast',history:state.history.slice(-6)})});
     const answer=clean(data.answer||data.message||'Je suis prêt.');
@@ -249,7 +336,7 @@ function opportunityFavorite(id){return !!Number(opportunityById(id)?.favorite||
 async function toggleFavorite(id){
   const o=opportunityById(id);if(!o)return;
   const next=o.favorite?0:1;
-  try{const saved=await api('/api/opportunities/'+id,{method:'PATCH',body:JSON.stringify({favorite:next})});Object.assign(o,saved);renderDashboard();renderRadar();renderOpenCalls();if(state.activeOpportunity===Number(id))renderOpenCallFavorite();toast(next?'Ajouté aux favoris':'Retiré des favoris')}catch{toast('Favori impossible à mettre à jour')}
+  try{const saved=await api('/api/opportunities/'+id,{method:'PATCH',body:JSON.stringify({favorite:next})});Object.assign(o,saved);renderDashboard();renderRadar();renderOpenCalls();if(state.activeOpportunity===Number(id))renderOpenCallFavorite();renderPlugyActions();toast(next?'Ajouté aux favoris':'Retiré des favoris')}catch{toast('Favori impossible à mettre à jour')}
 }
 function workflowLabel(s){return({saved:'À lire',working:'À traiter',drafting:'En rédaction',submitted:'Envoyé',followup:'Relance',closed:'Clos'})[s]||'Non suivi'}
 function oppCard(o,mode='radar'){
@@ -380,7 +467,7 @@ function renderBureau(){
 function clearDoc(){state.activeDoc=null;$('#bureauTitle').value='';$('#bureauBody').value='';$('#bureauFolder').value='Notes';$('#bureauTags').value='';$('#bureauPinned').checked=false;renderBureau();renderBureauSource(null)}
 function selectDoc(id){
   const n=state.bureau.find(x=>Number(x.id)===Number(id));if(!n)return;
-  state.activeDoc=n.id;$('#bureauTitle').value=n.title||'';$('#bureauBody').value=n.body||'';$('#bureauFolder').value=n.folder||'Notes';$('#bureauTags').value=n.tags||'';$('#bureauPinned').checked=!!n.pinned;renderBureau();renderBureauSource(n);openBureauMobileEditor();
+  state.activeDoc=n.id;renderPlugyActions();$('#bureauTitle').value=n.title||'';$('#bureauBody').value=n.body||'';$('#bureauFolder').value=n.folder||'Notes';$('#bureauTags').value=n.tags||'';$('#bureauPinned').checked=!!n.pinned;renderBureau();renderBureauSource(n);openBureauMobileEditor();
 }
 function ensureBureauBridge(){
   if($('#bureauSourceBar'))return;
@@ -481,7 +568,7 @@ function openLeadMobileSheet(){
   if(matchMedia('(max-width:820px)').matches)panel.classList.add('mobile-open');
 }
 async function selectLead(id){
-  const l=state.leads.find(x=>Number(x.id)===Number(id));if(!l)return;state.activeLead=l.id;$('#leadDetail').innerHTML=leadForm(l);bindLeadForm(l);openLeadMobileSheet();
+  const l=state.leads.find(x=>Number(x.id)===Number(id));if(!l)return;state.activeLead=l.id;renderPlugyActions();$('#leadDetail').innerHTML=leadForm(l);bindLeadForm(l);openLeadMobileSheet();
   try{const hist=await api('/api/v86/crm/'+l.id+'/history');$('#leadHistory').innerHTML='<h4>Historique</h4>'+hist.slice(0,15).map(h=>'<div class="history-item"><strong>'+esc(h.action)+'</strong> · '+esc(h.created_at)+'<br>'+esc(h.details||'')+'</div>').join('')}catch{}
 }
 function bindLeadForm(l={}){
@@ -1004,7 +1091,7 @@ async function persistWorkflow(id,patch={}){
 function renderOpenCallFavorite(){const b=$('#callFavorite');if(!b||!state.activeOpportunity)return;const fav=opportunityFavorite(state.activeOpportunity);b.textContent=fav?'★ Favori':'☆ Favori';b.classList.toggle('active',fav)}
 function openOpportunity(id){
   const o=opportunityById(id);if(!o)return;
-  state.activeOpportunity=id;injectOperationalUI();
+  state.activeOpportunity=id;injectOperationalUI();renderPlugyActions();
   $('#callTitle').textContent=o.title||'Open Call';
   $('#callMeta').textContent=[o.city,o.country,deadline(o.deadline),o.fee].filter(Boolean).join(' · ');
   $('#callSummary').textContent=o.summary||o.radar_reason||'Aucun résumé enregistré.';
