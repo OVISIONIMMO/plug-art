@@ -30,14 +30,38 @@ const contexts={
 };
 
 async function api(url,opt={}){
-  const r=await fetch(url,{cache:'no-store',...opt,headers:{'Accept':'application/json',...(opt.body?{'Content-Type':'application/json'}:{}),...(opt.headers||{})}});
-  if(!r.ok)throw new Error((await r.text())||('HTTP '+r.status));
-  const ct=r.headers.get('content-type')||'';
-  return ct.includes('json')?r.json():r.text();
+  const timeoutMs=Number(opt.timeout||(
+    url.includes('/content/image')?90000:
+    url.includes('/plugy')?60000:
+    url.includes('/radar/run')?120000:15000
+  ));
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
+  const {timeout,...fetchOpt}=opt;
+  try{
+    const r=await fetch(url,{cache:'no-store',...fetchOpt,signal:controller.signal,headers:{'Accept':'application/json',...(fetchOpt.body?{'Content-Type':'application/json'}:{}),...(fetchOpt.headers||{})}});
+    if(!r.ok)throw new Error((await r.text())||('HTTP '+r.status));
+    const ct=r.headers.get('content-type')||'';
+    return ct.includes('json')?r.json():r.text();
+  }catch(e){
+    if(e?.name==='AbortError')throw new Error('Délai dépassé');
+    throw e;
+  }finally{clearTimeout(timer)}
 }
 function toast(msg){
   const el=$('#toast');if(!el)return;el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2200);
 }
+function renderRouteView(id=state.view){
+  if(id==='dashboard')return renderDashboard();
+  if(id==='radar')return renderRadar();
+  if(id==='opencalls')return renderOpenCalls();
+  if(id==='creation'){renderContentSources();fillCreationSources();renderDraftPicker();return}
+  if(id==='bureau')return renderBureau();
+  if(id==='prospection')return renderLeads();
+  if(id==='agenda')return renderAgenda();
+  if(id==='network')return renderArtists();
+  if(id==='map')return renderMap();
+}
+
 function route(id,push=true){
   if(!viewMeta[id])id='dashboard';
   state.view=id;document.body.dataset.view=id;
@@ -54,12 +78,23 @@ function route(id,push=true){
   $('.workspace')?.scrollTo({top:0,behavior:'auto'});
   if(id!=='bureau')document.body.classList.remove('mobile-bureau-editing');
   if(id!=='prospection')$('#leadDetail')?.classList.remove('mobile-open');
-  if(id==='bureau')renderBureau();
-  if(id==='prospection')renderLeads();
-  if(id==='creation')renderContentSources();
+  renderRouteView(id);
 }
 $$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route)}));
 addEventListener('popstate',()=>route(location.hash.slice(1)||'dashboard',false));
+
+let modelViewerPromise=null;
+function ensureModelViewer(){
+  if(customElements.get('model-viewer'))return Promise.resolve(true);
+  if(modelViewerPromise)return modelViewerPromise;
+  modelViewerPromise=new Promise((resolve,reject)=>{
+    const s=document.createElement('script');s.type='module';s.src='https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js';
+    s.onload=()=>customElements.whenDefined('model-viewer').then(()=>resolve(true)).catch(()=>resolve(true));
+    s.onerror=()=>{modelViewerPromise=null;reject(new Error('3D indisponible'))};
+    document.head.appendChild(s);
+  });
+  return modelViewerPromise;
+}
 
 function playMotion(name='Idle',loop=false){
   document.body.dataset.plugyMotion=name;
@@ -79,11 +114,18 @@ $('#plugyModel')?.addEventListener('pointerenter',()=>playMotion('Curious'));
 $('#plugyModel')?.addEventListener('dblclick',()=>{openPlugy();playMotion('Attentive')});
 
 function openPlugy(seed=''){
-  $('#plugyDrawer')?.classList.add('open');playMotion('Attentive');
+  $('#plugyDrawer')?.classList.add('open');
+  ensureModelViewer().then(()=>playMotion('Attentive')).catch(()=>{$('#plugyState span').textContent='Mode texte'});
   if(seed)$('#plugyInput').value=seed;
   setTimeout(()=>$('#plugyInput')?.focus(),160);
 }
-function closePlugy(){$('#plugyDrawer')?.classList.remove('open')}
+function closePlugy(){
+  $('#plugyDrawer')?.classList.remove('open');
+  try{if(state.voice)state.recognition?.stop()}catch{}
+  try{if('speechSynthesis' in window)speechSynthesis.cancel()}catch{}
+  state.voice=false;state.voiceReply=false;
+  if($('#plugyState span'))$('#plugyState span').textContent='Prêt';
+}
 $('#sidebarPlugy')?.addEventListener('click',()=>openPlugy());
 $('#topPlugy')?.addEventListener('click',()=>openPlugy());
 $('#plugyClose')?.addEventListener('click',closePlugy);
@@ -383,19 +425,25 @@ async function initVoice(){
 $('#plugyVoice')?.addEventListener('click',initVoice);
 
 async function loadAll(){
+  const bureauP=api('/api/v107/bureau').catch(()=>[]);
+  const leadsP=api('/api/v86/crm').catch(()=>[]);
+  const workflowP=api('/api/v107/open-calls/workflow').catch(()=>[]);
+  const draftsP=api('/api/v108/drafts').catch(()=>[]);
   try{
-    const [boot,bureau,leads,workflow,drafts]=await Promise.all([
-      api('/api/v102/bootstrap'),
-      api('/api/v107/bureau'),
-      api('/api/v86/crm'),
-      api('/api/v107/open-calls/workflow'),
-      api('/api/v108/drafts')
-    ]);
-    state.bootstrap=boot;state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
+    const boot=await api('/api/v102/bootstrap');
+    state.bootstrap=boot;
     populateCountry($('#radarCountry'),boot.opportunities||[]);populateCountry($('#openCountry'),boot.opportunities||[]);
-    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();fillCreationSources();renderDraftPicker();renderBureau();renderLeads();renderAgenda();renderArtists();renderMap();renderNavBadges();
+    renderDashboard();if(state.view!=='dashboard')renderRouteView(state.view);
+    const [bureau,leads,workflow,drafts]=await Promise.all([bureauP,leadsP,workflowP,draftsP]);
+    state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
+    renderDashboard();renderNavBadges();if(state.view!=='dashboard')renderRouteView(state.view);
     toast('Workspace synchronisé');
-  }catch(e){console.warn('[PLUG ART V107]',e);toast('Certaines données sont indisponibles')}
+  }catch(e){
+    console.warn('[PLUG ART V111]',e);
+    const [bureau,leads,workflow,drafts]=await Promise.all([bureauP,leadsP,workflowP,draftsP]);
+    state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
+    renderNavBadges();renderRouteView(state.view);toast('Le Radar est momentanément indisponible');
+  }
 }
 
 
