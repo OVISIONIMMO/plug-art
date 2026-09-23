@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 
-const VERSION='106.20260923.1';
+const VERSION='106.20260923.2';
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const state={
@@ -103,7 +103,7 @@ function initPlugyModels(){
   const hero=$('.realistic-model');
   const saveData=!!navigator.connection?.saveData;
   if(hero&&(saveData||innerWidth<720)){
-    hero.src='/static/PLUGY_final_animated.glb?v='+VERSION;
+    hero.src='/assets/plugy-v106-realistic.glb?v='+VERSION;
     hero.removeAttribute('poster');
     hero.classList.remove('realistic-model');
     hero.classList.add('animated-model','hero-animated-fallback');
