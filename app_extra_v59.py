@@ -8,14 +8,14 @@ import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='106.0'
+app.version='107.0'
 BASE=Path(__file__).resolve().parent
-DASH=BASE/'static'/'plugar_v105.html'
+DASH=BASE/'static'/'plugart_v107.html'
 GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='106.20260923.1'
+VERSION='107.20260923.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -193,8 +193,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'106.0',
-      'X-Plug-Art-UI':'plugar-v106-realistic-contextual'
+      'X-Plug-Art-Version':'107.0',
+      'X-Plug-Art-UI':'plug-art-v107-internal-dashboard'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -1125,6 +1125,95 @@ def meta_webhook_events_v88(limit:int=40):
     return core.rows('select id,object_type,event_json,received_at from instagram_webhook_events order by id desc limit ?',(limit,))
 
 
+# V107 Bureau: persistent internal writing workspace.
+_v107c=core.conn()
+_v107c.executescript("""
+CREATE TABLE IF NOT EXISTS bureau_documents(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT DEFAULT '',
+  body TEXT DEFAULT '',
+  folder TEXT DEFAULT 'Notes',
+  tags TEXT DEFAULT '',
+  pinned INTEGER DEFAULT 0,
+  source_type TEXT DEFAULT '',
+  source_id TEXT DEFAULT '',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_bureau_documents_updated ON bureau_documents(pinned DESC,updated_at DESC,id DESC);
+""")
+_v107c.commit()
+_v107c.close()
+
+@app.get('/api/v107/bureau')
+def bureau_list_v107():
+    return core.rows("""select * from bureau_documents
+                        order by pinned desc,updated_at desc,id desc""")
+
+@app.post('/api/v107/bureau')
+def bureau_create_v107(body:dict):
+    body=body or {}
+    title=str(body.get('title') or 'Sans titre').strip()[:240]
+    content=str(body.get('body') or '')
+    folder=str(body.get('folder') or 'Notes').strip()[:80]
+    tags=str(body.get('tags') or '').strip()[:700]
+    pinned=1 if body.get('pinned') in (1,True,'1','true','on') else 0
+    source_type=str(body.get('source_type') or '').strip()[:80]
+    source_id=str(body.get('source_id') or '').strip()[:120]
+    now=_now_v85()
+    c=core.conn()
+    cur=c.execute("""insert into bureau_documents
+      (title,body,folder,tags,pinned,source_type,source_id,created_at,updated_at)
+      values(?,?,?,?,?,?,?,?,?)""",
+      (title,content,folder,tags,pinned,source_type,source_id,now,now))
+    c.commit();doc_id=cur.lastrowid;c.close()
+    return core.one('select * from bureau_documents where id=?',(doc_id,))
+
+@app.patch('/api/v107/bureau/{doc_id}')
+def bureau_update_v107(doc_id:int,body:dict):
+    if not core.one('select id from bureau_documents where id=?',(doc_id,)):
+        raise HTTPException(404,'Document introuvable')
+    body=body or {}
+    allowed={'title','body','folder','tags','source_type','source_id'}
+    data={k:str(v) for k,v in body.items() if k in allowed}
+    if 'pinned' in body:
+        data['pinned']=1 if body.get('pinned') in (1,True,'1','true','on') else 0
+    if not data:
+        return core.one('select * from bureau_documents where id=?',(doc_id,))
+    if 'title' in data:data['title']=data['title'].strip()[:240] or 'Sans titre'
+    if 'folder' in data:data['folder']=data['folder'].strip()[:80] or 'Notes'
+    if 'tags' in data:data['tags']=data['tags'].strip()[:700]
+    if 'source_type' in data:data['source_type']=data['source_type'].strip()[:80]
+    if 'source_id' in data:data['source_id']=data['source_id'].strip()[:120]
+    data['updated_at']=_now_v85()
+    sets=','.join(f"{k}=?" for k in data)
+    c=core.conn();c.execute(f"update bureau_documents set {sets} where id=?",(*data.values(),doc_id));c.commit();c.close()
+    return core.one('select * from bureau_documents where id=?',(doc_id,))
+
+@app.delete('/api/v107/bureau/{doc_id}')
+def bureau_delete_v107(doc_id:int):
+    c=core.conn();cur=c.execute('delete from bureau_documents where id=?',(doc_id,));c.commit();c.close()
+    if not cur.rowcount:
+        raise HTTPException(404,'Document introuvable')
+    return {'ok':True}
+
+@app.get('/api/v107/workspace')
+def workspace_v107():
+    today=time.strftime('%Y-%m-%d')
+    return {
+      'ok':True,
+      'bureau':core.rows('select * from bureau_documents order by pinned desc,updated_at desc limit 8'),
+      'prospection':core.rows("""select * from crm_leads
+        order by case when next_date!='' and next_date>=? then 0 else 1 end,
+        case when next_date!='' then next_date else '9999-12-31' end,
+        updated_at desc limit 8""",(today,)),
+      'counts':{
+        'bureau':(core.one('select count(*) count from bureau_documents') or {}).get('count',0),
+        'contacts':(core.one('select count(*) count from crm_leads') or {}).get('count',0)
+      }
+    }
+
+
 # V90 Interface Lab: persistent design-system configuration and version history.
 _v90c=core.conn()
 _v90c.executescript("""
@@ -1279,13 +1368,14 @@ def builder_restore_v90(version_id:int):
 @app.get('/api/v102/status')
 @app.get('/api/v105/status')
 @app.get('/api/v106/status')
+@app.get('/api/v107/status')
 def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'106.0',
-      'ui':'plugar-v106-realistic-contextual',
-      'reference_direction':'V106 PLUGAR: immersive Free-inspired narrative, realistic hero PLUGY, animated contextual agent, live Radar data and progressive motion',
+      'version':'107.0',
+      'ui':'plug-art-v107-internal-dashboard',
+      'reference_direction':'V107 PLUG ART: compact internal dashboard, direct tools, persistent Bureau, CRM prospection and one realistic contextual PLUGY',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -1293,7 +1383,7 @@ def status_v90():
       'typography':'Archivo + Inter Tight + IBM Plex Mono',
       'legacy_index_served':False,
       'single_mascot':True,
-      'plugy_reference':'v106-realistic-hero + PLUGY-final-animated-interaction',
+      'plugy_reference':'single v106 realistic animated model, mounted once in the V107 assistant drawer',
       'plugy_expected_sha256':PLUGY_REFERENCE_SHA256,
       'plugy_reference_match':hashlib.sha256(raw).hexdigest()==PLUGY_REFERENCE_SHA256 if raw else False,
       'plugy_model_path':'/assets/plugy-v106-realistic.glb',
@@ -1308,7 +1398,7 @@ def status_v90():
       'layouts':['top','cover','left','right','band','collage','minimal'],
       'cuts':['none','diagonal','curve','wave'],
       'themes':['editorial','glass','impact','paper','night','color'],
-      'background':'immersive PLUGAR editorial journey with realistic hero PLUGY, animated contextual behavior and full-screen chapters'
+      'background':'compact PLUG ART internal workspace with dashboard-first navigation and direct operational tools'
     }
 
-print(f"PLUGAR_V106_READY ui=free_flow realistic=on contextual_motion=on builder=interface_lab plugy2=15_concepts plugy=hero_centered instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V107_READY ui=internal_dashboard bureau=persistent prospection=crm realistic=on contextual_motion=on builder=interface_lab plugy2=15_concepts plugy=hero_centered instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
