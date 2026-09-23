@@ -38,6 +38,19 @@ async function api(url,opt={}){
 function toast(msg){
   const el=$('#toast');if(!el)return;el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2200);
 }
+
+function renderRouteView(id=state.view){
+  if(id==='dashboard')return renderDashboard();
+  if(id==='radar')return renderRadar();
+  if(id==='opencalls')return renderOpenCalls();
+  if(id==='creation'){renderContentSources();fillCreationSources();renderDraftPicker();return}
+  if(id==='bureau')return renderBureau();
+  if(id==='prospection')return renderLeads();
+  if(id==='agenda')return renderAgenda();
+  if(id==='network')return renderArtists();
+  if(id==='map')return renderMap();
+}
+
 function route(id,push=true){
   if(!viewMeta[id])id='dashboard';
   state.view=id;document.body.dataset.view=id;
@@ -49,9 +62,7 @@ function route(id,push=true){
   renderSuggestions();playMotion(viewMeta[id][2],id==='dashboard');
   if(push&&location.hash!=='#'+id)history.pushState({view:id},'','#'+id);
   $('.workspace')?.scrollTo({top:0,behavior:'auto'});
-  if(id==='bureau')renderBureau();
-  if(id==='prospection')renderLeads();
-  if(id==='creation')renderContentSources();
+  renderRouteView(id);
 }
 $$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route)}));
 addEventListener('popstate',()=>route(location.hash.slice(1)||'dashboard',false));
@@ -386,16 +397,16 @@ async function loadAll(){
     const boot=await api('/api/v102/bootstrap');
     state.bootstrap=boot;
     populateCountry($('#radarCountry'),boot.opportunities||[]);populateCountry($('#openCountry'),boot.opportunities||[]);
-    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();fillCreationSources();renderArtists();renderMap();
+    renderDashboard();if(state.view!=='dashboard')renderRouteView(state.view);
     const [bureau,leads,workflow,drafts]=await Promise.all([bureauP,leadsP,workflowP,draftsP]);
     state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
-    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();fillCreationSources();renderDraftPicker();renderBureau();renderLeads();renderAgenda();renderNavBadges();
+    renderDashboard();renderNavBadges();if(state.view!=='dashboard')renderRouteView(state.view);
     toast('Workspace synchronisé');
   }catch(e){
     console.warn('[PLUG ART V110]',e);
     const [bureau,leads,workflow,drafts]=await Promise.all([bureauP,leadsP,workflowP,draftsP]);
     state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
-    renderBureau();renderLeads();renderAgenda();renderNavBadges();toast('Le Radar est momentanément indisponible');
+    renderNavBadges();renderRouteView(state.view);toast('Le Radar est momentanément indisponible');
   }
 }
 
