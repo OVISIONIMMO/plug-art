@@ -4,7 +4,7 @@ const VERSION='107.20260923.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,bureau:[],leads:[],workflow:[],activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,recognition:null};
+const state={view:'dashboard',bootstrap:null,bureau:[],leads:[],workflow:[],activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,recognition:null,creationMode:'text',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -292,13 +292,107 @@ async function loadAll(){
     ]);
     state.bootstrap=boot;state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];
     populateCountry($('#radarCountry'),boot.opportunities||[]);populateCountry($('#openCountry'),boot.opportunities||[]);
-    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();renderBureau();renderLeads();renderArtists();renderMap();
+    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();fillCreationSources();renderBureau();renderLeads();renderArtists();renderMap();
     toast('Workspace synchronisé');
   }catch(e){console.warn('[PLUG ART V107]',e);toast('Certaines données sont indisponibles')}
 }
 
 
 
+
+
+
+/* V108 · compact creation studio */
+function installCreationModes(){
+  const view=$('#view-creation');if(!view||$('#creationModeBar'))return;
+  const toolbar=view.querySelector('.page-toolbar'),textPanel=view.querySelector('.creation-layout');
+  if(textPanel)textPanel.id='textCreationPanel';
+  const bar=document.createElement('div');bar.id='creationModeBar';bar.className='creation-mode-bar';
+  bar.innerHTML='<button class="active" data-create-mode="text">Texte</button><button data-create-mode="carousel">Carrousel</button><button data-create-mode="visual">Visuel</button>';
+  toolbar.insertAdjacentElement('afterend',bar);
+  const carousel=document.createElement('section');carousel.id='carouselCreationPanel';carousel.className='creation-mode-panel';
+  carousel.innerHTML='<div class="carousel-controls panel"><div class="panel-head"><div><small>CARROUSEL</small><h2>Structure éditoriale</h2></div></div><label>Source<select id="carouselSource"><option value="">Brief libre</option></select></label><label>Nombre de slides<select id="carouselCount"><option>4</option><option selected>5</option><option>6</option><option>7</option></select></label><label>Format<select id="carouselFormat"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><label>Brief<textarea id="carouselBrief" rows="7" placeholder="Angle, informations essentielles, CTA…"></textarea></label><button class="primary-btn wide" id="carouselGenerate">✦ Générer la structure</button><button class="secondary-btn wide" id="carouselGenerateImage">Générer l’image de la slide</button><button class="secondary-btn wide" id="carouselGenerateAll">Générer toutes les images</button><button class="secondary-btn wide" id="carouselToBureau">▤ Envoyer au Bureau</button></div><div class="carousel-preview panel"><div class="carousel-canvas" id="carouselCanvas"><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Ton carrousel apparaîtra ici</h3><p id="carouselBody">Choisis une source ou écris un brief.</p><b id="carouselCta">Découvrir →</b></div></div><div class="carousel-edit"><input id="slideKicker" placeholder="Kicker"><input id="slideTitle" placeholder="Titre"><textarea id="slideBody" rows="4" placeholder="Texte"></textarea><input id="slideCta" placeholder="CTA"></div></div><aside class="carousel-strip panel"><div class="panel-head"><div><small>SLIDES</small><h2 id="carouselCounter">0 slide</h2></div></div><div id="carouselSlides"></div></aside>';
+  view.appendChild(carousel);
+  const visual=document.createElement('section');visual.id='visualCreationPanel';visual.className='creation-mode-panel';
+  visual.innerHTML='<div class="visual-controls panel"><div class="panel-head"><div><small>VISUEL</small><h2>Génération d’image</h2></div></div><label>Prompt<textarea id="visualPrompt" rows="9" placeholder="Décris le visuel à créer…"></textarea></label><label>Style<select id="visualStyle"><option value="gallery">Galerie / éditorial</option><option value="editorial">Éditorial</option><option value="art">Art contemporain</option><option value="photo">Photographique</option></select></label><label>Format<select id="visualRatio"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><button class="primary-btn wide" id="visualGenerate">✦ Générer le visuel</button><button class="secondary-btn wide" id="visualToBureau">▤ Envoyer au Bureau</button></div><div class="visual-preview panel"><div id="visualImage"><span>Le visuel apparaîtra ici.</span></div></div>';
+  view.appendChild(visual);
+  const st=document.createElement('style');st.textContent=`
+  .creation-mode-bar{display:flex;gap:6px;margin:0 0 12px}.creation-mode-bar button{border:1px solid #e0e2e8;background:#fff;border-radius:999px;padding:9px 13px;font-size:10px;font-weight:800}.creation-mode-bar button.active{background:#111318;color:#fff;border-color:#111318}.creation-mode-panel{display:none}.creation-mode-panel.active{display:grid}.carouselCreationPanel{}.carousel-controls,.visual-controls{display:grid;gap:11px;align-self:start}.carousel-controls label,.visual-controls label{display:grid;gap:5px;font-size:8px;color:#90939e;font-weight:800;text-transform:uppercase;letter-spacing:.65px}.carousel-controls input,.carousel-controls select,.carousel-controls textarea,.visual-controls select,.visual-controls textarea{padding:10px;font-size:10px;text-transform:none;letter-spacing:0}.wide{width:100%}#carouselCreationPanel{grid-template-columns:260px minmax(0,1fr) 210px;gap:14px}.carousel-preview{min-height:650px;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:14px;align-items:center}.carousel-canvas{position:relative;overflow:hidden;aspect-ratio:4/5;border-radius:24px;background:linear-gradient(145deg,#eef1ff,#e4dcff 48%,#f3d2e3);box-shadow:0 25px 60px rgba(30,34,56,.12)}.carousel-image{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.72}.carousel-image:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.88) 70%)}.carousel-copy{position:absolute;z-index:2;left:7%;right:7%;bottom:6%;color:#17181e}.carousel-copy small{font-size:9px;font-weight:900;letter-spacing:1.1px}.carousel-copy h3{font-size:clamp(28px,3vw,50px);line-height:.95;letter-spacing:-2px;margin:10px 0 13px}.carousel-copy p{font-size:11px;line-height:1.45;max-width:85%}.carousel-copy b{font-size:10px}.carousel-edit{display:grid;gap:8px}.carousel-edit input,.carousel-edit textarea{padding:10px;font-size:10px}.carousel-strip{align-self:start;max-height:650px;overflow:auto}.carousel-slide-thumb{width:100%;border:1px solid #e4e5ea;background:#f8f9fa;border-radius:13px;padding:10px;text-align:left;margin-bottom:7px}.carousel-slide-thumb.active{border-color:#bfb6f4;background:#f8f6ff}.carousel-slide-thumb b,.carousel-slide-thumb span{display:block}.carousel-slide-thumb b{font-size:9px}.carousel-slide-thumb span{font-size:8px;color:#9295a0;margin-top:3px}#visualCreationPanel{grid-template-columns:300px 1fr;gap:14px}.visual-preview{min-height:660px;display:grid;place-items:center}.visual-preview #visualImage{width:min(540px,100%);aspect-ratio:4/5;border-radius:24px;background:#f0f2f6 center/cover no-repeat;display:grid;place-items:center;color:#9295a0;font-size:10px;box-shadow:0 24px 60px rgba(30,34,50,.08)}@media(max-width:1100px){#carouselCreationPanel{grid-template-columns:240px 1fr}.carousel-strip{grid-column:1/-1;display:flex;gap:7px;overflow:auto}.carousel-slide-thumb{min-width:150px}.carousel-preview{grid-template-columns:1fr}}@media(max-width:760px){#carouselCreationPanel,#visualCreationPanel{grid-template-columns:1fr}.carousel-preview{min-height:auto}.carousel-canvas{max-width:440px;margin:auto}.visual-preview{min-height:430px}}
+  `;document.head.appendChild(st);
+  $('[data-create-mode]',bar).forEach(b=>b.onclick=()=>setCreationMode(b.dataset.createMode));
+  $('#carouselSource').onchange=syncCarouselBrief;$('#carouselGenerate').onclick=generateCarousel;$('#carouselGenerateImage').onclick=()=>generateCarouselImage(state.carousel.active);$('#carouselGenerateAll').onclick=generateAllCarouselImages;$('#carouselToBureau').onclick=carouselToBureau;
+  $('#carouselFormat').onchange=e=>{state.carousel.format=e.target.value;renderCarousel()};
+  ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
+  $('#visualGenerate').onclick=generateVisual;$('#visualToBureau').onclick=visualToBureau;
+  setCreationMode('text');fillCreationSources();
+}
+function setCreationMode(mode){
+  state.creationMode=mode;
+  $('[data-create-mode]').forEach(b=>b.classList.toggle('active',b.dataset.createMode===mode));
+  $('#textCreationPanel')?.style.setProperty('display',mode==='text'?'grid':'none');
+  $('#carouselCreationPanel')?.classList.toggle('active',mode==='carousel');
+  $('#visualCreationPanel')?.classList.toggle('active',mode==='visual');
+}
+function fillCreationSources(){
+  const sel=$('#carouselSource');if(!sel)return;const cur=sel.value;
+  sel.innerHTML='<option value="">Brief libre</option>'+(state.bootstrap?.opportunities||[]).slice(0,100).map(o=>'<option value="'+o.id+'">'+esc(o.title)+'</option>').join('');if(cur)sel.value=cur;
+}
+function syncCarouselBrief(){
+  const o=opportunityById($('#carouselSource').value);if(!o)return;
+  $('#carouselBrief').value=[o.title,o.summary||o.radar_reason,[o.city,o.country].filter(Boolean).join(' · '),o.deadline?'Deadline : '+o.deadline:'',o.fee?'Frais : '+o.fee:''].filter(Boolean).join('\n');
+}
+function parseLooseJSON(txt){
+  txt=String(txt||'').replace(/\`\`\`json|\`\`\`/gi,'').trim();const a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<a)throw new Error('Réponse non structurée');return JSON.parse(txt.slice(a,b+1));
+}
+function fallbackCarousel(count,source,brief){
+  const title=source?.title||brief.split('\n')[0]||'Nouvelle opportunité',summary=source?.summary||source?.radar_reason||brief||'Informations à compléter.',loc=[source?.city,source?.country].filter(Boolean).join(' · ');
+  const base=[{kicker:'OPEN CALL',title,body:loc||summary,cta:'Découvrir →'},{kicker:'POURQUOI',title:'À regarder de près',body:summary,cta:'Voir plus →'},{kicker:'LE PROJET',title:source?.type||'Exposition / appel à projets',body:summary,cta:'Comprendre →'},{kicker:'INFOS',title:loc||'Informations pratiques',body:[source?.deadline?'Deadline · '+source.deadline:'',source?.fee||''].filter(Boolean).join(' · '),cta:'Enregistrer'},{kicker:'ACTION',title:'À toi de jouer.',body:'Vérifie les critères et la source officielle avant de candidater.',cta:'PLUG 🔌'}];
+  while(base.length<count)base.splice(base.length-1,0,{kicker:'À SAVOIR',title:'Point clé '+base.length,body:summary,cta:'Continuer →'});return base.slice(0,count).map(x=>({...x,image:'',image_prompt:''}));
+}
+async function generateCarousel(){
+  const btn=$('#carouselGenerate'),old=btn.textContent,count=Number($('#carouselCount').value||5),source=opportunityById($('#carouselSource').value),brief=clean($('#carouselBrief').value);
+  btn.disabled=true;btn.textContent='PLUGY structure…';playMotion('Think',true);
+  const facts=source?{title:source.title,summary:source.summary||source.radar_reason,city:source.city,country:source.country,deadline:source.deadline,fee:source.fee,type:source.type,eligibility:source.eligibility}:{brief};
+  const prompt='Crée un carrousel PLUG ART de '+count+' slides. N’invente aucun fait. Réponds uniquement en JSON valide : {"slides":[{"kicker":"","title":"","body":"","cta":"","image_prompt":""}]}. Chaque slide doit être concise, éditoriale et utile. Faits : '+JSON.stringify(facts);
+  try{const r=await api('/api/v32/plugy',{method:'POST',body:JSON.stringify({message:prompt,page:'content',mode:'deep'})});const parsed=parseLooseJSON(r.answer);if(!Array.isArray(parsed.slides)||!parsed.slides.length)throw new Error('Aucune slide');state.carousel.slides=parsed.slides.slice(0,count).map(x=>({kicker:x.kicker||'PLUG ART',title:x.title||'',body:x.body||'',cta:x.cta||'Découvrir →',image_prompt:x.image_prompt||'',image:''}));}
+  catch{state.carousel.slides=fallbackCarousel(count,source,brief)}
+  state.carousel.active=0;state.carousel.format=$('#carouselFormat').value||'4:5';renderCarousel();if(source)persistWorkflow(source.id,{workflow_status:'drafting',next_action:'Finaliser le carrousel'}).catch(()=>{});playMotion('Happy');btn.disabled=false;btn.textContent=old;
+}
+function renderCarousel(){
+  const slides=state.carousel.slides,s=slides[state.carousel.active]||{};$('#carouselCounter').textContent=slides.length+' slide'+(slides.length>1?'s':'');
+  $('#carouselSlides').innerHTML=slides.map((x,i)=>'<button class="carousel-slide-thumb '+(i===state.carousel.active?'active':'')+'" data-carousel-slide="'+i+'"><b>'+String(i+1).padStart(2,'0')+' · '+esc(x.kicker||'PLUG ART')+'</b><span>'+esc((x.title||'Sans titre').slice(0,50))+'</span></button>').join('')||'<div class="empty">Aucune slide.</div>';
+  $('[data-carousel-slide]').forEach(b=>b.onclick=()=>{state.carousel.active=Number(b.dataset.carouselSlide);renderCarousel()});
+  $('#carouselKicker').textContent=s.kicker||'PLUG ART';$('#carouselTitle').textContent=s.title||'Ton carrousel apparaîtra ici';$('#carouselBody').textContent=s.body||'Choisis une source ou écris un brief.';$('#carouselCta').textContent=s.cta||'Découvrir →';
+  const img=$('#carouselImage');img.style.backgroundImage=s.image?'url("'+s.image.replace(/"/g,'%22')+'")':'none';
+  const canvas=$('#carouselCanvas');canvas.style.aspectRatio=state.carousel.format==='1:1'?'1/1':state.carousel.format==='9:16'?'9/16':'4/5';
+  $('#slideKicker').value=s.kicker||'';$('#slideTitle').value=s.title||'';$('#slideBody').value=s.body||'';$('#slideCta').value=s.cta||'';
+}
+function syncActiveSlideEdit(){
+  const s=state.carousel.slides[state.carousel.active];if(!s)return;s.kicker=$('#slideKicker').value;s.title=$('#slideTitle').value;s.body=$('#slideBody').value;s.cta=$('#slideCta').value;renderCarousel();
+}
+async function generateCarouselImage(index){
+  const s=state.carousel.slides[index];if(!s)return toast('Génère d’abord les slides');
+  const source=opportunityById($('#carouselSource').value),ratio=state.carousel.format||'4:5',btn=$('#carouselGenerateImage'),old=btn.textContent;btn.disabled=true;btn.textContent='Image…';
+  const prompt=clean((s.image_prompt||'Illustration éditoriale contemporaine pour '+s.title+'. '+s.body)+' Univers PLUG ART, art contemporain émergent, galerie, matière, photographie ou peinture selon le sujet. Aucun texte lisible, aucun logo, aucun watermark.'+(source?' Contexte : '+source.title+'.':''));
+  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt,style:'gallery',ratio,quality:'medium'})});if(r.url){s.image=r.url;renderCarousel();toast('Image générée')}}catch(e){toast('Génération image indisponible')}finally{btn.disabled=false;btn.textContent=old}
+}
+async function generateAllCarouselImages(){
+  if(!state.carousel.slides.length)return toast('Génère d’abord les slides');const b=$('#carouselGenerateAll'),old=b.textContent;b.disabled=true;
+  for(let i=0;i<state.carousel.slides.length;i++){b.textContent='Image '+(i+1)+'/'+state.carousel.slides.length;state.carousel.active=i;renderCarousel();await generateCarouselImage(i)}
+  b.disabled=false;b.textContent=old;state.carousel.active=0;renderCarousel();
+}
+async function carouselToBureau(){
+  if(!state.carousel.slides.length)return;const sourceId=$('#carouselSource').value,source=opportunityById(sourceId);
+  const body=state.carousel.slides.map((s,i)=>'SLIDE '+(i+1)+'\n'+[s.kicker,s.title,s.body,s.cta,s.image?'Visuel : '+s.image:''].filter(Boolean).join('\n')).join('\n\n');
+  try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:'Carrousel · '+(source?.title||state.carousel.slides[0].title||'PLUG ART'),body,folder:'Contenus',tags:'carrousel, instagram, PLUG ART',source_type:sourceId?'opportunity':'',source_id:sourceId||''})});state.bureau.unshift(n);if(sourceId)await persistWorkflow(sourceId,{workflow_status:'drafting',next_action:'Finaliser le carrousel dans le Bureau'});toast('Carrousel envoyé au Bureau')}catch{toast('Enregistrement impossible')}
+}
+async function generateVisual(){
+  const prompt=clean($('#visualPrompt').value);if(!prompt)return toast('Ajoute un prompt');const b=$('#visualGenerate'),old=b.textContent;b.disabled=true;b.textContent='Génération…';playMotion('Think',true);
+  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt:prompt+' Aucun texte lisible, aucun logo, aucun watermark.',style:$('#visualStyle').value||'gallery',ratio:$('#visualRatio').value||'4:5',quality:'medium'})});if(r.url){state.visual={url:r.url,prompt};$('#visualImage').style.backgroundImage='url("'+r.url.replace(/"/g,'%22')+'")';$('#visualImage').innerHTML='';playMotion('Happy')}}catch{toast('Génération image indisponible')}finally{b.disabled=false;b.textContent=old}
+}
+async function visualToBureau(){
+  if(!state.visual.url)return toast('Génère d’abord un visuel');try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:'Visuel PLUG ART',body:'Prompt : '+state.visual.prompt+'\n\nVisuel : '+state.visual.url,folder:'Contenus',tags:'visuel, image, PLUG ART'})});state.bureau.unshift(n);toast('Visuel envoyé au Bureau')}catch{toast('Enregistrement impossible')}
+}
 
 /* V107.5 · operational layer */
 function injectOperationalUI(){
@@ -339,7 +433,8 @@ async function persistWorkflow(id,patch={}){
 }
 function openOpportunity(id){
   const o=opportunityById(id);if(!o)return;
-  state.activeOpportunity=id;injectOperationalUI();
+  state.activeOpportunity=id;installCreationModes();
+injectOperationalUI();
   $('#callTitle').textContent=o.title||'Open Call';
   $('#callMeta').textContent=[o.city,o.country,deadline(o.deadline),o.fee].filter(Boolean).join(' · ');
   $('#callSummary').textContent=o.summary||o.radar_reason||'Aucun résumé enregistré.';
