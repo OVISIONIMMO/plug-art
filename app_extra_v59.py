@@ -646,6 +646,33 @@ def crm_update_v86(lid:int,body:dict):
     _crm_history_v86(lid,'Mise à jour',' · '.join(changed[:8]) or 'Informations mises à jour')
     return core.one('select * from crm_leads where id=?',(lid,))
 
+@app.post('/api/v119/crm/{lid}/activity')
+def crm_activity_v119(lid:int,body:dict):
+    lead=core.one('select * from crm_leads where id=?',(lid,))
+    if not lead:
+        raise HTTPException(404,'Contact introuvable')
+    action=str((body or {}).get('action') or 'Activité').strip()[:80]
+    details=str((body or {}).get('details') or '').strip()[:1400]
+    allowed_status={'lead','contacted','waiting','followup','active','hot','closed'}
+    patch={}
+    status=str((body or {}).get('status') or '').strip()
+    if status in allowed_status:patch['status']=status
+    for key,limit in (('next_action',240),('next_date',20)):
+        val=str((body or {}).get(key) or '').strip()
+        if val:patch[key]=val[:limit]
+    if bool((body or {}).get('touch_contact')):
+        patch['last_contact']=time.strftime('%Y-%m-%d')
+    if patch:
+        patch['updated_at']=_now_v85()
+        sets=','.join(f"{k}=?" for k in patch)
+        c=core.conn();c.execute(f"update crm_leads set {sets} where id=?",(*patch.values(),lid));c.commit();c.close()
+    _crm_history_v86(lid,action,details)
+    return {
+      'ok':True,
+      'lead':core.one('select * from crm_leads where id=?',(lid,)),
+      'history':core.rows('select * from crm_history where lead_id=? order by id desc limit 20',(lid,))
+    }
+
 @app.delete('/api/v86/crm/{lid}')
 def crm_delete_v86(lid:int):
     c=core.conn()
