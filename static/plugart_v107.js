@@ -365,7 +365,7 @@ async function loadAll(){
     ]);
     state.bootstrap=boot;state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
     populateCountry($('#radarCountry'),boot.opportunities||[]);populateCountry($('#openCountry'),boot.opportunities||[]);
-    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();fillCreationSources();renderDraftPicker();renderBureau();renderLeads();renderAgenda();renderArtists();renderMap();
+    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();fillCreationSources();renderDraftPicker();renderBureau();renderLeads();renderAgenda();renderArtists();renderMap();renderNavBadges();
     toast('Workspace synchronisé');
   }catch(e){console.warn('[PLUG ART V107]',e);toast('Certaines données sont indisponibles')}
 }
@@ -376,6 +376,22 @@ async function loadAll(){
 
 
 /* V108 · compact creation studio */
+
+
+function setNavBadge(routeName,count){
+  const item=$('.nav-item[data-route="'+routeName+'"]');if(!item)return;
+  let badge=item.querySelector('.nav-attention');
+  if(!badge){badge=document.createElement('em');badge.className='nav-attention';item.appendChild(badge)}
+  badge.textContent=String(count||0);badge.hidden=!count;
+}
+function renderNavBadges(){
+  const today=new Date().toISOString().slice(0,10);
+  const urgentCalls=(state.bootstrap?.opportunities||[]).filter(o=>{const d=daysLeft(o);return d>=0&&d<=4}).length;
+  const dueLeads=state.leads.filter(l=>l.status!=='closed'&&l.next_date&&l.next_date<=today).length;
+  const agendaUrgent=agendaEntries().filter(x=>x.urgent).length;
+  setNavBadge('opencalls',urgentCalls);setNavBadge('prospection',dueLeads);setNavBadge('agenda',agendaUrgent);
+  if(!$('#navBadgeStyles')){const st=document.createElement('style');st.id='navBadgeStyles';st.textContent='.nav-item{position:relative}.nav-attention{margin-left:auto;min-width:18px;height:18px;border-radius:999px;background:#111318;color:#fff;font-size:8px;font-style:normal;display:grid;place-items:center;padding:0 5px}.nav-attention[hidden]{display:none}body.sidebar-small .nav-attention{position:absolute;right:3px;top:3px;min-width:14px;height:14px;font-size:7px;padding:0 3px}';document.head.appendChild(st)}
+}
 
 function installAgenda(){
   if($('#view-agenda'))return;
