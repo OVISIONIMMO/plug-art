@@ -653,7 +653,7 @@ function renderBureauPackageDetail(){
   const box=$('#bureauPackageDetail');if(!box)return;const p=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage));
   if(!p){box.innerHTML='<div class="empty">Sélectionne un dossier de candidature.</div>';return}
   const opp=p.opportunity||{},check=p.checklist||{},docs=(p.document_ids||[]).map(id=>state.bureau.find(n=>Number(n.id)===Number(id))).filter(Boolean);
-  box.innerHTML='<div class="package-detail-head"><div><small>DOSSIER DE CANDIDATURE</small><h3>'+esc(p.title||'Dossier')+'</h3></div><div class="package-detail-actions"><button id="packageOpenCall" '+(!opp.id?'disabled':'')+'>Open Call ↗</button><button id="packageToCreation">Vers Création</button><button class="primary" id="packageReady">Marquer prêt</button></div></div>'+
+  box.innerHTML='<div class="package-detail-head"><div><small>DOSSIER DE CANDIDATURE</small><h3>'+esc(p.title||'Dossier')+'</h3></div><div class="package-detail-actions"><button id="packageOpenCall" '+(!opp.id?'disabled':'')+'>Open Call ↗</button><button id="packageStarterPack">Créer le pack de base</button><button id="packageToCreation">Vers Création</button><button class="primary" id="packageReady">Marquer prêt</button></div></div>'+
     (opp.id?'<div class="package-source"><strong>'+esc(opp.title||'Open Call')+'</strong><span>'+esc([opp.city,opp.country,opp.deadline?'Deadline '+opp.deadline:''].filter(Boolean).join(' · '))+'</span></div>':'')+
     '<div class="package-status-row"><label>Statut<select id="packageStatus">'+['preparing','ready','submitted','followup','closed'].map(v=>'<option value="'+v+'" '+(p.status===v?'selected':'')+'>'+bureauPackageStatusLabel(v)+'</option>').join('')+'</select></label><label>Notes<textarea id="packageNotes" rows="3">'+esc(p.notes||'')+'</textarea></label></div>'+
     '<div class="package-checklist">'+Object.keys({source_checked:1,letter:1,bio:1,artist_statement:1,portfolio:1,visuals:1,links:1,submitted:1}).map(k=>'<button class="package-check '+(check[k]?'done':'')+'" data-package-check="'+k+'">'+(check[k]?'✓ ':'○ ')+esc(bureauChecklistLabel(k))+'</button>').join('')+'</div>'+
@@ -665,6 +665,7 @@ function renderBureauPackageDetail(){
   $$('[data-package-check]',box).forEach(b=>b.onclick=()=>{const next={...(p.checklist||{})};next[b.dataset.packageCheck]=!next[b.dataset.packageCheck];patchActivePackage({checklist:next})});
   $$('[data-package-doc]',box).forEach(b=>b.onclick=()=>{setBureauMode('documents');selectDoc(Number(b.dataset.packageDoc))});
   $('#packageCreateDoc').onclick=createDocumentFromPackage;
+  $('#packageStarterPack').onclick=createPackageStarterPack;
   $('#packageOpenCall').onclick=()=>{if(opp.id){route('opencalls');setTimeout(()=>openOpportunity(Number(opp.id)),40)}};
   $('#packageToCreation').onclick=()=>packageToCreation(p);
   $('#packageReady').onclick=()=>patchActivePackage({status:'ready'});
@@ -684,6 +685,29 @@ async function createDocumentFromPackage(){
   const b=$('#packageCreateDoc'),old=b.textContent;b.disabled=true;b.textContent='Création…';
   try{const out=await api('/api/v120/bureau/packages/'+p.id+'/document',{method:'POST',body:JSON.stringify({template_id:tid})});if(out.document){state.bureau.unshift(out.document);const i=state.bureauPackages.findIndex(x=>Number(x.id)===Number(out.package.id));if(i>=0)state.bureauPackages[i]=out.package;state.activeDoc=out.document.id;setBureauMode('documents');selectDoc(out.document.id);toast('Document créé depuis le modèle')}}catch{toast('Création du document impossible')}finally{b.disabled=false;b.textContent=old}
 }
+async function createPackageStarterPack(){
+  const p=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage));if(!p)return;
+  const wanted=['Lettre de candidature','Bio courte','Note artistique'];
+  const existingTitles=new Set((p.document_ids||[]).map(id=>state.bureau.find(n=>Number(n.id)===Number(id))?.title).filter(Boolean));
+  const templates=wanted.map(name=>state.bureauTemplates.find(t=>t.name===name)).filter(Boolean).filter(t=>!existingTitles.has(t.name));
+  if(!templates.length)return toast('Le pack de base est déjà créé');
+  const b=$('#packageStarterPack'),old=b?.textContent;if(b){b.disabled=true;b.textContent='Création…'}
+  try{
+    let current=p;
+    for(const t of templates){
+      if(b)b.textContent='Création · '+t.name;
+      const out=await api('/api/v120/bureau/packages/'+p.id+'/document',{method:'POST',body:JSON.stringify({template_id:t.id,title:t.name})});
+      if(out.document&&!state.bureau.some(x=>Number(x.id)===Number(out.document.id)))state.bureau.unshift(out.document);
+      if(out.package)current=out.package;
+    }
+    const checklist={...(current.checklist||{}),letter:true,bio:true,artist_statement:true};
+    const saved=await api('/api/v120/bureau/packages/'+p.id,{method:'PATCH',body:JSON.stringify({checklist})});
+    const i=state.bureauPackages.findIndex(x=>Number(x.id)===Number(saved.id));if(i>=0)state.bureauPackages[i]=saved;
+    renderBureauPackages();toast('Pack de candidature créé');
+  }catch{toast('Création du pack impossible')}
+  finally{if(b){b.disabled=false;b.textContent=old}}
+}
+
 function packageToCreation(p){
   const id=(p.document_ids||[])[0];if(id){state.activeDoc=Number(id);sendCurrentBureauToCreation();return}
   toast('Crée d’abord un document dans ce dossier');
@@ -748,10 +772,11 @@ function selectDoc(id){
 function ensureBureauBridge(){
   if($('#bureauSourceBar'))return;
   const editor=$('.bureau-editor');if(!editor)return;
-  const bar=document.createElement('div');bar.id='bureauSourceBar';bar.className='bureau-source-bar';bar.innerHTML='<span id="bureauSourceLabel">Document libre</span><div><button id="bureauOpenSource" hidden>Ouvrir la source</button><button id="bureauToCreation">✦ Envoyer vers Création</button></div>';
+  const bar=document.createElement('div');bar.id='bureauSourceBar';bar.className='bureau-source-bar';bar.innerHTML='<span id="bureauSourceLabel">Document libre</span><div><button id="bureauOpenSource" hidden>Ouvrir la source</button><button id="bureauAsTemplate">＋ Modèle</button><button id="bureauToCreation">✦ Envoyer vers Création</button></div>';
   editor.insertBefore(bar,editor.firstChild);
   const st=document.createElement('style');st.textContent='.bureau-source-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 10px;border-bottom:1px solid #eceef2;margin-bottom:4px}.bureau-source-bar>span{font-size:9px;color:#8d909b}.bureau-source-bar div{display:flex;gap:6px}.bureau-source-bar button{border:1px solid #e1e3e8;background:#fff;border-radius:9px;padding:7px 9px;font-size:8px;font-weight:800}.bureau-source-bar button:last-child{background:#f8f6ff;border-color:#ded9fb;color:#5f50c2}';document.head.appendChild(st);
   $('#bureauOpenSource').onclick=openCurrentBureauSource;
+  $('#bureauAsTemplate').onclick=saveCurrentDocAsTemplate;
   $('#bureauToCreation').onclick=sendCurrentBureauToCreation;
 }
 function renderBureauSource(n){
@@ -765,6 +790,15 @@ function openCurrentBureauSource(){
   if(n.source_type==='opportunity'&&n.source_id)openOpportunity(Number(n.source_id));
   if(n.source_type==='crm'&&n.source_id){route('prospection');setTimeout(()=>selectLead(Number(n.source_id)),30)}
 }
+async function saveCurrentDocAsTemplate(){
+  const n=state.bureau.find(x=>Number(x.id)===Number(state.activeDoc));if(!n)return toast('Sélectionne un document');
+  const category=n.folder==='Candidatures'?'Candidature':n.folder==='Prospection'?'Prospection':n.folder==='Contenus'?'Contenu':'Général';
+  try{
+    const t=await api('/api/v120/bureau/templates',{method:'POST',body:JSON.stringify({name:n.title||'Modèle',category,body:n.body||'',tags:n.tags||''})});
+    state.bureauTemplates.push(t);state.activeTemplate=t.id;setBureauMode('templates');renderBureauTemplates();toast('Document enregistré comme modèle');
+  }catch{toast('Création du modèle impossible')}
+}
+
 function sendCurrentBureauToCreation(){
   const n=state.bureau.find(x=>Number(x.id)===Number(state.activeDoc));if(!n)return;
   route('creation');setCreationMode('text');
