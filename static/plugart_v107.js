@@ -4,7 +4,7 @@ const VERSION='119.20260923.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,recognition:null,creationMode:'text',creationDirty:false,radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
+const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,recognition:null,creationMode:'text',creationDirty:false,radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -55,7 +55,7 @@ const viewDataFamilies={
   opencalls:['opportunities','workflow'],
   creation:['opportunities','drafts'],
   agenda:['opportunities','workflow','leads'],
-  bureau:['bureau'],
+  bureau:['bureau','bureauMeta'],
   prospection:['leads'],
   network:['artists'],
   map:['map']
@@ -64,7 +64,7 @@ function requiredFamilies(id){return viewDataFamilies[id]||[]}
 async function ensureDataFamily(name,force=false){
   if(state.dataLoaded[name]&&!force)return true;
   if(state.dataPromises[name])return state.dataPromises[name];
-  const endpoints={opportunities:'/api/opportunities',artists:'/api/artists',map:'/api/map',bureau:'/api/v107/bureau',leads:'/api/v86/crm',workflow:'/api/v107/open-calls/workflow',drafts:'/api/v108/drafts'};
+  const endpoints={opportunities:'/api/opportunities',artists:'/api/artists',map:'/api/map',bureau:'/api/v107/bureau',bureauMeta:'/api/v120/bureau/bootstrap',leads:'/api/v86/crm',workflow:'/api/v107/open-calls/workflow',drafts:'/api/v108/drafts'};
   const endpoint=endpoints[name];if(!endpoint)return true;
   state.dataPromises[name]=api(endpoint,{timeout:22000}).then(data=>{
     state.bootstrap=state.bootstrap||{stats:{},opportunities:[],artists:[],map:[]};
@@ -76,6 +76,7 @@ async function ensureDataFamily(name,force=false){
     if(name==='artists')state.bootstrap.artists=Array.isArray(data)?data:[];
     if(name==='map')state.bootstrap.map=Array.isArray(data)?data:[];
     if(name==='bureau')state.bureau=Array.isArray(data)?data:[];
+    if(name==='bureauMeta'){state.bureauTemplates=Array.isArray(data?.templates)?data.templates:[];state.bureauPackages=Array.isArray(data?.packages)?data.packages:[]}
     if(name==='leads')state.leads=Array.isArray(data)?data:[];
     if(name==='workflow')state.workflow=Array.isArray(data)?data:[];
     if(name==='drafts')state.drafts=Array.isArray(data)?data:[];
@@ -842,7 +843,7 @@ $('#plugyVoice')?.addEventListener('click',initVoice);
 installConversationButton();
 
 async function loadAll(){
-  state.dataLoaded={opportunities:false,artists:false,map:false,bureau:false,leads:false,workflow:false,drafts:false};state.dataPromises={};
+  state.dataLoaded={opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false};state.dataPromises={};
   try{
     const boot=await api('/api/v112/dashboard-bootstrap',{timeout:12000});
     state.bootstrap=boot;
