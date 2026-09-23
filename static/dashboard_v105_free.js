@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='105.20260923.2';
+const VERSION='106.20260923.1';
 const q=(s,r=document)=>r.querySelector(s),qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const home=q('#view-dashboard'); if(!home)return;
 
@@ -13,8 +13,14 @@ function loadModelViewer(){
   });
   return window.__plugV105MV;
 }
-function model(tagClass='v105-plugy-model'){
-  return '<model-viewer class="'+tagClass+'" src="/static/PLUGY_final_animated.glb?v='+VERSION+'" camera-controls autoplay auto-rotate auto-rotate-delay="900" rotation-per-second="1.35deg" camera-orbit="-7deg 77deg 2.95m" camera-target="0m .18m 0m" field-of-view="25deg" interaction-prompt="none" disable-pan disable-zoom shadow-intensity=".22" shadow-softness=".96" environment-image="neutral" exposure="1.16" tone-mapping="commerce" loading="lazy" reveal="auto"></model-viewer>';
+function model(tagClass='v105-plugy-model',kind='animated'){
+  const saveData=!!navigator.connection?.saveData||innerWidth<760;
+  const realistic=kind==='realistic'&&!saveData;
+  const src=realistic?'/assets/plugy-v106-realistic.glb?v='+VERSION:'/static/PLUGY_final_animated.glb?v='+VERSION;
+  const poster=realistic?' poster="https://storage.to3d.app/generated-3d/images/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_image.png"':'';
+  const autoplay=realistic?'':' autoplay';
+  const orbit=realistic?'8deg 76deg 3.15m':'-7deg 77deg 2.95m';
+  return '<model-viewer class="'+tagClass+(realistic?' is-realistic':' is-animated')+'" src="'+src+'"'+poster+' camera-controls'+autoplay+' auto-rotate auto-rotate-delay="900" rotation-per-second="'+(realistic?'.8':'1.35')+'deg" camera-orbit="'+orbit+'" camera-target="0m .18m 0m" field-of-view="25deg" interaction-prompt="none" disable-pan disable-zoom shadow-intensity=".24" shadow-softness=".96" environment-image="neutral" exposure="'+(realistic?'1.08':'1.16')+'" tone-mapping="commerce" loading="lazy" reveal="auto"></model-viewer>';
 }
 home.classList.add('v105-home');
 home.innerHTML=`
@@ -28,8 +34,8 @@ home.innerHTML=`
     </div>
     <div class="v105-hero-stage v105-reveal">
       <div class="v105-glow"></div><div class="v105-rings"><i></i><i></i><i></i></div>
-      ${model()}
-      <div class="v105-hero-note">PLUGY · agent contextuel vivant</div>
+      ${model('v105-plugy-model v105-plugy-realistic','realistic')}
+      <div class="v105-hero-note">PLUGY · modèle 3D réaliste / agent contextuel</div>
     </div>
   </div>
 </section>
@@ -75,7 +81,7 @@ home.innerHTML=`
 </section>
 
 <section class="v105-section v105-voice" id="v105Voice" data-plugy-label="Conversation">
-  <div class="v105-wrap v105-voice-grid"><div class="v105-voice-stage v105-reveal">${model()}</div><div class="v105-voice-copy v105-reveal"><div class="v105-eyebrow">PLUGY VOICE</div><h2 class="v105-display">Appuie.<br>Parle.<br><span>Continue.</span></h2><p>Un appui long ou un double-clic ouvre la conversation vocale. PLUGY reprend le contexte de la section et peut ensuite naviguer ou agir dans l’outil.</p><div class="v105-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><button class="v105-btn dark" data-v105-plugy="Ouvre une conversation avec moi et aide-moi dans la section actuelle.">Parler à PLUGY</button></div></div>
+  <div class="v105-wrap v105-voice-grid"><div class="v105-voice-stage v105-reveal">${model('v105-plugy-model v105-plugy-animated','animated')}</div><div class="v105-voice-copy v105-reveal"><div class="v105-eyebrow">PLUGY VOICE</div><h2 class="v105-display">Appuie.<br>Parle.<br><span>Continue.</span></h2><p>Un appui long ou un double-clic ouvre la conversation vocale. PLUGY reprend le contexte de la section et peut ensuite naviguer ou agir dans l’outil.</p><div class="v105-wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><button class="v105-btn dark" data-v105-plugy="Ouvre une conversation avec moi et aide-moi dans la section actuelle.">Parler à PLUGY</button></div></div>
 </section>
 
 <section class="v105-section v105-final" id="v105Final" data-plugy-label="Entrer">
