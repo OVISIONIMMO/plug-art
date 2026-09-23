@@ -1155,6 +1155,55 @@ function renderToday(){
 function handleLocalPlugy(message){
   const m=message.toLowerCase();
   const go=(id,reply)=>{route(id);return reply};
+
+  if(state.view==='opencalls'&&state.activeOpportunity){
+    const id=state.activeOpportunity,o=opportunityById(id);
+    if(/favori/.test(m)&&!/(affiche|ouvre|liste)/.test(m)){
+      toggleFavorite(id);return o?.favorite?'Je retire cet Open Call des favoris.':'Je mets cet Open Call en favori.';
+    }
+    if(/(bureau|document|note)/.test(m)&&/(envoie|ajoute|mets|transf)/.test(m)){
+      opportunityToBureau();return 'J’envoie cet Open Call au Bureau.';
+    }
+    if(/carrousel/.test(m)&&/(crée|cree|fais|transforme|prépare|prepare)/.test(m)){
+      createCarouselForOpportunity(id);return 'Je prépare un carrousel à partir de cet Open Call.';
+    }
+    if(/(marque|passe|mets).*(envoy|soumis|submit)/.test(m)){
+      persistWorkflow(id,{workflow_status:'submitted',next_action:'Suivre la réponse'}).then(()=>renderPlugyActions());return 'Je le marque comme envoyé.';
+    }
+    if(/(marque|passe|mets|prépare|prepare).*(relance|relancer)/.test(m)){
+      persistWorkflow(id,{workflow_status:'followup',next_action:'Relancer la structure'}).then(()=>renderPlugyActions());return 'Je le passe en relance.';
+    }
+  }
+
+  if(state.view==='prospection'&&state.activeLead){
+    if(/(prépare|prepare|écris|ecris|rédige|redige).*(relance|message)/.test(m)){
+      $('#leadPlugy')?.click();return 'Je prépare la relance pour ce contact.';
+    }
+    if(/(bureau|document|note)/.test(m)&&/(envoie|ajoute|mets|transf)/.test(m)){
+      $('#leadToBureau')?.click();return 'J’envoie ce contact au Bureau.';
+    }
+    if(/(marque|passe|mets).*(contacté|contacte)/.test(m)){
+      setActiveLeadStatus('contacted');return 'Je marque ce contact comme contacté.';
+    }
+    if(/(marque|passe|mets).*(relance|relancer)/.test(m)){
+      setActiveLeadStatus('followup');return 'Je passe ce contact en relance.';
+    }
+    if(/(marque|passe|mets).*(chaud|prioritaire)/.test(m)){
+      setActiveLeadStatus('hot');return 'Je passe ce contact en opportunité chaude.';
+    }
+  }
+
+  if(state.view==='bureau'&&state.activeDoc){
+    if(/(création|creation|studio)/.test(m)&&/(envoie|ouvre|transf|mets)/.test(m)){
+      sendCurrentBureauToCreation();return 'J’envoie ce document vers Création.';
+    }
+  }
+
+  if(state.view==='creation'&&state.creationMode==='carousel'&&state.carousel.slides.length){
+    if(/(prépare|prepare|génère|genere|écris|ecris).*(légende|legende).*(instagram)?/.test(m)){
+      prepareInstagramCaption();return 'Je prépare la légende Instagram.';
+    }
+  }
   if(/(ouvre|va|aller|affiche).*(radar)/.test(m))return go('radar','J’ouvre le Radar.');
   if(/(nouveau|crée|cree).*(carrousel)/.test(m)){route('creation');setCreationMode('carousel');state.currentDraft=null;return 'Nouveau carrousel prêt.'}
   if(/(nouveau|crée|cree).*(visuel|image)/.test(m)){route('creation');setCreationMode('visual');state.currentDraft=null;return 'Nouveau visuel prêt.'}
