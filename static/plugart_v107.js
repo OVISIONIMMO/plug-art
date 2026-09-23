@@ -205,7 +205,7 @@ function closePlugy(){
 $('#sidebarPlugy')?.addEventListener('click',()=>openPlugy());
 $('#topPlugy')?.addEventListener('click',()=>openPlugy());
 $('#plugyClose')?.addEventListener('click',closePlugy);
-$('[data-open-plugy]').forEach(b=>b.addEventListener('click',()=>openPlugy()));
+$$('[data-open-plugy]').forEach(b=>b.addEventListener('click',()=>openPlugy()));
 bindPlugyWarmIntent();
 function renderSuggestions(){
   const box=$('#plugySuggestions');if(!box)return;
