@@ -4,7 +4,7 @@ const VERSION='111.20260923.2';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false},dataPromises:{},bureau:[],leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,recognition:null,creationMode:'text',radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
+const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,recognition:null,creationMode:'text',radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -51,10 +51,12 @@ function toast(msg){
   const el=$('#toast');if(!el)return;el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2200);
 }
 const viewDataFamilies={
-  radar:['opportunities'],
-  opencalls:['opportunities'],
-  creation:['opportunities'],
-  agenda:['opportunities'],
+  radar:['opportunities','workflow'],
+  opencalls:['opportunities','workflow'],
+  creation:['opportunities','drafts'],
+  agenda:['opportunities','workflow','leads'],
+  bureau:['bureau'],
+  prospection:['leads'],
   network:['artists'],
   map:['map']
 };
@@ -62,7 +64,7 @@ function requiredFamilies(id){return viewDataFamilies[id]||[]}
 async function ensureDataFamily(name,force=false){
   if(state.dataLoaded[name]&&!force)return true;
   if(state.dataPromises[name])return state.dataPromises[name];
-  const endpoints={opportunities:'/api/opportunities',artists:'/api/artists',map:'/api/map'};
+  const endpoints={opportunities:'/api/opportunities',artists:'/api/artists',map:'/api/map',bureau:'/api/v107/bureau',leads:'/api/v86/crm',workflow:'/api/v107/open-calls/workflow',drafts:'/api/v108/drafts'};
   const endpoint=endpoints[name];if(!endpoint)return true;
   state.dataPromises[name]=api(endpoint,{timeout:22000}).then(data=>{
     state.bootstrap=state.bootstrap||{stats:{},opportunities:[],artists:[],map:[]};
@@ -73,6 +75,10 @@ async function ensureDataFamily(name,force=false){
     }
     if(name==='artists')state.bootstrap.artists=Array.isArray(data)?data:[];
     if(name==='map')state.bootstrap.map=Array.isArray(data)?data:[];
+    if(name==='bureau')state.bureau=Array.isArray(data)?data:[];
+    if(name==='leads')state.leads=Array.isArray(data)?data:[];
+    if(name==='workflow')state.workflow=Array.isArray(data)?data:[];
+    if(name==='drafts')state.drafts=Array.isArray(data)?data:[];
     state.dataLoaded[name]=true;
     return true;
   }).finally(()=>{delete state.dataPromises[name]});
@@ -244,14 +250,14 @@ function bindOppActions(root=document){
 }
 
 function adaptDashboardForDrafts(){
-  const stat=$('#statArtists')?.parentElement;if(stat){const label=stat.querySelector('span');if(label)label.textContent='Brouillons';stat.style.cursor='pointer';stat.onclick=()=>{route('creation');if(state.drafts[0])setTimeout(()=>loadDraft(state.drafts[0].id),40)}}
+  const stat=$('#statArtists')?.parentElement;if(stat){const label=stat.querySelector('span');if(label)label.textContent='Brouillons';stat.style.cursor='pointer';stat.onclick=async()=>{route('creation');try{await ensureViewData('creation');if(state.drafts[0])loadDraft(state.drafts[0].id)}catch{}}}
 }
 
 function renderDashboard(){
   const b=state.bootstrap||{},stats=b.stats||{};
   const trackedIds=new Set(state.workflow.filter(x=>x.workflow_status!=='closed').map(x=>String(x.opportunity_id)));
   const opps=(b.opportunities||[]).slice().sort((a,b)=>Number(!!b.favorite)-Number(!!a.favorite)||Number(trackedIds.has(String(b.id)))-Number(trackedIds.has(String(a.id)))||Number(b.radar_score??b.score??0)-Number(a.radar_score??a.score??0)).slice(0,4);
-  $('#statOpp').textContent=stats.opportunities??opps.length;$('#statUrgent').textContent=stats.urgent??0;$('#statArtists').textContent=state.drafts.length;$('#statContacts').textContent=state.leads.length;
+  $('#statOpp').textContent=stats.opportunities??opps.length;$('#statUrgent').textContent=stats.urgent??0;$('#statArtists').textContent=stats.drafts??state.drafts.length;$('#statContacts').textContent=stats.contacts??state.leads.length;
   const box=$('#dashboardCalls');box.innerHTML=opps.length?opps.map(o=>'<div class="priority-row"><div class="priority-thumb"><img src="/api/v67/opportunities/'+o.id+'/thumbnail" alt="" loading="lazy"></div><button data-dashboard-opp="'+o.id+'" style="border:0;background:transparent;text-align:left"><h3>'+esc(o.title)+'</h3><p>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</p></button><span class="score">'+Number(o.radar_score??o.score??0)+'/100</span></div>').join(''):'<div class="empty">Aucune opportunité active.</div>';
   $$('[data-dashboard-opp]').forEach(x=>x.onclick=()=>openOpportunity(Number(x.dataset.dashboardOpp)));
   $('#dashboardBureau').innerHTML=state.bureau.slice(0,4).map(n=>'<button class="compact-row" data-dash-doc="'+n.id+'" style="border:0;background:transparent;text-align:left;width:100%"><strong>'+esc(n.title||'Sans titre')+'</strong><span>'+esc(n.folder||'Notes')+' · '+esc((n.updated_at||'').replace('T',' '))+'</span></button>').join('')||'<div class="empty">Aucun document.</div>';
@@ -507,17 +513,14 @@ async function initVoice(){
 $('#plugyVoice')?.addEventListener('click',initVoice);
 
 async function loadAll(){
-  const bureauP=api('/api/v107/bureau').catch(()=>[]);
-  const leadsP=api('/api/v86/crm').catch(()=>[]);
-  const workflowP=api('/api/v107/open-calls/workflow').catch(()=>[]);
-  const draftsP=api('/api/v108/drafts').catch(()=>[]);
-  state.dataLoaded={opportunities:false,artists:false,map:false};state.dataPromises={};
+  state.dataLoaded={opportunities:false,artists:false,map:false,bureau:false,leads:false,workflow:false,drafts:false};state.dataPromises={};
   try{
     const boot=await api('/api/v112/dashboard-bootstrap',{timeout:12000});
     state.bootstrap=boot;
-    renderDashboard();
-    const [bureau,leads,workflow,drafts]=await Promise.all([bureauP,leadsP,workflowP,draftsP]);
-    state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
+    state.bureau=Array.isArray(boot.bureau)?boot.bureau:[];
+    state.leads=Array.isArray(boot.leads)?boot.leads:[];
+    state.workflow=Array.isArray(boot.workflow)?boot.workflow:[];
+    state.drafts=Array.isArray(boot.drafts)?boot.drafts:[];
     renderDashboard();renderNavBadges();
     if(requiredFamilies(state.view).length){
       await ensureViewData(state.view,true);
@@ -526,8 +529,6 @@ async function loadAll(){
     toast('Workspace synchronisé');
   }catch(e){
     console.warn('[PLUG ART V112]',e);
-    const [bureau,leads,workflow,drafts]=await Promise.all([bureauP,leadsP,workflowP,draftsP]);
-    state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
     renderNavBadges();renderRouteView(state.view);toast('Synchronisation partielle');
   }
 }
