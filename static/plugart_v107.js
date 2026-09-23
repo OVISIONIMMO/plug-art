@@ -701,9 +701,9 @@ function installMobileShell(){
   '</div>';
   document.body.appendChild(sheet);
 
-  $('[data-route]',dock).forEach(b=>b.onclick=()=>route(b.dataset.route));
-  $('[data-mobile-route]',sheet).forEach(b=>b.onclick=()=>route(b.dataset.mobileRoute));
-  $('[data-mobile-action]',sheet).forEach(b=>b.onclick=()=>{
+  $$('[data-route]',dock).forEach(b=>b.onclick=()=>route(b.dataset.route));
+  $$('[data-mobile-route]',sheet).forEach(b=>b.onclick=()=>route(b.dataset.mobileRoute));
+  $$('[data-mobile-action]',sheet).forEach(b=>b.onclick=()=>{
     sheet.classList.remove('open');
     if(b.dataset.mobileAction==='search')openSearch();
     if(b.dataset.mobileAction==='plugy')openPlugy();
