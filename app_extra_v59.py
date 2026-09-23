@@ -2,7 +2,7 @@ from pathlib import Path
 from fastapi import Request, HTTPException
 from fastapi.responses import HTMLResponse, Response, RedirectResponse, FileResponse
 from urllib.parse import urljoin, urlencode
-import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64,hmac
+import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64,hmac,math,struct
 import app as core
 import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
@@ -19,8 +19,120 @@ VERSION='106.20260923.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
-REALISTIC_PLUGY=Path('/data/plugy_v106_realistic.glb') if Path('/data').exists() else BASE/'static'/'plugy_v106_realistic.glb'
+REALISTIC_PLUGY=Path('/data/plugy_v106_realistic_animated.glb') if Path('/data').exists() else BASE/'static'/'plugy_v106_realistic_animated.glb'
 REALISTIC_PLUGY_LOCK=threading.Lock()
+
+def _v106_pad4(raw:bytes,pad=b' '):
+    return raw + pad*((4-len(raw)%4)%4)
+
+def _v106_quat(axis,angle):
+    x,y,z=axis
+    s=math.sin(angle/2.0)
+    return [x*s,y*s,z*s,math.cos(angle/2.0)]
+
+def _inject_v106_motion(raw:bytes):
+    if len(raw)<20 or raw[:4]!=b'glTF':
+        return raw
+    try:
+        _,version,_=struct.unpack_from('<4sII',raw,0)
+        pos=12;doc=None;bin_blob=b'';extras=[]
+        while pos+8<=len(raw):
+            ln,kind=struct.unpack_from('<I4s',raw,pos);pos+=8
+            chunk=raw[pos:pos+ln];pos+=ln
+            if kind==b'JSON':
+                doc=json.loads(chunk.decode('utf-8').rstrip(' \\x00'))
+            elif kind==b'BIN\\x00':
+                bin_blob=bytes(chunk)
+            else:
+                extras.append((kind,bytes(chunk)))
+        if not isinstance(doc,dict):
+            return raw
+        doc.setdefault('nodes',[])
+        doc.setdefault('scenes',[{'nodes':[0] if doc['nodes'] else []}])
+        scene_index=int(doc.get('scene',0) or 0)
+        while len(doc['scenes'])<=scene_index:
+            doc['scenes'].append({'nodes':[]})
+        scene=doc['scenes'][scene_index]
+        original=list(scene.get('nodes') or ([0] if doc['nodes'] else []))
+        root_index=len(doc['nodes'])
+        doc['nodes'].append({'name':'PLUGY_V106_MotionRoot','children':original})
+        scene['nodes']=[root_index]
+
+        doc.setdefault('buffers',[{'byteLength':len(bin_blob)}])
+        if not doc['buffers']:
+            doc['buffers']=[{'byteLength':len(bin_blob)}]
+        doc.setdefault('bufferViews',[])
+        doc.setdefault('accessors',[])
+        doc.setdefault('animations',[])
+        blob=bytearray(bin_blob)
+        while len(blob)%4:blob.append(0)
+
+        def accessor(values,type_name):
+            nonlocal blob
+            if type_name=='SCALAR':
+                rows=[[float(v)] for v in values];width=1
+            else:
+                rows=[[float(x) for x in row] for row in values]
+                width={'VEC3':3,'VEC4':4}[type_name]
+            flat=[x for row in rows for x in row]
+            offset=len(blob)
+            packed=struct.pack('<'+'f'*len(flat),*flat)
+            blob.extend(packed)
+            while len(blob)%4:blob.append(0)
+            vi=len(doc['bufferViews'])
+            doc['bufferViews'].append({'buffer':0,'byteOffset':offset,'byteLength':len(packed)})
+            ai=len(doc['accessors'])
+            acc={'bufferView':vi,'componentType':5126,'count':len(rows),'type':type_name}
+            if type_name=='SCALAR':
+                vals=[r[0] for r in rows];acc['min']=[min(vals)];acc['max']=[max(vals)]
+            doc['accessors'].append(acc)
+            return ai
+
+        def add_anim(name,times,translations=None,rotations=None,scales=None):
+            if any(a.get('name')==name for a in doc['animations'] if isinstance(a,dict)):
+                return
+            ti=accessor(times,'SCALAR');samplers=[];channels=[]
+            def channel(values,type_name,path):
+                oi=accessor(values,type_name)
+                si=len(samplers);samplers.append({'input':ti,'output':oi,'interpolation':'LINEAR'})
+                channels.append({'sampler':si,'target':{'node':root_index,'path':path}})
+            if translations is not None:channel(translations,'VEC3','translation')
+            if rotations is not None:channel(rotations,'VEC4','rotation')
+            if scales is not None:channel(scales,'VEC3','scale')
+            doc['animations'].append({'name':name,'samplers':samplers,'channels':channels})
+
+        add_anim('Idle',[0,1.2,2.4,3.6,4.8],
+            [[0,0,0],[0,.035,0],[0,.008,0],[0,-.018,0],[0,0,0]],
+            [_v106_quat((0,0,1),a) for a in (0,.018,-.014,.010,0)])
+        add_anim('SoftTurn',[0,.7,1.4,2.1],rotations=[_v106_quat((0,1,0),a) for a in (0,.18,-.14,0)])
+        add_anim('Think',[0,.45,1.0,1.55],
+            [[0,0,0],[0,.018,0],[0,.010,0],[0,0,0]],
+            [_v106_quat((0,0,1),a) for a in (0,-.13,-.055,0)])
+        add_anim('Curious',[0,.42,.88,1.32],rotations=[_v106_quat((0,0,1),a) for a in (0,.15,.07,0)])
+        add_anim('Present',[0,.36,.78,1.18],rotations=[_v106_quat((0,1,0),a) for a in (0,.20,-.09,0)])
+        add_anim('Bounce',[0,.18,.40,.62,.88],translations=[[0,0,0],[0,.11,0],[0,0,0],[0,.05,0],[0,0,0]])
+        add_anim('Happy',[0,.20,.42,.72],
+            [[0,0,0],[0,.085,0],[0,.025,0],[0,0,0]],
+            [_v106_quat((0,0,1),a) for a in (0,.055,-.025,0)])
+        add_anim('Attentive',[0,.38,.82],rotations=[_v106_quat((1,0,0),a) for a in (0,-.065,0)])
+        add_anim('Wave',[0,.22,.44,.66,.88,1.16],rotations=[_v106_quat((0,0,1),a) for a in (0,.10,-.085,.09,-.055,0)])
+        add_anim('Dance',[0,.28,.56,.84,1.12,1.40],rotations=[_v106_quat((0,0,1),a) for a in (0,.12,-.12,.12,-.12,0)])
+        add_anim('Blink',[0,.10,.20,.34],scales=[[1,1,1],[1,.985,1],[1,.995,1],[1,1,1]])
+
+        doc['buffers'][0]['byteLength']=len(blob)
+        asset=doc.setdefault('asset',{'version':'2.0'})
+        asset['generator']=str(asset.get('generator',''))+' + PLUGAR V106 Motion Layer'
+        j=_v106_pad4(json.dumps(doc,separators=(',',':')).encode('utf-8'),b' ')
+        b=_v106_pad4(bytes(blob),b'\\x00')
+        chunks=[(b'JSON',j),(b'BIN\\x00',b)]+extras
+        total=12+sum(8+len(c) for _,c in chunks)
+        out=bytearray(struct.pack('<4sII',b'glTF',version,total))
+        for kind,chunk in chunks:
+            out.extend(struct.pack('<I4s',len(chunk),kind));out.extend(chunk)
+        return bytes(out)
+    except Exception as exc:
+        print(f"PLUGY_V106_MOTION_PATCH_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
+        return raw
 
 def _ensure_realistic_plugy():
     try:
@@ -39,9 +151,9 @@ def _ensure_realistic_plugy():
             if rr.ok and len(rr.content)>10000 and rr.content[:4]==b'glTF':
                 REALISTIC_PLUGY.parent.mkdir(parents=True,exist_ok=True)
                 tmp=REALISTIC_PLUGY.with_suffix('.tmp')
-                tmp.write_bytes(rr.content)
+                tmp.write_bytes(_inject_v106_motion(rr.content))
                 tmp.replace(REALISTIC_PLUGY)
-                print(f"PLUGY_V106_REALISTIC_READY bytes={REALISTIC_PLUGY.stat().st_size}",flush=True)
+                print(f"PLUGY_V106_REALISTIC_READY bytes={REALISTIC_PLUGY.stat().st_size} motion=embedded",flush=True)
                 return True
         except Exception as exc:
             print(f"PLUGY_V106_REALISTIC_FETCH_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
