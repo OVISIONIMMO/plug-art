@@ -211,7 +211,21 @@ $('#bureauDelete')?.addEventListener('click',async()=>{if(!state.activeDoc)retur
 $$('[data-bureau-ai]').forEach(b=>b.onclick=async()=>{const text=$('#bureauBody').value;if(!text)return;const prompts={rewrite:'Réécris ce texte de façon plus fluide, professionnelle et claire sans ajouter de faits : ',shorten:'Résume ce texte en gardant les informations essentielles : ',application:'Transforme ce texte en candidature artistique convaincante mais factuelle : ',social:'Transforme ce texte en publication PLUG ART concise et claire : '};await askPlugy(prompts[b.dataset.bureauAi]+text,'#bureauBody')});
 
 function leadStatusLabel(s){return({lead:'À contacter',contacted:'Contacté',waiting:'En attente',followup:'Relance',active:'Échange en cours',hot:'Opportunité chaude',closed:'Clos'})[s]||s||'À contacter'}
+function ensureLeadPipeline(){
+  if($('#leadPipeline'))return;
+  const view=$('#view-prospection'),toolbar=view?.querySelector('.page-toolbar');if(!view||!toolbar)return;
+  const pipe=document.createElement('div');pipe.id='leadPipeline';pipe.className='lead-pipeline';toolbar.insertAdjacentElement('afterend',pipe);
+  const st=document.createElement('style');st.textContent='.lead-pipeline{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;margin:0 0 12px}.lead-pipe{border:1px solid #e2e4ea;background:#fff;border-radius:14px;padding:10px;text-align:left}.lead-pipe.active{border-color:#bfb6f4;background:#f8f6ff}.lead-pipe strong,.lead-pipe span{display:block}.lead-pipe strong{font-size:17px;letter-spacing:-.5px}.lead-pipe span{font-size:8px;color:#8d909b;margin-top:3px}@media(max-width:980px){.lead-pipeline{grid-template-columns:repeat(4,1fr)}}@media(max-width:560px){.lead-pipeline{grid-template-columns:repeat(2,1fr)}}';document.head.appendChild(st);
+}
+function renderLeadPipeline(){
+  ensureLeadPipeline();const pipe=$('#leadPipeline');if(!pipe)return;
+  const statuses=[['lead','À contacter'],['contacted','Contacté'],['waiting','En attente'],['followup','Relance'],['active','En cours'],['hot','Chaud'],['closed','Clos']];
+  const current=$('#leadStatusFilter')?.value||'';
+  pipe.innerHTML=statuses.map(([v,l])=>'<button class="lead-pipe '+(current===v?'active':'')+'" data-pipe="'+v+'"><strong>'+state.leads.filter(x=>(x.status||'lead')===v).length+'</strong><span>'+l+'</span></button>').join('');
+  $('[data-pipe]',pipe).forEach(b=>b.onclick=()=>{const sel=$('#leadStatusFilter');sel.value=sel.value===b.dataset.pipe?'':b.dataset.pipe;renderLeads()});
+}
 function renderLeads(){
+  renderLeadPipeline();
   const term=clean($('#leadSearch')?.value).toLowerCase(),filter=$('#leadStatusFilter')?.value||'',rows=state.leads.filter(l=>(!term||[l.name,l.organization,l.city,l.kind,l.email,l.instagram].join(' ').toLowerCase().includes(term))&&(!filter||l.status===filter));
   $('#leadTable').innerHTML='<div class="lead-row header"><span>Contact / structure</span><span>Type</span><span>Statut</span><span>Prochaine action</span><span></span></div>'+rows.map(l=>'<div class="lead-row"><button data-lead="'+l.id+'"><strong>'+esc(l.organization||l.name||'Contact')+'</strong><span>'+esc(l.name||l.city||'')+'</span></button><span>'+esc(l.kind||'Contact')+'</span><span class="status-chip">'+esc(leadStatusLabel(l.status))+'</span><span>'+esc(l.next_action||'—')+(l.next_date?'<br>'+esc(l.next_date):'')+'</span><button data-lead="'+l.id+'">›</button></div>').join('');
   $$('[data-lead]').forEach(b=>b.onclick=()=>selectLead(Number(b.dataset.lead)));
