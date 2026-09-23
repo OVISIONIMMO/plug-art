@@ -8,14 +8,14 @@ import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='114.0'
+app.version='115.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='114.20260923.1'
+VERSION='115.20260923.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -240,8 +240,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'114.0',
-      'X-Plug-Art-UI':'plug-art-v114-fast-premium-workspace'
+      'X-Plug-Art-Version':'115.0',
+      'X-Plug-Art-UI':'plug-art-v115-instagram-studio'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -1670,13 +1670,14 @@ def builder_restore_v90(version_id:int):
 @app.get('/api/v112/status')
 @app.get('/api/v113/status')
 @app.get('/api/v114/status')
+@app.get('/api/v115/status')
 def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'114.0',
-      'ui':'plug-art-v114-fast-premium-workspace',
-      'reference_direction':'V114 PLUG ART: premium modular mobile workspace with intent-based PLUGY prewarming, ZIP carousel exports, local draft recovery and V113 PBR animation system',
+      'version':'115.0',
+      'ui':'plug-art-v115-instagram-studio',
+      'reference_direction':'V115 PLUG ART: premium modular mobile workspace with rendered-slide ZIP exports, persistent PLUGY Instagram captions, manual Instagram carousel publishing, local draft recovery and premium animated PLUGY',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -1695,11 +1696,11 @@ def status_v90():
       'plugy_bytes':len(raw),
       'plugy_sha256':hashlib.sha256(raw).hexdigest() if raw else '',
       'plugy_animations':['Idle','SoftTurn','Think','Curious','Present','Bounce','Happy','Attentive','Wave','Dance','Blink','Listen','Speak','Charge','Travel'],
-      'studio':'XXL typography + multi-frame + text-only + PLUG ART art generation',
+      'studio':'Text + carousel + visual generation + rendered PNG/ZIP export + Instagram publishing',
       'layouts':['top','cover','left','right','band','collage','minimal'],
       'cuts':['none','diagonal','curve','wave'],
       'themes':['editorial','glass','impact','paper','night','color'],
       'background':'compact PLUG ART internal workspace with lightweight dashboard-first loading, modular operational data and integrated content studio'
     }
 
-print(f"PLUG_ART_V114_READY ui=internal_dashboard bureau=persistent prospection=crm open_call_workflow=on drafts=persistent realistic=on contextual_motion=on plugy=single_drawer instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V115_READY ui=internal_dashboard bureau=persistent prospection=crm open_call_workflow=on drafts=persistent realistic=on contextual_motion=on plugy=single_drawer instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
