@@ -1335,6 +1335,61 @@ def content_drafts_delete_v108(draft_id:int):
     return {'ok':True}
 
 
+# V112 lightweight dashboard bootstrap.
+@app.get('/api/v112/dashboard-bootstrap')
+def dashboard_bootstrap_v112():
+    db=core.conn()
+    try:
+        today=str(core.date.today())
+        def scalar(sql,p=()):
+            row=db.execute(sql,p).fetchone()
+            return row[0] if row else 0
+        stats={
+          'opportunities':scalar("select count(*) from opportunities where status in ('open','rolling')"),
+          'urgent':scalar("select count(*) from opportunities where deadline is not null and deadline>=? and deadline<=date(?, '+14 day')",(today,today)),
+          'artists':scalar("select count(*) from artists"),
+          'exhibitions':scalar("select count(*) from exhibitions where end>=?",(today,)),
+          'favorites':scalar("select count(*) from opportunities where favorite=1"),
+          'candidates':scalar("select count(*) from radar_candidates where state='new'")
+        }
+        fields="""id,title,city,country,deadline,fee,radar_score,score,favorite,source_url,
+                  summary,type,eligibility,status"""
+        priority=[dict(x) for x in db.execute(f"""select {fields} from opportunities
+          where status in ('open','rolling') and (
+            favorite=1 or id in (select opportunity_id from opportunity_workspace)
+            or (deadline is not null and deadline>=? and deadline<=date(?, '+14 day'))
+          )
+          order by favorite desc,
+                   case when deadline is null then 1 else 0 end,
+                   deadline,
+                   coalesce(radar_score,score,0) desc
+          limit 40""",(today,today)).fetchall()]
+        top=[dict(x) for x in db.execute(f"""select {fields} from opportunities
+          where status in ('open','rolling')
+          order by coalesce(radar_score,score,0) desc,
+                   case when deadline is null then 1 else 0 end,
+                   deadline
+          limit 12""").fetchall()]
+        seen=set();opps=[]
+        for row in priority+top:
+            oid=row.get('id')
+            if oid in seen:continue
+            seen.add(oid);opps.append(row)
+        return {
+          'version':'112-lite',
+          'generated_at':time.time(),
+          'stats':stats,
+          'opportunities':opps[:48],
+          'artists':[],
+          'events':[],
+          'map':[],
+          'radar':{},
+          'candidates':[]
+        }
+    finally:
+        db.close()
+
+
 # V90 Interface Lab: persistent design-system configuration and version history.
 _v90c=core.conn()
 _v90c.executescript("""
