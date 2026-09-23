@@ -738,7 +738,7 @@ async function createPackageForOpportunity(id){
 function renderBureau(){
   const term=clean($('#bureauSearch')?.value).toLowerCase(),rows=state.bureau.filter(n=>(!state.bureauFolderFilter||(n.folder||'Notes')===state.bureauFolderFilter)&&(!term||[n.title,n.body,n.folder,n.tags].join(' ').toLowerCase().includes(term)));
   $('#bureauList').innerHTML=rows.map(n=>'<button class="bureau-item '+(state.activeDoc===n.id?'active':'')+'" data-doc="'+n.id+'"><strong>'+(n.pinned?'★ ':'')+esc(n.title||'Sans titre')+'</strong><span>'+esc(n.folder||'Notes')+' · '+esc((n.updated_at||'').replace('T',' '))+'</span></button>').join('')||'<div class="empty">Aucun document.</div>';
-  $('[data-doc]').forEach(b=>b.onclick=()=>selectDoc(Number(b.dataset.doc)));renderBureauFolders();
+  $$('[data-doc]').forEach(b=>b.onclick=()=>selectDoc(Number(b.dataset.doc)));renderBureauFolders();
 }
 function clearDoc(){state.activeDoc=null;$('#bureauTitle').value='';$('#bureauBody').value='';$('#bureauFolder').value='Notes';$('#bureauTags').value='';$('#bureauPinned').checked=false;renderBureau();renderBureauSource(null)}
 function selectDoc(id){
@@ -1012,7 +1012,7 @@ async function initVoice(){
     if(last?.isFinal&&text.length>1){state.voice=false;askPlugy(text)}
     else if(last?.isFinal){state.voice=false;state.voiceReply=false;$('#plugyState span').textContent='Prêt';playMotion('Idle',true)}
   };
-  rec.onend=()=>{state.voice=false;if(!state.voiceReply){$('#plugyState span').textContent='Prêt';playMotion('Idle',true');resumeConversationListening(500)}};
+  rec.onend=()=>{state.voice=false;if(!state.voiceReply){$('#plugyState span').textContent='Prêt';playMotion('Idle',true);resumeConversationListening(500)}};
   rec.onerror=e=>{
     state.voice=false;state.voiceReply=false;
     const fatal=['not-allowed','service-not-allowed','audio-capture'].includes(e?.error);
