@@ -302,12 +302,24 @@ function sendCurrentBureauToCreation(){
   setTimeout(()=>{if($('#contentTitle'))$('#contentTitle').value=n.title||'';if($('#contentBrief'))$('#contentBrief').value=n.body||'';if(n.source_type==='opportunity'&&n.source_id&&$('#contentSource')){$('#contentSource').value=String(n.source_id);$('#contentSource').dispatchEvent(new Event('change'))}toast('Document chargé dans Création')},50);
 }
 $('#bureauNew')?.addEventListener('click',clearDoc);$('#bureauSearch')?.addEventListener('input',renderBureau);
+
+function ensureSaveStatus(){
+  if($('#workspaceSaveStatus'))return;
+  const top=$('.top-actions');if(!top)return;
+  const s=document.createElement('span');s.id='workspaceSaveStatus';s.className='save-status';s.textContent='Synchronisé';top.insertBefore(s,top.firstChild);
+  const st=document.createElement('style');st.textContent='.save-status{font-size:8px;color:#8c8f99;white-space:nowrap}.save-status.saving{color:#725ad1}.save-status.saved{color:#4e9d78}.save-status.error{color:#ca5a67}@media(max-width:820px){.save-status{display:none}}';document.head.appendChild(st);
+}
+function saveStatus(text,stateName=''){
+  ensureSaveStatus();const s=$('#workspaceSaveStatus');if(!s)return;s.textContent=text;s.className='save-status '+stateName;
+}
+
 async function saveBureau(silent=false){
+  saveStatus('Sauvegarde…','saving');
   const body={title:$('#bureauTitle').value||'Sans titre',body:$('#bureauBody').value,folder:$('#bureauFolder').value,tags:$('#bureauTags').value,pinned:$('#bureauPinned').checked?1:0};
   try{
     let n;if(state.activeDoc)n=await api('/api/v107/bureau/'+state.activeDoc,{method:'PATCH',body:JSON.stringify(body)});else n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify(body)});
-    const idx=state.bureau.findIndex(x=>x.id===n.id);if(idx>=0)state.bureau[idx]=n;else state.bureau.unshift(n);state.activeDoc=n.id;renderBureau();renderDashboard();if(!silent)toast('Document enregistré');return n;
-  }catch(e){if(!silent)toast('Erreur d’enregistrement')}
+    const idx=state.bureau.findIndex(x=>x.id===n.id);if(idx>=0)state.bureau[idx]=n;else state.bureau.unshift(n);state.activeDoc=n.id;renderBureau();renderDashboard();saveStatus('Enregistré','saved');if(!silent)toast('Document enregistré');return n;
+  }catch(e){saveStatus('Erreur de sauvegarde','error');if(!silent)toast('Erreur d’enregistrement')}
 }
 $('#bureauSave')?.addEventListener('click',()=>saveBureau(false));
 let bureauAutosaveTimer=0;
@@ -496,7 +508,7 @@ function installCreationModes(){
   $('#carouselFormat').onchange=e=>{state.carousel.format=e.target.value;renderCarousel()};
   ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
   $('#visualGenerate').onclick=generateVisual;$('#visualToBureau').onclick=visualToBureau;
-  setCreationMode('text');fillCreationSources();
+  setCreationMode('text');fillCreationSources();bindDraftAutosave();
 }
 
 function renderDraftPicker(){
@@ -508,13 +520,13 @@ function draftSnapshot(){
   if(state.creationMode==='visual')return{kind:'visual',title:'Visuel PLUG ART',source_opportunity_id:'',payload:{url:state.visual.url,prompt:$('#visualPrompt')?.value||state.visual.prompt||'',style:$('#visualStyle')?.value||'gallery',ratio:$('#visualRatio')?.value||'4:5'}};
   return{kind:'text',title:$('#contentTitle')?.value||$('#contentType')?.value||'Texte PLUG ART',source_opportunity_id:$('#contentSource')?.value||'',payload:{type:$('#contentType')?.value||'',objective:$('#contentObjective')?.value||'',brief:$('#contentBrief')?.value||'',body:$('#contentBody')?.value||''}};
 }
-async function saveDraft(){
-  const snap=draftSnapshot();
+async function saveDraft(silent=false){
+  const snap=draftSnapshot();saveStatus('Sauvegarde brouillon…','saving');
   try{
     let d;if(state.currentDraft)d=await api('/api/v108/drafts/'+state.currentDraft,{method:'PATCH',body:JSON.stringify(snap)});
     else d=await api('/api/v108/drafts',{method:'POST',body:JSON.stringify(snap)});
-    state.drafts=state.drafts.filter(x=>x.id!==d.id);state.drafts.unshift(d);state.currentDraft=d.id;renderDraftPicker();toast('Brouillon enregistré');
-  }catch{toast('Enregistrement du brouillon impossible')}
+    state.drafts=state.drafts.filter(x=>x.id!==d.id);state.drafts.unshift(d);state.currentDraft=d.id;renderDraftPicker();saveStatus('Brouillon enregistré','saved');if(!silent)toast('Brouillon enregistré');
+  }catch{saveStatus('Erreur brouillon','error');if(!silent)toast('Enregistrement du brouillon impossible')}
 }
 function loadDraft(id){
   const d=state.drafts.find(x=>Number(x.id)===Number(id));if(!d)return;state.currentDraft=d.id;setCreationMode(d.kind||'text');
@@ -527,6 +539,18 @@ function loadDraft(id){
 async function deleteDraft(){
   if(!state.currentDraft)return toast('Aucun brouillon sélectionné');
   try{await api('/api/v108/drafts/'+state.currentDraft,{method:'DELETE'});state.drafts=state.drafts.filter(x=>x.id!==state.currentDraft);state.currentDraft=null;renderDraftPicker();toast('Brouillon supprimé')}catch{toast('Suppression impossible')}
+}
+
+
+let draftAutosaveTimer=0;
+function scheduleDraftAutosave(){
+  if(!state.currentDraft)return;
+  clearTimeout(draftAutosaveTimer);
+  draftAutosaveTimer=setTimeout(()=>saveDraft(true),1600);
+}
+function bindDraftAutosave(){
+  ['contentTitle','contentObjective','contentBrief','contentBody','carouselBrief','slideKicker','slideTitle','slideBody','slideCta','visualPrompt'].forEach(id=>$('#'+id)?.addEventListener('input',scheduleDraftAutosave));
+  ['contentType','contentSource','carouselSource','carouselFormat','visualStyle','visualRatio'].forEach(id=>$('#'+id)?.addEventListener('change',scheduleDraftAutosave));
 }
 
 function setCreationMode(mode){
@@ -559,7 +583,7 @@ async function generateCarousel(){
   const prompt='Crée un carrousel PLUG ART de '+count+' slides. N’invente aucun fait. Réponds uniquement en JSON valide : {"slides":[{"kicker":"","title":"","body":"","cta":"","image_prompt":""}]}. Chaque slide doit être concise, éditoriale et utile. Faits : '+JSON.stringify(facts);
   try{const r=await api('/api/v32/plugy',{method:'POST',body:JSON.stringify({message:prompt,page:'content',mode:'deep'})});const parsed=parseLooseJSON(r.answer);if(!Array.isArray(parsed.slides)||!parsed.slides.length)throw new Error('Aucune slide');state.carousel.slides=parsed.slides.slice(0,count).map(x=>({kicker:x.kicker||'PLUG ART',title:x.title||'',body:x.body||'',cta:x.cta||'Découvrir →',image_prompt:x.image_prompt||'',image:''}));}
   catch{state.carousel.slides=fallbackCarousel(count,source,brief)}
-  state.carousel.active=0;state.carousel.format=$('#carouselFormat').value||'4:5';renderCarousel();if(source)persistWorkflow(source.id,{workflow_status:'drafting',next_action:'Finaliser le carrousel'}).catch(()=>{});playMotion('Happy');btn.disabled=false;btn.textContent=old;
+  state.carousel.active=0;state.carousel.format=$('#carouselFormat').value||'4:5';renderCarousel();scheduleDraftAutosave();if(source)persistWorkflow(source.id,{workflow_status:'drafting',next_action:'Finaliser le carrousel'}).catch(()=>{});playMotion('Happy');btn.disabled=false;btn.textContent=old;
 }
 function renderCarousel(){
   const slides=state.carousel.slides,s=slides[state.carousel.active]||{};$('#carouselCounter').textContent=slides.length+' slide'+(slides.length>1?'s':'');
@@ -577,7 +601,7 @@ async function generateCarouselImage(index){
   const s=state.carousel.slides[index];if(!s)return toast('Génère d’abord les slides');
   const source=opportunityById($('#carouselSource').value),ratio=state.carousel.format||'4:5',btn=$('#carouselGenerateImage'),old=btn.textContent;btn.disabled=true;btn.textContent='Image…';
   const prompt=clean((s.image_prompt||'Illustration éditoriale contemporaine pour '+s.title+'. '+s.body)+' Univers PLUG ART, art contemporain émergent, galerie, matière, photographie ou peinture selon le sujet. Aucun texte lisible, aucun logo, aucun watermark.'+(source?' Contexte : '+source.title+'.':''));
-  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt,style:'gallery',ratio,quality:'medium'})});if(r.url){s.image=r.url;renderCarousel();toast('Image générée')}}catch(e){toast('Génération image indisponible')}finally{btn.disabled=false;btn.textContent=old}
+  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt,style:'gallery',ratio,quality:'medium'})});if(r.url){s.image=r.url;renderCarousel();scheduleDraftAutosave();toast('Image générée')}}catch(e){toast('Génération image indisponible')}finally{btn.disabled=false;btn.textContent=old}
 }
 async function generateAllCarouselImages(){
   if(!state.carousel.slides.length)return toast('Génère d’abord les slides');const b=$('#carouselGenerateAll'),old=b.textContent;b.disabled=true;
@@ -591,7 +615,7 @@ async function carouselToBureau(){
 }
 async function generateVisual(){
   const prompt=clean($('#visualPrompt').value);if(!prompt)return toast('Ajoute un prompt');const b=$('#visualGenerate'),old=b.textContent;b.disabled=true;b.textContent='Génération…';playMotion('Think',true);
-  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt:prompt+' Aucun texte lisible, aucun logo, aucun watermark.',style:$('#visualStyle').value||'gallery',ratio:$('#visualRatio').value||'4:5',quality:'medium'})});if(r.url){state.visual={url:r.url,prompt};$('#visualImage').style.backgroundImage='url("'+r.url.replace(/"/g,'%22')+'")';$('#visualImage').innerHTML='';playMotion('Happy')}}catch{toast('Génération image indisponible')}finally{b.disabled=false;b.textContent=old}
+  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt:prompt+' Aucun texte lisible, aucun logo, aucun watermark.',style:$('#visualStyle').value||'gallery',ratio:$('#visualRatio').value||'4:5',quality:'medium'})});if(r.url){state.visual={url:r.url,prompt};scheduleDraftAutosave();$('#visualImage').style.backgroundImage='url("'+r.url.replace(/"/g,'%22')+'")';$('#visualImage').innerHTML='';playMotion('Happy')}}catch{toast('Génération image indisponible')}finally{b.disabled=false;b.textContent=old}
 }
 async function visualToBureau(){
   if(!state.visual.url)return toast('Génère d’abord un visuel');try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:'Visuel PLUG ART',body:'Prompt : '+state.visual.prompt+'\n\nVisuel : '+state.visual.url,folder:'Contenus',tags:'visuel, image, PLUG ART'})});state.bureau.unshift(n);toast('Visuel envoyé au Bureau')}catch{toast('Enregistrement impossible')}
@@ -685,6 +709,7 @@ function handleLocalPlugy(message){
   if(/(lance|actualise|démarre|demarre).*(radar|recherche)/.test(m)){route('radar');setTimeout(()=>$('#radarRun')?.click(),30);return 'Je lance le Radar.'}
   return '';
 }
+ensureSaveStatus();
 installAgenda();
 installOpenWorkflowFilters();
 adaptDashboardForDrafts();
