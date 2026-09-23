@@ -348,3 +348,21 @@ body[data-plugy-motion="wave"] .plugy-guide{
   .hero-model{transform:none!important}
   body[data-plugy-motion] .plugy-guide{transform:none!important}
 }
+
+
+/* PLUGY V106.2 · unified realistic presence */
+.plugy-guide-visual .realistic-model,
+.voice-ring .realistic-model{
+  filter:drop-shadow(0 24px 34px rgba(33,37,70,.18)) drop-shadow(0 4px 18px rgba(104,82,255,.10));
+}
+body[data-plugy-motion="think"] .realistic-model{
+  filter:drop-shadow(0 30px 44px rgba(112,82,255,.30)) drop-shadow(0 0 18px rgba(103,88,255,.14));
+}
+body[data-plugy-motion="present"] .realistic-model{
+  filter:drop-shadow(0 30px 44px rgba(65,205,224,.23)) drop-shadow(0 0 18px rgba(65,205,224,.10));
+}
+body[data-plugy-motion="happy"] .realistic-model{
+  filter:drop-shadow(0 30px 44px rgba(242,91,169,.20)) drop-shadow(0 0 18px rgba(242,91,169,.08));
+}
+.plugy-guide-visual .realistic-model{transform:scale(1.08)}
+.voice-ring .realistic-model{transform:scale(1.04)}
