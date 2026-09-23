@@ -13,6 +13,7 @@ const viewMeta={
  creation:['CRÉATION','Studio de contenu','Present'],
  bureau:['ÉCRITURE & DOCUMENTS','Bureau','Think'],
  prospection:['CONTACTS & PROSPECTION','Suivi des démarches','Attentive'],
+ agenda:['AGENDA','Deadlines & relances','Attentive'],
  network:['RÉSEAU','Artistes','Happy'],
  map:['CARTE','Opportunités & expositions','SoftTurn']
 };
@@ -23,6 +24,7 @@ const contexts={
  creation:{label:'Création',suggestions:['Améliore ce texte','Fais une version plus concise','Transforme en carrousel']},
  bureau:{label:'Bureau',suggestions:['Réécris ce brouillon','Résume ce document','Transforme en candidature']},
  prospection:{label:'Prospection',suggestions:['Prépare une relance','Résume ce contact','Propose la prochaine action']},
+ agenda:{label:'Agenda',suggestions:['Montre les urgences','Quelles deadlines arrivent ?','Quelles relances sont dues ?']},
  network:{label:'Artistes',suggestions:['Analyse ce profil','Propose des opportunités','Prépare une bio']},
  map:{label:'Carte',suggestions:['Trouve autour de Paris','Compare les villes','Montre les opportunités proches']}
 };
@@ -321,7 +323,7 @@ async function loadAll(){
     ]);
     state.bootstrap=boot;state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
     populateCountry($('#radarCountry'),boot.opportunities||[]);populateCountry($('#openCountry'),boot.opportunities||[]);
-    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();fillCreationSources();renderDraftPicker();renderBureau();renderLeads();renderArtists();renderMap();
+    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();fillCreationSources();renderDraftPicker();renderBureau();renderLeads();renderAgenda();renderArtists();renderMap();
     toast('Workspace synchronisé');
   }catch(e){console.warn('[PLUG ART V107]',e);toast('Certaines données sont indisponibles')}
 }
@@ -332,6 +334,33 @@ async function loadAll(){
 
 
 /* V108 · compact creation studio */
+
+function installAgenda(){
+  if($('#view-agenda'))return;
+  const navGroups=$$('.nav-group');const organize=navGroups[1]||navGroups[0];const prospect=organize?.querySelector('[data-route="prospection"]');
+  if(prospect){
+    const b=document.createElement('button');b.className='nav-item';b.dataset.route='agenda';b.innerHTML='<b>◷</b><span>Agenda</span>';prospect.insertAdjacentElement('afterend',b);b.onclick=()=>route('agenda');
+  }
+  const section=document.createElement('section');section.className='view';section.id='view-agenda';
+  section.innerHTML='<div class="page-toolbar"><div><small>AGENDA</small><h2>Deadlines & relances</h2><p>Les prochaines actions importantes dans une seule timeline.</p></div><div class="toolbar-actions"><select id="agendaFilter"><option value="">Tout</option><option value="call">Open Calls</option><option value="crm">Prospection</option></select><button class="secondary-btn" id="agendaRefresh">Actualiser</button></div></div><div class="agenda-board panel"><div id="agendaList"></div></div>';
+  $('.workspace').appendChild(section);
+  $('#agendaFilter').onchange=renderAgenda;$('#agendaRefresh').onclick=loadAll;
+  const st=document.createElement('style');st.textContent='.agenda-board{min-height:620px}.agenda-day{display:grid;grid-template-columns:92px 1fr;gap:16px;padding:14px 0;border-bottom:1px solid #eef0f3}.agenda-day:last-child{border-bottom:0}.agenda-date strong,.agenda-date span{display:block}.agenda-date strong{font-size:12px}.agenda-date span{font-size:9px;color:#9295a0;margin-top:3px}.agenda-items{display:grid;gap:7px}.agenda-item{border:1px solid #e7e8ed;background:#fafbfc;border-radius:14px;padding:10px 12px;display:grid;grid-template-columns:8px 1fr auto;gap:9px;align-items:center;text-align:left}.agenda-item i{width:8px;height:8px;border-radius:50%;background:#7657ff}.agenda-item.crm i{background:#56cfd8}.agenda-item.urgent{border-color:#efc8ce;background:#fff8f9}.agenda-item.urgent i{background:#e95f71}.agenda-item strong,.agenda-item span{display:block}.agenda-item strong{font-size:10px}.agenda-item span{font-size:9px;color:#8c8f9a;margin-top:3px}.agenda-item b{font-size:8px;color:#767a86;text-transform:uppercase}@media(max-width:700px){.agenda-day{grid-template-columns:1fr}.agenda-date{display:flex;gap:7px;align-items:baseline}}';document.head.appendChild(st);
+}
+function agendaEntries(){
+  const out=[],seen=new Set(),today=new Date().toISOString().slice(0,10),limit=new Date(Date.now()+45*86400000).toISOString().slice(0,10);
+  (state.bootstrap?.opportunities||[]).forEach(o=>{if(o.deadline&&o.deadline>=today&&o.deadline<=limit){const f=workflowFor(o.id);out.push({date:o.deadline,kind:'call',id:o.id,title:o.title,sub:f?.next_action||workflowLabel(f?.workflow_status||'saved'),urgent:o.deadline<=new Date(Date.now()+5*86400000).toISOString().slice(0,10)});seen.add('call-'+o.id+'-'+o.deadline)}});
+  state.workflow.forEach(w=>{if(w.next_date&&w.next_date>=today&&w.next_date<=limit&&!seen.has('call-'+w.opportunity_id+'-'+w.next_date)){const o=opportunityById(w.opportunity_id);if(o)out.push({date:w.next_date,kind:'call',id:o.id,title:o.title,sub:w.next_action||workflowLabel(w.workflow_status),urgent:w.next_date<=new Date(Date.now()+3*86400000).toISOString().slice(0,10)})}});
+  state.leads.forEach(l=>{if(l.next_date&&l.next_date>=today&&l.next_date<=limit)out.push({date:l.next_date,kind:'crm',id:l.id,title:l.organization||l.name||'Contact',sub:l.next_action||'Relance',urgent:l.next_date<=new Date(Date.now()+2*86400000).toISOString().slice(0,10)})});
+  return out.sort((a,b)=>a.date.localeCompare(b.date));
+}
+function renderAgenda(){
+  const box=$('#agendaList');if(!box)return;const filter=$('#agendaFilter')?.value||'',rows=agendaEntries().filter(x=>!filter||x.kind===filter),groups={};
+  rows.forEach(x=>(groups[x.date]||(groups[x.date]=[])).push(x));
+  box.innerHTML=Object.entries(groups).map(([date,items])=>{const d=new Date(date+'T12:00:00');return '<div class="agenda-day"><div class="agenda-date"><strong>'+d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+'</strong><span>'+d.toLocaleDateString('fr-FR',{weekday:'long'})+'</span></div><div class="agenda-items">'+items.map((x,i)=>'<button class="agenda-item '+x.kind+(x.urgent?' urgent':'')+'" data-agenda="'+esc(x.kind)+'-'+esc(x.id)+'"><i></i><span><strong>'+esc(x.title)+'</strong><span>'+esc(x.sub)+'</span></span><b>'+(x.kind==='crm'?'Prospection':'Open Call')+'</b></button>').join('')+'</div></div>'}).join('')||'<div class="empty">Aucune échéance dans les 45 prochains jours.</div>';
+  $$('[data-agenda]',box).forEach(b=>b.onclick=()=>{const [kind,id]=b.dataset.agenda.split('-');if(kind==='crm'){route('prospection');setTimeout(()=>selectLead(Number(id)),30)}else openOpportunity(Number(id))});
+}
+
 function installCreationModes(){
   const view=$('#view-creation');if(!view||$('#creationModeBar'))return;
   const toolbar=view.querySelector('.page-toolbar'),textPanel=view.querySelector('.creation-layout');
@@ -531,6 +560,7 @@ function handleLocalPlugy(message){
   if(/(ouvre|va|aller|affiche).*(open ?calls?|appels?)/.test(m))return go('opencalls','J’ouvre les Open Calls.');
   if(/(ouvre|va|aller|affiche).*(bureau|notes?)/.test(m))return go('bureau','J’ouvre le Bureau.');
   if(/(ouvre|va|aller|affiche).*(prospection|contacts?|crm)/.test(m))return go('prospection','J’ouvre Contacts & Prospection.');
+  if(/(ouvre|va|aller|affiche).*(agenda|calendrier|deadlines?|échéances?)/.test(m))return go('agenda','J’ouvre l’Agenda.');
   if(/(ouvre|va|aller|affiche).*(création|creation|studio|contenu)/.test(m))return go('creation','J’ouvre le Studio de contenu.');
   if(/(ouvre|va|aller|affiche).*(carte|map)/.test(m))return go('map','J’ouvre la Carte.');
   if(/(nouveau|crée|cree).*(document|note)/.test(m)){route('bureau');clearDoc();return 'Nouveau document prêt dans le Bureau.'}
@@ -538,6 +568,7 @@ function handleLocalPlugy(message){
   if(/(lance|actualise|démarre|demarre).*(radar|recherche)/.test(m)){route('radar');setTimeout(()=>$('#radarRun')?.click(),30);return 'Je lance le Radar.'}
   return '';
 }
+installAgenda();
 installCreationModes();
 ensureBureauBridge();
 injectOperationalUI();
