@@ -248,7 +248,10 @@ def bootstrap_v102():
           'artists':scalar("select count(*) from artists"),
           'exhibitions':scalar("select count(*) from exhibitions where end>=?",(today,)),
           'favorites':scalar("select count(*) from opportunities where favorite=1"),
-          'candidates':scalar("select count(*) from radar_candidates where state='new'")
+          'candidates':scalar("select count(*) from radar_candidates where state='new'"),
+          'drafts':scalar("select count(*) from content_drafts"),
+          'contacts':scalar("select count(*) from crm_leads"),
+          'bureau':scalar("select count(*) from bureau_documents")
         }
         opportunities=many("select * from opportunities where status in ('open','rolling') order by coalesce(radar_score,score,0) desc,case when deadline is null then 1 else 0 end,deadline")
         last=db.execute('select * from radar_runs order by id desc limit 1').fetchone()
@@ -1375,11 +1378,30 @@ def dashboard_bootstrap_v112():
             oid=row.get('id')
             if oid in seen:continue
             seen.add(oid);opps.append(row)
+        bureau=[dict(x) for x in db.execute("""select id,title,folder,tags,pinned,source_type,source_id,updated_at
+                                               from bureau_documents
+                                               order by pinned desc,updated_at desc,id desc limit 6""").fetchall()]
+        leads=[dict(x) for x in db.execute("""select id,name,organization,kind,status,city,country,next_action,next_date,updated_at
+                                              from crm_leads
+                                              where coalesce(status,'')!='closed'
+                                              order by case when next_date is null or next_date='' then 1 else 0 end,
+                                                       next_date,updated_at desc,id desc limit 8""").fetchall()]
+        workflow=[dict(x) for x in db.execute("""select opportunity_id,workflow_status,notes,next_action,next_date,created_at,updated_at
+                                                 from opportunity_workspace
+                                                 where workflow_status!='closed'
+                                                 order by case when next_date is null or next_date='' then 1 else 0 end,
+                                                          next_date,updated_at desc limit 30""").fetchall()]
+        drafts=[dict(x) for x in db.execute("""select id,kind,title,source_opportunity_id,created_at,updated_at
+                                               from content_drafts order by updated_at desc,id desc limit 8""").fetchall()]
         return {
           'version':'112-lite',
           'generated_at':time.time(),
           'stats':stats,
           'opportunities':opps[:48],
+          'bureau':bureau,
+          'leads':leads,
+          'workflow':workflow,
+          'drafts':drafts,
           'artists':[],
           'events':[],
           'map':[],
