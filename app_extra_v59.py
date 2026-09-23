@@ -8,14 +8,14 @@ import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='105.0'
+app.version='105.2'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugar_v105.html'
 GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='105.20260923.2'
+VERSION='105.20260923.3'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -31,7 +31,7 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'105.0',
+      'X-Plug-Art-Version':'105.2',
       'X-Plug-Art-UI':'plugar-v105-free-flow'
     }
     if request.headers.get('if-none-match')==etag:
