@@ -2,7 +2,7 @@ from pathlib import Path
 from fastapi import Request, HTTPException
 from fastapi.responses import HTMLResponse, Response, RedirectResponse, FileResponse
 from urllib.parse import urljoin, urlencode
-import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64,hmac,math,struct
+import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64,hmac,math,struct,io,zipfile
 import app as core
 import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
@@ -1458,6 +1458,58 @@ def dashboard_bootstrap_v112():
     finally:
         db.close()
 
+
+# V113 exported content: batch ZIP + public rendered slide storage.
+_V113_GENERATED_DIR=Path(os.getenv('PLUGART_GENERATED_DIR',str(Path(os.getenv('PLUGART_DB','/data/plugart.db')).parent/'generated-content')))
+_V113_GENERATED_DIR.mkdir(parents=True,exist_ok=True)
+
+def _v113_decode_png(data_url:str):
+    raw=str(data_url or '')
+    if ',' in raw and raw.lower().startswith('data:image/'):
+        raw=raw.split(',',1)[1]
+    try:data=base64.b64decode(raw,validate=True)
+    except Exception:raise HTTPException(400,'Image export invalide')
+    if not data or len(data)>9_000_000:raise HTTPException(413,'Image export trop volumineuse')
+    if data[:8]!=b'\x89PNG\r\n\x1a\n':raise HTTPException(400,'Seuls les exports PNG sont acceptés')
+    return data
+
+def _v113_safe_name(name:str,index:int):
+    name=re.sub(r'[^a-zA-Z0-9._-]+','-',str(name or '')).strip('-._')[:100]
+    return name if name.lower().endswith('.png') else ((name or f'slide-{index:02d}')+'.png')
+
+@app.post('/api/v113/exports/carousel/zip')
+def export_carousel_zip_v113(body:dict):
+    items=(body or {}).get('items') or []
+    if not isinstance(items,list) or not items:raise HTTPException(400,'Aucune slide à exporter')
+    if len(items)>10:raise HTTPException(400,'Maximum 10 slides par export')
+    memory=io.BytesIO()
+    with zipfile.ZipFile(memory,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as z:
+        for idx,item in enumerate(items,1):
+            if not isinstance(item,dict):continue
+            data=_v113_decode_png(item.get('data_url') or '')
+            z.writestr(_v113_safe_name(item.get('filename'),idx),data)
+    payload=memory.getvalue()
+    if not payload:raise HTTPException(400,'Export vide')
+    base=re.sub(r'[^a-zA-Z0-9._-]+','-',str((body or {}).get('title') or 'plug-art-carousel')).strip('-._')[:80] or 'plug-art-carousel'
+    return Response(content=payload,media_type='application/zip',headers={
+      'Content-Disposition':f'attachment; filename="{base}.zip"',
+      'Cache-Control':'no-store'
+    })
+
+@app.post('/api/v113/exports/carousel/public')
+def export_carousel_public_v113(body:dict):
+    items=(body or {}).get('items') or []
+    if not isinstance(items,list) or not items:raise HTTPException(400,'Aucune slide à enregistrer')
+    if len(items)>10:raise HTTPException(400,'Maximum 10 slides')
+    urls=[]
+    for idx,item in enumerate(items,1):
+        if not isinstance(item,dict):continue
+        data=_v113_decode_png(item.get('data_url') or '')
+        token=hashlib.sha256(data+str(time.time_ns()).encode()+str(idx).encode()).hexdigest()[:24]
+        name=f'plugartv32_{token}.png'
+        (_V113_GENERATED_DIR/name).write_bytes(data)
+        urls.append(f'/api/v32/content/generated/{name}')
+    return {'ok':True,'urls':urls,'count':len(urls)}
 
 # V90 Interface Lab: persistent design-system configuration and version history.
 _v90c=core.conn()
