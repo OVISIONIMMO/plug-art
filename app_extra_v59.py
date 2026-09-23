@@ -15,7 +15,7 @@ GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='119.20260923.2'
+VERSION='119.20260923.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -1274,6 +1274,229 @@ def bureau_delete_v107(doc_id:int):
         raise HTTPException(404,'Document introuvable')
     return {'ok':True}
 
+# V120 Bureau: reusable templates + application packages.
+_v120b=core.conn()
+_v120b.executescript("""
+CREATE TABLE IF NOT EXISTS bureau_templates(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT DEFAULT '',
+  category TEXT DEFAULT 'Général',
+  body TEXT DEFAULT '',
+  tags TEXT DEFAULT '',
+  built_in INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_bureau_templates_category ON bureau_templates(category,name);
+
+CREATE TABLE IF NOT EXISTS application_packages(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT DEFAULT '',
+  opportunity_id TEXT DEFAULT '',
+  status TEXT DEFAULT 'preparing',
+  folder TEXT DEFAULT 'Candidatures',
+  checklist_json TEXT DEFAULT '{}',
+  document_ids_json TEXT DEFAULT '[]',
+  notes TEXT DEFAULT '',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_application_packages_updated ON application_packages(updated_at DESC,id DESC);
+""")
+if not _v120b.execute("select count(*) from bureau_templates").fetchone()[0]:
+    now=_now_v85()
+    seed=[
+      ('Lettre de candidature','Candidature',
+       "Objet : Candidature — {{OPEN_CALL}}\n\nBonjour,\n\nJe souhaite proposer ma candidature pour {{OPEN_CALL}}.\n\n[Présente ici le projet, la démarche et pourquoi cette opportunité est pertinente.]\n\n[Ajoute les informations demandées par l’appel.]\n\nMerci pour votre attention.\n\nBien cordialement,",
+       'candidature, lettre',1,now,now),
+      ('Bio courte','Artiste',
+       "[Nom d’artiste / nom]\n\n[80 à 120 mots : pratique, médiums, démarche, repères d’exposition et territoire.]",
+       'bio, artiste',1,now,now),
+      ('Note artistique','Artiste',
+       "[Titre / série]\n\n[Intention artistique]\n\n[Processus, matière, technique]\n\n[Relation au lieu / au public / au thème]\n\n[Format et besoins éventuels]",
+       'note artistique, démarche',1,now,now),
+      ('Email de candidature','Candidature',
+       "Bonjour,\n\nJe vous contacte au sujet de {{OPEN_CALL}}. Vous trouverez ma candidature et les éléments demandés en pièces jointes / via le lien indiqué.\n\n[Phrase courte de contexte.]\n\nMerci pour votre attention.\n\nBien cordialement,",
+       'email, candidature',1,now,now),
+      ('Relance candidature','Candidature',
+       "Bonjour,\n\nJe me permets de revenir vers vous concernant ma candidature à {{OPEN_CALL}}, envoyée précédemment.\n\nJe reste disponible si vous avez besoin d’un complément d’information.\n\nMerci par avance pour votre retour.\n\nBien cordialement,",
+       'relance, candidature',1,now,now),
+      ('Légende Open Call','Contenu',
+       "{{OPEN_CALL}}\n\n{{RESUME}}\n\nDeadline : {{DEADLINE}}\n\nCommente PLUG 🔌 pour être branché et recevoir le lien de candidature.",
+       'instagram, open call',1,now,now)
+    ]
+    _v120b.executemany("""insert into bureau_templates
+      (name,category,body,tags,built_in,created_at,updated_at) values(?,?,?,?,?,?,?)""",seed)
+_v120b.commit();_v120b.close()
+
+def _v120_json(raw,fallback):
+    try:return json.loads(raw or '')
+    except Exception:return fallback
+
+def _v120_package_out(row):
+    if not row:return None
+    out=dict(row)
+    out['checklist']=_v120_json(out.pop('checklist_json','{}'),{})
+    out['document_ids']=_v120_json(out.pop('document_ids_json','[]'),[])
+    oid=str(out.get('opportunity_id') or '')
+    out['opportunity']=core.one("""select id,title,city,country,deadline,fee,source_url,summary,radar_reason
+                                   from opportunities where id=?""",(oid,)) if oid else None
+    return out
+
+def _v120_default_checklist():
+    return {
+      'source_checked':False,
+      'letter':False,
+      'bio':False,
+      'artist_statement':False,
+      'portfolio':False,
+      'visuals':False,
+      'links':False,
+      'submitted':False
+    }
+
+def _v120_render_template(text,opp):
+    opp=opp or {}
+    values={
+      '{{OPEN_CALL}}':str(opp.get('title') or '[Open Call]'),
+      '{{VILLE}}':str(opp.get('city') or ''),
+      '{{PAYS}}':str(opp.get('country') or ''),
+      '{{DEADLINE}}':str(opp.get('deadline') or '[deadline]'),
+      '{{FRAIS}}':str(opp.get('fee') or ''),
+      '{{RESUME}}':str(opp.get('summary') or opp.get('radar_reason') or '[résumé]')
+    }
+    out=str(text or '')
+    for k,v in values.items():out=out.replace(k,v)
+    return out
+
+@app.get('/api/v120/bureau/templates')
+def bureau_templates_list_v120():
+    return core.rows("""select * from bureau_templates
+                        order by built_in desc,category,name,id""")
+
+@app.post('/api/v120/bureau/templates')
+def bureau_templates_create_v120(body:dict):
+    body=body or {};now=_now_v85()
+    name=str(body.get('name') or 'Nouveau modèle').strip()[:160]
+    category=str(body.get('category') or 'Général').strip()[:80]
+    text=str(body.get('body') or '')
+    tags=str(body.get('tags') or '').strip()[:500]
+    c=core.conn();cur=c.execute("""insert into bureau_templates
+      (name,category,body,tags,built_in,created_at,updated_at) values(?,?,?,?,0,?,?)""",
+      (name,category,text,tags,now,now));c.commit();tid=cur.lastrowid;c.close()
+    return core.one('select * from bureau_templates where id=?',(tid,))
+
+@app.patch('/api/v120/bureau/templates/{template_id}')
+def bureau_templates_update_v120(template_id:int,body:dict):
+    row=core.one('select * from bureau_templates where id=?',(template_id,))
+    if not row:raise HTTPException(404,'Modèle introuvable')
+    body=body or {};data={}
+    for key,limit in (('name',160),('category',80),('tags',500)):
+        if key in body:data[key]=str(body.get(key) or '').strip()[:limit]
+    if 'body' in body:data['body']=str(body.get('body') or '')
+    if not data:return row
+    data['updated_at']=_now_v85();sets=','.join(f"{k}=?" for k in data)
+    c=core.conn();c.execute(f"update bureau_templates set {sets} where id=?",(*data.values(),template_id));c.commit();c.close()
+    return core.one('select * from bureau_templates where id=?',(template_id,))
+
+@app.delete('/api/v120/bureau/templates/{template_id}')
+def bureau_templates_delete_v120(template_id:int):
+    row=core.one('select * from bureau_templates where id=?',(template_id,))
+    if not row:raise HTTPException(404,'Modèle introuvable')
+    if int(row.get('built_in') or 0):raise HTTPException(400,'Modèle système non supprimable')
+    c=core.conn();c.execute('delete from bureau_templates where id=?',(template_id,));c.commit();c.close()
+    return {'ok':True}
+
+@app.get('/api/v120/bureau/bootstrap')
+def bureau_bootstrap_v120():
+    return {
+      'templates':core.rows("""select * from bureau_templates order by built_in desc,category,name,id"""),
+      'packages':[_v120_package_out(x) for x in core.rows(
+        'select * from application_packages order by updated_at desc,id desc')],
+      'opportunities':core.rows("""select id,title,city,country,deadline,fee
+                                   from opportunities
+                                   where status in ('open','rolling')
+                                   order by case when deadline is null then 1 else 0 end,deadline,
+                                            coalesce(radar_score,score,0) desc limit 120""")
+    }
+
+@app.get('/api/v120/bureau/packages')
+def bureau_packages_list_v120():
+    return [_v120_package_out(x) for x in core.rows(
+      'select * from application_packages order by updated_at desc,id desc')]
+
+@app.post('/api/v120/bureau/packages')
+def bureau_packages_create_v120(body:dict):
+    body=body or {};oid=str(body.get('opportunity_id') or '').strip()[:120]
+    opp=core.one('select id,title from opportunities where id=?',(oid,)) if oid else None
+    title=str(body.get('title') or (('Candidature · '+str(opp.get('title'))) if opp else 'Nouveau dossier')).strip()[:240]
+    status=str(body.get('status') or 'preparing').strip()[:40]
+    checklist=body.get('checklist') if isinstance(body.get('checklist'),dict) else _v120_default_checklist()
+    notes=str(body.get('notes') or '')
+    now=_now_v85()
+    c=core.conn();cur=c.execute("""insert into application_packages
+      (title,opportunity_id,status,folder,checklist_json,document_ids_json,notes,created_at,updated_at)
+      values(?,?,?,?,?,?,?,?,?)""",
+      (title,oid,status,'Candidatures',json.dumps(checklist,ensure_ascii=False),'[]',notes,now,now))
+    c.commit();pid=cur.lastrowid;c.close()
+    return _v120_package_out(core.one('select * from application_packages where id=?',(pid,)))
+
+@app.post('/api/v120/bureau/packages/from-opportunity/{opportunity_id}')
+def bureau_package_from_opportunity_v120(opportunity_id:int):
+    existing=core.one("""select * from application_packages where opportunity_id=?
+                         and status not in ('closed','archived') order by id desc limit 1""",(str(opportunity_id),))
+    if existing:return _v120_package_out(existing)
+    opp=core.one('select id,title from opportunities where id=?',(opportunity_id,))
+    if not opp:raise HTTPException(404,'Open Call introuvable')
+    return bureau_packages_create_v120({'opportunity_id':str(opportunity_id),'title':'Candidature · '+str(opp.get('title') or 'Open Call')})
+
+@app.patch('/api/v120/bureau/packages/{package_id}')
+def bureau_packages_update_v120(package_id:int,body:dict):
+    row=core.one('select * from application_packages where id=?',(package_id,))
+    if not row:raise HTTPException(404,'Dossier introuvable')
+    body=body or {};data={}
+    for key,limit in (('title',240),('opportunity_id',120),('status',40),('folder',80)):
+        if key in body:data[key]=str(body.get(key) or '').strip()[:limit]
+    if 'notes' in body:data['notes']=str(body.get('notes') or '')
+    if isinstance(body.get('checklist'),dict):data['checklist_json']=json.dumps(body['checklist'],ensure_ascii=False)
+    if isinstance(body.get('document_ids'),list):data['document_ids_json']=json.dumps([int(x) for x in body['document_ids'] if str(x).isdigit()][:50])
+    if not data:return _v120_package_out(row)
+    data['updated_at']=_now_v85();sets=','.join(f"{k}=?" for k in data)
+    c=core.conn();c.execute(f"update application_packages set {sets} where id=?",(*data.values(),package_id));c.commit();c.close()
+    return _v120_package_out(core.one('select * from application_packages where id=?',(package_id,)))
+
+@app.delete('/api/v120/bureau/packages/{package_id}')
+def bureau_packages_delete_v120(package_id:int):
+    c=core.conn();cur=c.execute('delete from application_packages where id=?',(package_id,));c.commit();c.close()
+    if not cur.rowcount:raise HTTPException(404,'Dossier introuvable')
+    return {'ok':True}
+
+@app.post('/api/v120/bureau/packages/{package_id}/document')
+def bureau_package_document_v120(package_id:int,body:dict):
+    pkg=core.one('select * from application_packages where id=?',(package_id,))
+    if not pkg:raise HTTPException(404,'Dossier introuvable')
+    body=body or {};template_id=int(body.get('template_id') or 0)
+    template=core.one('select * from bureau_templates where id=?',(template_id,)) if template_id else None
+    if not template:raise HTTPException(404,'Modèle introuvable')
+    opp=core.one("""select id,title,city,country,deadline,fee,summary,radar_reason
+                    from opportunities where id=?""",(str(pkg.get('opportunity_id') or ''),)) if pkg.get('opportunity_id') else None
+    title=str(body.get('title') or template.get('name') or 'Document').strip()[:240]
+    rendered=_v120_render_template(template.get('body'),opp)
+    doc=bureau_create_v107({
+      'title':title,
+      'body':rendered,
+      'folder':'Candidatures',
+      'tags':str(template.get('tags') or '')+', dossier',
+      'source_type':'opportunity' if opp else '',
+      'source_id':str(opp.get('id')) if opp else ''
+    })
+    ids=_v120_json(pkg.get('document_ids_json'),'[]')
+    if not isinstance(ids,list):ids=[]
+    ids.append(int(doc.get('id')))
+    c=core.conn();c.execute("update application_packages set document_ids_json=?,updated_at=? where id=?",
+      (json.dumps(ids[-50:]),_now_v85(),package_id));c.commit();c.close()
+    return {'ok':True,'document':doc,'package':_v120_package_out(core.one('select * from application_packages where id=?',(package_id,)))}
+
 @app.get('/api/v107/workspace')
 def workspace_v107():
     today=time.strftime('%Y-%m-%d')
@@ -1734,4 +1957,4 @@ def status_v90():
       'background':'compact PLUG ART internal workspace with lightweight dashboard-first loading, modular operational data and integrated content studio'
     }
 
-print(f"PLUG_ART_V119_2_READY ui=internal_dashboard bureau=persistent prospection=crm open_call_workflow=on drafts=persistent realistic=on contextual_motion=on plugy=single_drawer instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V119_READY ui=internal_dashboard bureau=persistent prospection=crm open_call_workflow=on drafts=persistent realistic=on contextual_motion=on plugy=single_drawer instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
