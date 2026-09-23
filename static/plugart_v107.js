@@ -56,6 +56,20 @@ function route(id,push=true){
 $$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route)}));
 addEventListener('popstate',()=>route(location.hash.slice(1)||'dashboard',false));
 
+
+let modelViewerPromise=null;
+function ensureModelViewer(){
+  if(customElements.get('model-viewer'))return Promise.resolve(true);
+  if(modelViewerPromise)return modelViewerPromise;
+  modelViewerPromise=new Promise((resolve,reject)=>{
+    const s=document.createElement('script');s.type='module';s.src='https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js';
+    s.onload=()=>customElements.whenDefined('model-viewer').then(()=>resolve(true)).catch(()=>resolve(true));
+    s.onerror=()=>{modelViewerPromise=null;reject(new Error('3D indisponible'))};
+    document.head.appendChild(s);
+  });
+  return modelViewerPromise;
+}
+
 function playMotion(name='Idle',loop=false){
   document.body.dataset.plugyMotion=name;
   const mv=$('#plugyModel');if(!mv)return;
@@ -74,7 +88,9 @@ $('#plugyModel')?.addEventListener('pointerenter',()=>playMotion('Curious'));
 $('#plugyModel')?.addEventListener('dblclick',()=>{openPlugy();playMotion('Attentive')});
 
 function openPlugy(seed=''){
-  $('#plugyDrawer')?.classList.add('open');playMotion('Attentive');
+  $('#plugyDrawer')?.classList.add('open');
+  ensureModelViewer().then(()=>playMotion('Attentive')).catch(()=>{$('#plugyState span').textContent='Mode texte'});
+
   if(seed)$('#plugyInput').value=seed;
   setTimeout(()=>$('#plugyInput')?.focus(),160);
 }
@@ -106,7 +122,7 @@ async function askPlugy(message,injectTarget=null){
     if(injectTarget){const el=$(injectTarget);if(el)el.value=answer}
     if(state.voiceReply)speakPlugy(answer);
     return answer;
-  }catch(e){wait.textContent='Je n’arrive pas à joindre mon moteur pour le moment.';$('#plugyState span').textContent='Connexion interrompue';playMotion('SoftTurn');}
+  }catch(e){wait.textContent='Je n’arrive pas à joindre mon moteur pour le moment.';$('#plugyState span').textContent='Connexion interrompue';state.voiceReply=false;playMotion('SoftTurn');}
 }
 $('#plugyForm')?.addEventListener('submit',e=>{e.preventDefault();const i=$('#plugyInput'),m=i.value;i.value='';askPlugy(m)});
 $$('[data-plugy-prompt]').forEach(b=>b.addEventListener('click',()=>askPlugy(b.dataset.plugyPrompt)));
@@ -362,19 +378,25 @@ async function initVoice(){
 $('#plugyVoice')?.addEventListener('click',initVoice);
 
 async function loadAll(){
+  const bureauP=api('/api/v107/bureau').catch(()=>[]);
+  const leadsP=api('/api/v86/crm').catch(()=>[]);
+  const workflowP=api('/api/v107/open-calls/workflow').catch(()=>[]);
+  const draftsP=api('/api/v108/drafts').catch(()=>[]);
   try{
-    const [boot,bureau,leads,workflow,drafts]=await Promise.all([
-      api('/api/v102/bootstrap'),
-      api('/api/v107/bureau'),
-      api('/api/v86/crm'),
-      api('/api/v107/open-calls/workflow'),
-      api('/api/v108/drafts')
-    ]);
-    state.bootstrap=boot;state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
+    const boot=await api('/api/v102/bootstrap');
+    state.bootstrap=boot;
     populateCountry($('#radarCountry'),boot.opportunities||[]);populateCountry($('#openCountry'),boot.opportunities||[]);
-    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();fillCreationSources();renderDraftPicker();renderBureau();renderLeads();renderAgenda();renderArtists();renderMap();renderNavBadges();
+    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();fillCreationSources();renderArtists();renderMap();
+    const [bureau,leads,workflow,drafts]=await Promise.all([bureauP,leadsP,workflowP,draftsP]);
+    state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
+    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();fillCreationSources();renderDraftPicker();renderBureau();renderLeads();renderAgenda();renderNavBadges();
     toast('Workspace synchronisé');
-  }catch(e){console.warn('[PLUG ART V107]',e);toast('Certaines données sont indisponibles')}
+  }catch(e){
+    console.warn('[PLUG ART V110]',e);
+    const [bureau,leads,workflow,drafts]=await Promise.all([bureauP,leadsP,workflowP,draftsP]);
+    state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
+    renderBureau();renderLeads();renderAgenda();renderNavBadges();toast('Le Radar est momentanément indisponible');
+  }
 }
 
 
@@ -664,4 +686,6 @@ pm?.addEventListener('pointerdown',()=>{clearTimeout(plugyPressTimer);plugyPress
 startPlugyAmbient();
 
 const initial=location.hash.slice(1)||'dashboard';history.replaceState({view:initial},'','#'+initial);route(initial,false);renderSuggestions();loadAll();
+const idle3d=()=>ensureModelViewer().catch(()=>{});
+if('requestIdleCallback' in window)requestIdleCallback(idle3d,{timeout:8000});else setTimeout(idle3d,6500);
 })();
