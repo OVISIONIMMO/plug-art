@@ -663,11 +663,101 @@ async function selectLead(id){
   const l=state.leads.find(x=>Number(x.id)===Number(id));if(!l)return;state.activeLead=l.id;renderPlugyActions();$('#leadDetail').innerHTML=leadForm(l);bindLeadForm(l);openLeadMobileSheet();
   try{const hist=await api('/api/v86/crm/'+l.id+'/history');$('#leadHistory').innerHTML='<h4>Historique</h4>'+hist.slice(0,15).map(h=>'<div class="history-item"><strong>'+esc(h.action)+'</strong> · '+esc(h.created_at)+'<br>'+esc(h.details||'')+'</div>').join('')}catch{}
 }
+
+function leadCurrentName(){
+  return clean($('#lfOrg')?.value||$('#lfName')?.value||'ce contact');
+}
+async function logLeadActivity(lid,payload){
+  const out=await api('/api/v119/crm/'+lid+'/activity',{method:'POST',body:JSON.stringify(payload)});
+  const saved=out.lead;
+  if(saved){
+    const i=state.leads.findIndex(x=>Number(x.id)===Number(saved.id));
+    if(i>=0)state.leads[i]=saved;else state.leads.unshift(saved);
+  }
+  renderLeads();renderDashboard();renderPlugyActions();
+  if(Array.isArray(out.history)&&$('#leadHistory')){
+    $('#leadHistory').innerHTML='<h4>Historique</h4>'+out.history.slice(0,15).map(h=>'<div class="history-item"><strong>'+esc(h.action)+'</strong> · '+esc(h.created_at)+'<br>'+esc(h.details||'')+'</div>').join('');
+  }
+  return out;
+}
+function installLeadOutreach(l={}){
+  if(!l.id||$('#leadOutreach'))return;
+  const hist=$('#leadHistory'),form=$('.lead-form');if(!form)return;
+  const section=document.createElement('section');section.id='leadOutreach';section.className='lead-outreach';
+  section.innerHTML='<div class="lead-outreach-head"><div><small>RELANCE RAPIDE</small><h4>Préparer et suivre le contact</h4></div><span id="leadOutreachState">Prêt</span></div>'+
+    '<textarea id="leadMessageDraft" rows="6" placeholder="Le message préparé par PLUGY apparaîtra ici…"></textarea>'+
+    '<div class="lead-outreach-actions">'+
+      '<button id="leadMessageGenerate">✦ Générer</button>'+
+      '<button id="leadMessageCopy">Copier</button>'+
+      '<button id="leadMessageEmail">Email ↗</button>'+
+      '<button id="leadMessageInstagram">Instagram ↗</button>'+
+      '<button class="primary" id="leadMessageSent">Marquer envoyé</button>'+
+    '</div>'+
+    '<div class="lead-schedule"><span>Relancer</span><button data-lead-delay="1">Demain</button><button data-lead-delay="3">+3 j</button><button data-lead-delay="7">+7 j</button></div>';
+  if(hist)hist.insertAdjacentElement('beforebegin',section);else form.appendChild(section);
+
+  if(!$('#leadOutreachStyles')){
+    const st=document.createElement('style');st.id='leadOutreachStyles';st.textContent=`
+      .lead-outreach{margin-top:14px;padding:13px;border:1px solid #e3e5ea;border-radius:16px;background:#fafbfc}
+      .lead-outreach-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}
+      .lead-outreach-head small{font-size:7px;letter-spacing:1px;color:#9599a5;font-weight:800}
+      .lead-outreach-head h4{margin:2px 0 0;font-size:11px}
+      .lead-outreach-head>span{font-size:8px;color:#8d919c}
+      .lead-outreach textarea{width:100%;min-height:110px;padding:10px;border:1px solid #dfe2e8;border-radius:12px;background:#fff;font-size:10px;line-height:1.5;resize:vertical}
+      .lead-outreach-actions,.lead-schedule{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+      .lead-outreach-actions button,.lead-schedule button{border:1px solid #dfe2e8;background:#fff;border-radius:9px;padding:8px 9px;font-size:8px;font-weight:800}
+      .lead-outreach-actions button.primary{background:#111318;color:#fff;border-color:#111318}
+      .lead-schedule{align-items:center}.lead-schedule span{font-size:8px;color:#8e929d;margin-right:2px}
+      @media(max-width:820px){.lead-outreach-actions,.lead-schedule{overflow:auto;flex-wrap:nowrap}.lead-outreach-actions button,.lead-schedule button{white-space:nowrap;min-height:36px}}
+    `;document.head.appendChild(st);
+  }
+
+  const stateEl=$('#leadOutreachState');
+  $('#leadMessageGenerate').onclick=async()=>{
+    const b=$('#leadMessageGenerate'),old=b.textContent;b.disabled=true;b.textContent='PLUGY…';if(stateEl)stateEl.textContent='Rédaction…';
+    const context=[clean($('#lfNotes')?.value),clean($('#lfAction')?.value)].filter(Boolean).join(' · ');
+    try{
+      await askPlugy('Rédige un message de prise de contact ou de relance professionnel, naturel et concis pour '+leadCurrentName()+'. Contexte : '+context+'. Évite le ton commercial agressif. Le message doit être directement envoyable et rester factuel.','#leadMessageDraft');
+      if(stateEl)stateEl.textContent='Message prêt';
+    }catch{if(stateEl)stateEl.textContent='Erreur'}
+    finally{b.disabled=false;b.textContent=old}
+  };
+  $('#leadMessageCopy').onclick=async()=>{
+    const msg=$('#leadMessageDraft')?.value||'';if(!msg)return toast('Prépare d’abord un message');
+    try{await navigator.clipboard.writeText(msg);toast('Message copié');if(stateEl)stateEl.textContent='Copié'}catch{toast('Copie impossible')}
+  };
+  $('#leadMessageEmail').onclick=()=>{
+    const email=clean($('#lfEmail')?.value),msg=$('#leadMessageDraft')?.value||'';if(!email)return toast('Aucune adresse email');
+    const subject='PLUG ART · '+leadCurrentName();location.href='mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(msg);
+  };
+  $('#leadMessageInstagram').onclick=()=>{
+    const raw=clean($('#lfInstagram')?.value);if(!raw)return toast('Aucun Instagram');
+    const handle=raw.replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/^@/,'').split(/[/?#]/)[0];
+    if(handle)window.open('https://www.instagram.com/'+encodeURIComponent(handle)+'/','_blank','noopener');
+  };
+  $('#leadMessageSent').onclick=async()=>{
+    const msg=$('#leadMessageDraft')?.value||'';const b=$('#leadMessageSent'),old=b.textContent;b.disabled=true;b.textContent='Enregistrement…';
+    try{
+      await logLeadActivity(l.id,{action:'Message envoyé',details:msg||'Contact marqué comme envoyé',status:'waiting',next_action:'Relancer si aucune réponse',next_date:isoAfterDays(3),touch_contact:true});
+      if(stateEl)stateEl.textContent='Envoyé · relance +3 j';toast('Démarche enregistrée');
+    }catch{toast('Historique impossible à enregistrer')}
+    finally{b.disabled=false;b.textContent=old}
+  };
+  $$('[data-lead-delay]',section).forEach(b=>b.onclick=async()=>{
+    const days=Number(b.dataset.leadDelay||3);
+    try{
+      await logLeadActivity(l.id,{action:'Relance planifiée',details:'Relance programmée dans '+days+' jour'+(days>1?'s':''),status:'followup',next_action:'Relancer la structure',next_date:isoAfterDays(days)});
+      if(stateEl)stateEl.textContent='Relance '+(days===1?'demain':'+'+days+' j');toast('Relance planifiée');
+    }catch{toast('Planification impossible')}
+  });
+}
+
 function bindLeadForm(l={}){
   $('#leadSave').onclick=async()=>{try{const data=leadPayload();let saved;if(l.id)saved=await api('/api/v86/crm/'+l.id,{method:'PATCH',body:JSON.stringify(data)});else saved=await api('/api/v86/crm',{method:'POST',body:JSON.stringify(data)});const i=state.leads.findIndex(x=>x.id===saved.id);if(i>=0)state.leads[i]=saved;else state.leads.unshift(saved);state.activeLead=saved.id;renderLeads();renderDashboard();selectLead(saved.id);toast('Contact enregistré')}catch(e){toast('Erreur CRM')}};
   $('#leadDelete')?.addEventListener('click',async()=>{try{await api('/api/v86/crm/'+l.id,{method:'DELETE'});state.leads=state.leads.filter(x=>x.id!==l.id);state.activeLead=null;$('#leadDetail').innerHTML='<div class="lead-empty"><b>◎</b><strong>Sélectionne un contact</strong><span>Sa fiche apparaîtra ici.</span></div>';renderLeads();renderDashboard();toast('Contact supprimé')}catch{}});
   $('#leadPlugy').onclick=()=>{const d=leadPayload();askPlugy('Prépare un message de relance professionnel et concis pour '+clean(d.organization||d.name)+'. Contexte : '+clean(d.notes)+'. Prochaine action : '+clean(d.next_action))};
   $('#leadToBureau').onclick=async()=>{const d=leadPayload();try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:'Prospection · '+clean(d.organization||d.name||'Contact'),body:[d.notes,d.next_action?'Prochaine action : '+d.next_action:'',d.email?'Email : '+d.email:'',d.instagram?'Instagram : '+d.instagram:''].filter(Boolean).join('\n\n'),folder:'Prospection',tags:'prospection, contact',source_type:l.id?'crm':'',source_id:l.id?String(l.id):''})});state.bureau.unshift(n);renderDashboard();toast('Contact envoyé au Bureau')}catch{toast('Envoi au Bureau impossible')}};
+  installLeadOutreach(l);
 }
 $('#leadNew')?.addEventListener('click',()=>{state.activeLead=null;$('#leadDetail').innerHTML=leadForm({status:'lead',kind:'Galerie'});bindLeadForm({});openLeadMobileSheet()});
 
