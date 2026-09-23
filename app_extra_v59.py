@@ -1412,7 +1412,12 @@ def bureau_bootstrap_v120():
     return {
       'templates':core.rows("""select * from bureau_templates order by built_in desc,category,name,id"""),
       'packages':[_v120_package_out(x) for x in core.rows(
-        'select * from application_packages order by updated_at desc,id desc')]
+        'select * from application_packages order by updated_at desc,id desc')],
+      'opportunities':core.rows("""select id,title,city,country,deadline,fee
+                                   from opportunities
+                                   where status in ('open','rolling')
+                                   order by case when deadline is null then 1 else 0 end,deadline,
+                                            coalesce(radar_score,score,0) desc limit 120""")
     }
 
 @app.get('/api/v120/bureau/packages')
