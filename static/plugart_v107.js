@@ -4,7 +4,7 @@ const VERSION='112.20260923.3';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,recognition:null,creationMode:'text',radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
+const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,recognition:null,creationMode:'text',creationDirty:false,radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -637,7 +637,7 @@ function clearLocalCreationBackup(){
 }
 function applyCreationSnapshot(snap){
   if(!snap)return;
-  const mode=snap.kind||'text',p=snap.payload||{};state.currentDraft=null;setCreationMode(mode);
+  const mode=snap.kind||'text',p=snap.payload||{};state.currentDraft=null;state.creationDirty=true;setCreationMode(mode);
   if(mode==='carousel'){
     state.carousel={slides:Array.isArray(p.slides)?p.slides:[],active:Number(p.active||0),format:p.format||'4:5'};
     if($('#carouselSource'))$('#carouselSource').value=snap.source_opportunity_id||'';
@@ -677,11 +677,11 @@ async function saveDraft(silent=false){
   try{
     let d;if(state.currentDraft)d=await api('/api/v108/drafts/'+state.currentDraft,{method:'PATCH',body:JSON.stringify(snap)});
     else d=await api('/api/v108/drafts',{method:'POST',body:JSON.stringify(snap)});
-    state.drafts=state.drafts.filter(x=>x.id!==d.id);state.drafts.unshift(d);state.currentDraft=d.id;renderDraftPicker();clearLocalCreationBackup();saveStatus('Brouillon enregistré','saved');if(!silent)toast('Brouillon enregistré');
+    state.drafts=state.drafts.filter(x=>x.id!==d.id);state.drafts.unshift(d);state.currentDraft=d.id;state.creationDirty=false;renderDraftPicker();clearLocalCreationBackup();saveStatus('Brouillon enregistré','saved');if(!silent)toast('Brouillon enregistré');
   }catch{saveStatus('Erreur brouillon','error');if(!silent)toast('Enregistrement du brouillon impossible')}
 }
 function loadDraft(id){
-  const d=state.drafts.find(x=>Number(x.id)===Number(id));if(!d)return;state.currentDraft=d.id;setCreationMode(d.kind||'text');
+  const d=state.drafts.find(x=>Number(x.id)===Number(id));if(!d)return;state.currentDraft=d.id;state.creationDirty=false;setCreationMode(d.kind||'text');
   const p=d.payload||{};
   if(d.kind==='carousel'){state.carousel={slides:Array.isArray(p.slides)?p.slides:[],active:Number(p.active||0),format:p.format||'4:5'};if($('#carouselSource'))$('#carouselSource').value=d.source_opportunity_id||'';if($('#carouselBrief'))$('#carouselBrief').value=p.brief||'';if($('#carouselFormat'))$('#carouselFormat').value=state.carousel.format;renderCarousel()}
   else if(d.kind==='visual'){state.visual={url:p.url||'',prompt:p.prompt||''};$('#visualPrompt').value=p.prompt||'';$('#visualStyle').value=p.style||'gallery';$('#visualRatio').value=p.ratio||'4:5';$('#visualImage').style.backgroundImage=p.url?'url("'+String(p.url).replace(/"/g,'%22')+'")':'none';if(p.url)$('#visualImage').innerHTML=''}
@@ -695,7 +695,7 @@ async function deleteDraft(){
 
 let draftAutosaveTimer=0;
 function scheduleDraftAutosave(){
-  saveLocalCreationBackup();
+  state.creationDirty=true;saveLocalCreationBackup();
   if(!state.currentDraft)return;
   clearTimeout(draftAutosaveTimer);draftAutosaveTimer=setTimeout(()=>saveDraft(true),1600);
 }
@@ -1031,6 +1031,6 @@ pm?.addEventListener('pointerdown',()=>{clearTimeout(plugyPressTimer);plugyPress
 ['pointerup','pointercancel','pointerleave'].forEach(ev=>pm?.addEventListener(ev,()=>clearTimeout(plugyPressTimer)));
 startPlugyAmbient();
 
-addEventListener('beforeunload',()=>{if(state.view==='creation')saveLocalCreationBackup()});
+addEventListener('beforeunload',()=>{if(state.view==='creation'&&state.creationDirty)saveLocalCreationBackup()});
 const initial=location.hash.slice(1)||'dashboard';history.replaceState({view:initial},'','#'+initial);route(initial,false);renderSuggestions();loadAll();
 })();
