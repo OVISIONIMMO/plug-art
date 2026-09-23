@@ -15,7 +15,7 @@ GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='104.20260923.1'
+VERSION='104.20260923.2'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
