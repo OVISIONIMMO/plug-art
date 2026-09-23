@@ -7,7 +7,7 @@ const apiMemo=new Map();
 const api=async(url,opt={})=>{const method=String(opt.method||'GET').toUpperCase(),memoable=method==='GET'&&/^\/api\/(stats|opportunities|artists|exhibitions|v86\/map)(?:\?|$)/.test(url),now=performance.now(),hit=apiMemo.get(url);if(memoable&&hit&&now-hit.t<3200)return hit.v;const r=await fetch(url,{cache:memoable?'default':'no-store',...opt});if(!r.ok)throw new Error((await r.text())||String(r.status));const ct=r.headers.get('content-type')||'',v=ct.includes('json')?await r.json():await r.text();if(memoable)apiMemo.set(url,{t:now,v});if(method!=='GET')apiMemo.clear();return v};
 const store={get(k,d=[]){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){localStorage.setItem(k,JSON.stringify(v))}};
 const state={stats:{},opps:[],artists:[],events:[],map:[],radar:{},candidates:[]};
-const meta={dashboard:['Accueil'],radar:['Radar'],opencalls:['Open Calls'],studio:['Studio Social'],map:['Carte internationale'],artists:['Artistes'],crm:['CRM Prospection'],social:['Instagram'],network:['Réseau'],workspace:['Suivi']};
+const meta={dashboard:['Accueil'],radar:['Radar'],opencalls:['Opportunités'],studio:['Studio'],map:['Carte'],artists:['Artistes'],crm:['CRM'],social:['Instagram'],network:['Réseau'],workspace:['Suivi']};
 let notes=store.get('plugart_v65_notes',store.get('plugart_v64_notes',[]));
 let contacts=store.get('plugart_v65_contacts',store.get('plugart_v64_contacts',[]));
 let socialQueue=store.get('plugart_v66_social_queue',[]);
@@ -33,7 +33,7 @@ addEventListener('keydown',e=>{
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();q('#quickGo')?.click();return}
   if(e.key==='Escape'){q('#simpleModal')?.classList.remove('open');q('#plugyChat')?.classList.remove('open');return}
   if(typing||e.metaKey||e.ctrlKey||e.altKey)return;
-  const map={1:'dashboard',2:'radar',3:'opencalls',4:'studio',5:'map',6:'artists',7:'crm'};
+  const map={1:'dashboard',2:'radar',3:'opencalls',4:'map',5:'studio',6:'social',7:'artists',8:'crm'};
   if(map[e.key])view(map[e.key]);
 });
 
@@ -214,7 +214,7 @@ function modal(html){const c=q('#modalContent'),m=q('#simpleModal');if(c&&m){c.i
 q('#modalClose')?.addEventListener('click',closeModal);q('#simpleModal')?.addEventListener('click',e=>{if(e.target===q('#simpleModal'))closeModal()});
 q('#newNote')?.addEventListener('click',()=>modal('<h3>Nouvelle note</h3><label>Titre<input id="mTitle"></label><label>Note<textarea id="mBody"></textarea></label><button class="save" id="mSaveNote">Enregistrer</button>'));
 q('#newContact')?.addEventListener('click',()=>modal('<h3>Nouveau contact</h3><label>Nom<input id="mName"></label><label>Information<textarea id="mInfo"></textarea></label><label>Statut<select id="mStatus"><option>À contacter</option><option>Contacté</option><option>Relance</option><option>Partenaire</option></select></label><button class="save" id="mSaveContact">Enregistrer</button>'));
-q('#quickGo')?.addEventListener('click',()=>modal('<h3>Navigation</h3><div class="modal-nav"><button data-go="dashboard">Accueil</button><button data-go="radar">Radar</button><button data-go="opencalls">Open Calls</button><button data-go="studio">Studio Social</button><button data-go="social">Instagram</button><button data-go="map">Carte</button><button data-go="artists">Artistes</button><button data-go="crm">CRM</button></div>'));
+q('#quickGo')?.addEventListener('click',()=>{});
 q('#modalContent')?.addEventListener('click',e=>{if(e.target.id==='mSaveNote'){notes.unshift({id:Date.now(),title:q('#mTitle').value,body:q('#mBody').value,date:new Date().toLocaleString('fr-FR')});store.set('plugart_v65_notes',notes);renderNotes();closeModal()}else if(e.target.id==='mSaveContact'){contacts.unshift({id:Date.now(),name:q('#mName').value,info:q('#mInfo').value,status:q('#mStatus').value});store.set('plugart_v65_contacts',contacts);renderContacts();closeModal()}else if(e.target.dataset.go){view(e.target.dataset.go);closeModal()}});
 
 function openChat(){q('#plugyChat')?.classList.add('open');window.PlugyAssistant?.setMode?.('assistant')}

@@ -8,110 +8,211 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/dashboard_v65.css?v=88.20260922.1">
+<link rel="stylesheet" href="/static/dashboard_v65.css?v=89.20260923.1">
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
 </head>
-<body>
+<body class="v89-ui">
 <div class="room-backdrop" aria-hidden="true">
   <div class="room-plant"></div>
   <div class="room-wall"></div>
   <div class="room-light"></div>
 </div>
 
-<aside class="side-rail">
-  <button class="brand" data-view="dashboard"><strong>PLUG</strong><span>ART</span><i></i></button>
-  <nav>
-    <button class="rail-item active" data-view="dashboard"><b>⌂</b><span>Accueil</span></button>
-    <button class="rail-item" data-view="radar"><b>◎</b><span>Radar</span></button>
-    <button class="rail-item" data-view="opencalls"><b>◫</b><span>Open Calls</span></button>
-    <button class="rail-item" data-view="studio"><b>✦</b><span>Studio</span></button>
-    <button class="rail-item" data-view="social"><b>◎</b><span>Instagram</span></button>
-    <button class="rail-item" data-view="map"><b>◎</b><span>Carte</span></button>
-    <button class="rail-item" data-view="artists"><b>◉</b><span>Artistes</span></button>
-    <button class="rail-item" data-view="crm"><b>▦</b><span>CRM</span></button>
+<aside class="side-rail v89-sidebar">
+  <div class="sidebar-brand-row">
+    <button class="brand" data-view="dashboard" aria-label="Accueil PLUG ART"><strong>PLUG</strong><span>ART</span><i></i></button>
+    <button class="sidebar-collapse" id="sidebarCollapse" aria-label="Réduire la navigation">‹</button>
+  </div>
+
+  <nav class="v89-nav">
+    <div class="nav-group">
+      <span class="nav-group-label">Explorer</span>
+      <button class="rail-item active" data-view="dashboard"><b>⌂</b><span>Accueil</span><em>01</em></button>
+      <button class="rail-item" data-view="radar"><b>◉</b><span>Radar</span><em>02</em></button>
+      <button class="rail-item" data-view="opencalls"><b>◇</b><span>Opportunités</span><em>03</em></button>
+      <button class="rail-item" data-view="map"><b>⌖</b><span>Carte</span><em>04</em></button>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Créer</span>
+      <button class="rail-item" data-view="studio"><b>✦</b><span>Studio</span><em>05</em></button>
+      <button class="rail-item" data-view="social"><b>◎</b><span>Instagram</span><em>06</em></button>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Gérer</span>
+      <button class="rail-item" data-view="artists"><b>◌</b><span>Artistes</span><em>07</em></button>
+      <button class="rail-item" data-view="crm"><b>▦</b><span>CRM</span><em>08</em></button>
+    </div>
   </nav>
-  <button class="rail-item rail-plugy" id="openPlugy"><b>●</b><span>PLUGY</span></button>
+
+  <button class="sidebar-agent" id="openPlugy">
+    <span class="sidebar-agent-orb"><i></i></span>
+    <span><strong>PLUGY</strong><small>Assistant actif</small></span>
+    <b>⌁</b>
+  </button>
+
+  <div class="sidebar-footer">
+    <span><i></i> Système actif</span>
+    <small>V89 · Control Room</small>
+  </div>
 </aside>
 
 <main class="shell">
-  <header class="top-pill glass">
+  <header class="top-pill v89-topbar">
     <div class="top-leading">
       <button class="nav-icon" id="navBack" aria-label="Retour" title="Retour">←</button>
-      <button class="nav-icon" data-view="dashboard" aria-label="Accueil" title="Accueil">⌂</button>
-      <div class="top-title"><strong id="pageTitle">Accueil</strong></div>
+      <div class="top-title">
+        <small id="pageEyebrow">CONTROL ROOM</small>
+        <strong id="pageTitle">Accueil</strong>
+      </div>
     </div>
-    <nav class="top-nav">
-      <button class="active" data-view="dashboard">Accueil</button>
-      <button data-view="radar">Radar</button>
-      <button data-view="opencalls">Open Calls</button>
-      <button data-view="studio">Studio</button>
-      <button data-view="social">Instagram</button>
-      <button data-view="map">Carte</button>
-      <button data-view="artists">Artistes</button>
-      <button data-view="crm">CRM</button>
-    </nav>
+
+    <button class="global-search" id="v89GlobalSearch" type="button">
+      <span>⌕</span><strong>Rechercher dans PLUG ART</strong><kbd>⌘ K</kbd>
+    </button>
+
     <div class="top-right">
-      <button class="command-button" data-view="opencalls">Open Calls</button>
-      <button class="command-button primary" data-view="studio">＋ Créer</button>
-      <span class="sync"><i></i> live</span>
-      <button class="mini-button layout-health" id="layoutHealth" aria-label="Diagnostic interface" title="Diagnostic interface">✓</button><button class="mini-button" id="quickGo" aria-label="Navigation rapide">⌕</button>
+      <span class="v89-live"><i></i><b>LIVE</b></span>
+      <button class="command-button v89-create" id="v89CreateButton">＋ Créer</button>
+      <button class="mini-button layout-health" id="layoutHealth" aria-label="Diagnostic interface" title="Diagnostic interface">✓</button>
+      <button class="mini-button" id="quickGo" aria-label="Navigation rapide">⌕</button>
     </div>
   </header>
 
-  <section class="view active" id="view-dashboard">
-    <div class="bento">
-      <article class="card card-priorities glass">
-        <div class="card-head"><strong>Priorités</strong><button data-view="radar">Ouvrir</button></div>
-        <div class="priority-stack" id="dashCalls"></div>
-      </article>
+  <section class="view active v89-home" id="view-dashboard">
+    <section class="home-command v89-reveal">
+      <div class="home-command-copy">
+        <div class="home-eyebrow"><span></span> PLUG ART · INTERNAL CONTROL ROOM</div>
+        <h1>Tout ce qui compte.<br><em>Au même endroit.</em></h1>
+        <p>Repère les opportunités, organise le réseau, crée les contenus et pilote Instagram avec PLUGY comme copilote.</p>
 
-      <article class="card card-radar glass">
-        <div class="card-head"><strong>Radar</strong><span class="status-dot"><i></i> actif</span></div>
-        <div class="radar-kpis">
-          <div><b id="dashOpp">—</b><span>Open Calls</span></div>
-          <div><b id="dashRadar">—</b><span>sources</span></div>
-          <div><b id="dashScore">—</b><span>score moyen</span></div>
+        <form class="home-plugy-command" id="homePlugyForm">
+          <span>✦</span>
+          <input id="homePlugyPrompt" autocomplete="off" placeholder="Demande à PLUGY de chercher, créer, analyser ou organiser…">
+          <button type="submit">Envoyer</button>
+        </form>
+
+        <div class="home-quick-actions">
+          <button data-home-action="radar"><i>◎</i><span>Scanner les opportunités</span></button>
+          <button data-home-action="studio"><i>✦</i><span>Créer un carrousel</span></button>
+          <button data-home-action="instagram"><i>◉</i><span>Analyser Instagram</span></button>
+          <button data-home-action="crm"><i>▦</i><span>Voir les relances</span></button>
         </div>
-        <svg class="spark" viewBox="0 0 520 150" preserveAspectRatio="none">
-          <defs><linearGradient id="sparkArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0cb68" stop-opacity=".56"/><stop offset="1" stop-color="#77d6cf" stop-opacity=".02"/></linearGradient></defs>
-          <path id="signalArea" fill="url(#sparkArea)" d="M0 140 L0 110 L90 92 L160 118 L240 76 L330 98 L410 52 L520 68 L520 140 Z"></path>
-          <path id="signalLine" fill="none" stroke="#f0cb68" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M0 110 L90 92 L160 118 L240 76 L330 98 L410 52 L520 68"></path>
-        </svg>
-        <div class="card-foot"><span>Dernier cycle <b id="dashCycle">—</b></span><button id="runRadarHome">Relancer</button></div>
-      </article>
 
-      <article class="card card-studio glass">
-        <div class="card-head"><strong>Contenu</strong><button data-view="studio">Ouvrir</button></div>
-        <div class="studio-summary">
-          <div class="mini-poster"><span>PLUG ART</span><strong id="dashDraftTitle">Carrousel</strong><small id="dashDraftMeta">aucun brouillon</small></div>
-          <div class="studio-shortcuts">
-            <button data-view="studio">＋ Nouveau carrousel</button>
-            <button id="homeAiStudio">PLUGY</button>
+        <div class="home-system-line">
+          <span><i></i> données synchronisées</span>
+          <span id="homeGreeting">Aujourd’hui</span>
+          <button id="homeDailyBrief">Brief PLUGY →</button>
+        </div>
+      </div>
+
+      <div class="home-plugy-stage" id="plugyHeroAnchor">
+        <div class="plugy-orbit orbit-a"></div>
+        <div class="plugy-orbit orbit-b"></div>
+        <div class="plugy-orbit orbit-c"></div>
+        <button class="orbit-action orbit-radar" data-plugy-prompt="Trouve-moi les meilleures opportunités artistiques à traiter aujourd’hui.">Radar</button>
+        <button class="orbit-action orbit-create" data-plugy-prompt="Aide-moi à choisir le meilleur contenu PLUG ART à créer maintenant.">Créer</button>
+        <button class="orbit-action orbit-social" data-plugy-prompt="Analyse mon activité Instagram et dis-moi ce que je dois améliorer en priorité.">Social</button>
+        <div class="plugy-stage-label"><i></i><span>PLUGY</span><small>agent personnel</small></div>
+      </div>
+    </section>
+
+    <section class="home-signal-strip v89-reveal">
+      <div><span>Opportunités</span><b id="dashOpp">—</b><small>actives</small></div>
+      <div><span>Radar</span><b id="dashRadar">—</b><small>sources</small></div>
+      <div><span>Qualité</span><b id="dashScore">—</b><small>score moyen</small></div>
+      <div><span>Réseau</span><b id="dashArtistCount">—</b><small>artistes</small></div>
+      <div class="signal-cycle"><span>Dernier cycle</span><b id="dashCycle">—</b><small>radar</small></div>
+    </section>
+
+    <section class="home-workspace">
+      <div class="home-column home-column-main">
+        <article class="home-surface home-priorities v89-reveal">
+          <div class="home-section-head">
+            <div><small>FOCUS</small><h2>Priorités à traiter</h2></div>
+            <button data-view="opencalls">Toutes les opportunités →</button>
           </div>
+          <div class="priority-stack priority-stack-v89" id="dashCalls"></div>
+        </article>
+
+        <article class="home-surface home-map-surface v89-reveal">
+          <div class="home-section-head">
+            <div><small>MONDE</small><h2>Où se passent les choses</h2></div>
+            <button data-view="map">Explorer la carte →</button>
+          </div>
+          <div class="mini-map mini-map-v89" id="miniMap"></div>
+          <div class="map-caption"><span>Paris</span><span>Europe</span><span>International</span></div>
+        </article>
+      </div>
+
+      <div class="home-column home-column-side">
+        <article class="home-surface home-radar-surface v89-reveal">
+          <div class="home-section-head">
+            <div><small>RADAR LIVE</small><h2>Signal d’opportunités</h2></div>
+            <span class="status-dot"><i></i> actif</span>
+          </div>
+          <svg class="spark spark-v89" viewBox="0 0 520 150" preserveAspectRatio="none">
+            <defs><linearGradient id="sparkArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a985ff" stop-opacity=".34"/><stop offset=".55" stop-color="#70d8da" stop-opacity=".14"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient></defs>
+            <path id="signalArea" fill="url(#sparkArea)" d="M0 140 L0 110 L90 92 L160 118 L240 76 L330 98 L410 52 L520 68 L520 140 Z"></path>
+            <path id="signalLine" fill="none" stroke="#7864db" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M0 110 L90 92 L160 118 L240 76 L330 98 L410 52 L520 68"></path>
+          </svg>
+          <div class="radar-footer-v89">
+            <span>Le moteur trie les pistes utiles avant de te les montrer.</span>
+            <button id="runRadarHome">Relancer</button>
+          </div>
+        </article>
+
+        <article class="home-surface home-create-surface v89-reveal">
+          <div class="home-section-head">
+            <div><small>STUDIO</small><h2>Créer maintenant</h2></div>
+            <button data-view="studio">Ouvrir →</button>
+          </div>
+          <div class="studio-summary studio-summary-v89">
+            <div class="mini-poster mini-poster-v89"><span>PLUG ART</span><strong id="dashDraftTitle">Carrousel</strong><small id="dashDraftMeta">aucun brouillon</small></div>
+            <div class="studio-shortcuts studio-shortcuts-v89">
+              <button data-view="studio"><b>＋</b><span>Nouveau contenu</span></button>
+              <button id="homeAiStudio"><b>✦</b><span>Créer avec PLUGY</span></button>
+              <button data-view="social"><b>◎</b><span>Instagram</span></button>
+            </div>
+          </div>
+        </article>
+
+        <article class="home-surface home-verify-surface v89-reveal">
+          <div class="home-section-head">
+            <div><small>À CONTRÔLER</small><h2>Pistes à vérifier</h2></div>
+            <button data-view="radar">Ouvrir →</button>
+          </div>
+          <div class="compact-list compact-list-v89" id="dashCandidates"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="home-bottom-flow">
+      <article class="home-flow-block v89-reveal">
+        <div class="home-section-head">
+          <div><small>RÉSEAU</small><h2>Artistes suivis</h2></div>
+          <button data-view="artists">Gérer →</button>
         </div>
+        <div class="network-count network-count-v89"><b>Actifs</b><span>profils dans le réseau PLUG ART</span></div>
+        <div class="avatar-row avatar-row-v89" id="dashArtists"></div>
       </article>
 
-      <article class="card card-verify glass">
-        <div class="card-head"><strong>À vérifier</strong><button data-view="crm">Ouvrir</button></div>
-        <div class="compact-list" id="dashCandidates"></div>
+      <article class="home-flow-block v89-reveal">
+        <div class="home-section-head">
+          <div><small>AGENDA</small><h2>Prochains rendez-vous</h2></div>
+          <button data-view="crm">Organiser →</button>
+        </div>
+        <div class="compact-list compact-list-v89" id="dashEvents"></div>
       </article>
 
-      <article class="card card-network glass">
-        <div class="card-head"><strong>Réseau</strong><button data-view="artists">Ouvrir</button></div>
-        <div class="network-count"><b id="dashArtistCount">—</b><span>profils actifs</span></div>
-        <div class="avatar-row" id="dashArtists"></div>
+      <article class="home-flow-block home-plugy-block v89-reveal">
+        <div>
+          <small>PLUGY · CONTEXTE</small>
+          <h2>Un agent qui suit le produit avec toi.</h2>
+          <p>Il comprend le Radar, le Studio, Instagram, les artistes et le CRM. Demande-lui une action, pas seulement une réponse.</p>
+        </div>
+        <button id="homeOpenPlugy">Parler à PLUGY <span>⌁</span></button>
       </article>
-
-      <article class="card card-agenda glass">
-        <div class="card-head"><strong>Agenda</strong><button data-view="artists">Ouvrir</button></div>
-        <div class="compact-list" id="dashEvents"></div>
-      </article>
-
-      <article class="card card-map glass">
-        <div class="card-head"><strong>Carte</strong></div>
-        <div class="mini-map" id="miniMap"></div>
-      </article>
-    </div>
+    </section>
   </section>
 
   <section class="view" id="view-radar">
@@ -485,9 +586,35 @@
   </section>
 </main>
 
+<div class="v89-overlay" id="v89CommandPalette" aria-hidden="true">
+  <div class="v89-overlay-backdrop" data-v89-close></div>
+  <div class="v89-command-card">
+    <div class="v89-command-search"><span>⌕</span><input id="v89CommandInput" placeholder="Rechercher une page, une opportunité, un artiste, une action…"><kbd>ESC</kbd></div>
+    <div class="v89-command-results" id="v89CommandResults"></div>
+  </div>
+</div>
+
+<div class="v89-overlay" id="v89CreateSheet" aria-hidden="true">
+  <div class="v89-overlay-backdrop" data-v89-close></div>
+  <div class="v89-create-sheet">
+    <div class="v89-sheet-head"><div><small>NOUVEAU</small><h2>Que veux-tu créer ?</h2></div><button data-v89-close>×</button></div>
+    <div class="v89-create-grid">
+      <button data-create-action="carousel"><i>✦</i><strong>Carrousel</strong><span>Ouvrir le Studio</span></button>
+      <button data-create-action="instagram"><i>◎</i><strong>Publication Instagram</strong><span>Créer puis publier</span></button>
+      <button data-create-action="artist"><i>◌</i><strong>Profil artiste</strong><span>Ajouter au réseau</span></button>
+      <button data-create-action="lead"><i>▦</i><strong>Contact CRM</strong><span>Ajouter un prospect</span></button>
+      <button data-create-action="radar"><i>◉</i><strong>Cycle Radar</strong><span>Relancer la recherche</span></button>
+      <button data-create-action="plugy"><i>⌁</i><strong>Avec PLUGY</strong><span>Décrire ce que tu veux</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="v89-plugy-cue" id="v89PlugyCue" aria-live="polite"><i></i><span></span></div>
+<div class="v89-scroll-progress" id="v89ScrollProgress"></div>
+
 <div class="plugy-float" id="plugyFloat" data-mode="hero">
   <div class="plugy-float-visual" id="plugyFloatVisual" data-plugy-state="idle" role="button" tabindex="0" aria-label="PLUGY, double-cliquer ou maintenir pour parler">
-    <model-viewer id="plugyFloatModel" src="/static/plugy_official_v84.glb?v=88.20260922.1" alt="PLUGY, assistant officiel PLUG ART nacré blanc rose aux reflets violet cyan" camera-controls auto-rotate auto-rotate-delay="1250" rotation-per-second="2.7deg" camera-orbit="-7deg 77deg 2.90m" camera-target="0m .18m 0m" field-of-view="25deg" interaction-prompt="none" disable-pan disable-zoom shadow-intensity=".19" shadow-softness=".98" environment-image="neutral" exposure="1.18" tone-mapping="commerce" loading="eager" reveal="auto"></model-viewer><div class="plugy-model-fallback"><strong>PLUGY</strong><span>Assistant PLUG ART</span></div>
+    <model-viewer id="plugyFloatModel" src="/static/plugy_official_v84.glb?v=89.20260923.1" alt="PLUGY, assistant officiel PLUG ART nacré blanc rose aux reflets violet cyan" camera-controls auto-rotate auto-rotate-delay="1250" rotation-per-second="2.7deg" camera-orbit="-7deg 77deg 2.90m" camera-target="0m .18m 0m" field-of-view="25deg" interaction-prompt="none" disable-pan disable-zoom shadow-intensity=".19" shadow-softness=".98" environment-image="neutral" exposure="1.18" tone-mapping="commerce" loading="eager" reveal="auto"></model-viewer><div class="plugy-model-fallback"><strong>PLUGY</strong><span>Assistant PLUG ART</span></div>
   </div>
   <button class="plugy-float-voice" id="plugyFloatVoice" aria-label="Parler à PLUGY">⌁</button>
 </div>
@@ -502,11 +629,12 @@
 </div>
 
 <div class="modal" id="simpleModal"><div class="modal-card"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
-<script defer src="/static/dashboard_v65_core.js?v=88.20260922.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=88.20260922.1"></script>\n<script defer src="/static/plugy_assistant_v88.js?v=88.20260922.1"></script>
-<script defer src="/static/dashboard_v86_map.js?v=88.20260922.1"></script>
-<script defer src="/static/dashboard_v86_people.js?v=88.20260922.1"></script>
-<script defer src="/static/dashboard_v86_editor.js?v=88.20260922.1"></script>
-<script defer src="/static/dashboard_v86_quality.js?v=88.20260922.1"></script>
-<script defer src="/static/dashboard_v88_instagram.js?v=88.20260922.1"></script>
+<script defer src="/static/dashboard_v65_core.js?v=89.20260923.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=89.20260923.1"></script>\n<script defer src="/static/plugy_assistant_v89.js?v=89.20260923.1"></script>
+<script defer src="/static/dashboard_v86_map.js?v=89.20260923.1"></script>
+<script defer src="/static/dashboard_v86_people.js?v=89.20260923.1"></script>
+<script defer src="/static/dashboard_v86_editor.js?v=89.20260923.1"></script>
+<script defer src="/static/dashboard_v86_quality.js?v=89.20260923.1"></script>
+<script defer src="/static/dashboard_v89_shell.js?v=89.20260923.1"></script>
+<script defer src="/static/dashboard_v88_instagram.js?v=89.20260923.1"></script>
 </body>
 </html>
