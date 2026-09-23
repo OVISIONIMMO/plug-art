@@ -105,7 +105,13 @@ function openPlugy(seed=''){
   if(seed)$('#plugyInput').value=seed;
   setTimeout(()=>$('#plugyInput')?.focus(),160);
 }
-function closePlugy(){$('#plugyDrawer')?.classList.remove('open')}
+function closePlugy(){
+  $('#plugyDrawer')?.classList.remove('open');
+  try{if(state.voice)state.recognition?.stop()}catch{}
+  try{if('speechSynthesis' in window)speechSynthesis.cancel()}catch{}
+  state.voice=false;state.voiceReply=false;
+  if($('#plugyState span'))$('#plugyState span').textContent='Prêt';
+}
 $('#sidebarPlugy')?.addEventListener('click',()=>openPlugy());
 $('#topPlugy')?.addEventListener('click',()=>openPlugy());
 $('#plugyClose')?.addEventListener('click',closePlugy);
@@ -382,9 +388,16 @@ function speakPlugy(text){
 async function initVoice(){
   const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){toast('Reconnaissance vocale indisponible');return}
   if(state.voice){state.recognition?.stop();return}
-  const rec=new R();state.recognition=rec;rec.lang='fr-FR';rec.interimResults=true;rec.continuous=false;state.voice=true;state.voiceReply=true;$('#plugyState span').textContent='Écoute…';playMotion('Attentive',true);
-  rec.onresult=e=>{let text='';for(let i=e.resultIndex;i<e.results.length;i++)text+=e.results[i][0].transcript;if(text)$('#plugyInput').value=text;if(e.results[e.results.length-1].isFinal){state.voice=false;askPlugy(text)}};
-  rec.onend=()=>{state.voice=false;if(!state.voiceReply){$('#plugyState span').textContent='Prêt';playMotion('Idle',true)}};rec.onerror=rec.onend;rec.start()
+  const rec=new R();state.recognition=rec;rec.lang='fr-FR';rec.interimResults=false;rec.continuous=false;rec.maxAlternatives=1;state.voice=true;state.voiceReply=true;$('#plugyState span').textContent='Écoute…';playMotion('Attentive',true);
+  rec.onresult=e=>{
+    const last=e.results?.[e.results.length-1],alt=last?.[0],text=clean(alt?.transcript||'');
+    if(text)$('#plugyInput').value=text;
+    if(last?.isFinal&&text.length>1){state.voice=false;askPlugy(text)}
+    else if(last?.isFinal){state.voice=false;state.voiceReply=false;$('#plugyState span').textContent='Prêt';playMotion('Idle',true)}
+  };
+  rec.onend=()=>{state.voice=false;if(!state.voiceReply){$('#plugyState span').textContent='Prêt';playMotion('Idle',true)}};
+  rec.onerror=()=>{state.voice=false;state.voiceReply=false;$('#plugyState span').textContent='Micro interrompu';playMotion('SoftTurn');setTimeout(()=>{if($('#plugyState span'))$('#plugyState span').textContent='Prêt'},900)};
+  rec.start()
 }
 $('#plugyVoice')?.addEventListener('click',initVoice);
 
@@ -697,6 +710,4 @@ pm?.addEventListener('pointerdown',()=>{clearTimeout(plugyPressTimer);plugyPress
 startPlugyAmbient();
 
 const initial=location.hash.slice(1)||'dashboard';history.replaceState({view:initial},'','#'+initial);route(initial,false);renderSuggestions();loadAll();
-const idle3d=()=>ensureModelViewer().catch(()=>{});
-if('requestIdleCallback' in window)requestIdleCallback(idle3d,{timeout:8000});else setTimeout(idle3d,6500);
 })();
