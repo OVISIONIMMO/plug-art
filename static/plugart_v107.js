@@ -4,7 +4,7 @@ const VERSION='107.20260923.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,bureau:[],leads:[],workflow:[],activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,recognition:null,creationMode:'text',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
+const state={view:'dashboard',bootstrap:null,bureau:[],leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,recognition:null,creationMode:'text',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -312,15 +312,16 @@ $('#plugyVoice')?.addEventListener('click',initVoice);
 
 async function loadAll(){
   try{
-    const [boot,bureau,leads,workflow]=await Promise.all([
+    const [boot,bureau,leads,workflow,drafts]=await Promise.all([
       api('/api/v102/bootstrap'),
       api('/api/v107/bureau'),
       api('/api/v86/crm'),
-      api('/api/v107/open-calls/workflow')
+      api('/api/v107/open-calls/workflow'),
+      api('/api/v108/drafts')
     ]);
-    state.bootstrap=boot;state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];
+    state.bootstrap=boot;state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
     populateCountry($('#radarCountry'),boot.opportunities||[]);populateCountry($('#openCountry'),boot.opportunities||[]);
-    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();fillCreationSources();renderBureau();renderLeads();renderArtists();renderMap();
+    renderDashboard();renderRadar();renderOpenCalls();renderContentSources();fillCreationSources();renderDraftPicker();renderBureau();renderLeads();renderArtists();renderMap();
     toast('Workspace synchronisé');
   }catch(e){console.warn('[PLUG ART V107]',e);toast('Certaines données sont indisponibles')}
 }
@@ -336,7 +337,7 @@ function installCreationModes(){
   const toolbar=view.querySelector('.page-toolbar'),textPanel=view.querySelector('.creation-layout');
   if(textPanel)textPanel.id='textCreationPanel';
   const bar=document.createElement('div');bar.id='creationModeBar';bar.className='creation-mode-bar';
-  bar.innerHTML='<button class="active" data-create-mode="text">Texte</button><button data-create-mode="carousel">Carrousel</button><button data-create-mode="visual">Visuel</button>';
+  bar.innerHTML='<button class="active" data-create-mode="text">Texte</button><button data-create-mode="carousel">Carrousel</button><button data-create-mode="visual">Visuel</button><span class="mode-spacer"></span><select id="draftPicker"><option value="">Brouillons</option></select><button id="draftSave">Enregistrer</button><button id="draftDelete" title="Supprimer le brouillon">×</button>';
   toolbar.insertAdjacentElement('afterend',bar);
   const carousel=document.createElement('section');carousel.id='carouselCreationPanel';carousel.className='creation-mode-panel';
   carousel.innerHTML='<div class="carousel-controls panel"><div class="panel-head"><div><small>CARROUSEL</small><h2>Structure éditoriale</h2></div></div><label>Source<select id="carouselSource"><option value="">Brief libre</option></select></label><label>Nombre de slides<select id="carouselCount"><option>4</option><option selected>5</option><option>6</option><option>7</option></select></label><label>Format<select id="carouselFormat"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><label>Brief<textarea id="carouselBrief" rows="7" placeholder="Angle, informations essentielles, CTA…"></textarea></label><button class="primary-btn wide" id="carouselGenerate">✦ Générer la structure</button><button class="secondary-btn wide" id="carouselGenerateImage">Générer l’image de la slide</button><button class="secondary-btn wide" id="carouselGenerateAll">Générer toutes les images</button><button class="secondary-btn wide" id="carouselToBureau">▤ Envoyer au Bureau</button></div><div class="carousel-preview panel"><div class="carousel-canvas" id="carouselCanvas"><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Ton carrousel apparaîtra ici</h3><p id="carouselBody">Choisis une source ou écris un brief.</p><b id="carouselCta">Découvrir →</b></div></div><div class="carousel-edit"><input id="slideKicker" placeholder="Kicker"><input id="slideTitle" placeholder="Titre"><textarea id="slideBody" rows="4" placeholder="Texte"></textarea><input id="slideCta" placeholder="CTA"></div></div><aside class="carousel-strip panel"><div class="panel-head"><div><small>SLIDES</small><h2 id="carouselCounter">0 slide</h2></div></div><div id="carouselSlides"></div></aside>';
@@ -345,15 +346,49 @@ function installCreationModes(){
   visual.innerHTML='<div class="visual-controls panel"><div class="panel-head"><div><small>VISUEL</small><h2>Génération d’image</h2></div></div><label>Prompt<textarea id="visualPrompt" rows="9" placeholder="Décris le visuel à créer…"></textarea></label><label>Style<select id="visualStyle"><option value="gallery">Galerie / éditorial</option><option value="editorial">Éditorial</option><option value="art">Art contemporain</option><option value="photo">Photographique</option></select></label><label>Format<select id="visualRatio"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><button class="primary-btn wide" id="visualGenerate">✦ Générer le visuel</button><button class="secondary-btn wide" id="visualToBureau">▤ Envoyer au Bureau</button></div><div class="visual-preview panel"><div id="visualImage"><span>Le visuel apparaîtra ici.</span></div></div>';
   view.appendChild(visual);
   const st=document.createElement('style');st.textContent=`
-  .creation-mode-bar{display:flex;gap:6px;margin:0 0 12px}.creation-mode-bar button{border:1px solid #e0e2e8;background:#fff;border-radius:999px;padding:9px 13px;font-size:10px;font-weight:800}.creation-mode-bar button.active{background:#111318;color:#fff;border-color:#111318}.creation-mode-panel{display:none}.creation-mode-panel.active{display:grid}.carouselCreationPanel{}.carousel-controls,.visual-controls{display:grid;gap:11px;align-self:start}.carousel-controls label,.visual-controls label{display:grid;gap:5px;font-size:8px;color:#90939e;font-weight:800;text-transform:uppercase;letter-spacing:.65px}.carousel-controls input,.carousel-controls select,.carousel-controls textarea,.visual-controls select,.visual-controls textarea{padding:10px;font-size:10px;text-transform:none;letter-spacing:0}.wide{width:100%}#carouselCreationPanel{grid-template-columns:260px minmax(0,1fr) 210px;gap:14px}.carousel-preview{min-height:650px;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:14px;align-items:center}.carousel-canvas{position:relative;overflow:hidden;aspect-ratio:4/5;border-radius:24px;background:linear-gradient(145deg,#eef1ff,#e4dcff 48%,#f3d2e3);box-shadow:0 25px 60px rgba(30,34,56,.12)}.carousel-image{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.72}.carousel-image:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.88) 70%)}.carousel-copy{position:absolute;z-index:2;left:7%;right:7%;bottom:6%;color:#17181e}.carousel-copy small{font-size:9px;font-weight:900;letter-spacing:1.1px}.carousel-copy h3{font-size:clamp(28px,3vw,50px);line-height:.95;letter-spacing:-2px;margin:10px 0 13px}.carousel-copy p{font-size:11px;line-height:1.45;max-width:85%}.carousel-copy b{font-size:10px}.carousel-edit{display:grid;gap:8px}.carousel-edit input,.carousel-edit textarea{padding:10px;font-size:10px}.carousel-strip{align-self:start;max-height:650px;overflow:auto}.carousel-slide-thumb{width:100%;border:1px solid #e4e5ea;background:#f8f9fa;border-radius:13px;padding:10px;text-align:left;margin-bottom:7px}.carousel-slide-thumb.active{border-color:#bfb6f4;background:#f8f6ff}.carousel-slide-thumb b,.carousel-slide-thumb span{display:block}.carousel-slide-thumb b{font-size:9px}.carousel-slide-thumb span{font-size:8px;color:#9295a0;margin-top:3px}#visualCreationPanel{grid-template-columns:300px 1fr;gap:14px}.visual-preview{min-height:660px;display:grid;place-items:center}.visual-preview #visualImage{width:min(540px,100%);aspect-ratio:4/5;border-radius:24px;background:#f0f2f6 center/cover no-repeat;display:grid;place-items:center;color:#9295a0;font-size:10px;box-shadow:0 24px 60px rgba(30,34,50,.08)}@media(max-width:1100px){#carouselCreationPanel{grid-template-columns:240px 1fr}.carousel-strip{grid-column:1/-1;display:flex;gap:7px;overflow:auto}.carousel-slide-thumb{min-width:150px}.carousel-preview{grid-template-columns:1fr}}@media(max-width:760px){#carouselCreationPanel,#visualCreationPanel{grid-template-columns:1fr}.carousel-preview{min-height:auto}.carousel-canvas{max-width:440px;margin:auto}.visual-preview{min-height:430px}}
+  .creation-mode-bar{display:flex;gap:6px;margin:0 0 12px;align-items:center}.creation-mode-bar .mode-spacer{flex:1}.creation-mode-bar select{border:1px solid #e0e2e8;background:#fff;border-radius:999px;padding:8px 11px;font-size:9px;max-width:220px}.creation-mode-bar button{border:1px solid #e0e2e8;background:#fff;border-radius:999px;padding:9px 13px;font-size:10px;font-weight:800}.creation-mode-bar button.active{background:#111318;color:#fff;border-color:#111318}.creation-mode-panel{display:none}.creation-mode-panel.active{display:grid}.carouselCreationPanel{}.carousel-controls,.visual-controls{display:grid;gap:11px;align-self:start}.carousel-controls label,.visual-controls label{display:grid;gap:5px;font-size:8px;color:#90939e;font-weight:800;text-transform:uppercase;letter-spacing:.65px}.carousel-controls input,.carousel-controls select,.carousel-controls textarea,.visual-controls select,.visual-controls textarea{padding:10px;font-size:10px;text-transform:none;letter-spacing:0}.wide{width:100%}#carouselCreationPanel{grid-template-columns:260px minmax(0,1fr) 210px;gap:14px}.carousel-preview{min-height:650px;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:14px;align-items:center}.carousel-canvas{position:relative;overflow:hidden;aspect-ratio:4/5;border-radius:24px;background:linear-gradient(145deg,#eef1ff,#e4dcff 48%,#f3d2e3);box-shadow:0 25px 60px rgba(30,34,56,.12)}.carousel-image{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.72}.carousel-image:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.88) 70%)}.carousel-copy{position:absolute;z-index:2;left:7%;right:7%;bottom:6%;color:#17181e}.carousel-copy small{font-size:9px;font-weight:900;letter-spacing:1.1px}.carousel-copy h3{font-size:clamp(28px,3vw,50px);line-height:.95;letter-spacing:-2px;margin:10px 0 13px}.carousel-copy p{font-size:11px;line-height:1.45;max-width:85%}.carousel-copy b{font-size:10px}.carousel-edit{display:grid;gap:8px}.carousel-edit input,.carousel-edit textarea{padding:10px;font-size:10px}.carousel-strip{align-self:start;max-height:650px;overflow:auto}.carousel-slide-thumb{width:100%;border:1px solid #e4e5ea;background:#f8f9fa;border-radius:13px;padding:10px;text-align:left;margin-bottom:7px}.carousel-slide-thumb.active{border-color:#bfb6f4;background:#f8f6ff}.carousel-slide-thumb b,.carousel-slide-thumb span{display:block}.carousel-slide-thumb b{font-size:9px}.carousel-slide-thumb span{font-size:8px;color:#9295a0;margin-top:3px}#visualCreationPanel{grid-template-columns:300px 1fr;gap:14px}.visual-preview{min-height:660px;display:grid;place-items:center}.visual-preview #visualImage{width:min(540px,100%);aspect-ratio:4/5;border-radius:24px;background:#f0f2f6 center/cover no-repeat;display:grid;place-items:center;color:#9295a0;font-size:10px;box-shadow:0 24px 60px rgba(30,34,50,.08)}@media(max-width:1100px){#carouselCreationPanel{grid-template-columns:240px 1fr}.carousel-strip{grid-column:1/-1;display:flex;gap:7px;overflow:auto}.carousel-slide-thumb{min-width:150px}.carousel-preview{grid-template-columns:1fr}}@media(max-width:760px){#carouselCreationPanel,#visualCreationPanel{grid-template-columns:1fr}.carousel-preview{min-height:auto}.carousel-canvas{max-width:440px;margin:auto}.visual-preview{min-height:430px}}
   `;document.head.appendChild(st);
   $$('[data-create-mode]',bar).forEach(b=>b.onclick=()=>setCreationMode(b.dataset.createMode));
+  $('#draftPicker').onchange=e=>{if(e.target.value)loadDraft(Number(e.target.value))};
+  $('#draftSave').onclick=saveDraft;
+  $('#draftDelete').onclick=deleteDraft;
   $('#carouselSource').onchange=syncCarouselBrief;$('#carouselGenerate').onclick=generateCarousel;$('#carouselGenerateImage').onclick=()=>generateCarouselImage(state.carousel.active);$('#carouselGenerateAll').onclick=generateAllCarouselImages;$('#carouselToBureau').onclick=carouselToBureau;
   $('#carouselFormat').onchange=e=>{state.carousel.format=e.target.value;renderCarousel()};
   ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
   $('#visualGenerate').onclick=generateVisual;$('#visualToBureau').onclick=visualToBureau;
   setCreationMode('text');fillCreationSources();
 }
+
+function renderDraftPicker(){
+  const p=$('#draftPicker');if(!p)return;const cur=state.currentDraft||'';
+  p.innerHTML='<option value="">Brouillons</option>'+state.drafts.map(d=>'<option value="'+d.id+'">'+esc((d.title||'Brouillon')+' · '+d.kind)+'</option>').join('');p.value=String(cur||'');
+}
+function draftSnapshot(){
+  if(state.creationMode==='carousel')return{kind:'carousel',title:state.carousel.slides[0]?.title||'Carrousel PLUG ART',source_opportunity_id:$('#carouselSource')?.value||'',payload:{slides:state.carousel.slides,active:state.carousel.active,format:state.carousel.format,brief:$('#carouselBrief')?.value||''}};
+  if(state.creationMode==='visual')return{kind:'visual',title:'Visuel PLUG ART',source_opportunity_id:'',payload:{url:state.visual.url,prompt:$('#visualPrompt')?.value||state.visual.prompt||'',style:$('#visualStyle')?.value||'gallery',ratio:$('#visualRatio')?.value||'4:5'}};
+  return{kind:'text',title:$('#contentTitle')?.value||$('#contentType')?.value||'Texte PLUG ART',source_opportunity_id:$('#contentSource')?.value||'',payload:{type:$('#contentType')?.value||'',objective:$('#contentObjective')?.value||'',brief:$('#contentBrief')?.value||'',body:$('#contentBody')?.value||''}};
+}
+async function saveDraft(){
+  const snap=draftSnapshot();
+  try{
+    let d;if(state.currentDraft)d=await api('/api/v108/drafts/'+state.currentDraft,{method:'PATCH',body:JSON.stringify(snap)});
+    else d=await api('/api/v108/drafts',{method:'POST',body:JSON.stringify(snap)});
+    state.drafts=state.drafts.filter(x=>x.id!==d.id);state.drafts.unshift(d);state.currentDraft=d.id;renderDraftPicker();toast('Brouillon enregistré');
+  }catch{toast('Enregistrement du brouillon impossible')}
+}
+function loadDraft(id){
+  const d=state.drafts.find(x=>Number(x.id)===Number(id));if(!d)return;state.currentDraft=d.id;setCreationMode(d.kind||'text');
+  const p=d.payload||{};
+  if(d.kind==='carousel'){state.carousel={slides:Array.isArray(p.slides)?p.slides:[],active:Number(p.active||0),format:p.format||'4:5'};if($('#carouselSource'))$('#carouselSource').value=d.source_opportunity_id||'';if($('#carouselBrief'))$('#carouselBrief').value=p.brief||'';if($('#carouselFormat'))$('#carouselFormat').value=state.carousel.format;renderCarousel()}
+  else if(d.kind==='visual'){state.visual={url:p.url||'',prompt:p.prompt||''};$('#visualPrompt').value=p.prompt||'';$('#visualStyle').value=p.style||'gallery';$('#visualRatio').value=p.ratio||'4:5';$('#visualImage').style.backgroundImage=p.url?'url("'+String(p.url).replace(/"/g,'%22')+'")':'none';if(p.url)$('#visualImage').innerHTML=''}
+  else{$('#contentTitle').value=d.title||'';$('#contentSource').value=d.source_opportunity_id||'';$('#contentType').value=p.type||$('#contentType').value;$('#contentObjective').value=p.objective||'';$('#contentBrief').value=p.brief||'';$('#contentBody').value=p.body||''}
+  renderDraftPicker();toast('Brouillon chargé');
+}
+async function deleteDraft(){
+  if(!state.currentDraft)return toast('Aucun brouillon sélectionné');
+  try{await api('/api/v108/drafts/'+state.currentDraft,{method:'DELETE'});state.drafts=state.drafts.filter(x=>x.id!==state.currentDraft);state.currentDraft=null;renderDraftPicker();toast('Brouillon supprimé')}catch{toast('Suppression impossible')}
+}
+
 function setCreationMode(mode){
   state.creationMode=mode;
   $$('[data-create-mode]').forEach(b=>b.classList.toggle('active',b.dataset.createMode===mode));
