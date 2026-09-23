@@ -4,7 +4,7 @@ const VERSION='111.20260923.2';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,fullBootstrap:false,fullBootstrapPromise:null,bureau:[],leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,recognition:null,creationMode:'text',radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
+const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false},dataPromises:{},bureau:[],leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,recognition:null,creationMode:'text',radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -50,26 +50,43 @@ async function api(url,opt={}){
 function toast(msg){
   const el=$('#toast');if(!el)return;el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2200);
 }
-const fullDataViews=new Set(['radar','opencalls','creation','agenda','network','map']);
-function requiresFullBootstrap(id){return fullDataViews.has(id)}
-async function ensureFullBootstrap(force=false){
-  if(state.fullBootstrapPromise)return state.fullBootstrapPromise;
-  if(state.fullBootstrap&&!force)return state.bootstrap;
-  saveStatus('Chargement des données…','saving');
-  state.fullBootstrapPromise=api('/api/v102/bootstrap',{timeout:30000})
-    .then(boot=>{
-      state.bootstrap=boot;state.fullBootstrap=true;
-      populateCountry($('#radarCountry'),boot.opportunities||[]);
-      populateCountry($('#openCountry'),boot.opportunities||[]);
-      saveStatus('Données chargées','saved');
-      return boot;
-    })
-    .catch(err=>{
-      saveStatus('Données complètes indisponibles','error');
-      throw err;
-    })
-    .finally(()=>{state.fullBootstrapPromise=null});
-  return state.fullBootstrapPromise;
+const viewDataFamilies={
+  radar:['opportunities'],
+  opencalls:['opportunities'],
+  creation:['opportunities'],
+  agenda:['opportunities'],
+  network:['artists'],
+  map:['map']
+};
+function requiredFamilies(id){return viewDataFamilies[id]||[]}
+async function ensureDataFamily(name,force=false){
+  if(state.dataLoaded[name]&&!force)return true;
+  if(state.dataPromises[name])return state.dataPromises[name];
+  const endpoints={opportunities:'/api/opportunities',artists:'/api/artists',map:'/api/map'};
+  const endpoint=endpoints[name];if(!endpoint)return true;
+  state.dataPromises[name]=api(endpoint,{timeout:22000}).then(data=>{
+    state.bootstrap=state.bootstrap||{stats:{},opportunities:[],artists:[],map:[]};
+    if(name==='opportunities'){
+      state.bootstrap.opportunities=Array.isArray(data)?data:[];
+      populateCountry($('#radarCountry'),state.bootstrap.opportunities);
+      populateCountry($('#openCountry'),state.bootstrap.opportunities);
+    }
+    if(name==='artists')state.bootstrap.artists=Array.isArray(data)?data:[];
+    if(name==='map')state.bootstrap.map=Array.isArray(data)?data:[];
+    state.dataLoaded[name]=true;
+    return true;
+  }).finally(()=>{delete state.dataPromises[name]});
+  return state.dataPromises[name];
+}
+async function ensureViewData(id,force=false){
+  const families=requiredFamilies(id);if(!families.length)return true;
+  saveStatus('Chargement '+viewMeta[id][1]+'…','saving');
+  try{
+    await Promise.all(families.map(name=>ensureDataFamily(name,force)));
+    saveStatus('Données chargées','saved');return true;
+  }catch(err){
+    saveStatus('Données indisponibles','error');throw err;
+  }
 }
 
 function renderRouteView(id=state.view){
@@ -100,9 +117,10 @@ function route(id,push=true){
   $('.workspace')?.scrollTo({top:0,behavior:'auto'});
   if(id!=='bureau')document.body.classList.remove('mobile-bureau-editing');
   if(id!=='prospection')$('#leadDetail')?.classList.remove('mobile-open');
-  if(requiresFullBootstrap(id)&&!state.fullBootstrap){
+  const missing=requiredFamilies(id).some(name=>!state.dataLoaded[name]);
+  if(missing){
     renderRouteView(id);
-    ensureFullBootstrap().then(()=>{if(state.view===id)renderRouteView(id)}).catch(()=>{if(state.view===id)toast('Données complètes momentanément indisponibles')});
+    ensureViewData(id).then(()=>{if(state.view===id)renderRouteView(id)}).catch(()=>{if(state.view===id)toast('Données momentanément indisponibles')});
   }else renderRouteView(id);
 }
 $$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route)}));
@@ -493,7 +511,7 @@ async function loadAll(){
   const leadsP=api('/api/v86/crm').catch(()=>[]);
   const workflowP=api('/api/v107/open-calls/workflow').catch(()=>[]);
   const draftsP=api('/api/v108/drafts').catch(()=>[]);
-  state.fullBootstrap=false;
+  state.dataLoaded={opportunities:false,artists:false,map:false};state.dataPromises={};
   try{
     const boot=await api('/api/v112/dashboard-bootstrap',{timeout:12000});
     state.bootstrap=boot;
@@ -501,8 +519,8 @@ async function loadAll(){
     const [bureau,leads,workflow,drafts]=await Promise.all([bureauP,leadsP,workflowP,draftsP]);
     state.bureau=Array.isArray(bureau)?bureau:[];state.leads=Array.isArray(leads)?leads:[];state.workflow=Array.isArray(workflow)?workflow:[];state.drafts=Array.isArray(drafts)?drafts:[];
     renderDashboard();renderNavBadges();
-    if(requiresFullBootstrap(state.view)){
-      await ensureFullBootstrap(true);
+    if(requiredFamilies(state.view).length){
+      await ensureViewData(state.view,true);
       renderRouteView(state.view);
     }else if(state.view!=='dashboard')renderRouteView(state.view);
     toast('Workspace synchronisé');
