@@ -31,3 +31,18 @@ body[data-plugy-motion="Think"] .plugy-stage model-viewer{filter:drop-shadow(0 2
 @media(max-width:820px){:root{--sidebar:76px}.app-shell{grid-template-columns:76px 1fr}.brand-art,.brand-plug,.brand i,.nav-group small,.nav-item span,.sidebar-plugy span:not(.mini-energy),.sidebar-plugy>b,.sidebar-foot span,.sidebar-foot small,.sidebar-collapse{display:none!important}.nav-item{justify-content:center;padding:0}.sidebar-plugy{grid-template-columns:1fr;place-items:center;padding:8px}.workspace{padding:0 12px 24px}.topbar{grid-template-columns:1fr auto;height:72px}.global-search{display:none}.top-actions .primary-btn{display:none}.dashboard-grid{grid-template-columns:1fr}.span-2,.plugy-home{grid-column:auto}.quick-grid{grid-template-columns:1fr 1fr}.tool-layout,.creation-layout,.bureau-layout{grid-template-columns:1fr}.filter-panel{display:grid;grid-template-columns:1fr 1fr}.filter-panel .plugy-inline{grid-column:span 2}.bureau-list-panel{min-height:auto;max-height:260px;overflow:auto}.card-grid,.open-grid,.artist-grid{grid-template-columns:1fr 1fr}.lead-row{grid-template-columns:1fr .7fr .8fr 26px}.lead-row>*:nth-child(4){display:none}}
 @media(max-width:560px){.sidebar{padding:12px 8px}.workspace{padding-left:8px;padding-right:8px}.top-title h1{font-size:20px}.plugy-btn{padding:0 9px}.quick-grid{grid-template-columns:1fr}.page-toolbar{align-items:flex-start;flex-direction:column}.toolbar-actions{width:100%}.toolbar-actions button{flex:1}.filter-panel{grid-template-columns:1fr}.filter-panel .plugy-inline{grid-column:auto}.card-grid,.open-grid,.artist-grid{grid-template-columns:1fr}.search-strip,.table-toolbar{flex-direction:column}.lead-row{grid-template-columns:1fr .8fr 26px}.lead-row>*:nth-child(3),.lead-row>*:nth-child(4){display:none}.bureau-meta-row{flex-wrap:wrap}.plugy-drawer{top:5px;right:5px;bottom:5px;width:calc(100vw - 10px)}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* V107.1 · Open Call workflow + richer PLUGY */
+.workflow-select{
+  width:100%;margin-top:10px;padding:9px 10px;border:1px solid #dedfe6;border-radius:11px;
+  background:#f7f8fa;color:#444852;font-size:9px;font-weight:750;
+}
+.workflow-mini{
+  margin-top:10px;border:1px solid #e1def5;background:#f9f7ff;color:#5f51bd;
+  border-radius:10px;padding:8px 10px;font-size:9px;font-weight:800;
+}
+body[data-plugy-motion="Bounce"] .plugy-stage model-viewer{transform:translateY(-7px) scale(1.018)}
+body[data-plugy-motion="Curious"] .plugy-stage model-viewer{transform:rotate(-1.2deg) scale(1.012)}
+body[data-plugy-motion="Attentive"] .plugy-energy.e1{opacity:.42;transform:scale(1.12)}
+body[data-plugy-motion="Attentive"] .plugy-energy.e2{opacity:.40;transform:scale(1.18)}
+.plugy-energy{transition:opacity .32s ease,transform .42s cubic-bezier(.2,.8,.2,1)}
