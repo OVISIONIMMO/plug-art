@@ -1,6 +1,7 @@
 (function(){
 'use strict';
 
+const VERSION='106.20260923.1';
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const state={
@@ -60,6 +61,81 @@ const contexts={
   }
 };
 
+const motionBySection={
+  hero:'Idle',
+  brief:'Curious',
+  context:'Think',
+  radar:'Attentive',
+  map:'SoftTurn',
+  studio:'Present',
+  network:'Happy',
+  voice:'Attentive',
+  final:'Wave'
+};
+let plugyMotionTimer=0;
+let ambientTimer=0;
+
+function animatedModels(){
+  return $('.animated-model');
+}
+function playPlugyMotion(name='Idle',loop=false){
+  document.body.dataset.plugyMotion=String(name).toLowerCase();
+  clearTimeout(plugyMotionTimer);
+  animatedModels().forEach(mv=>{
+    const run=()=>{
+      const list=mv.availableAnimations||[];
+      const target=list.includes(name)?name:(list.includes('Idle')?'Idle':list[0]);
+      if(!target)return;
+      try{
+        mv.animationName=target;
+        mv.timeScale=target==='Think'?.82:target==='Attentive'?.9:1;
+        mv.play({repetitions:loop?Infinity:1});
+      }catch(_){}
+    };
+    if(mv.loaded)run();
+    else mv.addEventListener('load',run,{once:true});
+  });
+  if(!loop&&name!=='Idle'){
+    plugyMotionTimer=setTimeout(()=>playPlugyMotion('Idle',true),name==='Think'?1900:1450);
+  }
+}
+function initPlugyModels(){
+  const hero=$('.realistic-model');
+  const saveData=!!navigator.connection?.saveData;
+  if(hero&&(saveData||innerWidth<720)){
+    hero.src='/static/PLUGY_final_animated.glb?v='+VERSION;
+    hero.removeAttribute('poster');
+    hero.classList.remove('realistic-model');
+    hero.classList.add('animated-model','hero-animated-fallback');
+    hero.setAttribute('autoplay','');
+  }
+  animatedModels().forEach(mv=>{
+    const idle=()=>playPlugyMotion('Idle',true);
+    if(mv.loaded)idle(); else mv.addEventListener('load',idle,{once:true});
+    mv.addEventListener('pointerenter',()=>playPlugyMotion('Curious',false));
+    mv.addEventListener('dblclick',()=>{openPanel();playPlugyMotion('Attentive',false)});
+  });
+  const stage=$('.hero-plugy');
+  stage?.addEventListener('pointermove',e=>{
+    if(matchMedia('(pointer:coarse)').matches)return;
+    const r=stage.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width-.5;
+    const y=(e.clientY-r.top)/r.height-.5;
+    stage.style.setProperty('--plugy-x',(x*16).toFixed(2)+'px');
+    stage.style.setProperty('--plugy-y',(y*11).toFixed(2)+'px');
+  },{passive:true});
+  stage?.addEventListener('pointerleave',()=>{
+    stage.style.setProperty('--plugy-x','0px');
+    stage.style.setProperty('--plugy-y','0px');
+  });
+  clearInterval(ambientTimer);
+  ambientTimer=setInterval(()=>{
+    if(state.voice||state.speaking||$('#plugyPanel')?.classList.contains('open'))return;
+    const choices=['Blink','SoftTurn','Curious'];
+    playPlugyMotion(choices[Math.floor(Math.random()*choices.length)],false);
+  },8500);
+}
+
 function safeText(v,fallback=''){
   return String(v==null?fallback:v).replace(/\s+/g,' ').trim();
 }
@@ -84,6 +160,8 @@ function setSection(id){
   });
   if(id!=='hero')document.body.classList.add('guide-visible');
   else if(scrollY<innerHeight*.55)document.body.classList.remove('guide-visible');
+  const motion=motionBySection[id]||'Idle';
+  playPlugyMotion(motion,id==='hero');
 }
 
 function initObservers(){
@@ -211,7 +289,7 @@ async function loadData(){
     state.data=await r.json();
     renderRadar();renderArtists();renderMap();
   }catch(err){
-    console.warn('[PLUGAR V105] données',err);
+    console.warn('[PLUGAR V106] données',err);
   }
 }
 
@@ -228,6 +306,7 @@ function addMessage(text,role='bot'){
 function setStatus(text){const el=$('#plugyStatus');if(el)el.textContent=text}
 function openPanel(){
   $('#plugyPanel')?.classList.add('open');
+  playPlugyMotion('Attentive',false);
   setTimeout(()=>$('#chatInput')?.focus(),180);
 }
 function closePanel(){$('#plugyPanel')?.classList.remove('open')}
@@ -244,6 +323,7 @@ async function askPlugy(message,voiceReply=false){
   addMessage(message,'user');
   state.history.push({role:'user',content:message});
   setStatus('Réflexion…');
+  playPlugyMotion('Think',true);
   const waiting=addMessage('…','bot');
   const ctx=sectionContext();
   const contextual='Contexte PLUGAR : rubrique '+ctx.label+'. '+ctx.bubble+' Demande utilisateur : '+message;
@@ -269,12 +349,14 @@ async function askPlugy(message,voiceReply=false){
     waiting.textContent=answer;
     state.history.push({role:'assistant',content:answer});
     setStatus('Prêt · '+ctx.label);
+    playPlugyMotion('Present',false);
     if(voiceReply)speak(answer);
     return data;
   }catch(err){
     waiting.textContent='Je n’arrive pas à joindre mon moteur maintenant. Le reste du site reste disponible.';
     setStatus('Connexion interrompue');
-    console.warn('[PLUGAR V105] PLUGY',err);
+    playPlugyMotion('SoftTurn',false);
+    console.warn('[PLUGAR V106] PLUGY',err);
   }
 }
 function bindPromptButtons(){
@@ -297,7 +379,8 @@ function speak(text){
   const u=new SpeechSynthesisUtterance(text);
   u.lang='fr-FR';u.rate=1.08;u.pitch=1;
   state.speaking=true;
-  u.onend=()=>{state.speaking=false};
+  playPlugyMotion('Present',true);
+  u.onend=()=>{state.speaking=false;playPlugyMotion('Idle',true)};
   speechSynthesis.speak(u);
 }
 function recognitionCtor(){return window.SpeechRecognition||window.webkitSpeechRecognition}
@@ -315,7 +398,7 @@ function toggleVoice(){
   const r=new C();
   r.lang='fr-FR';r.interimResults=true;r.continuous=false;r.maxAlternatives=1;
   state.recognition=r;
-  r.onstart=()=>{state.voice=true;btn?.classList.add('listening');setStatus('Je t’écoute…')};
+  r.onstart=()=>{state.voice=true;btn?.classList.add('listening');setStatus('Je t’écoute…');playPlugyMotion('Attentive',true)};
   r.onresult=e=>{
     let final='',interim='';
     for(let i=e.resultIndex;i<e.results.length;i++){
@@ -326,8 +409,8 @@ function toggleVoice(){
     if(input)input.value=(final||interim).trim();
     if(final.trim())askPlugy(final.trim(),true);
   };
-  r.onerror=()=>{setStatus('Micro indisponible')};
-  r.onend=()=>{state.voice=false;btn?.classList.remove('listening');if(!state.speaking)setStatus('Prêt · '+sectionContext().label)};
+  r.onerror=()=>{setStatus('Micro indisponible');playPlugyMotion('SoftTurn',false)};
+  r.onend=()=>{state.voice=false;btn?.classList.remove('listening');if(!state.speaking){setStatus('Prêt · '+sectionContext().label);playPlugyMotion('Idle',true)}};
   try{r.start()}catch(err){console.warn(err)}
 }
 
@@ -410,6 +493,7 @@ function initMobile(){
 function boot(){
   initObservers();
   initScroll();
+  initPlugyModels();
   initChat();
   initStudio();
   initCities();
@@ -417,7 +501,7 @@ function boot(){
   initMobile();
   loadData();
   requestAnimationFrame(()=>$$('.hero .reveal').forEach(x=>x.classList.add('is-visible')));
-  window.PLUGAR_V105={state,openPlugy,askPlugy,loadData};
+  window.PLUGAR_V106={state,openPlugy,askPlugy,loadData,playPlugyMotion};
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
