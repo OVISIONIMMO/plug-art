@@ -8,14 +8,14 @@ import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='89.0'
+app.version='90.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'dashboard_v65.html'
 GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='89.20260923.1'
+VERSION='90.20260923.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 
@@ -30,8 +30,8 @@ def root_v65():
       'Cache-Control':'no-store, no-cache, must-revalidate, max-age=0',
       'Pragma':'no-cache',
       'Expires':'0',
-      'X-Plug-Art-Version':'89.0',
-      'X-Plug-Art-UI':'internal-control-center-v89'
+      'X-Plug-Art-Version':'90.0',
+      'X-Plug-Art-UI':'internal-control-center-v90'
     })
 
 from fastapi.middleware.gzip import GZipMiddleware
@@ -894,6 +894,131 @@ def meta_webhook_events_v88(limit:int=40):
     limit=max(1,min(int(limit or 40),100))
     return core.rows('select id,object_type,event_json,received_at from instagram_webhook_events order by id desc limit ?',(limit,))
 
+
+# V90 Interface Lab: persistent design-system configuration and version history.
+_v90c=core.conn()
+_v90c.executescript("""
+CREATE TABLE IF NOT EXISTS interface_builder_config(
+  id INTEGER PRIMARY KEY CHECK(id=1),
+  config_json TEXT DEFAULT '{}',
+  updated_at TEXT DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS interface_builder_versions(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT DEFAULT '',
+  config_json TEXT DEFAULT '{}',
+  published INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT ''
+);
+""")
+_v90c.commit()
+_v90c.close()
+
+_V90_DEFAULT_CONFIG={
+  'accent':'violet',
+  'surface':'editorial',
+  'density':'balanced',
+  'radius':22,
+  'fontScale':1.0,
+  'motion':'subtle',
+  'sidebar':'standard',
+  'plugyConcept':'monolith'
+}
+_V90_ALLOWED={
+  'accent':{'violet','cyan','coral','cobalt','lime','mono'},
+  'surface':{'editorial','glass','flat'},
+  'density':{'compact','balanced','airy'},
+  'motion':{'off','subtle','expressive'},
+  'sidebar':{'compact','standard'},
+  'plugyConcept':{'pearl','monolith','halo','flux','prism','orbit','fold','softmodule','totem','pixel','lens','ribbon','capsule','magnetic','void'}
+}
+
+def _v90_normalize_config(raw):
+    raw=raw if isinstance(raw,dict) else {}
+    out=dict(_V90_DEFAULT_CONFIG)
+    for key,allowed in _V90_ALLOWED.items():
+        val=str(raw.get(key,out[key])).strip()
+        if val in allowed:
+            out[key]=val
+    try:
+        out['radius']=max(10,min(34,int(float(raw.get('radius',out['radius'])))))
+    except Exception:
+        pass
+    try:
+        out['fontScale']=max(.88,min(1.16,round(float(raw.get('fontScale',out['fontScale'])),2)))
+    except Exception:
+        pass
+    return out
+
+def _v90_config_row():
+    row=core.one('select config_json,updated_at from interface_builder_config where id=1') or {}
+    try:
+        cfg=json.loads(row.get('config_json') or '{}')
+    except Exception:
+        cfg={}
+    return _v90_normalize_config(cfg),row.get('updated_at','')
+
+def _v90_versions():
+    rows=core.rows('select id,name,published,created_at,config_json from interface_builder_versions order by id desc limit 20')
+    out=[]
+    for row in rows:
+        try:
+            config=json.loads(row.get('config_json') or '{}')
+        except Exception:
+            config={}
+        out.append({
+          'id':row.get('id'),
+          'name':row.get('name',''),
+          'published':bool(row.get('published')),
+          'created_at':row.get('created_at',''),
+          'config':_v90_normalize_config(config)
+        })
+    return out
+
+@app.get('/api/v90/builder/config')
+def builder_config_v90():
+    cfg,updated=_v90_config_row()
+    return {'ok':True,'config':cfg,'updated_at':updated,'versions':_v90_versions()}
+
+@app.patch('/api/v90/builder/config')
+def builder_config_update_v90(body:dict):
+    cfg=_v90_normalize_config((body or {}).get('config') or {})
+    name=str((body or {}).get('name') or 'Interface Lab').strip()[:120]
+    publish=bool((body or {}).get('publish'))
+    now=time.strftime('%Y-%m-%dT%H:%M:%S')
+    payload=json.dumps(cfg,ensure_ascii=False)
+    c=core.conn()
+    c.execute("""insert into interface_builder_config(id,config_json,updated_at) values(1,?,?)
+                 on conflict(id) do update set config_json=excluded.config_json,updated_at=excluded.updated_at""",(payload,now))
+    if publish:
+        c.execute('update interface_builder_versions set published=0')
+    cur=c.execute('insert into interface_builder_versions(name,config_json,published,created_at) values(?,?,?,?)',
+                  (name,payload,1 if publish else 0,now))
+    c.commit()
+    c.close()
+    return {'ok':True,'config':cfg,'version_id':cur.lastrowid,'published':publish,'versions':_v90_versions()}
+
+@app.get('/api/v90/builder/versions')
+def builder_versions_v90():
+    return {'ok':True,'items':_v90_versions()}
+
+@app.post('/api/v90/builder/versions/{version_id}/restore')
+def builder_restore_v90(version_id:int):
+    row=core.one('select config_json from interface_builder_versions where id=?',(version_id,))
+    if not row:
+        raise HTTPException(404,'Version introuvable')
+    try:
+        cfg=_v90_normalize_config(json.loads(row.get('config_json') or '{}'))
+    except Exception:
+        cfg=dict(_V90_DEFAULT_CONFIG)
+    now=time.strftime('%Y-%m-%dT%H:%M:%S')
+    c=core.conn()
+    c.execute("""insert into interface_builder_config(id,config_json,updated_at) values(1,?,?)
+                 on conflict(id) do update set config_json=excluded.config_json,updated_at=excluded.updated_at""",
+              (json.dumps(cfg,ensure_ascii=False),now))
+    c.commit();c.close()
+    return {'ok':True,'config':cfg}
+
 @app.get('/api/v65/status')
 @app.get('/api/v66/status')
 @app.get('/api/v67/status')
@@ -918,13 +1043,14 @@ def meta_webhook_events_v88(limit:int=40):
 @app.get('/api/v87/status')
 @app.get('/api/v88/status')
 @app.get('/api/v89/status')
-def status_v89():
+@app.get('/api/v90/status')
+def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'89.0',
-      'ui':'internal-control-center-v89',
-      'reference_direction':'V89 premium Control Room redesign: unified navigation, command palette, PLUGY-centered home, refined workspaces, preserved operational modules',
+      'version':'90.0',
+      'ui':'internal-control-center-v90',
+      'reference_direction':'V90 Interface Lab: persistent product design system, responsive preview, professional site builder and 15 PLUGY 2.0 form studies',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -950,4 +1076,4 @@ def status_v89():
       'background':'premium responsive PLUG ART Control Room with agent-centered command workspace and refined editorial surfaces'
     }
 
-print(f"PLUG_ART_V89_READY ui=control_room plugy=hero_centered viewer_scope=fixed instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V90_READY ui=control_room builder=interface_lab plugy2=15_concepts plugy=hero_centered instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)

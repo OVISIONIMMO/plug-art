@@ -7,7 +7,7 @@ const apiMemo=new Map();
 const api=async(url,opt={})=>{const method=String(opt.method||'GET').toUpperCase(),memoable=method==='GET'&&/^\/api\/(stats|opportunities|artists|exhibitions|v86\/map)(?:\?|$)/.test(url),now=performance.now(),hit=apiMemo.get(url);if(memoable&&hit&&now-hit.t<3200)return hit.v;const r=await fetch(url,{cache:memoable?'default':'no-store',...opt});if(!r.ok)throw new Error((await r.text())||String(r.status));const ct=r.headers.get('content-type')||'',v=ct.includes('json')?await r.json():await r.text();if(memoable)apiMemo.set(url,{t:now,v});if(method!=='GET')apiMemo.clear();return v};
 const store={get(k,d=[]){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){localStorage.setItem(k,JSON.stringify(v))}};
 const state={stats:{},opps:[],artists:[],events:[],map:[],radar:{},candidates:[]};
-const meta={dashboard:['Accueil'],radar:['Radar'],opencalls:['Opportunités'],studio:['Studio'],map:['Carte'],artists:['Artistes'],crm:['CRM'],social:['Instagram'],network:['Réseau'],workspace:['Suivi']};
+const meta={dashboard:['Accueil'],radar:['Radar'],opencalls:['Opportunités'],studio:['Studio'],map:['Carte'],artists:['Artistes'],crm:['CRM'],social:['Instagram'],builder:['Interface Lab'],network:['Réseau'],workspace:['Suivi']};
 let notes=store.get('plugart_v65_notes',store.get('plugart_v64_notes',[]));
 let contacts=store.get('plugart_v65_contacts',store.get('plugart_v64_contacts',[]));
 let socialQueue=store.get('plugart_v66_social_queue',[]);
@@ -33,7 +33,7 @@ addEventListener('keydown',e=>{
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();q('#quickGo')?.click();return}
   if(e.key==='Escape'){q('#simpleModal')?.classList.remove('open');q('#plugyChat')?.classList.remove('open');return}
   if(typing||e.metaKey||e.ctrlKey||e.altKey)return;
-  const map={1:'dashboard',2:'radar',3:'opencalls',4:'map',5:'studio',6:'social',7:'artists',8:'crm'};
+  const map={1:'dashboard',2:'radar',3:'opencalls',4:'map',5:'studio',6:'social',7:'artists',8:'crm',9:'builder'};
   if(map[e.key])view(map[e.key]);
 });
 

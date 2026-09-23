@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/dashboard_v65.css?v=89.20260923.1">
+<link rel="stylesheet" href="/static/dashboard_v65.css?v=90.20260923.1">
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
 </head>
 <body class="v89-ui">
@@ -42,6 +42,10 @@
       <button class="rail-item" data-view="artists"><b>◌</b><span>Artistes</span><em>07</em></button>
       <button class="rail-item" data-view="crm"><b>▦</b><span>CRM</span><em>08</em></button>
     </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Système</span>
+      <button class="rail-item" data-view="builder"><b>⌘</b><span>Interface Lab</span><em>09</em></button>
+    </div>
   </nav>
 
   <button class="sidebar-agent" id="openPlugy">
@@ -52,7 +56,7 @@
 
   <div class="sidebar-footer">
     <span><i></i> Système actif</span>
-    <small>V89 · Control Room</small>
+    <small>V90 · Interface Lab</small>
   </div>
 </aside>
 
@@ -567,6 +571,187 @@
     </div>
   </section>
 
+  <section class="view v90-builder" id="view-builder">
+    <div class="section-bar">
+      <h1>Interface Lab</h1>
+      <div class="section-actions">
+        <span class="builder-state" id="builderSaveState">Configuration synchronisée</span>
+        <button class="glass-button" id="builderReset">Réinitialiser</button>
+        <button class="glass-button" id="builderSave">Enregistrer</button>
+        <button class="glass-button primary" id="builderPublish">Publier la version</button>
+      </div>
+    </div>
+
+    <section class="builder-intro">
+      <div>
+        <small>PLUG ART · PRODUCT DESIGN SYSTEM</small>
+        <h2>Reconstruire le produit sans toucher au code.</h2>
+        <p>Structure, densité, surfaces, typographie, navigation, responsive et PLUGY 2.0 sont réunis dans un seul atelier interne.</p>
+      </div>
+      <button id="builderAskPlugy">✦ Travailler avec PLUGY</button>
+    </section>
+
+    <div class="builder-shell">
+      <aside class="builder-panel builder-structure">
+        <div class="builder-panel-head"><span>01</span><div><small>ARCHITECTURE</small><h3>Structure du produit</h3></div></div>
+        <div class="builder-tree">
+          <strong>Control Room</strong>
+          <button><i></i>Accueil <span>Hero · priorités · signaux</span></button>
+          <button><i></i>Radar <span>Recherche · qualification</span></button>
+          <button><i></i>Opportunités <span>Décision · détail</span></button>
+          <button><i></i>Carte <span>Territoires · clusters</span></button>
+          <strong>Production</strong>
+          <button><i></i>Studio <span>Éditeur social</span></button>
+          <button><i></i>Instagram <span>Feed · planning · Meta</span></button>
+          <strong>Réseau</strong>
+          <button><i></i>Artistes <span>Profils · portfolios</span></button>
+          <button><i></i>CRM <span>Prospection · relances</span></button>
+          <strong>Système</strong>
+          <button class="active"><i></i>Interface Lab <span>Design system · PLUGY</span></button>
+        </div>
+        <div class="builder-guidelines">
+          <small>PRINCIPES</small>
+          <p>Moins de boîtes. Plus de hiérarchie. Un écran = une intention principale. PLUGY reste une action, jamais une décoration.</p>
+        </div>
+      </aside>
+
+      <main class="builder-canvas">
+        <div class="builder-preview-toolbar">
+          <div class="preview-devices">
+            <button class="active" data-preview-mode="desktop">Ordinateur</button>
+            <button data-preview-mode="tablet">Tablette</button>
+            <button data-preview-mode="mobile">Mobile</button>
+          </div>
+          <span id="builderViewportLabel">1440 × 960</span>
+          <button id="builderApplyCurrent">Appliquer à cette session</button>
+        </div>
+
+        <div class="builder-preview-stage">
+          <div class="builder-preview-frame" id="builderPreviewFrame" data-preview="desktop">
+            <div class="preview-app">
+              <aside class="preview-sidebar">
+                <strong>PLUG<span>ART</span></strong>
+                <i class="active"></i><i></i><i></i><i></i><i></i><i></i>
+                <em></em>
+              </aside>
+              <div class="preview-main">
+                <header><span></span><b></b><button></button></header>
+                <section class="preview-hero">
+                  <div><small>CONTROL ROOM</small><h4>Tout ce qui compte.<br><em>Au même endroit.</em></h4><p></p><label></label></div>
+                  <div class="preview-plugy"><i></i><i></i><span><b></b><b></b></span></div>
+                </section>
+                <div class="preview-signals"><i></i><i></i><i></i><i></i></div>
+                <div class="preview-grid"><article></article><article></article><article></article></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <aside class="builder-panel builder-inspector">
+        <div class="builder-panel-head"><span>02</span><div><small>DESIGN TOKENS</small><h3>Réglages</h3></div></div>
+
+        <div class="builder-control">
+          <label>Accent</label>
+          <div class="builder-swatches">
+            <button class="sw-violet active" data-builder-accent="violet" title="Violet"></button>
+            <button class="sw-cyan" data-builder-accent="cyan" title="Cyan"></button>
+            <button class="sw-coral" data-builder-accent="coral" title="Corail"></button>
+            <button class="sw-cobalt" data-builder-accent="cobalt" title="Cobalt"></button>
+            <button class="sw-lime" data-builder-accent="lime" title="Lime"></button>
+            <button class="sw-mono" data-builder-accent="mono" title="Monochrome"></button>
+          </div>
+        </div>
+
+        <div class="builder-control">
+          <label>Surfaces</label>
+          <div class="builder-segmented">
+            <button class="active" data-builder-surface="editorial">Éditorial</button>
+            <button data-builder-surface="glass">Verre</button>
+            <button data-builder-surface="flat">Plat</button>
+          </div>
+        </div>
+
+        <div class="builder-control">
+          <label>Densité</label>
+          <div class="builder-segmented">
+            <button data-builder-density="compact">Compacte</button>
+            <button class="active" data-builder-density="balanced">Équilibrée</button>
+            <button data-builder-density="airy">Aérée</button>
+          </div>
+        </div>
+
+        <div class="builder-control">
+          <label>Navigation</label>
+          <div class="builder-segmented">
+            <button data-builder-sidebar="compact">Compacte</button>
+            <button class="active" data-builder-sidebar="standard">Standard</button>
+          </div>
+        </div>
+
+        <div class="builder-control range">
+          <label>Rayon des surfaces <b id="builderRadiusValue"></b></label>
+          <input id="builderRadius" type="range" min="10" max="34" step="1" value="22">
+        </div>
+
+        <div class="builder-control range">
+          <label>Échelle typographique</label>
+          <input id="builderFontScale" type="range" min=".88" max="1.16" step=".02" value="1">
+        </div>
+
+        <div class="builder-control">
+          <label>Mouvement</label>
+          <div class="builder-segmented">
+            <button data-builder-motion="off">Aucun</button>
+            <button class="active" data-builder-motion="subtle">Subtil</button>
+            <button data-builder-motion="expressive">Expressif</button>
+          </div>
+        </div>
+
+        <div class="builder-versions-wrap">
+          <label>Versions enregistrées</label>
+          <div id="builderVersions" class="builder-versions"></div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="plugy-lab">
+      <div class="plugy-lab-head">
+        <div>
+          <small>PLUGY 2.0 · FORM STUDY</small>
+          <h2>15 façons de réinventer la prise.</h2>
+          <p>On conserve le symbole électrique, mais on arrête de traiter PLUGY comme une mascotte jouet. Chaque piste est pensée pour fonctionner en grand, en mini et dans l’interface.</p>
+        </div>
+        <div class="plugy-selected-summary">
+          <span>Sélection actuelle</span>
+          <strong id="plugyConceptName">Monolith Plug</strong>
+          <small id="plugyConceptTone">Iconique · premium</small>
+        </div>
+      </div>
+
+      <div class="plugy-lab-focus">
+        <div class="plugy-concept-stage concept-monolith" id="plugyConceptStage">
+          <i class="concept-prong p1"></i><i class="concept-prong p2"></i>
+          <span class="concept-face"><b></b><b></b></span>
+          <div class="plugy-stage-ring r1"></div><div class="plugy-stage-ring r2"></div>
+        </div>
+        <div class="plugy-concept-copy">
+          <small>CONCEPT RETENU POUR LE PROTOTYPE</small>
+          <h3 id="plugyConceptNameLarge">PLUGY 2.0</h3>
+          <p id="plugyConceptDescription">Bloc carré-arrondi presque monolithique, deux broches géométriques très courtes, yeux noyés dans la matière.</p>
+          <div class="plugy-design-rules">
+            <span><b>01</b> Lisible à 70 px</span>
+            <span><b>02</b> Silhouette reconnaissable sans visage</span>
+            <span><b>03</b> États écoute / réflexion / parole</span>
+            <span><b>04</b> Pas d’effet jouet ou lapin</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="plugy-concept-grid" id="plugyConceptGrid"></div>
+    </section>
+  </section>
+
   <section class="view legacy-view" id="view-network">
     <div class="section-bar"><h1>Réseau</h1></div>
     <div class="network-grid">
@@ -586,15 +771,15 @@
   </section>
 </main>
 
-<div class="v89-overlay" id="v89CommandPalette" aria-hidden="true">
+<div class="v89-overlay" id="v90CommandPalette" aria-hidden="true">
   <div class="v89-overlay-backdrop" data-v89-close></div>
   <div class="v89-command-card">
-    <div class="v89-command-search"><span>⌕</span><input id="v89CommandInput" placeholder="Rechercher une page, une opportunité, un artiste, une action…"><kbd>ESC</kbd></div>
-    <div class="v89-command-results" id="v89CommandResults"></div>
+    <div class="v89-command-search"><span>⌕</span><input id="v90CommandInput" placeholder="Rechercher une page, une opportunité, un artiste, une action…"><kbd>ESC</kbd></div>
+    <div class="v89-command-results" id="v90CommandResults"></div>
   </div>
 </div>
 
-<div class="v89-overlay" id="v89CreateSheet" aria-hidden="true">
+<div class="v89-overlay" id="v90CreateSheet" aria-hidden="true">
   <div class="v89-overlay-backdrop" data-v89-close></div>
   <div class="v89-create-sheet">
     <div class="v89-sheet-head"><div><small>NOUVEAU</small><h2>Que veux-tu créer ?</h2></div><button data-v89-close>×</button></div>
@@ -609,12 +794,12 @@
   </div>
 </div>
 
-<div class="v89-plugy-cue" id="v89PlugyCue" aria-live="polite"><i></i><span></span></div>
+<div class="v89-plugy-cue" id="v90PlugyCue" aria-live="polite"><i></i><span></span></div>
 <div class="v89-scroll-progress" id="v89ScrollProgress"></div>
 
 <div class="plugy-float" id="plugyFloat" data-mode="hero">
   <div class="plugy-float-visual" id="plugyFloatVisual" data-plugy-state="idle" role="button" tabindex="0" aria-label="PLUGY, double-cliquer ou maintenir pour parler">
-    <model-viewer id="plugyFloatModel" src="/static/plugy_official_v84.glb?v=89.20260923.1" alt="PLUGY, assistant officiel PLUG ART nacré blanc rose aux reflets violet cyan" camera-controls auto-rotate auto-rotate-delay="1250" rotation-per-second="2.7deg" camera-orbit="-7deg 77deg 2.90m" camera-target="0m .18m 0m" field-of-view="25deg" interaction-prompt="none" disable-pan disable-zoom shadow-intensity=".19" shadow-softness=".98" environment-image="neutral" exposure="1.18" tone-mapping="commerce" loading="eager" reveal="auto"></model-viewer><div class="plugy-model-fallback"><strong>PLUGY</strong><span>Assistant PLUG ART</span></div>
+    <model-viewer id="plugyFloatModel" src="/static/plugy_official_v84.glb?v=90.20260923.1" alt="PLUGY, assistant officiel PLUG ART nacré blanc rose aux reflets violet cyan" camera-controls auto-rotate auto-rotate-delay="1250" rotation-per-second="2.7deg" camera-orbit="-7deg 77deg 2.90m" camera-target="0m .18m 0m" field-of-view="25deg" interaction-prompt="none" disable-pan disable-zoom shadow-intensity=".19" shadow-softness=".98" environment-image="neutral" exposure="1.18" tone-mapping="commerce" loading="eager" reveal="auto"></model-viewer><div class="plugy-model-fallback"><strong>PLUGY</strong><span>Assistant PLUG ART</span></div>
   </div>
   <button class="plugy-float-voice" id="plugyFloatVoice" aria-label="Parler à PLUGY">⌁</button>
 </div>
@@ -629,12 +814,13 @@
 </div>
 
 <div class="modal" id="simpleModal"><div class="modal-card"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
-<script defer src="/static/dashboard_v65_core.js?v=89.20260923.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=89.20260923.1"></script>\n<script defer src="/static/plugy_assistant_v89.js?v=89.20260923.1"></script>
-<script defer src="/static/dashboard_v86_map.js?v=89.20260923.1"></script>
-<script defer src="/static/dashboard_v86_people.js?v=89.20260923.1"></script>
-<script defer src="/static/dashboard_v86_editor.js?v=89.20260923.1"></script>
-<script defer src="/static/dashboard_v86_quality.js?v=89.20260923.1"></script>
-<script defer src="/static/dashboard_v89_shell.js?v=89.20260923.1"></script>
-<script defer src="/static/dashboard_v88_instagram.js?v=89.20260923.1"></script>
+<script defer src="/static/dashboard_v65_core.js?v=90.20260923.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=90.20260923.1"></script>\n<script defer src="/static/plugy_assistant_v90.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v86_map.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v86_people.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v86_editor.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v86_quality.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v90_shell.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v90_builder.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v88_instagram.js?v=90.20260923.1"></script>
 </body>
 </html>
