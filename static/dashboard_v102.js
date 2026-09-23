@@ -96,6 +96,18 @@ async function ensurePlugy(){
   return plugyPromise;
 }
 
+
+function bindRouteWarmIntent(){
+  document.querySelectorAll('[data-view]').forEach(el=>{
+    if(el.dataset.v102WarmBound)return;
+    el.dataset.v102WarmBound='1';
+    const warm=()=>ensureRoute(el.dataset.view,true);
+    el.addEventListener('pointerenter',warm,{once:true,passive:true});
+    el.addEventListener('focusin',warm,{once:true,passive:true});
+    el.addEventListener('touchstart',warm,{once:true,passive:true});
+  });
+}
+
 function bindPlugyIntent(){
   const selectors=['#openPlugy','#homePlugyForm','.orbit-action','#plugyFloat','.sidebar-agent'];
   selectors.forEach(sel=>document.querySelectorAll(sel).forEach(el=>{
@@ -146,7 +158,7 @@ function observeNewContent(){
       if(r.addedNodes?.length){imageWork=true;plugyWork=true;break}
     }
     if(imageWork)tuneImages();
-    if(plugyWork)bindPlugyIntent();
+    if(plugyWork){bindPlugyIntent();bindRouteWarmIntent();}
   });
   mo.observe(document.body,{childList:true,subtree:true});
 }
@@ -154,7 +166,7 @@ function observeNewContent(){
 function premiumRuntime(){
   document.body.classList.add('v89-ui','v100-ui','v101-ui','v102-ui');
   document.documentElement.dataset.plugartUi='v102';
-  tuneImages();bindPlugyIntent();observeNewContent();
+  tuneImages();bindPlugyIntent();bindRouteWarmIntent();observeNewContent();
 
   addEventListener('plugart:view',e=>{
     const id=e.detail?.id||document.body.dataset.view||'dashboard';
@@ -176,12 +188,6 @@ function premiumRuntime(){
   // PLUGY stays instant on intent, but its 3D engine no longer competes with first paint.
   idle(()=>ensurePlugy(),coarse?2200:900);
 
-  // Desktop can afford warm modules. Touch devices load them strictly on demand.
-  idle(()=>{
-    const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
-    if(coarse||conn?.saveData||/2g/.test(conn?.effectiveType||''))return;
-    ['studio','social','map'].forEach((id,i)=>setTimeout(()=>ensureRoute(id,true),i*260));
-  },3000);
 
   // Runtime quality adaptation: keep visual quality, remove expensive motion on stressed mobile sessions.
   const lowMemory=Number(navigator.deviceMemory||8)<=4;
