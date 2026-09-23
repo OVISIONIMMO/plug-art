@@ -124,7 +124,7 @@ function route(id,push=true){
   if(id!=='bureau')document.body.classList.remove('mobile-bureau-editing');
   if(id!=='prospection')$('#leadDetail')?.classList.remove('mobile-open');
   const missing=requiredFamilies(id).some(name=>!state.dataLoaded[name]);
-  if(missing){
+  if(missing&&state.bootstrap){
     renderRouteView(id);
     ensureViewData(id).then(()=>{if(state.view===id)renderRouteView(id)}).catch(()=>{if(state.view===id)toast('Données momentanément indisponibles')});
   }else renderRouteView(id);
@@ -261,10 +261,10 @@ function renderDashboard(){
   const box=$('#dashboardCalls');box.innerHTML=opps.length?opps.map(o=>'<div class="priority-row"><div class="priority-thumb"><img src="/api/v67/opportunities/'+o.id+'/thumbnail" alt="" loading="lazy"></div><button data-dashboard-opp="'+o.id+'" style="border:0;background:transparent;text-align:left"><h3>'+esc(o.title)+'</h3><p>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</p></button><span class="score">'+Number(o.radar_score??o.score??0)+'/100</span></div>').join(''):'<div class="empty">Aucune opportunité active.</div>';
   $$('[data-dashboard-opp]').forEach(x=>x.onclick=()=>openOpportunity(Number(x.dataset.dashboardOpp)));
   $('#dashboardBureau').innerHTML=state.bureau.slice(0,4).map(n=>'<button class="compact-row" data-dash-doc="'+n.id+'" style="border:0;background:transparent;text-align:left;width:100%"><strong>'+esc(n.title||'Sans titre')+'</strong><span>'+esc(n.folder||'Notes')+' · '+esc((n.updated_at||'').replace('T',' '))+'</span></button>').join('')||'<div class="empty">Aucun document.</div>';
-  $$('[data-dash-doc]').forEach(b=>b.onclick=()=>{route('bureau');selectDoc(Number(b.dataset.dashDoc))});
+  $('[data-dash-doc]').forEach(b=>b.onclick=async()=>{const id=Number(b.dataset.dashDoc);route('bureau');try{await ensureViewData('bureau');selectDoc(id)}catch{}});
   const leads=state.leads.slice().sort((a,b)=>(a.next_date||'9999').localeCompare(b.next_date||'9999')).slice(0,4);
   $('#dashboardProspection').innerHTML=leads.map(l=>'<button class="compact-row" data-dash-lead="'+l.id+'" style="border:0;background:transparent;text-align:left;width:100%"><strong>'+esc(l.organization||l.name||'Contact')+'</strong><span>'+esc(l.next_action||'À suivre')+(l.next_date?' · '+esc(l.next_date):'')+'</span></button>').join('')||'<div class="empty">Aucune relance.</div>';
-  $$('[data-dash-lead]').forEach(b=>b.onclick=()=>{route('prospection');selectLead(Number(b.dataset.dashLead))});
+  $('[data-dash-lead]').forEach(b=>b.onclick=async()=>{const id=Number(b.dataset.dashLead);route('prospection');try{await ensureViewData('prospection');selectLead(id)}catch{}});
   renderToday();
 }
 function populateCountry(select,items){
@@ -479,7 +479,7 @@ function openSearch(){
   $('#searchOverlay').classList.add('open');const i=$('#commandInput');i.value='';renderCommand('');setTimeout(()=>i.focus(),60)
 }
 function renderCommand(term){
-  term=clean(term).toLowerCase();const pages=Object.entries(viewMeta).map(([id,m])=>({type:'Page',title:m[1],id}));const opps=(state.bootstrap?.opportunities||[]).slice(0,40).map(o=>({type:'Open Call',title:o.title,id:o.id,route:'opencalls'}));const leads=state.leads.slice(0,30).map(l=>({type:'Contact',title:l.organization||l.name,id:l.id,route:'prospection'}));const docs=state.bureau.slice(0,30).map(n=>({type:'Bureau',title:n.title,id:n.id,route:'bureau'}));const drafts=state.drafts.slice(0,30).map(d=>({type:'Brouillon',title:d.title,id:d.id,route:'creation'}));const all=[...pages,...opps,...leads,...docs,...drafts].filter(x=>!term||String(x.title).toLowerCase().includes(term)).slice(0,18);$('#commandResults').innerHTML=all.map((x,i)=>'<button class="command-result" data-cmd="'+i+'"><strong>'+esc(x.title)+'</strong><span>'+esc(x.type)+'</span></button>').join('');$$('[data-cmd]').forEach((b,i)=>b.onclick=()=>{const x=all[i];$('#searchOverlay').classList.remove('open');route(x.route||x.id);if(x.type==='Contact')setTimeout(()=>selectLead(x.id),60);if(x.type==='Bureau')setTimeout(()=>selectDoc(x.id),60);if(x.type==='Open Call')setTimeout(()=>openOpportunity(x.id),60);if(x.type==='Brouillon')setTimeout(()=>loadDraft(x.id),60)})
+  term=clean(term).toLowerCase();const pages=Object.entries(viewMeta).map(([id,m])=>({type:'Page',title:m[1],id}));const opps=(state.bootstrap?.opportunities||[]).slice(0,40).map(o=>({type:'Open Call',title:o.title,id:o.id,route:'opencalls'}));const leads=state.leads.slice(0,30).map(l=>({type:'Contact',title:l.organization||l.name,id:l.id,route:'prospection'}));const docs=state.bureau.slice(0,30).map(n=>({type:'Bureau',title:n.title,id:n.id,route:'bureau'}));const drafts=state.drafts.slice(0,30).map(d=>({type:'Brouillon',title:d.title,id:d.id,route:'creation'}));const all=[...pages,...opps,...leads,...docs,...drafts].filter(x=>!term||String(x.title).toLowerCase().includes(term)).slice(0,18);$('#commandResults').innerHTML=all.map((x,i)=>'<button class="command-result" data-cmd="'+i+'"><strong>'+esc(x.title)+'</strong><span>'+esc(x.type)+'</span></button>').join('');$$('[data-cmd]').forEach((b,i)=>b.onclick=async()=>{const x=all[i];$('#searchOverlay').classList.remove('open');route(x.route||x.id);try{if(x.type==='Contact'){await ensureViewData('prospection');selectLead(x.id)}if(x.type==='Bureau'){await ensureViewData('bureau');selectDoc(x.id)}if(x.type==='Open Call'){await ensureViewData('opencalls');openOpportunity(x.id)}if(x.type==='Brouillon'){await ensureViewData('creation');loadDraft(x.id)}}catch{}})
 }
 $('#globalSearch')?.addEventListener('click',openSearch);$('#commandInput')?.addEventListener('input',e=>renderCommand(e.target.value));
 $('#refreshData')?.addEventListener('click',loadAll);
@@ -784,7 +784,7 @@ function renderToday(){
   (state.bootstrap?.opportunities||[]).filter(o=>{const d=daysLeft(o);return d>=0&&d<=4&&!workflowFor(o.id)}).slice(0,4).forEach(o=>items.push({kind:'call',id:o.id,title:o.title,sub:'Deadline proche',date:o.deadline,urgent:true}));
   items.sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
   box.innerHTML=items.slice(0,6).map((x,i)=>'<button class="today-row '+(x.kind==='crm'?'crm ':'')+(x.urgent?'urgent':'')+'" data-today="'+i+'"><i></i><span><strong>'+esc(x.title)+'</strong><span>'+esc(x.sub)+'</span></span><b>'+esc(x.date||'À traiter')+'</b></button>').join('')||'<div class="empty">Rien d’urgent. Le calme, cette fonctionnalité rare.</div>';
-  $$('[data-today]',box).forEach((b,i)=>b.onclick=()=>{const x=items[i];if(x.kind==='crm'){route('prospection');setTimeout(()=>selectLead(x.id),30)}else openOpportunity(x.id)});
+  $('[data-today]',box).forEach((b,i)=>b.onclick=async()=>{const x=items[i];if(x.kind==='crm'){route('prospection');try{await ensureViewData('prospection');selectLead(x.id)}catch{}}else openOpportunity(x.id)});
 }
 function handleLocalPlugy(message){
   const m=message.toLowerCase();
