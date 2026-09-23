@@ -76,7 +76,7 @@ let plugyMotionTimer=0;
 let ambientTimer=0;
 
 function animatedModels(){
-  return $('.animated-model,.realistic-model');
+  return Array.from(document.querySelectorAll('.animated-model,.realistic-model'));
 }
 function playPlugyMotion(name='Idle',loop=false){
   document.body.dataset.plugyMotion=String(name).toLowerCase();
