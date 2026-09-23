@@ -4,7 +4,7 @@ const VERSION='108.20260923.9';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,bureau:[],leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,recognition:null,creationMode:'text',radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
+const state={view:'dashboard',bootstrap:null,bureau:[],leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,recognition:null,creationMode:'text',radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -93,7 +93,7 @@ function addMsg(text,role='bot'){
 }
 async function askPlugy(message,injectTarget=null){
   message=clean(message);if(!message)return;
-  const local=handleLocalPlugy(message);if(local){openPlugy();addMsg(message,'user');addMsg(local,'bot');playMotion('Happy');return local;}
+  const local=handleLocalPlugy(message);if(local){openPlugy();addMsg(message,'user');addMsg(local,'bot');playMotion('Happy');if(state.voiceReply)speakPlugy(local);return local;}
   openPlugy();addMsg(message,'user');state.history.push({role:'user',content:message});
   $('#plugyState span').textContent='Réflexion…';playMotion('Think',true);
   const wait=addMsg('…','bot');
@@ -104,6 +104,7 @@ async function askPlugy(message,injectTarget=null){
     wait.textContent=answer;state.history.push({role:'assistant',content:answer});
     $('#plugyState span').textContent='Prêt';playMotion('Present');
     if(injectTarget){const el=$(injectTarget);if(el)el.value=answer}
+    if(state.voiceReply)speakPlugy(answer);
     return answer;
   }catch(e){wait.textContent='Je n’arrive pas à joindre mon moteur pour le moment.';$('#plugyState span').textContent='Connexion interrompue';playMotion('SoftTurn');}
 }
@@ -345,12 +346,18 @@ $$('[data-create]').forEach(b=>b.onclick=()=>{const a=b.dataset.create;$('#newOv
 
 $('#sidebarCollapse')?.addEventListener('click',()=>document.body.classList.toggle('sidebar-small'));
 addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openSearch()}if(e.key==='Escape'){$$('.overlay.open').forEach(o=>o.classList.remove('open'));closePlugy()}});
+
+function speakPlugy(text){
+  text=clean(text);if(!text||!('speechSynthesis' in window)){state.voiceReply=false;return}
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';u.rate=1.08;u.pitch=1;u.onstart=()=>{$('#plugyState span').textContent='Parle…';playMotion('Present',true)};u.onend=()=>{$('#plugyState span').textContent='Prêt';state.voiceReply=false;playMotion('Idle',true)};u.onerror=()=>{state.voiceReply=false;playMotion('Idle',true)};speechSynthesis.speak(u)}catch{state.voiceReply=false}
+}
+
 async function initVoice(){
   const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){toast('Reconnaissance vocale indisponible');return}
   if(state.voice){state.recognition?.stop();return}
-  const rec=new R();state.recognition=rec;rec.lang='fr-FR';rec.interimResults=true;rec.continuous=false;state.voice=true;$('#plugyState span').textContent='Écoute…';playMotion('Attentive',true);
+  const rec=new R();state.recognition=rec;rec.lang='fr-FR';rec.interimResults=true;rec.continuous=false;state.voice=true;state.voiceReply=true;$('#plugyState span').textContent='Écoute…';playMotion('Attentive',true);
   rec.onresult=e=>{let text='';for(let i=e.resultIndex;i<e.results.length;i++)text+=e.results[i][0].transcript;if(text)$('#plugyInput').value=text;if(e.results[e.results.length-1].isFinal){state.voice=false;askPlugy(text)}};
-  rec.onend=()=>{state.voice=false;$('#plugyState span').textContent='Prêt';playMotion('Idle',true)};rec.onerror=rec.onend;rec.start()
+  rec.onend=()=>{state.voice=false;if(!state.voiceReply){$('#plugyState span').textContent='Prêt';playMotion('Idle',true)}};rec.onerror=rec.onend;rec.start()
 }
 $('#plugyVoice')?.addEventListener('click',initVoice);
 
