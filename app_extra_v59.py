@@ -1514,6 +1514,146 @@ def workspace_v107():
     }
 
 
+# V120 Bureau: reusable templates + application folders.
+_v120b=core.conn()
+_v120b.executescript("""
+CREATE TABLE IF NOT EXISTS bureau_templates(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT DEFAULT '',
+  kind TEXT DEFAULT 'Texte',
+  body TEXT DEFAULT '',
+  tags TEXT DEFAULT '',
+  is_default INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_bureau_templates_updated ON bureau_templates(is_default DESC,updated_at DESC,id DESC);
+
+CREATE TABLE IF NOT EXISTS application_folders(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT DEFAULT '',
+  opportunity_id TEXT DEFAULT '',
+  status TEXT DEFAULT 'preparing',
+  checklist_json TEXT DEFAULT '[]',
+  notes TEXT DEFAULT '',
+  primary_doc_id INTEGER,
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_application_folders_updated ON application_folders(updated_at DESC,id DESC);
+""")
+_v120b.commit()
+_seed_count=(_v120b.execute("select count(*) from bureau_templates").fetchone() or [0])[0]
+if not _seed_count:
+    now=_now_v85()
+    seeds=[
+      ('Bio artiste','Bio',"Présente l’artiste, sa pratique, ses médiums, son univers et les repères essentiels de son parcours. Reste factuel, fluide et synthétique.",'bio, artiste',1),
+      ('Note artistique','Note artistique',"Explique la démarche artistique, les intentions, les techniques, les recherches visuelles et le rapport au public sans surinterpréter.",'démarche, artiste',1),
+      ('Candidature Open Call','Candidature',"Présente le projet, explique sa pertinence pour l’appel, précise les œuvres proposées et termine par une formule simple de disponibilité.",'candidature, open call',1),
+      ('Email de prospection','Email',"Objet clair. Présentation courte de PLUG ART ou de l’artiste. Motif précis de la prise de contact. Proposition concrète. Coordonnées et lien utile.",'prospection, email',1),
+      ('Texte exposition','Exposition',"Présente l’exposition, son fil conducteur, les artistes ou œuvres concernées, et les informations pratiques dans une écriture accessible.",'exposition, texte',1),
+      ('Légende Instagram','Instagram',"Accroche courte, informations utiles, appel à l’action clair et hashtags limités et pertinents.",'instagram, contenu',1)
+    ]
+    _v120b.executemany("""insert into bureau_templates(title,kind,body,tags,is_default,created_at,updated_at)
+                         values(?,?,?,?,?,?,?)""",[(a,b,c,d,e,now,now) for a,b,c,d,e in seeds])
+    _v120b.commit()
+_v120b.close()
+
+def _v120_checklist_default():
+    return [
+      {'key':'eligibility','label':'Vérifier l’éligibilité','done':False},
+      {'key':'portfolio','label':'Préparer portfolio / visuels','done':False},
+      {'key':'statement','label':'Finaliser texte / note artistique','done':False},
+      {'key':'form','label':'Compléter le formulaire','done':False},
+      {'key':'submit','label':'Envoyer la candidature','done':False}
+    ]
+
+def _v120_application_row(row):
+    if not row:return None
+    out=dict(row)
+    try:out['checklist']=json.loads(out.pop('checklist_json') or '[]')
+    except Exception:out['checklist']=[]
+    return out
+
+@app.get('/api/v120/bureau/templates')
+def bureau_templates_list_v120():
+    return core.rows("select * from bureau_templates order by is_default desc,updated_at desc,id desc")
+
+@app.post('/api/v120/bureau/templates')
+def bureau_templates_create_v120(body:dict):
+    body=body or {};now=_now_v85()
+    title=str(body.get('title') or 'Nouveau modèle').strip()[:180]
+    kind=str(body.get('kind') or 'Texte').strip()[:80]
+    content=str(body.get('body') or '')
+    tags=str(body.get('tags') or '').strip()[:500]
+    c=core.conn();cur=c.execute("""insert into bureau_templates(title,kind,body,tags,is_default,created_at,updated_at)
+                                  values(?,?,?,?,0,?,?)""",(title,kind,content,tags,now,now));c.commit();tid=cur.lastrowid;c.close()
+    return core.one('select * from bureau_templates where id=?',(tid,))
+
+@app.patch('/api/v120/bureau/templates/{tid}')
+def bureau_templates_update_v120(tid:int,body:dict):
+    if not core.one('select id from bureau_templates where id=?',(tid,)):raise HTTPException(404,'Modèle introuvable')
+    body=body or {};data={}
+    for key,limit in (('title',180),('kind',80),('tags',500)):
+        if key in body:data[key]=str(body.get(key) or '').strip()[:limit]
+    if 'body' in body:data['body']=str(body.get('body') or '')
+    if not data:return core.one('select * from bureau_templates where id=?',(tid,))
+    data['updated_at']=_now_v85();sets=','.join(f"{k}=?" for k in data)
+    c=core.conn();c.execute(f"update bureau_templates set {sets} where id=?",(*data.values(),tid));c.commit();c.close()
+    return core.one('select * from bureau_templates where id=?',(tid,))
+
+@app.delete('/api/v120/bureau/templates/{tid}')
+def bureau_templates_delete_v120(tid:int):
+    row=core.one('select * from bureau_templates where id=?',(tid,))
+    if not row:raise HTTPException(404,'Modèle introuvable')
+    if int(row.get('is_default') or 0):raise HTTPException(400,'Un modèle par défaut ne peut pas être supprimé')
+    c=core.conn();c.execute('delete from bureau_templates where id=?',(tid,));c.commit();c.close()
+    return {'ok':True}
+
+@app.get('/api/v120/bureau/applications')
+def bureau_applications_list_v120():
+    return [_v120_application_row(x) for x in core.rows("select * from application_folders order by updated_at desc,id desc")]
+
+@app.post('/api/v120/bureau/applications')
+def bureau_applications_create_v120(body:dict):
+    body=body or {};now=_now_v85()
+    title=str(body.get('title') or 'Dossier de candidature').strip()[:220]
+    opportunity_id=str(body.get('opportunity_id') or '').strip()[:120]
+    status=str(body.get('status') or 'preparing').strip()[:40]
+    if status not in {'preparing','drafting','ready','submitted','followup','closed'}:status='preparing'
+    checklist=body.get('checklist') if isinstance(body.get('checklist'),list) else _v120_checklist_default()
+    notes=str(body.get('notes') or '')
+    primary_doc_id=body.get('primary_doc_id')
+    try:primary_doc_id=int(primary_doc_id) if primary_doc_id not in (None,'') else None
+    except Exception:primary_doc_id=None
+    c=core.conn();cur=c.execute("""insert into application_folders
+      (title,opportunity_id,status,checklist_json,notes,primary_doc_id,created_at,updated_at)
+      values(?,?,?,?,?,?,?,?)""",(title,opportunity_id,status,json.dumps(checklist,ensure_ascii=False),notes,primary_doc_id,now,now));c.commit();aid=cur.lastrowid;c.close()
+    return _v120_application_row(core.one('select * from application_folders where id=?',(aid,)))
+
+@app.patch('/api/v120/bureau/applications/{aid}')
+def bureau_applications_update_v120(aid:int,body:dict):
+    if not core.one('select id from application_folders where id=?',(aid,)):raise HTTPException(404,'Dossier introuvable')
+    body=body or {};data={}
+    for key,limit in (('title',220),('opportunity_id',120),('status',40)):
+        if key in body:data[key]=str(body.get(key) or '').strip()[:limit]
+    if data.get('status') and data['status'] not in {'preparing','drafting','ready','submitted','followup','closed'}:data['status']='preparing'
+    if 'notes' in body:data['notes']=str(body.get('notes') or '')
+    if isinstance(body.get('checklist'),list):data['checklist_json']=json.dumps(body['checklist'],ensure_ascii=False)
+    if 'primary_doc_id' in body:
+        try:data['primary_doc_id']=int(body.get('primary_doc_id')) if body.get('primary_doc_id') not in (None,'') else None
+        except Exception:data['primary_doc_id']=None
+    if not data:return _v120_application_row(core.one('select * from application_folders where id=?',(aid,)))
+    data['updated_at']=_now_v85();sets=','.join(f"{k}=?" for k in data)
+    c=core.conn();c.execute(f"update application_folders set {sets} where id=?",(*data.values(),aid));c.commit();c.close()
+    return _v120_application_row(core.one('select * from application_folders where id=?',(aid,)))
+
+@app.delete('/api/v120/bureau/applications/{aid}')
+def bureau_applications_delete_v120(aid:int):
+    c=core.conn();cur=c.execute('delete from application_folders where id=?',(aid,));c.commit();c.close()
+    if not cur.rowcount:raise HTTPException(404,'Dossier introuvable')
+    return {'ok':True}
+
 # V107.1 Open Call workflow tracking.
 _v107w=core.conn()
 _v107w.executescript("""
