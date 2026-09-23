@@ -618,7 +618,7 @@ function installCreationModes(){
   bar.innerHTML='<button class="active" data-create-mode="text">Texte</button><button data-create-mode="carousel">Carrousel</button><button data-create-mode="visual">Visuel</button><span class="mode-spacer"></span><select id="draftPicker"><option value="">Brouillons</option></select><button id="draftRecover" hidden>Récupérer local</button><button id="draftSave">Enregistrer</button><button id="draftDelete" title="Supprimer le brouillon">×</button>';
   toolbar.insertAdjacentElement('afterend',bar);
   const carousel=document.createElement('section');carousel.id='carouselCreationPanel';carousel.className='creation-mode-panel';
-  carousel.innerHTML='<div class="carousel-controls panel"><div class="panel-head"><div><small>CARROUSEL</small><h2>Structure éditoriale</h2></div></div><label>Source<select id="carouselSource"><option value="">Brief libre</option></select></label><label>Nombre de slides<select id="carouselCount"><option>4</option><option selected>5</option><option>6</option><option>7</option></select></label><label>Format<select id="carouselFormat"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><label>Brief<textarea id="carouselBrief" rows="7" placeholder="Angle, informations essentielles, CTA…"></textarea></label><button class="primary-btn wide" id="carouselGenerate">✦ Générer la structure</button><button class="secondary-btn wide" id="carouselGenerateImage">Générer l’image de la slide</button><button class="secondary-btn wide" id="carouselGenerateAll">Générer toutes les images</button><button class="secondary-btn wide" id="carouselExport">Exporter la slide PNG</button><button class="secondary-btn wide" id="carouselExportAll">Exporter toutes les slides</button><button class="secondary-btn wide" id="carouselToBureau">▤ Envoyer au Bureau</button></div><div class="carousel-preview panel"><div class="carousel-canvas" id="carouselCanvas"><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Ton carrousel apparaîtra ici</h3><p id="carouselBody">Choisis une source ou écris un brief.</p><b id="carouselCta">Découvrir →</b></div></div><div class="carousel-edit"><input id="slideKicker" placeholder="Kicker"><input id="slideTitle" placeholder="Titre"><textarea id="slideBody" rows="4" placeholder="Texte"></textarea><input id="slideCta" placeholder="CTA"></div></div><aside class="carousel-strip panel"><div class="panel-head"><div><small>SLIDES</small><h2 id="carouselCounter">0 slide</h2></div></div><div id="carouselSlides"></div></aside>';
+  carousel.innerHTML='<div class="carousel-controls panel"><div class="panel-head"><div><small>CARROUSEL</small><h2>Structure éditoriale</h2></div></div><label>Source<select id="carouselSource"><option value="">Brief libre</option></select></label><label>Nombre de slides<select id="carouselCount"><option>4</option><option selected>5</option><option>6</option><option>7</option></select></label><label>Format<select id="carouselFormat"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><label>Brief<textarea id="carouselBrief" rows="7" placeholder="Angle, informations essentielles, CTA…"></textarea></label><button class="primary-btn wide" id="carouselGenerate">✦ Générer la structure</button><button class="secondary-btn wide" id="carouselGenerateImage">Générer l’image de la slide</button><button class="secondary-btn wide" id="carouselGenerateAll">Générer toutes les images</button><button class="secondary-btn wide" id="carouselExport">Exporter la slide PNG</button><button class="secondary-btn wide" id="carouselExportAll">Exporter toutes les slides</button><label>Instagram<textarea id="carouselCaption" rows="5" placeholder="Légende Instagram…"></textarea></label><button class="secondary-btn wide" id="carouselCaptionGenerate">✦ Préparer la légende</button><button class="primary-btn wide" id="carouselPublishInstagram">Publier sur Instagram</button><button class="secondary-btn wide" id="carouselToBureau">▤ Envoyer au Bureau</button></div><div class="carousel-preview panel"><div class="carousel-canvas" id="carouselCanvas"><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Ton carrousel apparaîtra ici</h3><p id="carouselBody">Choisis une source ou écris un brief.</p><b id="carouselCta">Découvrir →</b></div></div><div class="carousel-edit"><input id="slideKicker" placeholder="Kicker"><input id="slideTitle" placeholder="Titre"><textarea id="slideBody" rows="4" placeholder="Texte"></textarea><input id="slideCta" placeholder="CTA"></div></div><aside class="carousel-strip panel"><div class="panel-head"><div><small>SLIDES</small><h2 id="carouselCounter">0 slide</h2></div></div><div id="carouselSlides"></div></aside>';
   view.appendChild(carousel);
   const visual=document.createElement('section');visual.id='visualCreationPanel';visual.className='creation-mode-panel';
   visual.innerHTML='<div class="visual-controls panel"><div class="panel-head"><div><small>VISUEL</small><h2>Génération d’image</h2></div></div><label>Prompt<textarea id="visualPrompt" rows="9" placeholder="Décris le visuel à créer…"></textarea></label><label>Style<select id="visualStyle"><option value="gallery">Galerie / éditorial</option><option value="editorial">Éditorial</option><option value="art">Art contemporain</option><option value="photo">Photographique</option></select></label><label>Format<select id="visualRatio"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><button class="primary-btn wide" id="visualGenerate">✦ Générer le visuel</button><button class="secondary-btn wide" id="visualDownload">Télécharger le visuel</button><button class="secondary-btn wide" id="visualToBureau">▤ Envoyer au Bureau</button></div><div class="visual-preview panel"><div id="visualImage"><span>Le visuel apparaîtra ici.</span></div></div>';
@@ -631,7 +631,7 @@ function installCreationModes(){
   $('#draftRecover').onclick=restoreLocalCreationBackup;
   $('#draftSave').onclick=saveDraft;
   $('#draftDelete').onclick=deleteDraft;
-  $('#carouselSource').onchange=syncCarouselBrief;$('#carouselGenerate').onclick=generateCarousel;$('#carouselGenerateImage').onclick=()=>generateCarouselImage(state.carousel.active);$('#carouselGenerateAll').onclick=generateAllCarouselImages;$('#carouselExport').onclick=()=>exportCarouselSlide(state.carousel.active);$('#carouselExportAll').onclick=exportAllCarouselSlides;$('#carouselToBureau').onclick=carouselToBureau;
+  $('#carouselSource').onchange=syncCarouselBrief;$('#carouselGenerate').onclick=generateCarousel;$('#carouselGenerateImage').onclick=()=>generateCarouselImage(state.carousel.active);$('#carouselGenerateAll').onclick=generateAllCarouselImages;$('#carouselExport').onclick=()=>exportCarouselSlide(state.carousel.active);$('#carouselExportAll').onclick=exportAllCarouselSlides;$('#carouselCaptionGenerate').onclick=prepareInstagramCaption;$('#carouselPublishInstagram').onclick=publishCarouselInstagram;$('#carouselToBureau').onclick=carouselToBureau;
   $('#carouselFormat').onchange=e=>{state.carousel.format=e.target.value;renderCarousel()};
   ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
   $('#visualGenerate').onclick=generateVisual;$('#visualDownload').onclick=downloadVisual;$('#visualToBureau').onclick=visualToBureau;
@@ -670,6 +670,7 @@ function applyCreationSnapshot(snap){
     state.carousel={slides:Array.isArray(p.slides)?p.slides:[],active:Number(p.active||0),format:p.format||'4:5'};
     if($('#carouselSource'))$('#carouselSource').value=snap.source_opportunity_id||'';
     if($('#carouselBrief'))$('#carouselBrief').value=p.brief||'';
+    if($('#carouselCaption'))$('#carouselCaption').value=p.instagram_caption||'';
     if($('#carouselFormat'))$('#carouselFormat').value=state.carousel.format;
     renderCarousel();
   }else if(mode==='visual'){
@@ -696,7 +697,7 @@ function renderDraftPicker(){
   p.innerHTML='<option value="">Brouillons</option>'+state.drafts.map(d=>'<option value="'+d.id+'">'+esc((d.title||'Brouillon')+' · '+d.kind)+'</option>').join('');p.value=String(cur||'');
 }
 function draftSnapshot(){
-  if(state.creationMode==='carousel')return{kind:'carousel',title:state.carousel.slides[0]?.title||'Carrousel PLUG ART',source_opportunity_id:$('#carouselSource')?.value||'',payload:{slides:state.carousel.slides,active:state.carousel.active,format:state.carousel.format,brief:$('#carouselBrief')?.value||''}};
+  if(state.creationMode==='carousel')return{kind:'carousel',title:state.carousel.slides[0]?.title||'Carrousel PLUG ART',source_opportunity_id:$('#carouselSource')?.value||'',payload:{slides:state.carousel.slides,active:state.carousel.active,format:state.carousel.format,brief:$('#carouselBrief')?.value||'',instagram_caption:$('#carouselCaption')?.value||''}};
   if(state.creationMode==='visual')return{kind:'visual',title:'Visuel PLUG ART',source_opportunity_id:'',payload:{url:state.visual.url,prompt:$('#visualPrompt')?.value||state.visual.prompt||'',style:$('#visualStyle')?.value||'gallery',ratio:$('#visualRatio')?.value||'4:5'}};
   return{kind:'text',title:$('#contentTitle')?.value||$('#contentType')?.value||'Texte PLUG ART',source_opportunity_id:$('#contentSource')?.value||'',payload:{type:$('#contentType')?.value||'',objective:$('#contentObjective')?.value||'',brief:$('#contentBrief')?.value||'',body:$('#contentBody')?.value||''}};
 }
@@ -711,7 +712,7 @@ async function saveDraft(silent=false){
 function loadDraft(id){
   const d=state.drafts.find(x=>Number(x.id)===Number(id));if(!d)return;state.currentDraft=d.id;state.creationDirty=false;setCreationMode(d.kind||'text');
   const p=d.payload||{};
-  if(d.kind==='carousel'){state.carousel={slides:Array.isArray(p.slides)?p.slides:[],active:Number(p.active||0),format:p.format||'4:5'};if($('#carouselSource'))$('#carouselSource').value=d.source_opportunity_id||'';if($('#carouselBrief'))$('#carouselBrief').value=p.brief||'';if($('#carouselFormat'))$('#carouselFormat').value=state.carousel.format;renderCarousel()}
+  if(d.kind==='carousel'){state.carousel={slides:Array.isArray(p.slides)?p.slides:[],active:Number(p.active||0),format:p.format||'4:5'};if($('#carouselSource'))$('#carouselSource').value=d.source_opportunity_id||'';if($('#carouselBrief'))$('#carouselBrief').value=p.brief||'';if($('#carouselCaption'))$('#carouselCaption').value=p.instagram_caption||'';if($('#carouselFormat'))$('#carouselFormat').value=state.carousel.format;renderCarousel()}
   else if(d.kind==='visual'){state.visual={url:p.url||'',prompt:p.prompt||''};$('#visualPrompt').value=p.prompt||'';$('#visualStyle').value=p.style||'gallery';$('#visualRatio').value=p.ratio||'4:5';$('#visualImage').style.backgroundImage=p.url?'url("'+String(p.url).replace(/"/g,'%22')+'")':'none';if(p.url)$('#visualImage').innerHTML=''}
   else{$('#contentTitle').value=d.title||'';$('#contentSource').value=d.source_opportunity_id||'';$('#contentType').value=p.type||$('#contentType').value;$('#contentObjective').value=p.objective||'';$('#contentBrief').value=p.brief||'';$('#contentBody').value=p.body||''}
   clearLocalCreationBackup();renderDraftPicker();toast('Brouillon chargé');
@@ -728,7 +729,7 @@ function scheduleDraftAutosave(){
   clearTimeout(draftAutosaveTimer);draftAutosaveTimer=setTimeout(()=>saveDraft(true),1600);
 }
 function bindDraftAutosave(){
-  ['contentTitle','contentObjective','contentBrief','contentBody','carouselBrief','slideKicker','slideTitle','slideBody','slideCta','visualPrompt'].forEach(id=>$('#'+id)?.addEventListener('input',scheduleDraftAutosave));
+  ['contentTitle','contentObjective','contentBrief','contentBody','carouselBrief','carouselCaption','slideKicker','slideTitle','slideBody','slideCta','visualPrompt'].forEach(id=>$('#'+id)?.addEventListener('input',scheduleDraftAutosave));
   ['contentType','contentSource','carouselSource','carouselFormat','visualStyle','visualRatio'].forEach(id=>$('#'+id)?.addEventListener('change',scheduleDraftAutosave));
 }
 
@@ -858,25 +859,47 @@ async function getZipLib(){
   if(!zipLibPromise)zipLibPromise=import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm').then(m=>m.default||m);
   return zipLibPromise;
 }
+function blobToDataUrl(blob){
+  return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||''));r.onerror=reject;r.readAsDataURL(blob)});
+}
+async function renderedCarouselItems(){
+  const items=[];
+  for(let i=0;i<state.carousel.slides.length;i++){
+    const blob=await renderCarouselSlideBlob(i);if(!blob)throw new Error('Rendu slide impossible');
+    items.push({filename:'plug-art-slide-'+String(i+1).padStart(2,'0')+'.png',data_url:await blobToDataUrl(blob)});
+  }
+  return items;
+}
 async function exportAllCarouselSlides(){
   if(!state.carousel.slides.length)return toast('Aucune slide à exporter');
   const b=$('#carouselExportAll'),old=b.textContent;b.disabled=true;
   try{
-    const JSZip=await getZipLib(),zip=new JSZip();
-    for(let i=0;i<state.carousel.slides.length;i++){
-      b.textContent='Prépare '+(i+1)+'/'+state.carousel.slides.length;
-      const blob=await renderCarouselSlideBlob(i);
-      if(blob)zip.file('plug-art-slide-'+String(i+1).padStart(2,'0')+'.png',blob);
-    }
+    b.textContent='Préparation des slides…';
+    const items=await renderedCarouselItems();
     b.textContent='Création ZIP…';
-    const archive=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}},meta=>{b.textContent='ZIP '+Math.round(meta.percent)+'%'});
-    triggerBlobDownload(archive,'plug-art-carousel.zip');toast('Carrousel ZIP exporté');
-  }catch(err){
-    for(let i=0;i<state.carousel.slides.length;i++){
-      b.textContent='Export '+(i+1)+'/'+state.carousel.slides.length;
-      await exportCarouselSlide(i,true);await new Promise(r=>setTimeout(r,160));
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),120000);
+    const r=await fetch('/api/v115/exports/carousel/zip',{method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json','Accept':'application/zip'},body:JSON.stringify({title:'plug-art-carousel',items})});
+    clearTimeout(timer);
+    if(!r.ok)throw new Error('server-zip');
+    triggerBlobDownload(await r.blob(),'plug-art-carousel.zip');toast('Carrousel ZIP exporté');
+  }catch(serverErr){
+    try{
+      const JSZip=await getZipLib(),zip=new JSZip();
+      for(let i=0;i<state.carousel.slides.length;i++){
+        b.textContent='Prépare '+(i+1)+'/'+state.carousel.slides.length;
+        const blob=await renderCarouselSlideBlob(i);
+        if(blob)zip.file('plug-art-slide-'+String(i+1).padStart(2,'0')+'.png',blob);
+      }
+      b.textContent='ZIP local…';
+      const archive=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+      triggerBlobDownload(archive,'plug-art-carousel.zip');toast('Carrousel ZIP exporté');
+    }catch(err){
+      for(let i=0;i<state.carousel.slides.length;i++){
+        b.textContent='Export '+(i+1)+'/'+state.carousel.slides.length;
+        await exportCarouselSlide(i,true);await new Promise(r=>setTimeout(r,160));
+      }
+      toast('Carrousel exporté en PNG');
     }
-    toast('Carrousel exporté en PNG');
   }finally{b.disabled=false;b.textContent=old}
 }
 async function downloadVisual(){
@@ -887,6 +910,44 @@ async function downloadVisual(){
   }catch{
     window.open(state.visual.url,'_blank','noopener');toast('Visuel ouvert pour téléchargement');
   }
+}
+
+async function saveRenderedCarouselPublic(){
+  if(!state.carousel.slides.length)throw new Error('Aucune slide');
+  const items=await renderedCarouselItems();
+  const out=await api('/api/v115/exports/carousel/public',{method:'POST',timeout:120000,body:JSON.stringify({items})});
+  if(!Array.isArray(out.urls)||!out.urls.length)throw new Error('Aucun média public');
+  return out.urls.map(u=>new URL(u,location.origin).href);
+}
+async function prepareInstagramCaption(){
+  if(!state.carousel.slides.length)return toast('Génère d’abord le carrousel');
+  const b=$('#carouselCaptionGenerate'),old=b.textContent;b.disabled=true;b.textContent='PLUGY écrit…';
+  const source=opportunityById($('#carouselSource')?.value);
+  const slides=state.carousel.slides.map((s,i)=>({slide:i+1,title:s.title,body:s.body,cta:s.cta}));
+  const prompt='Rédige une légende Instagram PLUG ART claire, naturelle et concise à partir de ces informations. N’invente aucun fait. Termine exactement par : Commente PLUG 🔌 pour être branché et recevoir le lien de candidature. Ajoute 4 à 7 hashtags pertinents maximum. Données : '+JSON.stringify({source:source?.title||'',deadline:source?.deadline||'',slides});
+  try{
+    const out=await api('/api/v32/plugy',{method:'POST',timeout:60000,body:JSON.stringify({message:prompt,page:'content',mode:'deep'})});
+    const caption=String(out.answer||'').trim();if(!caption)throw new Error('Légende vide');
+    $('#carouselCaption').value=caption;scheduleDraftAutosave();toast('Légende préparée');
+  }catch(e){console.warn('[PLUG ART caption]',e);toast('PLUGY n’a pas pu préparer la légende')}
+  finally{b.disabled=false;b.textContent=old}
+}
+async function publishCarouselInstagram(){
+  if(!state.carousel.slides.length)return toast('Aucun carrousel à publier');
+  const caption=String($('#carouselCaption')?.value||'').trim();if(!caption)return toast('Ajoute ou génère une légende');
+  const b=$('#carouselPublishInstagram'),old=b.textContent;b.disabled=true;b.textContent='Vérification Instagram…';
+  try{
+    const status=await api('/api/v88/instagram/status',{timeout:15000});
+    if(!status.connected)throw new Error('instagram-not-connected');
+    b.textContent='Préparation des slides…';
+    const urls=await saveRenderedCarouselPublic();
+    b.textContent='Publication…';
+    const out=await api('/api/v88/instagram/publish',{method:'POST',timeout:120000,body:JSON.stringify({caption,media_urls:urls})});
+    toast(out.permalink?'Publié sur Instagram':'Publication Instagram confirmée');
+  }catch(e){
+    console.warn('[PLUG ART Instagram]',e);
+    toast(String(e.message||e).includes('instagram-not-connected')?'Instagram n’est pas connecté':'Publication Instagram impossible');
+  }finally{b.disabled=false;b.textContent=old}
 }
 
 async function carouselToBureau(){
