@@ -8,7 +8,7 @@
 <meta name="description" content="PLUGAR rassemble opportunités artistiques, création, réseau et PLUGY dans une expérience fluide pensée pour les artistes émergents.">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ajax.googleapis.com">
-<link rel="stylesheet" href="/static/plugar_v105.css?v=105.20260923.1">
+<link rel="stylesheet" href="/static/plugar_v105.css?v=106.20260923.1">
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
 </head>
 <body data-plugy-section="hero">
@@ -47,19 +47,20 @@
     </div>
     <div class="hero-plugy reveal" aria-label="PLUGY, assistant PLUGAR">
       <model-viewer
-        class="hero-model"
-        src="/static/plugy_official_v84.glb"
+        class="hero-model realistic-model"
+        src="/assets/plugy-v106-realistic.glb?v=106.20260923.1"
+        poster="https://storage.to3d.app/generated-3d/images/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_image.png"
         camera-controls
         auto-rotate
-        rotation-per-second="7deg"
+        auto-rotate-delay="600"
+        rotation-per-second=".85deg"
         interaction-prompt="none"
-        shadow-intensity="0.55"
+        shadow-intensity="0.62"
         shadow-softness="1"
-        exposure="1.08"
-        camera-orbit="0deg 78deg 3.25m"
-        field-of-view="28deg"
-        autoplay
-        alt="PLUGY en 3D"></model-viewer>
+        exposure="1.04"
+        camera-orbit="8deg 76deg 3.15m"
+        field-of-view="27deg"
+        alt="PLUGY réaliste en 3D"></model-viewer>
       <div class="model-fallback" aria-hidden="true"><i class="eye a"></i><i class="eye b"></i></div>
     </div>
   </div>
@@ -196,7 +197,15 @@
       <button class="btn btn-glow" id="voiceCta">Démarrer la conversation</button>
     </div>
     <div class="voice-stage reveal">
-      <div class="voice-ring"><div class="voice-orb"></div></div>
+      <div class="voice-ring">
+        <div class="voice-orb"></div>
+        <model-viewer class="voice-model animated-model"
+          src="/static/PLUGY_final_animated.glb?v=106.20260923.1"
+          camera-controls autoplay interaction-prompt="none"
+          shadow-intensity=".25" shadow-softness="1"
+          exposure="1.12" camera-orbit="0deg 78deg 3.2m"
+          field-of-view="29deg" alt="PLUGY animé"></model-viewer>
+      </div>
       <div class="voice-bars"><i></i><i></i><i></i><i></i><i></i></div>
     </div>
   </div>
@@ -227,7 +236,7 @@
 
 <aside class="plugy-guide" id="plugyGuide" aria-live="polite">
   <button class="plugy-guide-visual" data-open-plugy aria-label="Parler à PLUGY">
-    <model-viewer class="plugy-mini-model" src="/static/plugy_official_v84.glb" auto-rotate rotation-per-second="8deg" interaction-prompt="none" shadow-intensity=".2" camera-orbit="0deg 78deg 3.5m" field-of-view="30deg" autoplay alt="PLUGY"></model-viewer>
+    <model-viewer class="plugy-mini-model animated-model" src="/static/PLUGY_final_animated.glb?v=106.20260923.1" interaction-prompt="none" shadow-intensity=".22" shadow-softness="1" exposure="1.1" camera-orbit="0deg 78deg 3.35m" field-of-view="30deg" autoplay alt="PLUGY animé"></model-viewer>
   </button>
   <div class="plugy-bubble"><b>PLUGY</b><span id="plugyBubbleText">Je garde le contexte de cette rubrique.</span><button data-open-plugy>Me parler →</button></div>
 </aside>
@@ -249,6 +258,6 @@
   </form>
 </aside>
 
-<script src="/static/plugar_v105.js?v=105.20260923.1" defer></script>
+<script src="/static/plugar_v105.js?v=106.20260923.1" defer></script>
 </body>
 </html>
