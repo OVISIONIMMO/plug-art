@@ -587,7 +587,7 @@ function installCreationModes(){
   const toolbar=view.querySelector('.page-toolbar'),textPanel=view.querySelector('.creation-layout');
   if(textPanel)textPanel.id='textCreationPanel';
   const bar=document.createElement('div');bar.id='creationModeBar';bar.className='creation-mode-bar';
-  bar.innerHTML='<button class="active" data-create-mode="text">Texte</button><button data-create-mode="carousel">Carrousel</button><button data-create-mode="visual">Visuel</button><span class="mode-spacer"></span><select id="draftPicker"><option value="">Brouillons</option></select><button id="draftSave">Enregistrer</button><button id="draftDelete" title="Supprimer le brouillon">×</button>';
+  bar.innerHTML='<button class="active" data-create-mode="text">Texte</button><button data-create-mode="carousel">Carrousel</button><button data-create-mode="visual">Visuel</button><span class="mode-spacer"></span><select id="draftPicker"><option value="">Brouillons</option></select><button id="draftRecover" hidden>Récupérer local</button><button id="draftSave">Enregistrer</button><button id="draftDelete" title="Supprimer le brouillon">×</button>';
   toolbar.insertAdjacentElement('afterend',bar);
   const carousel=document.createElement('section');carousel.id='carouselCreationPanel';carousel.className='creation-mode-panel';
   carousel.innerHTML='<div class="carousel-controls panel"><div class="panel-head"><div><small>CARROUSEL</small><h2>Structure éditoriale</h2></div></div><label>Source<select id="carouselSource"><option value="">Brief libre</option></select></label><label>Nombre de slides<select id="carouselCount"><option>4</option><option selected>5</option><option>6</option><option>7</option></select></label><label>Format<select id="carouselFormat"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><label>Brief<textarea id="carouselBrief" rows="7" placeholder="Angle, informations essentielles, CTA…"></textarea></label><button class="primary-btn wide" id="carouselGenerate">✦ Générer la structure</button><button class="secondary-btn wide" id="carouselGenerateImage">Générer l’image de la slide</button><button class="secondary-btn wide" id="carouselGenerateAll">Générer toutes les images</button><button class="secondary-btn wide" id="carouselExport">Exporter la slide PNG</button><button class="secondary-btn wide" id="carouselExportAll">Exporter toutes les slides</button><button class="secondary-btn wide" id="carouselToBureau">▤ Envoyer au Bureau</button></div><div class="carousel-preview panel"><div class="carousel-canvas" id="carouselCanvas"><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Ton carrousel apparaîtra ici</h3><p id="carouselBody">Choisis une source ou écris un brief.</p><b id="carouselCta">Découvrir →</b></div></div><div class="carousel-edit"><input id="slideKicker" placeholder="Kicker"><input id="slideTitle" placeholder="Titre"><textarea id="slideBody" rows="4" placeholder="Texte"></textarea><input id="slideCta" placeholder="CTA"></div></div><aside class="carousel-strip panel"><div class="panel-head"><div><small>SLIDES</small><h2 id="carouselCounter">0 slide</h2></div></div><div id="carouselSlides"></div></aside>';
@@ -600,13 +600,67 @@ function installCreationModes(){
   `;document.head.appendChild(st);
   $$('[data-create-mode]',bar).forEach(b=>b.onclick=()=>setCreationMode(b.dataset.createMode));
   $('#draftPicker').onchange=e=>{if(e.target.value)loadDraft(Number(e.target.value))};
+  $('#draftRecover').onclick=restoreLocalCreationBackup;
   $('#draftSave').onclick=saveDraft;
   $('#draftDelete').onclick=deleteDraft;
   $('#carouselSource').onchange=syncCarouselBrief;$('#carouselGenerate').onclick=generateCarousel;$('#carouselGenerateImage').onclick=()=>generateCarouselImage(state.carousel.active);$('#carouselGenerateAll').onclick=generateAllCarouselImages;$('#carouselExport').onclick=()=>exportCarouselSlide(state.carousel.active);$('#carouselExportAll').onclick=exportAllCarouselSlides;$('#carouselToBureau').onclick=carouselToBureau;
   $('#carouselFormat').onchange=e=>{state.carousel.format=e.target.value;renderCarousel()};
   ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
   $('#visualGenerate').onclick=generateVisual;$('#visualDownload').onclick=downloadVisual;$('#visualToBureau').onclick=visualToBureau;
-  setCreationMode('text');fillCreationSources();bindDraftAutosave();
+  setCreationMode('text');fillCreationSources();bindDraftAutosave();refreshLocalDraftRecovery();
+}
+
+
+const LOCAL_CREATION_KEY='plugart.creation.backup.v113';
+function readLocalCreationBackup(){
+  try{
+    const raw=localStorage.getItem(LOCAL_CREATION_KEY);if(!raw)return null;
+    const data=JSON.parse(raw);if(!data?.snapshot||Date.now()-Number(data.at||0)>7*86400000){localStorage.removeItem(LOCAL_CREATION_KEY);return null}
+    return data;
+  }catch{return null}
+}
+function refreshLocalDraftRecovery(){
+  const b=$('#draftRecover');if(!b)return;const backup=readLocalCreationBackup();
+  b.hidden=!backup;
+  if(backup){const d=new Date(Number(backup.at||Date.now()));b.textContent='Récupérer local · '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+}
+function saveLocalCreationBackup(){
+  try{
+    const snapshot=draftSnapshot();
+    localStorage.setItem(LOCAL_CREATION_KEY,JSON.stringify({at:Date.now(),mode:snapshot.kind||state.creationMode,snapshot}));
+    refreshLocalDraftRecovery();
+  }catch{}
+}
+function clearLocalCreationBackup(){
+  try{localStorage.removeItem(LOCAL_CREATION_KEY)}catch{}
+  refreshLocalDraftRecovery();
+}
+function applyCreationSnapshot(snap){
+  if(!snap)return;
+  const mode=snap.kind||'text',p=snap.payload||{};state.currentDraft=null;setCreationMode(mode);
+  if(mode==='carousel'){
+    state.carousel={slides:Array.isArray(p.slides)?p.slides:[],active:Number(p.active||0),format:p.format||'4:5'};
+    if($('#carouselSource'))$('#carouselSource').value=snap.source_opportunity_id||'';
+    if($('#carouselBrief'))$('#carouselBrief').value=p.brief||'';
+    if($('#carouselFormat'))$('#carouselFormat').value=state.carousel.format;
+    renderCarousel();
+  }else if(mode==='visual'){
+    state.visual={url:p.url||'',prompt:p.prompt||''};
+    $('#visualPrompt').value=p.prompt||'';$('#visualStyle').value=p.style||'gallery';$('#visualRatio').value=p.ratio||'4:5';
+    $('#visualImage').style.backgroundImage=p.url?'url("'+String(p.url).replace(/"/g,'%22')+'")':'none';
+    if(p.url)$('#visualImage').innerHTML='';
+  }else{
+    $('#contentTitle').value=snap.title||'';
+    $('#contentSource').value=snap.source_opportunity_id||'';
+    $('#contentType').value=p.type||$('#contentType').value;
+    $('#contentObjective').value=p.objective||'';
+    $('#contentBrief').value=p.brief||'';
+    $('#contentBody').value=p.body||'';
+  }
+}
+function restoreLocalCreationBackup(){
+  const backup=readLocalCreationBackup();if(!backup)return toast('Aucun brouillon local');
+  applyCreationSnapshot(backup.snapshot);toast('Brouillon local récupéré');
 }
 
 function renderDraftPicker(){
@@ -623,7 +677,7 @@ async function saveDraft(silent=false){
   try{
     let d;if(state.currentDraft)d=await api('/api/v108/drafts/'+state.currentDraft,{method:'PATCH',body:JSON.stringify(snap)});
     else d=await api('/api/v108/drafts',{method:'POST',body:JSON.stringify(snap)});
-    state.drafts=state.drafts.filter(x=>x.id!==d.id);state.drafts.unshift(d);state.currentDraft=d.id;renderDraftPicker();saveStatus('Brouillon enregistré','saved');if(!silent)toast('Brouillon enregistré');
+    state.drafts=state.drafts.filter(x=>x.id!==d.id);state.drafts.unshift(d);state.currentDraft=d.id;renderDraftPicker();clearLocalCreationBackup();saveStatus('Brouillon enregistré','saved');if(!silent)toast('Brouillon enregistré');
   }catch{saveStatus('Erreur brouillon','error');if(!silent)toast('Enregistrement du brouillon impossible')}
 }
 function loadDraft(id){
@@ -632,15 +686,16 @@ function loadDraft(id){
   if(d.kind==='carousel'){state.carousel={slides:Array.isArray(p.slides)?p.slides:[],active:Number(p.active||0),format:p.format||'4:5'};if($('#carouselSource'))$('#carouselSource').value=d.source_opportunity_id||'';if($('#carouselBrief'))$('#carouselBrief').value=p.brief||'';if($('#carouselFormat'))$('#carouselFormat').value=state.carousel.format;renderCarousel()}
   else if(d.kind==='visual'){state.visual={url:p.url||'',prompt:p.prompt||''};$('#visualPrompt').value=p.prompt||'';$('#visualStyle').value=p.style||'gallery';$('#visualRatio').value=p.ratio||'4:5';$('#visualImage').style.backgroundImage=p.url?'url("'+String(p.url).replace(/"/g,'%22')+'")':'none';if(p.url)$('#visualImage').innerHTML=''}
   else{$('#contentTitle').value=d.title||'';$('#contentSource').value=d.source_opportunity_id||'';$('#contentType').value=p.type||$('#contentType').value;$('#contentObjective').value=p.objective||'';$('#contentBrief').value=p.brief||'';$('#contentBody').value=p.body||''}
-  renderDraftPicker();toast('Brouillon chargé');
+  clearLocalCreationBackup();renderDraftPicker();toast('Brouillon chargé');
 }
 async function deleteDraft(){
   if(!state.currentDraft)return toast('Aucun brouillon sélectionné');
-  try{await api('/api/v108/drafts/'+state.currentDraft,{method:'DELETE'});state.drafts=state.drafts.filter(x=>x.id!==state.currentDraft);state.currentDraft=null;renderDraftPicker();toast('Brouillon supprimé')}catch{toast('Suppression impossible')}
+  try{await api('/api/v108/drafts/'+state.currentDraft,{method:'DELETE'});state.drafts=state.drafts.filter(x=>x.id!==state.currentDraft);state.currentDraft=null;clearLocalCreationBackup();renderDraftPicker();toast('Brouillon supprimé')}catch{toast('Suppression impossible')}
 }
 
 let draftAutosaveTimer=0;
 function scheduleDraftAutosave(){
+  saveLocalCreationBackup();
   if(!state.currentDraft)return;
   clearTimeout(draftAutosaveTimer);draftAutosaveTimer=setTimeout(()=>saveDraft(true),1600);
 }
@@ -976,5 +1031,6 @@ pm?.addEventListener('pointerdown',()=>{clearTimeout(plugyPressTimer);plugyPress
 ['pointerup','pointercancel','pointerleave'].forEach(ev=>pm?.addEventListener(ev,()=>clearTimeout(plugyPressTimer)));
 startPlugyAmbient();
 
+addEventListener('beforeunload',()=>{if(state.view==='creation')saveLocalCreationBackup()});
 const initial=location.hash.slice(1)||'dashboard';history.replaceState({view:initial},'','#'+initial);route(initial,false);renderSuggestions();loadAll();
 })();
