@@ -8,14 +8,14 @@ import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='108.0'
+app.version='109.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='108.20260923.1'
+VERSION='109.20260923.4'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -193,8 +193,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'108.0',
-      'X-Plug-Art-UI':'plug-art-v108-internal-studio'
+      'X-Plug-Art-Version':'109.0',
+      'X-Plug-Art-UI':'plug-art-v109-productivity-workspace'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -1494,9 +1494,9 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'108.0',
-      'ui':'plug-art-v108-internal-studio',
-      'reference_direction':'V108 PLUG ART: compact internal dashboard, direct Radar and Open Call workflow, persistent Bureau, CRM prospection, carousel and visual studio, and one realistic contextual PLUGY',
+      'version':'109.0',
+      'ui':'plug-art-v109-productivity-workspace',
+      'reference_direction':'V109 PLUG ART: compact productivity workspace with Radar presets, Open Call favorites and workflow, Agenda, persistent Bureau and drafts, CRM prospection, creation studio and interactive voice PLUGY',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -1522,4 +1522,4 @@ def status_v90():
       'background':'compact PLUG ART internal workspace with dashboard-first navigation, operational workflow and integrated content studio'
     }
 
-print(f"PLUG_ART_V108_READY ui=internal_dashboard bureau=persistent prospection=crm open_call_workflow=on drafts=persistent realistic=on contextual_motion=on plugy=single_drawer instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V109_READY ui=internal_dashboard bureau=persistent prospection=crm open_call_workflow=on drafts=persistent realistic=on contextual_motion=on plugy=single_drawer instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
