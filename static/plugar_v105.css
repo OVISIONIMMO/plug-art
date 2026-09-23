@@ -277,3 +277,74 @@ body[data-plugy-section="network"] .plugy-guide{right:auto;left:34px}
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}.reveal{opacity:1;transform:none}.hero-plugy:before,.voice-stage:before,.voice-orb,.voice-bars i{animation:none}.btn,.feature-card,.artist-card,.plugy-guide{transition:none}
 }
+
+
+/* PLUGAR V106 · realistic + contextual PLUGY motion */
+.chapter:not(.hero){content-visibility:auto;contain-intrinsic-size:900px}
+.hero-plugy{
+  --plugy-x:0px;--plugy-y:0px;
+  perspective:1200px;
+}
+.hero-model{
+  transform:translate3d(var(--plugy-x),var(--plugy-y),0) scale(1.025);
+  transition:transform .5s cubic-bezier(.2,.8,.2,1),filter .55s ease,opacity .35s ease;
+  will-change:transform;
+}
+.hero-model.realistic-model{
+  filter:drop-shadow(0 48px 54px rgba(31,35,60,.20)) drop-shadow(0 8px 22px rgba(109,86,255,.10));
+}
+.hero-model.realistic-model::part(default-progress-bar){display:none}
+.hero-model.hero-animated-fallback{filter:drop-shadow(0 34px 44px rgba(56,52,108,.22))}
+.plugy-mini-model,.voice-model{
+  transition:filter .38s ease,transform .38s ease;
+  will-change:transform;
+}
+.voice-ring{overflow:visible}
+.voice-model{
+  position:absolute;z-index:3;width:330px;height:330px;
+  --poster-color:transparent;background:transparent;
+  filter:drop-shadow(0 28px 36px rgba(55,50,120,.24));
+}
+.voice-orb{position:absolute;z-index:1;opacity:.36;transform:scale(1.24)}
+body[data-plugy-motion="think"] .plugy-guide-visual:before{
+  opacity:.95;transform:scale(1.14);
+  background:radial-gradient(circle,#7a5fff88,transparent 70%);
+}
+body[data-plugy-motion="think"] .plugy-mini-model,
+body[data-plugy-motion="think"] .voice-model{
+  filter:drop-shadow(0 30px 42px rgba(120,86,255,.34));
+}
+body[data-plugy-motion="attentive"] .plugy-bubble{
+  box-shadow:0 22px 62px rgba(57,82,180,.19);
+}
+body[data-plugy-motion="present"] .plugy-mini-model,
+body[data-plugy-motion="present"] .voice-model{
+  filter:drop-shadow(0 30px 42px rgba(67,210,229,.25));
+}
+body[data-plugy-motion="happy"] .plugy-guide-visual:before{
+  background:radial-gradient(circle,#ff6eb06c,transparent 68%);
+}
+body[data-plugy-motion="wave"] .plugy-guide{
+  transform:translate3d(0,-4px,0) scale(1.015);
+}
+.plugy-guide-visual:before{transition:transform .35s ease,opacity .35s ease,background .35s ease}
+.chat-panel.open .chat-avatar{box-shadow:0 8px 26px #6455ce50,0 0 0 6px rgba(121,88,255,.06)}
+.realistic-model[loaded]{animation:v106HeroSettle .8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes v106HeroSettle{
+  from{opacity:.2;transform:translate3d(var(--plugy-x),calc(var(--plugy-y) + 22px),0) scale(.97)}
+  to{opacity:1;transform:translate3d(var(--plugy-x),var(--plugy-y),0) scale(1.025)}
+}
+@media(max-width:1050px){
+  .voice-model{width:300px;height:300px}
+}
+@media(max-width:680px){
+  .hero-model{transform:none!important;filter:drop-shadow(0 24px 34px rgba(48,48,84,.17))}
+  .voice-model{width:250px;height:250px}
+  .voice-orb{width:130px;height:130px}
+  .chapter:not(.hero){contain-intrinsic-size:760px}
+}
+@media(prefers-reduced-motion:reduce){
+  .realistic-model[loaded],.plugy-mini-model,.voice-model{animation:none!important;transition:none!important}
+  .hero-model{transform:none!important}
+  body[data-plugy-motion] .plugy-guide{transform:none!important}
+}
