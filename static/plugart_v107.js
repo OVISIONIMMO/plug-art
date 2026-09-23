@@ -668,7 +668,7 @@ function renderDraftPicker(){
   p.innerHTML='<option value="">Brouillons</option>'+state.drafts.map(d=>'<option value="'+d.id+'">'+esc((d.title||'Brouillon')+' · '+d.kind)+'</option>').join('');p.value=String(cur||'');
 }
 function draftSnapshot(){
-  if(state.creationMode==='carousel')return{kind:'carousel',title:state.carousel.slides[0]?.title||'Carrousel PLUG ART',source_opportunity_id:$('#carouselSource')?.value||'',payload:{slides:state.carousel.slides,active:state.carousel.active,format:state.carousel.format,brief:$('#carouselBrief')?.value||''}};
+  if(state.creationMode==='carousel')return{kind:'carousel',title:state.carousel.slides[0]?.title||'Carrousel PLUG ART',source_opportunity_id:$('#carouselSource')?.value||'',payload:{slides:state.carousel.slides,active:state.carousel.active,format:state.carousel.format,brief:$('#carouselBrief')?.value||'',instagram_caption:$('#carouselCaption')?.value||''}};
   if(state.creationMode==='visual')return{kind:'visual',title:'Visuel PLUG ART',source_opportunity_id:'',payload:{url:state.visual.url,prompt:$('#visualPrompt')?.value||state.visual.prompt||'',style:$('#visualStyle')?.value||'gallery',ratio:$('#visualRatio')?.value||'4:5'}};
   return{kind:'text',title:$('#contentTitle')?.value||$('#contentType')?.value||'Texte PLUG ART',source_opportunity_id:$('#contentSource')?.value||'',payload:{type:$('#contentType')?.value||'',objective:$('#contentObjective')?.value||'',brief:$('#contentBrief')?.value||'',body:$('#contentBody')?.value||''}};
 }
@@ -683,7 +683,7 @@ async function saveDraft(silent=false){
 function loadDraft(id){
   const d=state.drafts.find(x=>Number(x.id)===Number(id));if(!d)return;state.currentDraft=d.id;state.creationDirty=false;setCreationMode(d.kind||'text');
   const p=d.payload||{};
-  if(d.kind==='carousel'){state.carousel={slides:Array.isArray(p.slides)?p.slides:[],active:Number(p.active||0),format:p.format||'4:5'};if($('#carouselSource'))$('#carouselSource').value=d.source_opportunity_id||'';if($('#carouselBrief'))$('#carouselBrief').value=p.brief||'';if($('#carouselFormat'))$('#carouselFormat').value=state.carousel.format;renderCarousel()}
+  if(d.kind==='carousel'){state.carousel={slides:Array.isArray(p.slides)?p.slides:[],active:Number(p.active||0),format:p.format||'4:5'};if($('#carouselSource'))$('#carouselSource').value=d.source_opportunity_id||'';if($('#carouselBrief'))$('#carouselBrief').value=p.brief||'';if($('#carouselCaption'))$('#carouselCaption').value=p.instagram_caption||'';if($('#carouselFormat'))$('#carouselFormat').value=state.carousel.format;renderCarousel()}
   else if(d.kind==='visual'){state.visual={url:p.url||'',prompt:p.prompt||''};$('#visualPrompt').value=p.prompt||'';$('#visualStyle').value=p.style||'gallery';$('#visualRatio').value=p.ratio||'4:5';$('#visualImage').style.backgroundImage=p.url?'url("'+String(p.url).replace(/"/g,'%22')+'")':'none';if(p.url)$('#visualImage').innerHTML=''}
   else{$('#contentTitle').value=d.title||'';$('#contentSource').value=d.source_opportunity_id||'';$('#contentType').value=p.type||$('#contentType').value;$('#contentObjective').value=p.objective||'';$('#contentBrief').value=p.brief||'';$('#contentBody').value=p.body||''}
   clearLocalCreationBackup();renderDraftPicker();toast('Brouillon chargé');
@@ -700,7 +700,7 @@ function scheduleDraftAutosave(){
   clearTimeout(draftAutosaveTimer);draftAutosaveTimer=setTimeout(()=>saveDraft(true),1600);
 }
 function bindDraftAutosave(){
-  ['contentTitle','contentObjective','contentBrief','contentBody','carouselBrief','slideKicker','slideTitle','slideBody','slideCta','visualPrompt'].forEach(id=>$('#'+id)?.addEventListener('input',scheduleDraftAutosave));
+  ['contentTitle','contentObjective','contentBrief','contentBody','carouselBrief','carouselCaption','slideKicker','slideTitle','slideBody','slideCta','visualPrompt'].forEach(id=>$('#'+id)?.addEventListener('input',scheduleDraftAutosave));
   ['contentType','contentSource','carouselSource','carouselFormat','visualStyle','visualRatio'].forEach(id=>$('#'+id)?.addEventListener('change',scheduleDraftAutosave));
 }
 
@@ -828,21 +828,62 @@ async function exportCarouselSlide(index=0){
   }catch(e){console.warn('[PLUG ART export slide]',e);toast('Export PNG impossible')}
   finally{if(b){b.disabled=false;b.textContent=old}}
 }
+async function renderCarouselPayload(){
+  await document.fonts?.ready;
+  const base=slugFile(state.carousel.slides[0]?.title||'plug-art-carousel'),items=[];
+  for(let i=0;i<state.carousel.slides.length;i++){
+    const canvas=await renderSlideCanvas(state.carousel.slides[i],i);
+    items.push({filename:`${base}-slide-${String(i+1).padStart(2,'0')}.png`,data_url:canvas.toDataURL('image/png',1)});
+  }
+  return {base,items};
+}
 async function exportCarouselAll(){
   if(!state.carousel.slides.length)return toast('Aucune slide à exporter');
-  const b=$('#carouselExportAll'),old=b?.textContent;if(b)b.disabled=true;
-  const base=slugFile(state.carousel.slides[0]?.title||'plug-art-carousel');
+  const b=$('#carouselExportAll'),old=b?.textContent;if(b){b.disabled=true;b.textContent='Préparation ZIP…'}
   try{
-    await document.fonts?.ready;
-    for(let i=0;i<state.carousel.slides.length;i++){
-      if(b)b.textContent=`Export ${i+1}/${state.carousel.slides.length}…`;
-      const canvas=await renderSlideCanvas(state.carousel.slides[i],i),blob=await canvasBlob(canvas);
-      downloadBlob(blob,`${base}-slide-${String(i+1).padStart(2,'0')}.png`);
-      await new Promise(r=>setTimeout(r,180));
-    }
-    toast('Carrousel exporté en PNG');
-  }catch(e){console.warn('[PLUG ART export all]',e);toast('Export du carrousel interrompu')}
+    const {base,items}=await renderCarouselPayload();
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),120000);
+    const r=await fetch('/api/v113/exports/carousel/zip',{method:'POST',signal:controller.signal,headers:{'Content-Type':'application/json','Accept':'application/zip'},body:JSON.stringify({title:base,items})});
+    clearTimeout(timer);if(!r.ok)throw new Error(await r.text());
+    const blob=await r.blob();downloadBlob(blob,`${base}.zip`);toast('Carrousel ZIP exporté');
+  }catch(e){console.warn('[PLUG ART export zip]',e);toast('Export ZIP impossible')}
   finally{if(b){b.disabled=false;b.textContent=old}}
+}
+async function saveCarouselPublic(){
+  if(!state.carousel.slides.length)throw new Error('Aucune slide');
+  const {items}=await renderCarouselPayload();
+  const r=await api('/api/v113/exports/carousel/public',{method:'POST',timeout:120000,body:JSON.stringify({items})});
+  if(!Array.isArray(r.urls)||!r.urls.length)throw new Error('Aucun média enregistré');
+  return r.urls.map(u=>new URL(u,location.origin).href);
+}
+async function prepareInstagramCaption(){
+  if(!state.carousel.slides.length)return toast('Génère d’abord le carrousel');
+  const b=$('#carouselCaptionGenerate'),old=b?.textContent;if(b){b.disabled=true;b.textContent='PLUGY écrit…'}
+  const source=opportunityById($('#carouselSource')?.value),facts=state.carousel.slides.map((s,i)=>({slide:i+1,title:s.title,body:s.body,cta:s.cta}));
+  const prompt='Rédige une légende Instagram PLUG ART claire, naturelle et concise à partir de ces slides. N’invente aucun fait. Termine par : Commente PLUG 🔌 pour être branché et recevoir le lien de candidature. Ajoute 4 à 7 hashtags pertinents maximum. Contexte : '+JSON.stringify({source:source?.title||'',deadline:source?.deadline||'',slides:facts});
+  try{
+    const r=await api('/api/v32/plugy',{method:'POST',timeout:60000,body:JSON.stringify({message:prompt,page:'content',mode:'deep'})});
+    const answer=clean(r.answer||'');if(!answer)throw new Error('Légende vide');$('#carouselCaption').value=answer;scheduleDraftAutosave();toast('Légende préparée');
+  }catch(e){console.warn('[PLUG ART caption]',e);toast('PLUGY n’a pas pu préparer la légende')}
+  finally{if(b){b.disabled=false;b.textContent=old}}
+}
+async function publishCarouselInstagram(){
+  if(!state.carousel.slides.length)return toast('Aucun carrousel à publier');
+  const caption=String($('#carouselCaption')?.value||'').trim();if(!caption)return toast('Ajoute ou génère une légende');
+  const b=$('#carouselPublishInstagram'),old=b?.textContent;if(b){b.disabled=true;b.textContent='Vérification Instagram…'}
+  try{
+    const status=await api('/api/v88/instagram/status',{timeout:15000});
+    if(!status.connected)throw new Error('Instagram n’est pas connecté');
+    if(b)b.textContent='Préparation des slides…';
+    const urls=await saveCarouselPublic();
+    if(b)b.textContent='Publication…';
+    const out=await api('/api/v88/instagram/publish',{method:'POST',timeout:120000,body:JSON.stringify({caption,media_urls:urls})});
+    toast(out.permalink?'Publié sur Instagram':'Publication Instagram confirmée');
+    if(out.permalink)window.open(out.permalink,'_blank','noopener');
+  }catch(e){
+    console.warn('[PLUG ART Instagram publish]',e);
+    toast(String(e.message||e).includes('connect')?'Instagram n’est pas connecté':'Publication Instagram impossible');
+  }finally{if(b){b.disabled=false;b.textContent=old}}
 }
 async function downloadGeneratedVisual(){
   const url=state.visual.url;if(!url)return toast('Génère d’abord un visuel');
