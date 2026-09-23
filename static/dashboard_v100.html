@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4f4f2">
+<title>PLUG ART — Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/dashboard_v65.css?v=90.20260923.1">
+<link rel="stylesheet" href="/static/dashboard_v100.css?v=100.20260923.1">
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
+</head>
+<body class="v100-ui">
+<div class="room-backdrop" aria-hidden="true">
+  <div class="room-plant"></div>
+  <div class="room-wall"></div>
+  <div class="room-light"></div>
+</div>
+
+<aside class="side-rail v89-sidebar">
+  <div class="sidebar-brand-row">
+    <button class="brand" data-view="dashboard" aria-label="Accueil PLUG ART"><strong>PLUG</strong><span>ART</span><i></i></button>
+    <button class="sidebar-collapse" id="sidebarCollapse" aria-label="Réduire la navigation">‹</button>
+  </div>
+
+  <nav class="v89-nav">
+    <div class="nav-group">
+      <span class="nav-group-label">Explorer</span>
+      <button class="rail-item active" data-view="dashboard"><b>⌂</b><span>Accueil</span><em>01</em></button>
+      <button class="rail-item" data-view="radar"><b>◉</b><span>Radar</span><em>02</em></button>
+      <button class="rail-item" data-view="opencalls"><b>◇</b><span>Opportunités</span><em>03</em></button>
+      <button class="rail-item" data-view="map"><b>⌖</b><span>Carte</span><em>04</em></button>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Créer</span>
+      <button class="rail-item" data-view="studio"><b>✦</b><span>Studio</span><em>05</em></button>
+      <button class="rail-item" data-view="social"><b>◎</b><span>Instagram</span><em>06</em></button>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Gérer</span>
+      <button class="rail-item" data-view="artists"><b>◌</b><span>Artistes</span><em>07</em></button>
+      <button class="rail-item" data-view="crm"><b>▦</b><span>CRM</span><em>08</em></button>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Système</span>
+      <button class="rail-item" data-view="builder"><b>⌘</b><span>Interface Lab</span><em>09</em></button>
+    </div>
+  </nav>
+
+  <button class="sidebar-agent" id="openPlugy">
+    <span class="sidebar-agent-orb"><i></i></span>
+    <span><strong>PLUGY</strong><small>Assistant actif</small></span>
+    <b>⌁</b>
+  </button>
+
+  <div class="sidebar-footer">
+    <span><i></i> Système actif</span>
+    <small>V90 · Interface Lab</small>
+  </div>
+</aside>
+
+<main class="shell">
+  <header class="top-pill v89-topbar">
+    <div class="top-leading">
+      <button class="nav-icon" id="navBack" aria-label="Retour" title="Retour">←</button>
+      <div class="top-title">
+        <small id="pageEyebrow">CONTROL ROOM</small>
+        <strong id="pageTitle">Accueil</strong>
+      </div>
+    </div>
+
+    <button class="global-search" id="v89GlobalSearch" type="button">
+      <span>⌕</span><strong>Rechercher dans PLUG ART</strong><kbd>⌘ K</kbd>
+    </button>
+
+    <div class="top-right">
+      <span class="v89-live"><i></i><b>LIVE</b></span>
+      <button class="command-button v89-create" id="v89CreateButton">＋ Créer</button>
+      <button class="mini-button layout-health" id="layoutHealth" aria-label="Diagnostic interface" title="Diagnostic interface">✓</button>
+      <button class="mini-button" id="quickGo" aria-label="Navigation rapide">⌕</button>
+    </div>
+  </header>
+
+  <section class="view active v89-home" id="view-dashboard">
+    <section class="home-command v89-reveal">
+      <div class="home-command-copy">
+        <div class="home-eyebrow"><span></span> PLUG ART · INTERNAL CONTROL ROOM</div>
+        <h1>Tout ce qui compte.<br><em>Au même endroit.</em></h1>
+        <p>Repère les opportunités, organise le réseau, crée les contenus et pilote Instagram avec PLUGY comme copilote.</p>
+
+        <form class="home-plugy-command" id="homePlugyForm">
+          <span>✦</span>
+          <input id="homePlugyPrompt" autocomplete="off" placeholder="Demande à PLUGY de chercher, créer, analyser ou organiser…">
+          <button type="submit">Envoyer</button>
+        </form>
+
+        <div class="home-quick-actions">
+          <button data-home-action="radar"><i>◎</i><span>Scanner les opportunités</span></button>
+          <button data-home-action="studio"><i>✦</i><span>Créer un carrousel</span></button>
+          <button data-home-action="instagram"><i>◉</i><span>Analyser Instagram</span></button>
+          <button data-home-action="crm"><i>▦</i><span>Voir les relances</span></button>
+        </div>
+
+        <div class="home-system-line">
+          <span><i></i> données synchronisées</span>
+          <span id="homeGreeting">Aujourd’hui</span>
+          <button id="homeDailyBrief">Brief PLUGY →</button>
+        </div>
+      </div>
+
+      <div class="home-plugy-stage" id="plugyHeroAnchor">
+        <div class="plugy-orbit orbit-a"></div>
+        <div class="plugy-orbit orbit-b"></div>
+        <div class="plugy-orbit orbit-c"></div>
+        <button class="orbit-action orbit-radar" data-plugy-prompt="Trouve-moi les meilleures opportunités artistiques à traiter aujourd’hui.">Radar</button>
+        <button class="orbit-action orbit-create" data-plugy-prompt="Aide-moi à choisir le meilleur contenu PLUG ART à créer maintenant.">Créer</button>
+        <button class="orbit-action orbit-social" data-plugy-prompt="Analyse mon activité Instagram et dis-moi ce que je dois améliorer en priorité.">Social</button>
+        <div class="plugy-stage-label"><i></i><span>PLUGY</span><small>agent personnel</small></div>
+      </div>
+    </section>
+
+    <section class="home-signal-strip v89-reveal">
+      <div><span>Opportunités</span><b id="dashOpp">—</b><small>actives</small></div>
+      <div><span>Radar</span><b id="dashRadar">—</b><small>sources</small></div>
+      <div><span>Qualité</span><b id="dashScore">—</b><small>score moyen</small></div>
+      <div><span>Réseau</span><b id="dashArtistCount">—</b><small>artistes</small></div>
+      <div class="signal-cycle"><span>Dernier cycle</span><b id="dashCycle">—</b><small>radar</small></div>
+    </section>
+
+    <section class="home-workspace">
+      <div class="home-column home-column-main">
+        <article class="home-surface home-priorities v89-reveal">
+          <div class="home-section-head">
+            <div><small>FOCUS</small><h2>Priorités à traiter</h2></div>
+            <button data-view="opencalls">Toutes les opportunités →</button>
+          </div>
+          <div class="priority-stack priority-stack-v89" id="dashCalls"></div>
+        </article>
+
+        <article class="home-surface home-map-surface v89-reveal">
+          <div class="home-section-head">
+            <div><small>MONDE</small><h2>Où se passent les choses</h2></div>
+            <button data-view="map">Explorer la carte →</button>
+          </div>
+          <div class="mini-map mini-map-v89" id="miniMap"></div>
+          <div class="map-caption"><span>Paris</span><span>Europe</span><span>International</span></div>
+        </article>
+      </div>
+
+      <div class="home-column home-column-side">
+        <article class="home-surface home-radar-surface v89-reveal">
+          <div class="home-section-head">
+            <div><small>RADAR LIVE</small><h2>Signal d’opportunités</h2></div>
+            <span class="status-dot"><i></i> actif</span>
+          </div>
+          <svg class="spark spark-v89" viewBox="0 0 520 150" preserveAspectRatio="none">
+            <defs><linearGradient id="sparkArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a985ff" stop-opacity=".34"/><stop offset=".55" stop-color="#70d8da" stop-opacity=".14"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient></defs>
+            <path id="signalArea" fill="url(#sparkArea)" d="M0 140 L0 110 L90 92 L160 118 L240 76 L330 98 L410 52 L520 68 L520 140 Z"></path>
+            <path id="signalLine" fill="none" stroke="#7864db" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M0 110 L90 92 L160 118 L240 76 L330 98 L410 52 L520 68"></path>
+          </svg>
+          <div class="radar-footer-v89">
+            <span>Le moteur trie les pistes utiles avant de te les montrer.</span>
+            <button id="runRadarHome">Relancer</button>
+          </div>
+        </article>
+
+        <article class="home-surface home-create-surface v89-reveal">
+          <div class="home-section-head">
+            <div><small>STUDIO</small><h2>Créer maintenant</h2></div>
+            <button data-view="studio">Ouvrir →</button>
+          </div>
+          <div class="studio-summary studio-summary-v89">
+            <div class="mini-poster mini-poster-v89"><span>PLUG ART</span><strong id="dashDraftTitle">Carrousel</strong><small id="dashDraftMeta">aucun brouillon</small></div>
+            <div class="studio-shortcuts studio-shortcuts-v89">
+              <button data-view="studio"><b>＋</b><span>Nouveau contenu</span></button>
+              <button id="homeAiStudio"><b>✦</b><span>Créer avec PLUGY</span></button>
+              <button data-view="social"><b>◎</b><span>Instagram</span></button>
+            </div>
+          </div>
+        </article>
+
+        <article class="home-surface home-verify-surface v89-reveal">
+          <div class="home-section-head">
+            <div><small>À CONTRÔLER</small><h2>Pistes à vérifier</h2></div>
+            <button data-view="radar">Ouvrir →</button>
+          </div>
+          <div class="compact-list compact-list-v89" id="dashCandidates"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="home-bottom-flow">
+      <article class="home-flow-block v89-reveal">
+        <div class="home-section-head">
+          <div><small>RÉSEAU</small><h2>Artistes suivis</h2></div>
+          <button data-view="artists">Gérer →</button>
+        </div>
+        <div class="network-count network-count-v89"><b>Actifs</b><span>profils dans le réseau PLUG ART</span></div>
+        <div class="avatar-row avatar-row-v89" id="dashArtists"></div>
+      </article>
+
+      <article class="home-flow-block v89-reveal">
+        <div class="home-section-head">
+          <div><small>AGENDA</small><h2>Prochains rendez-vous</h2></div>
+          <button data-view="crm">Organiser →</button>
+        </div>
+        <div class="compact-list compact-list-v89" id="dashEvents"></div>
+      </article>
+
+      <article class="home-flow-block home-plugy-block v89-reveal">
+        <div>
+          <small>PLUGY · CONTEXTE</small>
+          <h2>Un agent qui suit le produit avec toi.</h2>
+          <p>Il comprend le Radar, le Studio, Instagram, les artistes et le CRM. Demande-lui une action, pas seulement une réponse.</p>
+        </div>
+        <button id="homeOpenPlugy">Parler à PLUGY <span>⌁</span></button>
+      </article>
+    </section>
+  </section>
+
+  <section class="view" id="view-radar">
+    <div class="section-bar">
+      <h1>Radar</h1>
+      <div class="section-actions"><button class="glass-button primary" id="runRadar">Relancer</button></div>
+    </div>
+
+    <div class="radar-category-grid">
+      <article class="radar-category glass"><strong>Priorité</strong><b id="radarPriorityCount">0</b><p>Scores élevés et opportunités directement exploitables.</p></article>
+      <article class="radar-category glass"><strong>Urgent</strong><b id="radarUrgentCount">0</b><p>Deadlines proches à traiter avant le reste.</p></article>
+      <article class="radar-category glass"><strong>Accessible</strong><b id="radarAccessibleCount">0</b><p>Gratuit ou coût raisonnable pour artistes émergents.</p></article>
+      <article class="radar-category glass"><strong>Collectif</strong><b id="radarCollectiveCount">0</b><p>Expositions collectives et appels adaptés aux émergents.</p></article>
+    </div>
+
+    <div class="radar-plan-grid">
+      <article class="radar-panel glass">
+        <div class="panel-title"><h2>Actions</h2><span id="radarLast">—</span></div>
+        <div id="radarPlan" class="action-plan"></div>
+      </article>
+      <article class="radar-panel glass">
+        <div class="panel-title"><h2>À vérifier</h2><span id="radarInfo">—</span></div>
+        <div id="radarCandidateList" class="verification-list"></div>
+      </article>
+      <article class="radar-panel glass">
+        <div class="panel-title"><h2>Sources</h2></div>
+        <div id="radarSources" class="source-stack"></div>
+      </article>
+      <article class="radar-panel radar-dna glass">
+        <div class="panel-title"><h2>Critères</h2></div>
+        <div class="dna-matrix">
+          <span class="plus">Émergent <b>+18</b></span><span class="plus">Collectif <b>+14</b></span><span class="plus">Exposition <b>+12</b></span>
+          <span class="plus">Peinture / photo <b>+9</b></span><span class="plus">Paris / 93 <b>+15</b></span><span class="plus">France <b>+10</b></span>
+          <span class="plus">Gratuit <b>+20</b></span><span class="plus">≤ 400 € <b>+4 à +14</b></span>
+          <span class="minus">Concours / prix <b>−28</b></span><span class="minus">Pay-to-play <b>−16</b></span><span class="minus">Online only <b>−8</b></span>
+        </div>
+        <p class="dna-note">Le moteur classe d’abord les liens prometteurs, puis vérifie la page source, la deadline, le coût, le territoire et la fiabilité avant de proposer une piste.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="view" id="view-opencalls">
+    <div class="section-bar">
+      <h1>Open Calls</h1>
+      <div class="section-actions"><button class="glass-button" id="refreshOpenCalls">Actualiser</button></div>
+    </div>
+    <div class="open-calls-shell">
+      <aside class="filter-panel glass open-call-filters">
+        <label>Recherche<input id="searchOppOpen" placeholder="Nom, ville, organisateur…"></label>
+        <label>Pays<select id="countryFilterOpen"><option value="">Tous</option></select></label>
+        <label>Catégorie<select id="categoryFilterOpen"><option value="">Toutes</option><option value="priority">Priorité</option><option value="urgent">Urgent</option><option value="accessible">Accessible</option><option value="collective">Collectif / émergent</option><option value="france">France</option><option value="europe">Europe</option></select></label>
+        <label>Score minimum<select id="scoreFilterOpen"><option value="0">Tous</option><option value="60">60+</option><option value="75">75+</option><option value="85">85+</option></select></label>
+        <div class="filter-note"><strong id="openCallCount">0</strong><span>opportunités affichées</span></div>
+      </aside>
+      <div class="open-call-grid" id="openCallGrid"></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-studio">
+    <div class="section-bar">
+      <h1>Studio Social</h1>
+      <div class="section-actions">
+        <button class="glass-button ai" id="plugyCarouselBtn">✦ Générer avec PLUGY</button>
+        <button class="glass-button" id="generateAllImagesBtn">Images</button>
+        <button class="glass-button" id="saveDraftBtn">Enregistrer</button>
+        <button class="glass-button" id="queueInstagramBtn">Instagram</button>
+        <button class="glass-button primary" id="exportSlideBtn">Exporter</button>
+      </div>
+    </div>
+
+    <div class="studio-grid">
+      <aside class="studio-sidebar glass">
+        <div class="side-title"><strong>Projet</strong></div>
+        <label>Source<select id="studioSource"><option value="">Brief libre</option></select></label>
+        <label>Objectif<select id="studioObjective"><option value="inform">Informer</option><option value="apply">Faire candidater</option><option value="promote">Promouvoir</option><option value="storytell">Storytelling</option></select></label>
+        <label>Format<select id="studioFormat"><option value="portrait">Instagram 4:5</option><option value="square">Carré 1:1</option><option value="story">Story / Reel 9:16</option></select></label>
+        <label>Direction artistique<select id="studioBrand"><option value="plug-clean">PLUG ART blanc / bleu</option><option value="editorial">Éditorial sobre</option><option value="urgent">Urgence / deadline</option><option value="artistic">Artistique / expo</option></select></label>
+        <label>Slides<div class="range-line"><input id="studioCount" type="range" min="3" max="10" value="5"><b id="studioCountValue">5</b></div></label>
+        <label>Brief<textarea id="studioBrief" placeholder="Sujet, angle, données importantes, CTA…"></textarea></label>
+        <div class="preset-grid">
+          <button class="active" data-preset="open">Open Call</button><button data-preset="urgent">Dernier jour</button><button data-preset="artist">Artiste</button><button data-preset="event">Événement</button>
+        </div>
+        <button class="wide-action" id="generateStudio">Structurer</button>
+        <button class="wide-action muted" id="improveStudio">Relire avec PLUGY</button>
+        <div class="image-status" id="imageStatus"><i></i><span>Images IA</span><b>vérification…</b></div>
+      </aside>
+
+      <section class="studio-canvas glass">
+        <div class="canvas-toolbar"><div><small>APERÇU</small><strong id="studioCounter">Slide 1 / 5</strong></div><div class="studio-free-tools"><button id="layerUndo" title="Annuler">↶</button><button id="layerRedo" title="Rétablir">↷</button><select id="studioTemplate" title="Template"><option value="none">Template</option><option value="open">Open Call</option><option value="deadline">Deadline</option><option value="artist">Artiste</option></select><button id="freeModeToggle" class="active">Libre</button><button id="addTextLayer">+ Texte</button><button id="addRectLayer">▭</button><button id="addCircleLayer">○</button><button id="addImageLayer">+ Image</button><input id="freeImageUpload" type="file" accept="image/*" hidden></div><div class="zoom-controls"><button id="zoomOut">−</button><span id="zoomLabel">100%</span><button id="zoomIn">+</button></div></div>
+        <div class="carousel-stage">
+          <article class="carousel-art theme-editorial layout-top cut-none align-left font-sans accent-violet" id="carouselArt">
+            <div class="art-media" id="artMedia"><div class="art-photo" id="artPhoto"></div><div class="art-photo-secondary" id="artPhotoSecondary"></div><div class="art-photo-third" id="artPhotoThird"></div><div class="art-photo-fourth" id="artPhotoFourth"></div></div>
+            <div class="art-copy" id="artCopy"><span id="artKicker">PLUG ART</span><h3 id="artTitle">Titre du carrousel</h3><p id="artBody">Le contenu apparaîtra ici.</p><footer><b>PLUG ART</b><span id="artCta">Découvrir →</span></footer></div><div class="free-layer-board" id="freeLayerBoard" aria-label="Calques libres"></div>
+          </article>
+        </div>
+        <div class="slide-nav"><button id="prevStudio">←</button><div id="slideDots"></div><button id="nextStudio">→</button></div>
+        <div class="slide-strip" id="studioStrip"></div>
+      </section>
+
+      <aside class="studio-editor glass">
+        <div class="editor-tabs">
+          <button class="active" data-editor-tab="text">Texte</button><button data-editor-tab="layout">Disposition</button><button data-editor-tab="image">Image</button><button data-editor-tab="style">Style</button><button data-editor-tab="layers">Calques</button>
+        </div>
+
+        <div class="editor-pane active" data-pane="text">
+          <label>Label<input id="editKicker"></label>
+          <label>Titre<textarea id="editTitle"></textarea></label>
+          <label>Texte<textarea id="editBody"></textarea></label>
+          <label>CTA<input id="editCta"></label>
+          <label>Taille titre<div class="range-line"><input id="titleSize" type="range" min="60" max="260" value="100"><b id="titleSizeValue">100%</b></div></label>
+          <label>Taille texte<div class="range-line"><input id="bodySize" type="range" min="60" max="180" value="100"><b id="bodySizeValue">100%</b></div></label>
+          <label>Alignement<div class="choice-row"><button class="active" data-align="left">Gauche</button><button data-align="center">Centre</button><button data-align="right">Droite</button></div></label>
+        </div>
+
+        <div class="editor-pane" data-pane="layout">
+          <label>Disposition<select id="layoutSelect"><option value="top">Image haut</option><option value="cover">Plein écran</option><option value="left">Image gauche</option><option value="right">Image droite</option><option value="band">Bandeau</option><option value="collage">Collage 2 images</option><option value="collage3">Triptyque 3 images</option><option value="grid4">Grille 4 images</option><option value="frame">Cadre galerie</option><option value="poster">Poster éditorial</option><option value="minimal">Texte dominant</option><option value="text">100% typographie</option><option value="artfield">Champ artistique</option></select></label>
+          <label>Coupure<select id="cutSelect"><option value="none">Droite</option><option value="diagonal">Diagonale</option><option value="curve">Courbe</option><option value="wave">Vague</option></select></label>
+          <label>Police<select id="fontSelect"><option value="sans">Sans moderne</option><option value="serif">Serif éditoriale</option><option value="display">Display condensée</option></select></label>
+          <button class="wide-action muted" id="smartLayout">Varier automatiquement les slides</button>
+          <button class="wide-action muted" id="applyLayoutAll">Appliquer à toutes les slides</button>
+        </div>
+
+        <div class="editor-pane" data-pane="image">
+          <label>Mode visuel<select id="visualMode"><option value="photo">Photo / visuel réel</option><option value="art">Illustration PLUG ART</option><option value="none">Sans image / typographie</option></select></label>
+          <label>Image principale<input id="editImage" placeholder="URL"></label>
+          <label>Image secondaire<input id="editImage2" placeholder="URL pour collage"></label>
+          <label>Image 3<input id="editImage3" placeholder="URL pour triptyque / grille"></label>
+          <label>Image 4<input id="editImage4" placeholder="URL pour grille"></label>
+          <label>Importer<input id="imageUpload" type="file" accept="image/*"></label>
+          <label>Position<select id="imagePosition"><option value="center">Centre</option><option value="top">Haut</option><option value="bottom">Bas</option><option value="left">Gauche</option><option value="right">Droite</option></select></label>
+          <div class="ai-image-box">
+            <small>ATELIER VISUEL PLUG ART</small>
+            <textarea id="imagePrompt" placeholder="Décris une création artistique : matière, exposition, peinture, photo, collage, installation…"></textarea>
+            <div class="two-col"><select id="imageStyle"><option value="gallery">Installation / galerie</option><option value="studio">Matière / atelier</option><option value="urban">Culture urbaine / street art</option><option value="photo">Collage éditorial artistique</option><option value="architecture">Architecture culturelle</option><option value="portrait">Portrait d’artiste</option></select><select id="imageQuality"><option value="medium">Standard</option><option value="high">Haute qualité</option></select></div>
+            <button class="wide-action ai" id="generateSlideImage">✦ Créer un visuel PLUG ART</button>
+            <button class="wide-action muted" id="illustrateSlideBtn">Créer une illustration abstraite</button>
+          </div>
+        </div>
+
+        <div class="editor-pane" data-pane="layers"><div class="layer-toolbar-note">Ajoute puis déplace directement les éléments sur le visuel.</div><div id="layerList" class="layer-list"></div><label>Texte / nom<input id="layerText" placeholder="Texte du calque"></label><label>Couleur<input id="layerColor" type="color" value="#111111"></label><label>Taille<input id="layerFontSize" type="range" min="18" max="180" value="64"></label><label>Largeur<input id="layerWidth" type="range" min="8" max="95" value="40"></label><label>Hauteur<input id="layerHeight" type="range" min="5" max="80" value="18"></label><label>Opacité<input id="layerOpacity" type="range" min="10" max="100" value="100"></label><label>Rotation<input id="layerRotation" type="range" min="-180" max="180" value="0"></label><div class="layer-actions"><button id="layerBack">↓ Derrière</button><button id="layerFront">↑ Devant</button><button id="layerDuplicate">Dupliquer</button><button id="layerLock">Verrouiller</button><button id="layerDelete">Supprimer</button></div></div>
+        <div class="editor-pane" data-pane="style">
+          <label>Thème<div class="theme-grid"><button class="active" data-theme="editorial">Éditorial</button><button data-theme="glass">Glass</button><button data-theme="impact">Impact</button><button data-theme="paper">Papier</button><button data-theme="night">Night</button><button data-theme="color">Color</button></div></label>
+          <label>Accent<div class="accent-grid"><button class="active" data-accent="violet"></button><button data-accent="cyan"></button><button data-accent="pink"></button><button data-accent="gold"></button><button data-accent="ink"></button></div></label>
+          <button class="wide-action muted" id="applyStyleAll">Appliquer le style à toutes les slides</button>
+        </div>
+
+        <div class="editor-bottom">
+          <div class="editor-actions"><button id="duplicateStudio">Dupliquer</button><button id="deleteStudio">Supprimer</button></div>
+          <div class="caption-area"><small>LÉGENDE</small><textarea id="captionText"></textarea><button id="generateCaption">Générer la légende</button></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+
+  <section class="view" id="view-map">
+    <div class="section-bar"><h1>Carte internationale</h1><div class="section-actions"><button class="glass-button" id="fitGeoMap">Tout voir</button><button class="glass-button" id="geoGeocode">Compléter la carte</button><button class="glass-button primary" id="refreshGeoMap">Actualiser</button></div></div>
+    <div class="geo-shell"><aside class="geo-filters glass"><label>Recherche<input id="geoSearch" placeholder="Ville, pays, exposition…"></label><label>Type<select id="geoKind"><option value="">Tout</option><option value="opportunity">Open Calls</option><option value="exhibition">Expositions</option></select></label><label>Pays<select id="geoCountry"><option value="">Tous les pays</option></select></label><div class="geo-kpis"><div><b id="geoVisible">0</b><span>points visibles</span></div><div><b id="geoCountries">0</b><span>pays</span></div></div><div class="geo-status" id="geoStatus">Vérification géographique…</div><p>Zoome, déplace la carte et ouvre directement les repères utiles.</p></aside><div class="geo-map-panel glass"><div id="geoMap" class="geo-map"><div class="geo-loading">Chargement de la carte…</div></div></div><aside class="geo-results glass"><div class="panel-title"><h2>Repères</h2></div><div id="geoResultList" class="geo-result-list"></div></aside></div>
+  </section>
+  <section class="view" id="view-artists">
+    <div class="section-bar"><h1>Artistes</h1><div class="section-actions"><button class="glass-button primary" id="addArtistBtn">+ Ajouter un artiste</button></div></div>
+    <div class="artist-tools glass"><input id="artistSearch" placeholder="Rechercher un artiste, une discipline, une ville…"><span id="artistCount">0 profils</span></div><div class="artist-grid-v85" id="artistGridV85"></div>
+  </section>
+  <section class="view" id="view-crm">
+    <div class="section-bar"><h1>CRM Prospection</h1><div class="section-actions"><button class="glass-button primary" id="addLeadBtn">+ Nouveau contact</button></div></div>
+    <div class="crm-tools glass"><input id="crmSearch" placeholder="Galerie, lieu, contact, ville…"><select id="crmPriority"><option value="">Toutes priorités</option><option value="high">Haute</option><option value="normal">Normale</option><option value="low">Basse</option></select><button id="crmDueOnly" class="crm-due-filter">À relancer <b id="crmDueCount">0</b></button><span id="crmCount">0 contacts</span></div><div class="crm-board" id="crmBoard"></div>
+  </section>
+  <section class="view" id="view-social">
+    <div class="section-bar">
+      <h1>Instagram</h1>
+      <div class="section-actions">
+        <button class="glass-button" id="instagramQuickCreate">＋ Créer</button>
+        <button class="glass-button" id="instagramRefresh">Actualiser</button>
+        <button class="glass-button primary" id="instagramConnectTop">Connecter Meta</button>
+      </div>
+    </div>
+
+    <div class="instagram-command glass">
+      <div class="instagram-command-main">
+        <small>PLUG ART SOCIAL CONTROL</small>
+        <h2>Ton feed, tes contenus et Meta dans le même tableau de bord.</h2>
+        <p>Prépare dans le Studio, prévisualise le feed, programme la file, contrôle les commentaires et publie depuis PLUG ART.</p>
+      </div>
+      <div class="instagram-command-state">
+        <span id="instagramConnectionBadge" class="instagram-connection-badge">Instagram à configurer</span>
+        <button id="instagramOpenSetup">Configuration Meta</button>
+      </div>
+    </div>
+
+    <nav class="instagram-tabs glass" aria-label="Rubriques Instagram">
+      <button class="active" data-ig-panel="overview">Vue d’ensemble</button>
+      <button data-ig-panel="feed">Feed</button>
+      <button data-ig-panel="planner">Planning</button>
+      <button data-ig-panel="comments">Commentaires</button>
+      <button data-ig-panel="setup">Connexion Meta</button>
+    </nav>
+
+    <div class="instagram-panel active" id="ig-panel-overview">
+      <div class="instagram-overview-grid">
+        <article class="ig-card ig-account-card glass">
+          <div class="panel-title"><h2>Compte</h2><span>Meta Graph API</span></div>
+          <div id="instagramAccount"></div>
+        </article>
+
+        <article class="ig-card ig-actions-card glass">
+          <div class="panel-title"><h2>Créer rapidement</h2><span>Studio PLUG ART</span></div>
+          <div class="ig-create-grid">
+            <button data-ig-create="carousel"><b>▦</b><strong>Carrousel</strong><span>4:5 · jusqu’à 10 slides</span></button>
+            <button data-ig-create="post"><b>□</b><strong>Publication</strong><span>4:5 ou carré</span></button>
+            <button data-ig-create="story"><b>▯</b><strong>Story</strong><span>9:16 · export rapide</span></button>
+            <button data-ig-create="plugy"><b>✦</b><strong>Avec PLUGY</strong><span>Brief → contenu</span></button>
+          </div>
+        </article>
+
+        <article class="ig-card ig-performance-card glass">
+          <div class="panel-title"><h2>Performance récente</h2><span>Derniers contenus chargés</span></div>
+          <div class="ig-performance-kpis">
+            <div><b id="igPerfPosts">0</b><span>posts analysés</span></div>
+            <div><b id="igPerfLikes">0</b><span>likes</span></div>
+            <div><b id="igPerfComments">0</b><span>commentaires</span></div>
+            <div><b id="igPerfAvg">0</b><span>interactions / post</span></div>
+          </div>
+          <div id="igTopPost" class="ig-top-post"><span>Connecte le compte pour analyser le feed.</span></div>
+        </article>
+
+        <article class="ig-card ig-mini-feed-card glass">
+          <div class="panel-title"><h2>Aperçu du feed</h2><button data-ig-go="feed">Ouvrir le feed</button></div>
+          <div id="instagramFeedMini" class="instagram-feed-grid mini"><div class="empty-line">Le feed apparaîtra ici après connexion.</div></div>
+        </article>
+
+        <article class="ig-card ig-content-tools-card glass">
+          <div class="panel-title"><h2>Outils contenu</h2><span>PLUGY + raccourcis</span></div>
+          <label class="ig-brief-label">Brief<textarea id="socialBrief" placeholder="Exposition, artiste, open call, annonce…"></textarea></label>
+          <div class="ig-toolbox">
+            <button id="socialKitBtn">✦ Légende + hashtags</button>
+            <button id="igRewriteShort">Version courte</button>
+            <button id="igAddCTA">Ajouter CTA PLUG</button>
+            <button id="igCopyCaption">Copier le texte</button>
+          </div>
+          <textarea id="socialKitOutput" class="ig-tool-output" placeholder="Le résultat PLUGY apparaîtra ici."></textarea>
+        </article>
+      </div>
+    </div>
+
+    <div class="instagram-panel" id="ig-panel-feed">
+      <div class="ig-feed-layout">
+        <article class="ig-card ig-feed-main glass">
+          <div class="panel-title">
+            <div><h2>Feed Instagram</h2><span id="igFeedIdentity">Compte non connecté</span></div>
+            <div class="ig-feed-controls">
+              <button class="active" data-feed-view="actual">Actuel</button>
+              <button data-feed-view="future">Avec prochains posts</button>
+              <select id="igFeedFilter"><option value="">Tous</option><option value="IMAGE">Images</option><option value="CAROUSEL_ALBUM">Carrousels</option><option value="VIDEO">Vidéos / Reels</option></select>
+            </div>
+          </div>
+          <div id="instagramFeed" class="instagram-feed-grid"><div class="empty-line">Connecte Instagram pour afficher directement ton feed.</div></div>
+        </article>
+
+        <aside class="ig-card ig-feed-side glass">
+          <div class="panel-title"><h2>Lecture du feed</h2><span>PLUGY</span></div>
+          <div id="igFeedAnalysis" class="ig-feed-analysis">
+            <p>PLUGY utilisera le contenu chargé pour résumer les formats, les interactions et les rythmes de publication.</p>
+          </div>
+          <button class="wide-action ai" id="igAskPlugyFeed">✦ Analyser mon feed</button>
+          <button class="wide-action" id="igCopyFeedPlan">Copier le prochain plan</button>
+        </aside>
+      </div>
+    </div>
+
+    <div class="instagram-panel" id="ig-panel-planner">
+      <div class="ig-planner-grid">
+        <article class="ig-card ig-queue-card glass">
+          <div class="panel-title"><h2>File de publication</h2><span>Studio → Instagram</span></div>
+          <div class="social-kpis"><div><b id="socialTotal">0</b><span>Total</span></div><div><b id="socialReady">0</b><span>Prêtes</span></div><div><b id="socialPublished">0</b><span>Publiées</span></div></div>
+          <div id="socialQueue" class="social-queue"></div>
+        </article>
+
+        <article class="ig-card ig-calendar-card glass">
+          <div class="panel-title"><h2>Planning</h2><span>7 prochains jours</span></div>
+          <div id="instagramCalendar" class="instagram-calendar"></div>
+          <div class="ig-schedule-tools">
+            <button id="igScheduleMorning">Matin</button>
+            <button id="igScheduleNoon">Midi</button>
+            <button id="igScheduleEvening">Soir</button>
+          </div>
+        </article>
+
+        <article class="ig-card glass">
+          <div class="panel-title"><h2>Prévisualisation future</h2><span>Feed + brouillons</span></div>
+          <div id="instagramFutureFeed" class="instagram-feed-grid future"><div class="empty-line">Ajoute un contenu depuis le Studio.</div></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="instagram-panel" id="ig-panel-comments">
+      <div class="ig-comments-layout">
+        <article class="ig-card glass">
+          <div class="panel-title"><h2>Publications</h2><span>Choisis un post</span></div>
+          <div id="igCommentMediaList" class="ig-comment-media-list"><div class="empty-line">Connecte Instagram.</div></div>
+        </article>
+        <article class="ig-card glass">
+          <div class="panel-title"><h2>Commentaires</h2><button id="igRefreshComments">Actualiser</button></div>
+          <div id="igCommentsList" class="ig-comments-list"><div class="empty-line">Sélectionne une publication.</div></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="instagram-panel" id="ig-panel-setup">
+      <div class="ig-setup-layout">
+        <article class="ig-card ig-setup-card glass">
+          <div class="panel-title"><h2>Connexion Meta for Developers</h2><span id="igSetupProgress">0/5</span></div>
+          <div id="igSetupChecklist" class="ig-setup-checklist"></div>
+          <div class="ig-setup-actions">
+            <button class="primary" id="instagramConnect">Connecter Instagram</button>
+            <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta for Developers ↗</a>
+          </div>
+        </article>
+
+        <article class="ig-card glass">
+          <div class="panel-title"><h2>Valeurs à copier dans Meta</h2><span>Production</span></div>
+          <div class="ig-copy-stack">
+            <label>Domaine de l’app<div><code id="igAppDomain">—</code><button data-copy-id="igAppDomain">Copier</button></div></label>
+            <label>OAuth Redirect URI<div><code id="igRedirectUri">—</code><button data-copy-id="igRedirectUri">Copier</button></div></label>
+            <label>Webhook Callback URL<div><code id="igWebhookUrl">—</code><button data-copy-id="igWebhookUrl">Copier</button></div></label>
+            <label>Webhook Verify Token<div><code id="igWebhookToken">—</code><button data-copy-id="igWebhookToken">Copier</button></div></label>
+          </div>
+        </article>
+
+        <article class="ig-card glass">
+          <div class="panel-title"><h2>Permissions utilisées</h2><span>Facebook Login</span></div>
+          <div id="igPermissionList" class="ig-permission-list"></div>
+          <p class="ig-note">Le flux actuel utilise un compte Instagram professionnel relié à une Page Facebook. La publication directe d’images et carrousels passe par l’API officielle Meta.</p>
+        </article>
+
+        <article class="ig-card glass">
+          <div class="panel-title"><h2>Diagnostic</h2><button id="igTestMeta">Tester</button></div>
+          <div id="igMetaDiagnostic" class="ig-meta-diagnostic"><span>Le diagnostic vérifiera la configuration et la connexion du compte.</span></div>
+        </article>
+      </div>
+    </div>
+
+    <div class="ig-hidden-compat" aria-hidden="true">
+      <button id="instagramStudioBridge"></button><button id="addLatestDraft"></button>
+      <div id="instagramMedia"></div>
+      <div id="socialChecklist">
+        <label><input type="checkbox" data-social-check="source"></label>
+        <label><input type="checkbox" data-social-check="deadline"></label>
+        <label><input type="checkbox" data-social-check="image"></label>
+        <label><input type="checkbox" data-social-check="cta"></label>
+        <label><input type="checkbox" data-social-check="format"></label>
+      </div>
+    </div>
+  </section>
+
+  <section class="view v90-builder" id="view-builder">
+    <div class="section-bar">
+      <h1>Interface Lab</h1>
+      <div class="section-actions">
+        <span class="builder-state" id="builderSaveState">Configuration synchronisée</span>
+        <button class="glass-button" id="builderReset">Réinitialiser</button>
+        <button class="glass-button" id="builderSave">Enregistrer</button>
+        <button class="glass-button primary" id="builderPublish">Publier la version</button>
+      </div>
+    </div>
+
+    <section class="builder-intro">
+      <div>
+        <small>PLUG ART · PRODUCT DESIGN SYSTEM</small>
+        <h2>Reconstruire le produit sans toucher au code.</h2>
+        <p>Structure, densité, surfaces, typographie, navigation, responsive et PLUGY 2.0 sont réunis dans un seul atelier interne.</p>
+      </div>
+      <button id="builderAskPlugy">✦ Travailler avec PLUGY</button>
+    </section>
+
+    <div class="builder-shell">
+      <aside class="builder-panel builder-structure">
+        <div class="builder-panel-head"><span>01</span><div><small>ARCHITECTURE</small><h3>Structure du produit</h3></div></div>
+        <div class="builder-tree">
+          <strong>Control Room</strong>
+          <button><i></i>Accueil <span>Hero · priorités · signaux</span></button>
+          <button><i></i>Radar <span>Recherche · qualification</span></button>
+          <button><i></i>Opportunités <span>Décision · détail</span></button>
+          <button><i></i>Carte <span>Territoires · clusters</span></button>
+          <strong>Production</strong>
+          <button><i></i>Studio <span>Éditeur social</span></button>
+          <button><i></i>Instagram <span>Feed · planning · Meta</span></button>
+          <strong>Réseau</strong>
+          <button><i></i>Artistes <span>Profils · portfolios</span></button>
+          <button><i></i>CRM <span>Prospection · relances</span></button>
+          <strong>Système</strong>
+          <button class="active"><i></i>Interface Lab <span>Design system · PLUGY</span></button>
+        </div>
+        <div class="builder-guidelines">
+          <small>PRINCIPES</small>
+          <p>Moins de boîtes. Plus de hiérarchie. Un écran = une intention principale. PLUGY reste une action, jamais une décoration.</p>
+        </div>
+      </aside>
+
+      <main class="builder-canvas">
+        <div class="builder-preview-toolbar">
+          <div class="preview-devices">
+            <button class="active" data-preview-mode="desktop">Ordinateur</button>
+            <button data-preview-mode="tablet">Tablette</button>
+            <button data-preview-mode="mobile">Mobile</button>
+          </div>
+          <span id="builderViewportLabel">1440 × 960</span>
+          <button id="builderApplyCurrent">Appliquer à cette session</button>
+        </div>
+
+        <div class="builder-preview-stage">
+          <div class="builder-preview-frame" id="builderPreviewFrame" data-preview="desktop">
+            <div class="preview-app">
+              <aside class="preview-sidebar">
+                <strong>PLUG<span>ART</span></strong>
+                <i class="active"></i><i></i><i></i><i></i><i></i><i></i>
+                <em></em>
+              </aside>
+              <div class="preview-main">
+                <header><span></span><b></b><button></button></header>
+                <section class="preview-hero">
+                  <div><small>CONTROL ROOM</small><h4>Tout ce qui compte.<br><em>Au même endroit.</em></h4><p></p><label></label></div>
+                  <div class="preview-plugy"><i></i><i></i><span><b></b><b></b></span></div>
+                </section>
+                <div class="preview-signals"><i></i><i></i><i></i><i></i></div>
+                <div class="preview-grid"><article></article><article></article><article></article></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <aside class="builder-panel builder-inspector">
+        <div class="builder-panel-head"><span>02</span><div><small>DESIGN TOKENS</small><h3>Réglages</h3></div></div>
+
+        <div class="builder-control">
+          <label>Accent</label>
+          <div class="builder-swatches">
+            <button class="sw-violet active" data-builder-accent="violet" title="Violet"></button>
+            <button class="sw-cyan" data-builder-accent="cyan" title="Cyan"></button>
+            <button class="sw-coral" data-builder-accent="coral" title="Corail"></button>
+            <button class="sw-cobalt" data-builder-accent="cobalt" title="Cobalt"></button>
+            <button class="sw-lime" data-builder-accent="lime" title="Lime"></button>
+            <button class="sw-mono" data-builder-accent="mono" title="Monochrome"></button>
+          </div>
+        </div>
+
+        <div class="builder-control">
+          <label>Surfaces</label>
+          <div class="builder-segmented">
+            <button class="active" data-builder-surface="editorial">Éditorial</button>
+            <button data-builder-surface="glass">Verre</button>
+            <button data-builder-surface="flat">Plat</button>
+          </div>
+        </div>
+
+        <div class="builder-control">
+          <label>Densité</label>
+          <div class="builder-segmented">
+            <button data-builder-density="compact">Compacte</button>
+            <button class="active" data-builder-density="balanced">Équilibrée</button>
+            <button data-builder-density="airy">Aérée</button>
+          </div>
+        </div>
+
+        <div class="builder-control">
+          <label>Navigation</label>
+          <div class="builder-segmented">
+            <button data-builder-sidebar="compact">Compacte</button>
+            <button class="active" data-builder-sidebar="standard">Standard</button>
+          </div>
+        </div>
+
+        <div class="builder-control range">
+          <label>Rayon des surfaces <b id="builderRadiusValue"></b></label>
+          <input id="builderRadius" type="range" min="10" max="34" step="1" value="22">
+        </div>
+
+        <div class="builder-control range">
+          <label>Échelle typographique</label>
+          <input id="builderFontScale" type="range" min=".88" max="1.16" step=".02" value="1">
+        </div>
+
+        <div class="builder-control">
+          <label>Mouvement</label>
+          <div class="builder-segmented">
+            <button data-builder-motion="off">Aucun</button>
+            <button class="active" data-builder-motion="subtle">Subtil</button>
+            <button data-builder-motion="expressive">Expressif</button>
+          </div>
+        </div>
+
+        <div class="builder-versions-wrap">
+          <label>Versions enregistrées</label>
+          <div id="builderVersions" class="builder-versions"></div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="plugy-lab">
+      <div class="plugy-lab-head">
+        <div>
+          <small>PLUGY 2.0 · FORM STUDY</small>
+          <h2>15 façons de réinventer la prise.</h2>
+          <p>On conserve le symbole électrique, mais on arrête de traiter PLUGY comme une mascotte jouet. Chaque piste est pensée pour fonctionner en grand, en mini et dans l’interface.</p>
+        </div>
+        <div class="plugy-selected-summary">
+          <span>Sélection actuelle</span>
+          <strong id="plugyConceptName">Monolith Plug</strong>
+          <small id="plugyConceptTone">Iconique · premium</small>
+        </div>
+      </div>
+
+      <div class="plugy-lab-focus">
+        <div class="plugy-concept-stage concept-monolith" id="plugyConceptStage">
+          <i class="concept-prong p1"></i><i class="concept-prong p2"></i>
+          <span class="concept-face"><b></b><b></b></span>
+          <div class="plugy-stage-ring r1"></div><div class="plugy-stage-ring r2"></div>
+        </div>
+        <div class="plugy-concept-copy">
+          <small>CONCEPT RETENU POUR LE PROTOTYPE</small>
+          <h3 id="plugyConceptNameLarge">PLUGY 2.0</h3>
+          <p id="plugyConceptDescription">Bloc carré-arrondi presque monolithique, deux broches géométriques très courtes, yeux noyés dans la matière.</p>
+          <div class="plugy-design-rules">
+            <span><b>01</b> Lisible à 70 px</span>
+            <span><b>02</b> Silhouette reconnaissable sans visage</span>
+            <span><b>03</b> États écoute / réflexion / parole</span>
+            <span><b>04</b> Pas d’effet jouet ou lapin</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="plugy-concept-grid" id="plugyConceptGrid"></div>
+    </section>
+  </section>
+
+  <section class="view legacy-view" id="view-network">
+    <div class="section-bar"><h1>Réseau</h1></div>
+    <div class="network-grid">
+      <article class="network-panel glass"><div class="card-head"><strong>Artistes</strong></div><div class="network-list" id="artistList"></div></article>
+      <article class="network-panel glass"><div class="card-head"><strong>Événements</strong></div><div class="network-list" id="eventList"></div></article>
+      <article class="network-panel glass"><div class="card-head"><strong>Carte</strong></div><div class="world-map" id="worldMap"></div></article>
+    </div>
+  </section>
+
+  <section class="view legacy-view" id="view-workspace">
+    <div class="section-bar"><h1>Suivi</h1></div>
+    <div class="workspace-grid">
+      <article class="work-panel glass"><div class="card-head"><strong>Notes</strong><button id="newNote">+ Ajouter</button></div><div id="notesList"></div></article>
+      <article class="work-panel glass"><div class="card-head"><strong>Contacts</strong><button id="newContact">+ Ajouter</button></div><div id="contactsList"></div></article>
+      <article class="work-panel glass"><div class="card-head"><strong>Radar</strong></div><div id="workspaceCandidates"></div></article>
+    </div>
+  </section>
+</main>
+
+<div class="v89-overlay" id="v90CommandPalette" aria-hidden="true">
+  <div class="v89-overlay-backdrop" data-v89-close></div>
+  <div class="v89-command-card">
+    <div class="v89-command-search"><span>⌕</span><input id="v90CommandInput" placeholder="Rechercher une page, une opportunité, un artiste, une action…"><kbd>ESC</kbd></div>
+    <div class="v89-command-results" id="v90CommandResults"></div>
+  </div>
+</div>
+
+<div class="v89-overlay" id="v90CreateSheet" aria-hidden="true">
+  <div class="v89-overlay-backdrop" data-v89-close></div>
+  <div class="v89-create-sheet">
+    <div class="v89-sheet-head"><div><small>NOUVEAU</small><h2>Que veux-tu créer ?</h2></div><button data-v89-close>×</button></div>
+    <div class="v89-create-grid">
+      <button data-create-action="carousel"><i>✦</i><strong>Carrousel</strong><span>Ouvrir le Studio</span></button>
+      <button data-create-action="instagram"><i>◎</i><strong>Publication Instagram</strong><span>Créer puis publier</span></button>
+      <button data-create-action="artist"><i>◌</i><strong>Profil artiste</strong><span>Ajouter au réseau</span></button>
+      <button data-create-action="lead"><i>▦</i><strong>Contact CRM</strong><span>Ajouter un prospect</span></button>
+      <button data-create-action="radar"><i>◉</i><strong>Cycle Radar</strong><span>Relancer la recherche</span></button>
+      <button data-create-action="plugy"><i>⌁</i><strong>Avec PLUGY</strong><span>Décrire ce que tu veux</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="v89-plugy-cue" id="v90PlugyCue" aria-live="polite"><i></i><span></span></div>
+<div class="v89-scroll-progress" id="v89ScrollProgress"></div>
+
+<div class="plugy-float" id="plugyFloat" data-mode="hero">
+  <div class="plugy-float-visual" id="plugyFloatVisual" data-plugy-state="idle" role="button" tabindex="0" aria-label="PLUGY, double-cliquer ou maintenir pour parler">
+    <model-viewer id="plugyFloatModel" src="/static/plugy_official_v84.glb?v=90.20260923.1" alt="PLUGY, assistant officiel PLUG ART nacré blanc rose aux reflets violet cyan" camera-controls auto-rotate auto-rotate-delay="1250" rotation-per-second="2.7deg" camera-orbit="-7deg 77deg 2.90m" camera-target="0m .18m 0m" field-of-view="25deg" interaction-prompt="none" disable-pan disable-zoom shadow-intensity=".19" shadow-softness=".98" environment-image="neutral" exposure="1.18" tone-mapping="commerce" loading="eager" reveal="auto"></model-viewer><div class="plugy-model-fallback"><strong>PLUGY</strong><span>Assistant PLUG ART</span></div>
+  </div>
+  <button class="plugy-float-voice" id="plugyFloatVoice" aria-label="Parler à PLUGY">⌁</button>
+</div>
+
+<nav class="mobile-dock glass"><button class="active" data-view="dashboard"><b>⌂</b><span>Accueil</span></button><button data-view="radar"><b>◎</b><span>Radar</span></button><button data-view="studio"><b>✦</b><span>Studio</span></button><button data-view="social"><b>◎</b><span>Instagram</span></button><button data-view="crm"><b>▦</b><span>CRM</span></button></nav>
+
+<div class="plugy-chat" id="plugyChat">
+  <div class="chat-head"><div><i></i><strong>PLUGY</strong><span id="plugyVoiceStatus">Disponible</span></div><div class="chat-head-actions"><button id="plugyVoiceBtn" aria-label="Conversation vocale">⌁</button><button id="closeChat" aria-label="Fermer">×</button></div></div>
+  <div class="plugy-live-transcript" id="plugyLiveTranscript">Double-clique sur PLUGY ou maintiens-le pour parler.</div>
+  <div class="chat-stream" id="chatStream"><div class="bot-msg">Je suis prêt.</div></div>
+  <form id="chatForm"><input id="chatInput" autocomplete="off" placeholder="Demande à PLUGY…"><button aria-label="Envoyer">↑</button></form>
+</div>
+
+<div class="modal" id="simpleModal"><div class="modal-card"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
+<script defer src="/static/dashboard_v65_core.js?v=90.20260923.1"></script>\n<script defer src="/static/dashboard_v65_studio.js?v=90.20260923.1"></script>\n<script defer src="/static/plugy_assistant_v90.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v86_map.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v86_people.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v86_editor.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v86_quality.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v90_shell.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v90_builder.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v88_instagram.js?v=90.20260923.1"></script>
+<script defer src="/static/dashboard_v100.js?v=100.20260923.1"></script>\n</body>
+</html>
