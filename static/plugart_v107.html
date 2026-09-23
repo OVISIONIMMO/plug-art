@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4f5f7">
+<title>PLUG ART — Workspace</title>
+<meta name="description" content="PLUG ART Workspace — Radar, Open Calls, création, Bureau, prospection et PLUGY.">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/plugart_v107.css?v=107.20260923.1">
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
+</head>
+<body data-view="dashboard" data-plugy-motion="Idle">
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand-row">
+      <button class="brand" data-route="dashboard"><span class="brand-plug">PLUG</span><span class="brand-art">ART</span><i></i></button>
+      <button class="sidebar-collapse" id="sidebarCollapse" aria-label="Réduire la navigation">‹</button>
+    </div>
+
+    <nav class="main-nav">
+      <div class="nav-group">
+        <small>TRAVAIL</small>
+        <button class="nav-item active" data-route="dashboard"><b>⌂</b><span>Dashboard</span></button>
+        <button class="nav-item" data-route="radar"><b>◉</b><span>Radar</span></button>
+        <button class="nav-item" data-route="opencalls"><b>◇</b><span>Open Calls</span></button>
+        <button class="nav-item" data-route="creation"><b>✦</b><span>Création</span></button>
+      </div>
+      <div class="nav-group">
+        <small>ORGANISER</small>
+        <button class="nav-item" data-route="bureau"><b>▤</b><span>Bureau</span></button>
+        <button class="nav-item" data-route="prospection"><b>◎</b><span>Contacts & Prospection</span></button>
+        <button class="nav-item" data-route="network"><b>◌</b><span>Artistes</span></button>
+        <button class="nav-item" data-route="map"><b>⌖</b><span>Carte</span></button>
+      </div>
+    </nav>
+
+    <button class="sidebar-plugy" id="sidebarPlugy">
+      <span class="mini-energy"></span>
+      <span><strong>PLUGY</strong><small>Assistant contextuel</small></span>
+      <b>⌁</b>
+    </button>
+    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small>V107</small></div>
+  </aside>
+
+  <main class="workspace">
+    <header class="topbar">
+      <div class="top-title">
+        <small id="pageEyebrow">WORKSPACE</small>
+        <h1 id="pageTitle">Dashboard</h1>
+      </div>
+      <button class="global-search" id="globalSearch"><span>⌕</span><strong>Rechercher dans PLUG ART</strong><kbd>⌘ K</kbd></button>
+      <div class="top-actions">
+        <button class="icon-btn" id="refreshData" title="Actualiser">↻</button>
+        <button class="primary-btn" id="newAction">＋ Nouveau</button>
+        <button class="plugy-btn" id="topPlugy"><i></i> PLUGY</button>
+      </div>
+    </header>
+
+    <section class="view active" id="view-dashboard">
+      <div class="dashboard-grid">
+        <section class="panel quick-panel span-2">
+          <div class="panel-head"><div><small>ACCÈS RAPIDE</small><h2>Que veux-tu faire ?</h2></div><span class="live-pill"><i></i> LIVE</span></div>
+          <div class="quick-grid">
+            <button data-route="radar"><b>◉</b><strong>Lancer le Radar</strong><span>Trouver de nouvelles opportunités</span></button>
+            <button data-route="creation"><b>✦</b><strong>Créer un contenu</strong><span>Carrousel, candidature, texte</span></button>
+            <button data-route="bureau"><b>▤</b><strong>Ouvrir le Bureau</strong><span>Écrire, réécrire, structurer</span></button>
+            <button data-route="prospection"><b>◎</b><strong>Ajouter un contact</strong><span>Suivre une démarche ou relance</span></button>
+          </div>
+        </section>
+
+        <section class="panel plugy-home">
+          <div class="panel-head"><div><small>PLUGY</small><h2>Assistant actif</h2></div><button class="text-btn" data-open-plugy>Ouvrir →</button></div>
+          <div class="plugy-home-copy">
+            <p id="plugyHomeText">Je peux filtrer le Radar, écrire dans le Bureau, créer un contenu ou préparer une relance.</p>
+            <div class="plugy-home-actions">
+              <button data-plugy-prompt="Montre-moi les priorités à traiter aujourd'hui dans PLUG ART.">Mes priorités</button>
+              <button data-plugy-prompt="Aide-moi à choisir la prochaine action utile dans mon workspace PLUG ART.">Prochaine action</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel span-2">
+          <div class="panel-head"><div><small>OPEN CALLS</small><h2>À traiter maintenant</h2></div><button class="text-btn" data-route="opencalls">Tout voir →</button></div>
+          <div class="priority-list" id="dashboardCalls"><div class="empty">Chargement des opportunités…</div></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><div><small>BUREAU</small><h2>Derniers documents</h2></div><button class="text-btn" data-route="bureau">Ouvrir →</button></div>
+          <div class="compact-list" id="dashboardBureau"><div class="empty">Aucun document.</div></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><div><small>PROSPECTION</small><h2>Relances à venir</h2></div><button class="text-btn" data-route="prospection">Suivre →</button></div>
+          <div class="compact-list" id="dashboardProspection"><div class="empty">Aucune relance.</div></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><div><small>ACTIVITÉ</small><h2>Vue rapide</h2></div></div>
+          <div class="metric-grid">
+            <div><strong id="statOpp">—</strong><span>Open Calls</span></div>
+            <div><strong id="statUrgent">—</strong><span>Urgents</span></div>
+            <div><strong id="statArtists">—</strong><span>Artistes</span></div>
+            <div><strong id="statContacts">—</strong><span>Contacts</span></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="view" id="view-radar">
+      <div class="page-toolbar">
+        <div><small>VEILLE ACTIVE</small><h2>Radar</h2><p>Trouver, filtrer et vérifier les opportunités.</p></div>
+        <div class="toolbar-actions"><button class="secondary-btn" id="radarRefresh">Actualiser</button><button class="primary-btn" id="radarRun">◉ Lancer une recherche</button></div>
+      </div>
+      <div class="tool-layout">
+        <aside class="filter-panel panel">
+          <label>Recherche<input id="radarSearch" placeholder="Titre, ville, discipline…"></label>
+          <label>Pays<select id="radarCountry"><option value="">Tous</option></select></label>
+          <label>Score minimum<select id="radarScore"><option value="0">Tous</option><option value="60">60+</option><option value="75">75+</option><option value="85">85+</option></select></label>
+          <label>Type<select id="radarType"><option value="">Tous</option><option value="collective">Collectif / émergent</option><option value="accessible">Accessible</option><option value="urgent">Deadline proche</option></select></label>
+          <button class="plugy-inline" data-plugy-prompt="Analyse mes filtres Radar et aide-moi à trouver les opportunités les plus pertinentes.">✦ Affiner avec PLUGY</button>
+        </aside>
+        <div class="results-panel"><div class="result-head"><strong id="radarCount">0 opportunité</strong><span>triées par pertinence</span></div><div class="card-grid" id="radarGrid"></div></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-opencalls">
+      <div class="page-toolbar">
+        <div><small>SÉLECTION DE TRAVAIL</small><h2>Open Calls</h2><p>Les appels actifs, lisibles et prêts à être exploités.</p></div>
+        <div class="toolbar-actions"><button class="primary-btn" data-route="creation">✦ Créer depuis un Open Call</button></div>
+      </div>
+      <div class="search-strip"><input id="openSearch" placeholder="Rechercher un Open Call…"><select id="openCountry"><option value="">Tous les pays</option></select><select id="openStatus"><option value="">Tous</option><option value="urgent">Urgents</option><option value="accessible">Accessibles</option><option value="collective">Collectifs</option></select></div>
+      <div class="open-grid" id="openGrid"></div>
+    </section>
+
+    <section class="view" id="view-creation">
+      <div class="page-toolbar">
+        <div><small>CRÉATION</small><h2>Studio de contenu</h2><p>Créer rapidement à partir d’un Open Call, d’un brief ou du Bureau.</p></div>
+        <div class="toolbar-actions"><button class="secondary-btn" id="contentClear">Nouveau</button><button class="primary-btn" id="contentGenerate">✦ Générer avec PLUGY</button></div>
+      </div>
+      <div class="creation-layout">
+        <aside class="creation-form panel">
+          <label>Source<select id="contentSource"><option value="">Brief libre</option></select></label>
+          <label>Type<select id="contentType"><option>Carrousel Instagram</option><option>Légende Instagram</option><option>Candidature</option><option>Email de prospection</option><option>Texte d’exposition</option></select></label>
+          <label>Objectif<input id="contentObjective" placeholder="Informer, candidater, promouvoir…"></label>
+          <label>Brief<textarea id="contentBrief" rows="8" placeholder="Sujet, angle, informations importantes…"></textarea></label>
+          <button class="plugy-inline" id="contentImprove">✦ Structurer le brief</button>
+        </aside>
+        <section class="editor-panel panel">
+          <div class="editor-toolbar"><input id="contentTitle" class="editor-title" placeholder="Titre du contenu"><span id="contentStatus">Brouillon</span></div>
+          <textarea id="contentBody" class="content-editor" placeholder="Le contenu généré apparaîtra ici…"></textarea>
+          <div class="editor-actions"><button id="contentCopy">Copier</button><button id="contentToBureau">Envoyer au Bureau</button><button class="primary-btn" id="contentRegenerate">Régénérer</button></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="view" id="view-bureau">
+      <div class="page-toolbar">
+        <div><small>ÉCRITURE & DOCUMENTS</small><h2>Bureau</h2><p>Notes, candidatures, idées, textes et brouillons dans un seul espace.</p></div>
+        <div class="toolbar-actions"><button class="primary-btn" id="bureauNew">＋ Nouveau document</button></div>
+      </div>
+      <div class="bureau-layout">
+        <aside class="bureau-list-panel panel">
+          <div class="bureau-search"><input id="bureauSearch" placeholder="Rechercher dans le Bureau…"></div>
+          <div class="bureau-list" id="bureauList"></div>
+        </aside>
+        <section class="bureau-editor panel">
+          <div class="bureau-meta">
+            <input id="bureauTitle" class="editor-title" placeholder="Titre du document">
+            <div class="bureau-meta-row"><select id="bureauFolder"><option>Notes</option><option>Candidatures</option><option>Contenus</option><option>Prospection</option><option>Projets</option></select><input id="bureauTags" placeholder="tags, séparés, par virgules"><label class="pin-check"><input type="checkbox" id="bureauPinned"> Épingler</label></div>
+          </div>
+          <textarea id="bureauBody" class="bureau-body" placeholder="Commence à écrire ici…"></textarea>
+          <div class="bureau-actions">
+            <button data-bureau-ai="rewrite">✦ Réécrire</button>
+            <button data-bureau-ai="shorten">Résumer</button>
+            <button data-bureau-ai="application">Transformer en candidature</button>
+            <button data-bureau-ai="social">Transformer en post</button>
+            <span class="spacer"></span>
+            <button class="danger-text" id="bureauDelete">Supprimer</button>
+            <button class="primary-btn" id="bureauSave">Enregistrer</button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="view" id="view-prospection">
+      <div class="page-toolbar">
+        <div><small>CONTACTS & PROSPECTION</small><h2>Suivi des démarches</h2><p>Galeries, lieux, partenaires, médias et relances au même endroit.</p></div>
+        <div class="toolbar-actions"><button class="primary-btn" id="leadNew">＋ Ajouter un contact</button></div>
+      </div>
+      <div class="prospection-layout">
+        <section class="panel lead-table-panel">
+          <div class="table-toolbar"><input id="leadSearch" placeholder="Rechercher un contact…"><select id="leadStatusFilter"><option value="">Tous les statuts</option><option value="lead">À contacter</option><option value="contacted">Contacté</option><option value="waiting">En attente</option><option value="followup">Relance</option><option value="active">Échange en cours</option><option value="hot">Opportunité chaude</option><option value="closed">Clos</option></select></div>
+          <div class="lead-table" id="leadTable"></div>
+        </section>
+        <aside class="panel lead-detail" id="leadDetail">
+          <div class="lead-empty"><b>◎</b><strong>Sélectionne un contact</strong><span>Sa fiche et son historique apparaîtront ici.</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="view" id="view-network">
+      <div class="page-toolbar"><div><small>RÉSEAU</small><h2>Artistes</h2><p>Profils, pratiques, coordonnées et parcours.</p></div></div>
+      <div class="artist-grid" id="artistGrid"></div>
+    </section>
+
+    <section class="view" id="view-map">
+      <div class="page-toolbar"><div><small>CARTE</small><h2>Opportunités & expositions</h2><p>Une vue géographique de ce que le Radar a trouvé.</p></div><div class="toolbar-actions"><button class="secondary-btn" id="mapRefresh">Actualiser la carte</button></div></div>
+      <div class="map-workspace panel" id="mapWorkspace"><div class="map-grid-lines"></div><div class="map-caption"><strong>PLUG ART MAP</strong><span id="mapCount">0 point</span></div></div>
+    </section>
+  </main>
+</div>
+
+<aside class="plugy-drawer" id="plugyDrawer" aria-label="PLUGY">
+  <div class="plugy-drawer-head">
+    <div><small>ASSISTANT PLUG ART</small><strong>PLUGY</strong></div>
+    <button id="plugyClose">×</button>
+  </div>
+  <div class="plugy-stage">
+    <div class="plugy-energy e1"></div><div class="plugy-energy e2"></div>
+    <model-viewer id="plugyModel" src="/assets/plugy-v106-realistic.glb?v=107.20260923.1" interaction-prompt="none" camera-controls disable-pan disable-zoom shadow-intensity=".45" shadow-softness="1" exposure="1.08" camera-orbit="0deg 78deg 3.2m" field-of-view="29deg" alt="PLUGY"></model-viewer>
+    <div class="plugy-state" id="plugyState"><i></i><span>Prêt</span></div>
+  </div>
+  <div class="plugy-context" id="plugyContext">Contexte : Dashboard</div>
+  <div class="plugy-stream" id="plugyStream"><div class="msg bot">Je suis prêt. Je peux agir dans la rubrique où tu travailles.</div></div>
+  <div class="plugy-suggestions" id="plugySuggestions"></div>
+  <form class="plugy-form" id="plugyForm"><button type="button" id="plugyVoice">◉</button><input id="plugyInput" autocomplete="off" placeholder="Demande quelque chose…"><button type="submit">↑</button></form>
+</aside>
+
+<div class="overlay" id="searchOverlay">
+  <div class="overlay-card command-card">
+    <div class="command-input"><span>⌕</span><input id="commandInput" placeholder="Rechercher une page, un Open Call, un contact…"><kbd>ESC</kbd></div>
+    <div class="command-results" id="commandResults"></div>
+  </div>
+</div>
+
+<div class="overlay" id="newOverlay">
+  <div class="overlay-card create-card">
+    <div class="modal-head"><div><small>NOUVEAU</small><h2>Créer ou ajouter</h2></div><button data-close-overlay>×</button></div>
+    <div class="create-grid">
+      <button data-create="content"><b>✦</b><strong>Contenu</strong><span>Ouvrir le Studio</span></button>
+      <button data-create="bureau"><b>▤</b><strong>Document</strong><span>Écrire dans le Bureau</span></button>
+      <button data-create="lead"><b>◎</b><strong>Contact</strong><span>Ajouter à la prospection</span></button>
+      <button data-create="radar"><b>◉</b><strong>Recherche Radar</strong><span>Lancer une veille</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script defer src="/static/plugart_v107.js?v=107.20260923.1"></script>
+</body>
+</html>
