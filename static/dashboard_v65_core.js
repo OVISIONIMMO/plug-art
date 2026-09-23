@@ -4,7 +4,7 @@
 const q=(s,r=document)=>r.querySelector(s), qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const apiMemo=new Map();
-const api=async(url,opt={})=>{const method=String(opt.method||'GET').toUpperCase(),memoable=method==='GET'&&/^\/api\/(stats|opportunities|artists|exhibitions|v86\/map)(?:\?|$)/.test(url),now=performance.now(),hit=apiMemo.get(url);if(memoable&&hit&&now-hit.t<3200)return hit.v;const r=await fetch(url,{cache:memoable?'default':'no-store',...opt});if(!r.ok)throw new Error((await r.text())||String(r.status));const ct=r.headers.get('content-type')||'',v=ct.includes('json')?await r.json():await r.text();if(memoable)apiMemo.set(url,{t:now,v});if(method!=='GET')apiMemo.clear();return v};
+const api=async(url,opt={})=>{const method=String(opt.method||'GET').toUpperCase(),memoable=method==='GET'&&/^\/api\/(stats|opportunities|artists|exhibitions|v86\/map|v102\/bootstrap)(?:\?|$)/.test(url),now=performance.now(),hit=apiMemo.get(url);if(memoable&&hit&&now-hit.t<8000)return hit.v;const controller=opt.signal?null:new AbortController(),timer=controller?setTimeout(()=>controller.abort(),12000):0;try{const r=await fetch(url,{cache:memoable?'default':'no-store',...opt,signal:opt.signal||controller?.signal});if(!r.ok)throw new Error((await r.text())||String(r.status));const ct=r.headers.get('content-type')||'',v=ct.includes('json')?await r.json():await r.text();if(memoable)apiMemo.set(url,{t:now,v});if(method!=='GET')apiMemo.clear();return v}finally{if(timer)clearTimeout(timer)}};
 const store={get(k,d=[]){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){localStorage.setItem(k,JSON.stringify(v))}};
 const state={stats:{},opps:[],artists:[],events:[],map:[],radar:{},candidates:[]};
 const meta={dashboard:['Accueil'],radar:['Radar'],opencalls:['Opportunités'],studio:['Studio'],map:['Carte'],artists:['Artistes'],crm:['CRM'],social:['Instagram'],builder:['Interface Lab'],network:['Réseau'],workspace:['Suivi']};
@@ -59,7 +59,7 @@ function renderDashboard(){
   set('dashOpp',state.stats.opportunities??state.opps.length);set('dashArtistCount',state.stats.artists??state.artists.length);set('dashRadar',run.online??run.checked??'—');set('dashCycle',run.finished_at?fmt(run.finished_at):'—');set('dashScore',scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length)+'%':'—');
   chart(scores.slice(0,8));
   const calls=state.opps.slice().sort((a,b)=>Number(b.radar_score??b.score??0)-Number(a.radar_score??a.score??0)).slice(0,5);
-  const dc=q('#dashCalls');if(dc)dc.innerHTML=calls.length?calls.map(o=>'<button class="priority-item" data-open="'+esc(o.id)+'"><div class="priority-thumb" style="background-image:url(\''+oppImg(o)+'\')"></div><div><h3>'+esc(o.title)+'</h3><p>'+esc([o.city,o.country].filter(Boolean).join(' · ')||o.type||'Open Call')+'</p></div><b>'+Number(o.radar_score??o.score??0)+'</b></button>').join(''):'<div class="compact-row"><span>Aucune opportunité.</span></div>';
+  const dc=q('#dashCalls');if(dc)dc.innerHTML=calls.length?calls.map(o=>'<button class="priority-item" data-open="'+esc(o.id)+'"><div class="priority-thumb"><img src="'+oppImg(o)+'" alt="" loading="lazy" decoding="async" fetchpriority="low"></div><div><h3>'+esc(o.title)+'</h3><p>'+esc([o.city,o.country].filter(Boolean).join(' · ')||o.type||'Open Call')+'</p></div><b>'+Number(o.radar_score??o.score??0)+'</b></button>').join(''):'<div class="compact-row"><span>Aucune opportunité.</span></div>';
   qa('[data-open]').forEach(b=>b.onclick=()=>{view('opencalls');setTimeout(()=>openOppDetails(b.dataset.open),120)});
   const cand=q('#dashCandidates');if(cand)cand.innerHTML=state.candidates.slice(0,3).map(c=>'<div class="compact-row"><strong>'+esc(c.title||'Piste')+'</strong><span>'+esc(c.source_name||'À vérifier')+' · '+Number(c.candidate_score||0)+'/100</span></div>').join('')||'<div class="compact-row"><span>Aucune nouvelle piste.</span></div>';
   const ev=q('#dashEvents');if(ev)ev.innerHTML=state.events.slice(0,3).map(e=>'<div class="compact-row"><strong>'+esc(cut(e.title,60))+'</strong><span>'+esc(e.city||e.country||'')+' · '+esc(fmt(e.start))+'</span></div>').join('')||'<div class="compact-row"><span>Aucun événement.</span></div>';
@@ -148,7 +148,7 @@ function filterOpenCalls(){
   if(q('#openCallCount'))q('#openCallCount').textContent=rows.length;
   box.innerHTML=rows.map(o=>{
     const score=Number(o.radar_score??o.score??0),d=daysLeft(o),deadline=o.deadline?fmt(o.deadline):'À vérifier';
-    return '<article class="open-call-card glass" data-open-detail="'+esc(o.id)+'"><div class="open-call-media"><img src="'+oppImg(o)+'" alt="" loading="lazy"><span>'+score+'/100</span></div><div class="open-call-copy"><div class="open-call-meta">'+esc(o.type||'Open Call')+' · '+esc([o.city,o.country].filter(Boolean).join(' · ')||'International')+'</div><h3>'+esc(o.title)+'</h3><p>'+esc(cut(o.summary||o.radar_reason||'',150))+'</p><div class="open-call-facts"><span>Deadline <b>'+esc(deadline)+'</b></span><span>Frais <b>'+esc(cut(o.fee||'À vérifier',40))+'</b></span>'+(d>=0&&d<=14?'<span class="urgent-chip">'+d+' j</span>':'')+'</div><div class="open-call-actions"><button data-use="'+esc(o.id)+'">Créer</button><a href="'+esc(safe(o.source_url))+'" target="_blank" rel="noopener">Source ↗</a><button class="ghost" data-detail="'+esc(o.id)+'">Détails</button></div></div></article>';
+    return '<article class="open-call-card glass" data-open-detail="'+esc(o.id)+'"><div class="open-call-media"><img src="'+oppImg(o)+'" alt="" loading="lazy" decoding="async" fetchpriority="low"><span>'+score+'/100</span></div><div class="open-call-copy"><div class="open-call-meta">'+esc(o.type||'Open Call')+' · '+esc([o.city,o.country].filter(Boolean).join(' · ')||'International')+'</div><h3>'+esc(o.title)+'</h3><p>'+esc(cut(o.summary||o.radar_reason||'',150))+'</p><div class="open-call-facts"><span>Deadline <b>'+esc(deadline)+'</b></span><span>Frais <b>'+esc(cut(o.fee||'À vérifier',40))+'</b></span>'+(d>=0&&d<=14?'<span class="urgent-chip">'+d+' j</span>':'')+'</div><div class="open-call-actions"><button data-use="'+esc(o.id)+'">Créer</button><a href="'+esc(safe(o.source_url))+'" target="_blank" rel="noopener">Source ↗</a><button class="ghost" data-detail="'+esc(o.id)+'">Détails</button></div></div></article>';
   }).join('')||'<div class="glass empty-state">Aucun Open Call ne correspond aux filtres.</div>';
   qa('#openCallGrid img').forEach(img=>img.onerror=()=>img.closest('.open-call-media')?.classList.add('image-missing'));
   qa('#openCallGrid [data-use]').forEach(b=>b.onclick=e=>{e.stopPropagation();view('studio');const sel=q('#studioSource');if(sel){sel.value=String(b.dataset.use);sel.dispatchEvent(new Event('change'))}});
@@ -229,19 +229,44 @@ function playPlugy(name,once=true){
 function schedulePlugy(){clearTimeout(animTimer);animTimer=setTimeout(()=>{if(!window.PlugyAssistant?.state?.conversation)playPlugy(['Blink','Curious','SoftTurn','Happy','Attentive'][Math.floor(Math.random()*5)],true);schedulePlugy()},7000+Math.random()*5000)}
 q('#plugyModel')?.addEventListener('load',()=>{playPlugy('IdleBlink',false);schedulePlugy()},{once:true});qa('[data-anim]').forEach(b=>b.onclick=()=>playPlugy(b.dataset.anim,true));
 
+function applyBootstrap(b){
+  if(!b||typeof b!=='object')return false;
+  state.stats=b.stats||{};
+  state.opps=Array.isArray(b.opportunities)?b.opportunities:[];
+  state.radar=b.radar||{};
+  state.candidates=Array.isArray(b.candidates)?b.candidates:[];
+  state.artists=Array.isArray(b.artists)?b.artists:[];
+  state.events=Array.isArray(b.events)?b.events:[];
+  state.map=Array.isArray(b.map)?b.map:[];
+  renderDashboard();renderRadar();renderOpenCalls();renderWorkspace();renderNetwork();
+  return true;
+}
 async function loadAll(){
-  const critical=[['/api/stats',{}],['/api/opportunities',[]],['/api/radar/status',{}],['/api/radar/candidates',[]]];
-  const vals=await Promise.all(critical.map(async s=>{try{return await api(s[0])}catch{return s[1]}}));
-  state.stats=vals[0]||{};state.opps=Array.isArray(vals[1])?vals[1]:[];state.radar=vals[2]||{};state.candidates=Array.isArray(vals[3])?vals[3]:[];
-  renderDashboard();renderRadar();renderOpenCalls();renderWorkspace();
-  const hydrate=async()=>{
+  const cacheKey='plugart_v102_bootstrap';
+  let cached=null;
+  try{cached=store.get(cacheKey,null)}catch{}
+  if(cached&&cached.payload&&Date.now()-Number(cached.saved_at||0)<300000){
+    applyBootstrap(cached.payload);
+    document.documentElement.dataset.dataWarm='1';
+  }
+  try{
+    const fresh=await api('/api/v102/bootstrap');
+    applyBootstrap(fresh);
+    try{store.set(cacheKey,{saved_at:Date.now(),payload:fresh})}catch{}
+    document.documentElement.dataset.dataReady='1';
+    window.dispatchEvent(new CustomEvent('plugart:hydrated',{detail:{source:'bootstrap'}}));
+    return state;
+  }catch(e){
+    const critical=[['/api/stats',{}],['/api/opportunities',[]],['/api/radar/status',{}],['/api/radar/candidates',[]]];
+    const vals=await Promise.all(critical.map(async s=>{try{return await api(s[0])}catch{return s[1]}}));
+    state.stats=vals[0]||{};state.opps=Array.isArray(vals[1])?vals[1]:[];state.radar=vals[2]||{};state.candidates=Array.isArray(vals[3])?vals[3]:[];
+    renderDashboard();renderRadar();renderOpenCalls();renderWorkspace();
     const deferred=[['/api/artists',[]],['/api/exhibitions',[]],['/api/v86/map',[]]];
     const more=await Promise.all(deferred.map(async s=>{try{return await api(s[0])}catch{return s[1]}}));
     state.artists=Array.isArray(more[0])?more[0]:[];state.events=Array.isArray(more[1])?more[1]:[];state.map=Array.isArray(more[2])?more[2]:[];
-    renderDashboard();renderNetwork();window.dispatchEvent(new CustomEvent('plugart:hydrated'));
-  };
-  if('requestIdleCallback'in window)requestIdleCallback(()=>hydrate(),{timeout:900});else setTimeout(hydrate,80);
-  return state;
+    renderDashboard();renderNetwork();window.dispatchEvent(new CustomEvent('plugart:hydrated',{detail:{source:'fallback'}}));
+    return state;
+  }
 }
 window.PLUG65={q,qa,esc,api,store,state,view,cut,fmt,oppImg,playPlugy,openChat,openOppDetails,filterOpenCalls,renderDashboard,renderSocial,modal,closeModal,loadAll,getSocialQueue:()=>socialQueue,setSocialQueue:(items)=>{socialQueue=Array.isArray(items)?items:[];persistSocial();renderSocial()}};
 const initialView=location.hash.slice(1)||'dashboard';history.replaceState({view:initialView},'','#'+initialView);view(initialView,{fromHistory:true,instant:true});
