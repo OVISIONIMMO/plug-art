@@ -193,8 +193,36 @@ function renderBureau(){
   $('#bureauList').innerHTML=rows.map(n=>'<button class="bureau-item '+(state.activeDoc===n.id?'active':'')+'" data-doc="'+n.id+'"><strong>'+(n.pinned?'★ ':'')+esc(n.title||'Sans titre')+'</strong><span>'+esc(n.folder||'Notes')+' · '+esc((n.updated_at||'').replace('T',' '))+'</span></button>').join('')||'<div class="empty">Aucun document.</div>';
   $$('[data-doc]').forEach(b=>b.onclick=()=>selectDoc(Number(b.dataset.doc)));
 }
-function clearDoc(){state.activeDoc=null;$('#bureauTitle').value='';$('#bureauBody').value='';$('#bureauFolder').value='Notes';$('#bureauTags').value='';$('#bureauPinned').checked=false;renderBureau()}
-function selectDoc(id){const n=state.bureau.find(x=>Number(x.id)===Number(id));if(!n)return;state.activeDoc=n.id;$('#bureauTitle').value=n.title||'';$('#bureauBody').value=n.body||'';$('#bureauFolder').value=n.folder||'Notes';$('#bureauTags').value=n.tags||'';$('#bureauPinned').checked=!!n.pinned;renderBureau()}
+function clearDoc(){state.activeDoc=null;$('#bureauTitle').value='';$('#bureauBody').value='';$('#bureauFolder').value='Notes';$('#bureauTags').value='';$('#bureauPinned').checked=false;renderBureau();renderBureauSource(null)}
+function selectDoc(id){
+  const n=state.bureau.find(x=>Number(x.id)===Number(id));if(!n)return;
+  state.activeDoc=n.id;$('#bureauTitle').value=n.title||'';$('#bureauBody').value=n.body||'';$('#bureauFolder').value=n.folder||'Notes';$('#bureauTags').value=n.tags||'';$('#bureauPinned').checked=!!n.pinned;renderBureau();renderBureauSource(n);
+}
+function ensureBureauBridge(){
+  if($('#bureauSourceBar'))return;
+  const editor=$('.bureau-editor');if(!editor)return;
+  const bar=document.createElement('div');bar.id='bureauSourceBar';bar.className='bureau-source-bar';bar.innerHTML='<span id="bureauSourceLabel">Document libre</span><div><button id="bureauOpenSource" hidden>Ouvrir la source</button><button id="bureauToCreation">✦ Envoyer vers Création</button></div>';
+  editor.insertBefore(bar,editor.firstChild);
+  const st=document.createElement('style');st.textContent='.bureau-source-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 10px;border-bottom:1px solid #eceef2;margin-bottom:4px}.bureau-source-bar>span{font-size:9px;color:#8d909b}.bureau-source-bar div{display:flex;gap:6px}.bureau-source-bar button{border:1px solid #e1e3e8;background:#fff;border-radius:9px;padding:7px 9px;font-size:8px;font-weight:800}.bureau-source-bar button:last-child{background:#f8f6ff;border-color:#ded9fb;color:#5f50c2}';document.head.appendChild(st);
+  $('#bureauOpenSource').onclick=openCurrentBureauSource;
+  $('#bureauToCreation').onclick=sendCurrentBureauToCreation;
+}
+function renderBureauSource(n){
+  ensureBureauBridge();const label=$('#bureauSourceLabel'),btn=$('#bureauOpenSource');if(!label||!btn)return;
+  if(n?.source_type==='opportunity'&&n.source_id){const o=opportunityById(n.source_id);label.textContent='Source · Open Call'+(o?' · '+o.title:'');btn.hidden=false;btn.textContent='Ouvrir l’Open Call'}
+  else if(n?.source_type==='crm'&&n.source_id){const l=state.leads.find(x=>String(x.id)===String(n.source_id));label.textContent='Source · Prospection'+(l?' · '+(l.organization||l.name||'Contact'):'');btn.hidden=false;btn.textContent='Ouvrir le contact'}
+  else{label.textContent='Document libre';btn.hidden=true}
+}
+function openCurrentBureauSource(){
+  const n=state.bureau.find(x=>Number(x.id)===Number(state.activeDoc));if(!n)return;
+  if(n.source_type==='opportunity'&&n.source_id)openOpportunity(Number(n.source_id));
+  if(n.source_type==='crm'&&n.source_id){route('prospection');setTimeout(()=>selectLead(Number(n.source_id)),30)}
+}
+function sendCurrentBureauToCreation(){
+  const n=state.bureau.find(x=>Number(x.id)===Number(state.activeDoc));if(!n)return;
+  route('creation');setCreationMode('text');
+  setTimeout(()=>{if($('#contentTitle'))$('#contentTitle').value=n.title||'';if($('#contentBrief'))$('#contentBrief').value=n.body||'';if(n.source_type==='opportunity'&&n.source_id&&$('#contentSource')){$('#contentSource').value=String(n.source_id);$('#contentSource').dispatchEvent(new Event('change'))}toast('Document chargé dans Création')},50);
+}
 $('#bureauNew')?.addEventListener('click',clearDoc);$('#bureauSearch')?.addEventListener('input',renderBureau);
 async function saveBureau(silent=false){
   const body={title:$('#bureauTitle').value||'Sans titre',body:$('#bureauBody').value,folder:$('#bureauFolder').value,tags:$('#bureauTags').value,pinned:$('#bureauPinned').checked?1:0};
@@ -243,7 +271,7 @@ function bindLeadForm(l={}){
   $('#leadSave').onclick=async()=>{try{const data=leadPayload();let saved;if(l.id)saved=await api('/api/v86/crm/'+l.id,{method:'PATCH',body:JSON.stringify(data)});else saved=await api('/api/v86/crm',{method:'POST',body:JSON.stringify(data)});const i=state.leads.findIndex(x=>x.id===saved.id);if(i>=0)state.leads[i]=saved;else state.leads.unshift(saved);state.activeLead=saved.id;renderLeads();renderDashboard();selectLead(saved.id);toast('Contact enregistré')}catch(e){toast('Erreur CRM')}};
   $('#leadDelete')?.addEventListener('click',async()=>{try{await api('/api/v86/crm/'+l.id,{method:'DELETE'});state.leads=state.leads.filter(x=>x.id!==l.id);state.activeLead=null;$('#leadDetail').innerHTML='<div class="lead-empty"><b>◎</b><strong>Sélectionne un contact</strong><span>Sa fiche apparaîtra ici.</span></div>';renderLeads();renderDashboard();toast('Contact supprimé')}catch{}});
   $('#leadPlugy').onclick=()=>{const d=leadPayload();askPlugy('Prépare un message de relance professionnel et concis pour '+clean(d.organization||d.name)+'. Contexte : '+clean(d.notes)+'. Prochaine action : '+clean(d.next_action))};
-  $('#leadToBureau').onclick=async()=>{const d=leadPayload();try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:'Prospection · '+clean(d.organization||d.name||'Contact'),body:[d.notes,d.next_action?'Prochaine action : '+d.next_action:'',d.email?'Email : '+d.email:'',d.instagram?'Instagram : '+d.instagram:''].filter(Boolean).join('\n\n'),folder:'Prospection',tags:'prospection, contact'})});state.bureau.unshift(n);renderDashboard();toast('Contact envoyé au Bureau')}catch{toast('Envoi au Bureau impossible')}};
+  $('#leadToBureau').onclick=async()=>{const d=leadPayload();try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:'Prospection · '+clean(d.organization||d.name||'Contact'),body:[d.notes,d.next_action?'Prochaine action : '+d.next_action:'',d.email?'Email : '+d.email:'',d.instagram?'Instagram : '+d.instagram:''].filter(Boolean).join('\n\n'),folder:'Prospection',tags:'prospection, contact',source_type:l.id?'crm':'',source_id:l.id?String(l.id):''})});state.bureau.unshift(n);renderDashboard();toast('Contact envoyé au Bureau')}catch{toast('Envoi au Bureau impossible')}};
 }
 $('#leadNew')?.addEventListener('click',()=>{state.activeLead=null;$('#leadDetail').innerHTML=leadForm({status:'lead',kind:'Galerie'});bindLeadForm({})});
 
@@ -476,6 +504,7 @@ function handleLocalPlugy(message){
   return '';
 }
 installCreationModes();
+ensureBureauBridge();
 injectOperationalUI();
 
 // PLUGY V107.1 interaction layer: one model, richer behavior.
