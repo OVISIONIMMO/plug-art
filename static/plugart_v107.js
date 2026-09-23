@@ -15,7 +15,7 @@ const viewMeta={
  prospection:['CONTACTS & PROSPECTION','Suivi des démarches','Attentive'],
  agenda:['AGENDA','Deadlines & relances','Attentive'],
  network:['RÉSEAU','Artistes','Happy'],
- map:['CARTE','Opportunités & expositions','SoftTurn']
+ map:['CARTE','Opportunités & expositions','Travel']
 };
 const contexts={
  dashboard:{label:'Dashboard',suggestions:['Mes priorités','Que dois-je traiter aujourd’hui ?','Résume mon workspace']},
@@ -152,11 +152,11 @@ function playMotion(name='Idle',loop=false){
     const a=mv.availableAnimations||[];
     const target=a.includes(name)?name:(a.includes('Idle')?'Idle':a[0]);
     if(!target)return;
-    try{mv.animationName=target;mv.timeScale=name==='Think'?.84:1;mv.play({repetitions:loop?Infinity:1})}catch{}
+    try{mv.animationName=target;mv.timeScale=(name==='Think'||name==='Charge')?.84:1;mv.play({repetitions:loop?Infinity:1})}catch{}
   };
   if(mv.loaded)run();else mv.addEventListener('load',run,{once:true});
   clearTimeout(playMotion.t);
-  if(!loop&&name!=='Idle')playMotion.t=setTimeout(()=>playMotion('Idle',true),name==='Think'?1900:1450);
+  if(!loop&&name!=='Idle')playMotion.t=setTimeout(()=>playMotion('Idle',true),(name==='Think'||name==='Charge')?1900:1450);
 }
 $('#plugyModel')?.addEventListener('load',()=>playMotion('Idle',true),{once:true});
 $('#plugyModel')?.addEventListener('pointerenter',()=>playMotion('Curious'));
@@ -191,7 +191,7 @@ async function askPlugy(message,injectTarget=null){
   message=clean(message);if(!message)return;
   const local=handleLocalPlugy(message);if(local){openPlugy();addMsg(message,'user');addMsg(local,'bot');playMotion('Happy');if(state.voiceReply)speakPlugy(local);return local;}
   openPlugy();addMsg(message,'user');state.history.push({role:'user',content:message});
-  $('#plugyState span').textContent='Réflexion…';playMotion('Think',true);
+  $('#plugyState span').textContent='Réflexion…';playMotion('Charge',true);
   const wait=addMsg('…','bot');
   const ctx='Contexte PLUG ART : '+contexts[state.view].label+'. ';
   try{
@@ -493,13 +493,13 @@ addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()===
 
 function speakPlugy(text){
   text=clean(text);if(!text||!('speechSynthesis' in window)){state.voiceReply=false;return}
-  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';u.rate=1.08;u.pitch=1;u.onstart=()=>{$('#plugyState span').textContent='Parle…';playMotion('Present',true)};u.onend=()=>{$('#plugyState span').textContent='Prêt';state.voiceReply=false;playMotion('Idle',true)};u.onerror=()=>{state.voiceReply=false;playMotion('Idle',true)};speechSynthesis.speak(u)}catch{state.voiceReply=false}
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';u.rate=1.08;u.pitch=1;u.onstart=()=>{$('#plugyState span').textContent='Parle…';playMotion('Speak',true)};u.onend=()=>{$('#plugyState span').textContent='Prêt';state.voiceReply=false;playMotion('Idle',true)};u.onerror=()=>{state.voiceReply=false;playMotion('Idle',true)};speechSynthesis.speak(u)}catch{state.voiceReply=false}
 }
 
 async function initVoice(){
   const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){toast('Reconnaissance vocale indisponible');return}
   if(state.voice){state.recognition?.stop();return}
-  const rec=new R();state.recognition=rec;rec.lang='fr-FR';rec.interimResults=false;rec.continuous=false;rec.maxAlternatives=1;state.voice=true;state.voiceReply=true;$('#plugyState span').textContent='Écoute…';playMotion('Attentive',true);
+  const rec=new R();state.recognition=rec;rec.lang='fr-FR';rec.interimResults=false;rec.continuous=false;rec.maxAlternatives=1;state.voice=true;state.voiceReply=true;$('#plugyState span').textContent='Écoute…';playMotion('Listen',true);
   rec.onresult=e=>{
     const last=e.results?.[e.results.length-1],alt=last?.[0],text=clean(alt?.transcript||'');
     if(text)$('#plugyInput').value=text;
