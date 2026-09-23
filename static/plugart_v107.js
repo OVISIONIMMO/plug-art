@@ -127,7 +127,8 @@ function bindOppActions(root=document){
   $$('[data-opp-create]',root).forEach(b=>b.onclick=()=>{route('creation');setTimeout(()=>{const s=$('#contentSource');s.value=String(b.dataset.oppCreate);s.dispatchEvent(new Event('change'))},60)});
   $$('[data-opp-plugy]',root).forEach(b=>{b.onclick=()=>{const o=(state.bootstrap?.opportunities||[]).find(x=>String(x.id)===String(b.dataset.oppPlugy));askPlugy('Analyse cet Open Call : '+clean(o?.title)+'. Donne-moi les points clés, risques, deadline et prochaine action.')}});
   $$('[data-opp-follow]',root).forEach(b=>b.onclick=async()=>{try{const row=await api('/api/v107/open-calls/'+b.dataset.oppFollow+'/workflow',{method:'PUT',body:JSON.stringify({workflow_status:'saved'})});state.workflow=state.workflow.filter(x=>String(x.opportunity_id)!==String(row.opportunity_id));state.workflow.push(row);renderRadar();renderOpenCalls();renderDashboard();toast('Open Call ajouté au suivi')}catch{toast('Suivi impossible')}});
-  $$('.workflow-select',root).forEach(sel=>{
+  $('[data-route]',root).forEach(b=>b.onclick=()=>route(b.dataset.route));
+  $('.workflow-select',root).forEach(sel=>{
     const flow=workflowFor(sel.dataset.oppWorkflow);sel.value=flow?.workflow_status||'';
     sel.onchange=async()=>{
       const id=sel.dataset.oppWorkflow;
@@ -145,7 +146,7 @@ function renderDashboard(){
   const opps=(b.opportunities||[]).slice().sort((a,b)=>Number(trackedIds.has(String(b.id)))-Number(trackedIds.has(String(a.id)))||Number(b.radar_score??b.score??0)-Number(a.radar_score??a.score??0)).slice(0,4);
   $('#statOpp').textContent=stats.opportunities??opps.length;$('#statUrgent').textContent=stats.urgent??0;$('#statArtists').textContent=stats.artists??(b.artists||[]).length;$('#statContacts').textContent=state.leads.length;
   const box=$('#dashboardCalls');box.innerHTML=opps.length?opps.map(o=>'<div class="priority-row"><div class="priority-thumb"><img src="/api/v67/opportunities/'+o.id+'/thumbnail" alt="" loading="lazy"></div><button data-dashboard-opp="'+o.id+'" style="border:0;background:transparent;text-align:left"><h3>'+esc(o.title)+'</h3><p>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</p></button><span class="score">'+Number(o.radar_score??o.score??0)+'/100</span></div>').join(''):'<div class="empty">Aucune opportunité active.</div>';
-  $$('[data-dashboard-opp]').forEach(x=>x.onclick=()=>{route('opencalls');setTimeout(()=>$('#openSearch').value=(b.opportunities||[]).find(o=>String(o.id)===x.dataset.dashboardOpp)?.title||'',40)});
+  $('[data-dashboard-opp]').forEach(x=>x.onclick=()=>{route('opencalls');setTimeout(()=>{const o=(b.opportunities||[]).find(o=>String(o.id)===x.dataset.dashboardOpp);$('#openSearch').value=o?.title||'';renderOpenCalls()},40)});
   $('#dashboardBureau').innerHTML=state.bureau.slice(0,4).map(n=>'<button class="compact-row" data-dash-doc="'+n.id+'" style="border:0;background:transparent;text-align:left;width:100%"><strong>'+esc(n.title||'Sans titre')+'</strong><span>'+esc(n.folder||'Notes')+' · '+esc((n.updated_at||'').replace('T',' '))+'</span></button>').join('')||'<div class="empty">Aucun document.</div>';
   $$('[data-dash-doc]').forEach(b=>b.onclick=()=>{route('bureau');selectDoc(Number(b.dataset.dashDoc))});
   const leads=state.leads.slice().sort((a,b)=>(a.next_date||'9999').localeCompare(b.next_date||'9999')).slice(0,4);
