@@ -1,4 +1,4 @@
-/* PLUGAR V105 — immersive product site inspired by premium product storytelling */
+/* PLUGAR V105.2 — immersive product site with contextual PLUGY motion */
 :root{
   --v105-ink:#090a0f;--v105-paper:#f6f6f4;--v105-white:#fff;--v105-muted:#6c6e78;
   --v105-line:rgba(16,18,28,.12);--v105-blue:#3478ff;--v105-cyan:#48dce7;
@@ -123,4 +123,19 @@ body:not([data-view="dashboard"]) .v105-guide{display:none!important}
   .v105-brief,.v105-radar,.v105-map,.v105-studio,.v105-artists,.v105-voice,.v105-intelligence{padding:90px 0}
   .v105-display{font-size:46px}.v105-intel-card{min-height:220px}.v105-intel-card h3{font-size:29px}.v105-map-board{height:440px}
   .v105-studio-canvas{grid-template-columns:1fr;padding:20px}.v105-tool-list{display:none}.v105-guide{right:10px;bottom:12px;width:185px}.v105-guide-orb{width:42px;height:42px}.v105-footer-row{display:grid}
+}
+
+/* V105.2 motion layer */
+body[data-view="dashboard"] .v105-section{scroll-margin-top:88px}
+.v105-plugy-model{transition:transform .55s cubic-bezier(.2,.8,.2,1),filter .55s ease}
+.v105-hero-stage .v105-plugy-model{transform:translate3d(var(--v105-px,0px),var(--v105-py,0px),0)}
+.v105-guide-orb{animation:v105GuidePulse 3.2s ease-in-out infinite}
+body[data-plugy-motion="think"] .v105-glow{filter:blur(38px);opacity:.95;transform:scale(1.08)}
+body[data-plugy-motion="attentive"] .v105-guide{transform:translateY(-4px);box-shadow:0 26px 70px rgba(66,60,150,.20)}
+body[data-plugy-motion="present"] .v105-studio-canvas{box-shadow:0 34px 92px rgba(74,77,140,.14)}
+body[data-plugy-motion="happy"] .v105-artists{background:linear-gradient(180deg,#f8f1fc,#f4f3fb)}
+body[data-plugy-motion="wave"] .v105-final .v105-display{transform:translateY(-3px)}
+@keyframes v105GuidePulse{50%{transform:scale(1.06);box-shadow:inset 0 0 0 1px #fff,0 10px 26px rgba(80,70,180,.30)}}
+@media(prefers-reduced-motion:reduce){
+  .v105-reveal,.v105-plugy-model,.v105-guide-orb,.v105-wave i,.v105-glow,.v105-rings i{animation:none!important;transition:none!important}
 }
