@@ -64,19 +64,57 @@ async def v85_headers(request:Request,call_next):
 
 @app.get('/api/v102/bootstrap')
 def bootstrap_v102():
-    """Single round-trip bootstrap for the workspace."""
-    return {
-      'version':'102.0',
-      'generated_at':time.time(),
-      'stats':core.stats(),
-      'opportunities':core.get_opportunities(),
-      'radar':core.radar_status(),
-      'candidates':core.radar_candidates(),
-      'artists':core.get_artists(),
-      'events':core.get_exhibitions(),
-      'map':core.map_data()
-    }
+    """Single DB read pass for the initial workspace."""
+    db=core.conn()
+    try:
+        today=str(core.date.today())
+        def many(sql,p=()):
+            return [dict(x) for x in db.execute(sql,p).fetchall()]
+        def scalar(sql,p=()):
+            row=db.execute(sql,p).fetchone()
+            return row[0] if row else 0
 
+        stats={
+          'opportunities':scalar("select count(*) from opportunities where status in ('open','rolling')"),
+          'urgent':scalar("select count(*) from opportunities where deadline is not null and deadline>=? and deadline<=date(?, '+14 day')",(today,today)),
+          'artists':scalar("select count(*) from artists"),
+          'exhibitions':scalar("select count(*) from exhibitions where end>=?",(today,)),
+          'favorites':scalar("select count(*) from opportunities where favorite=1"),
+          'candidates':scalar("select count(*) from radar_candidates where state='new'")
+        }
+        opportunities=many("select * from opportunities where status in ('open','rolling') order by coalesce(radar_score,score,0) desc,case when deadline is null then 1 else 0 end,deadline")
+        last=db.execute('select * from radar_runs order by id desc limit 1').fetchone()
+        radar={
+          'last_run':dict(last) if last else None,
+          'runs':many('select * from radar_runs order by id desc limit 10'),
+          'sources':many('select * from radar_sources order by reliability desc'),
+          'candidate_counts':many('select state,count(*) count from radar_candidates group by state'),
+          'top':many("select id,title,city,country,deadline,fee,radar_score,priority,radar_reason,source_status from opportunities where status in ('open','rolling') order by radar_score desc limit 10")
+        }
+        candidates=many("select * from radar_candidates where state='new' order by candidate_score desc,deadline")
+        artists=many('select * from artists order by name')
+        for artist in artists:
+            try:artist['tags']=json.loads(artist.get('tags') or '[]')
+            except Exception:artist['tags']=[]
+            try:artist['milestones']=json.loads(artist.get('milestones') or '[]')
+            except Exception:artist['milestones']=[]
+        events=many('select * from exhibitions order by start')
+        map_rows=many("select id,title,'' venue,city,country,lat,lon,deadline date,deadline,coalesce(radar_score,score,0) score,source_url,'opportunity' kind from opportunities where lat is not null and lon is not null and status in ('open','rolling')")
+        map_rows+=many("select id,title,venue,city,country,lat,lon,start date,start deadline,0 score,source_url,'exhibition' kind from exhibitions where lat is not null and lon is not null")
+
+        return {
+          'version':'102.0',
+          'generated_at':time.time(),
+          'stats':stats,
+          'opportunities':opportunities,
+          'radar':radar,
+          'candidates':candidates,
+          'artists':artists,
+          'events':events,
+          'map':map_rows
+        }
+    finally:
+        db.close()
 
 def _attr(tag,name):
     m=re.search(rf'\b{name}\s*=\s*["\']([^"\']+)["\']',tag,re.I)
