@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='128.20260924.1';
+const VERSION='128.20260924.2';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -569,6 +569,7 @@ function installSlideDashboard(){
         '</div>'+
       '</section>'+
     '</div>'+
+    '<button class="slide-plugy-companion" id="slidePlugyCompanion" data-slide-plugy aria-label="Ouvrir PLUGY"><i></i><span><small>PLUGY</small><strong id="slidePlugyHint">Je reste avec toi</strong></span><b>↗</b></button>'+
     '<div class="slide-mobile-dots">'+dashboardSlideNames.map((_,i)=>'<button data-dash-slide="'+i+'" class="'+(i===0?'active':'')+'" aria-label="Slide '+(i+1)+'"></button>').join('')+'</div>';
   view.insertBefore(deck,legacy);
 
@@ -629,6 +630,17 @@ function setDashboardSlideState(index,animate=true){
   $('#slideDashboardTitle').textContent=dashboardSlideNames[dashboardSlideIndex];
   $('#slidePrev').disabled=dashboardSlideIndex===0;$('#slideNext').disabled=dashboardSlideIndex===dashboardSlideNames.length-1;
   deck.dataset.slide=String(dashboardSlideIndex);
+  const plugyHints=[
+    'Je rassemble tes priorités',
+    'Je peux trier les appels',
+    'Je peux rédiger avec toi',
+    'Je peux préparer la relance',
+    'Je peux croiser réseau et opportunités'
+  ];
+  const hint=$('#slidePlugyHint');
+  if(hint)hint.textContent=plugyHints[dashboardSlideIndex]||'Je reste avec toi';
+  const companion=$('#slidePlugyCompanion');
+  if(companion)companion.classList.toggle('hero-hidden',dashboardSlideIndex===0);
   const motions=['Idle','Attentive','Present','Curious','Travel'];
   if(state.view==='dashboard'&&!$('#plugyDrawer')?.classList.contains('open'))playMotion(motions[dashboardSlideIndex]||'Idle',dashboardSlideIndex===0);
 }
