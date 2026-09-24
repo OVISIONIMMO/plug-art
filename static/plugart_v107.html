@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#f4f5f7">
 <title>PLUG ART — Workspace</title>
 <meta name="description" content="PLUG ART Workspace — Radar, Open Calls, création, Bureau, prospection et PLUGY.">
-<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">\n<link rel="preconnect" href="https://ajax.googleapis.com" crossorigin>\n<link rel="dns-prefetch" href="//ajax.googleapis.com">\n<link rel="preload" href="/static/plugart_v107.js?v=128.20260924.2" as="script">
-<link rel="stylesheet" href="/static/plugart_v107.css?v=128.20260924.2">
-<link rel="stylesheet" href="/static/plugart_v122_slide.css?v=128.20260924.2">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">\n<link rel="preconnect" href="https://ajax.googleapis.com" crossorigin>\n<link rel="dns-prefetch" href="//ajax.googleapis.com">\n<link rel="preload" href="/static/plugart_v107.js?v=129.20260924.1" as="script">
+<link rel="stylesheet" href="/static/plugart_v107.css?v=129.20260924.1">
+<link rel="stylesheet" href="/static/plugart_v122_slide.css?v=129.20260924.1">
 </head>
 <body data-view="dashboard" data-plugy-motion="Idle">
 <div class="app-shell">
@@ -41,7 +41,7 @@
       <span><strong>PLUGY</strong><small>Assistant contextuel</small></span>
       <b>⌁</b>
     </button>
-    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small>V128.1</small></div>
+    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small>V129</small></div>
   </aside>
 
   <main class="workspace">
@@ -53,6 +53,7 @@
       <button class="global-search" id="globalSearch"><span>⌕</span><strong>Rechercher dans PLUG ART</strong><kbd>⌘ K</kbd></button>
       <div class="top-actions">
         <button class="icon-btn" id="refreshData" title="Actualiser">↻</button>
+        <button class="secondary-btn design-lab-trigger" id="designLabButton" title="Édition visuelle">◫ Design</button>
         <button class="primary-btn" id="newAction">＋ Nouveau</button>
         <button class="plugy-btn" id="topPlugy"><i></i> PLUGY</button>
       </div>
@@ -206,8 +207,28 @@
     </section>
 
     <section class="view" id="view-map">
-      <div class="page-toolbar"><div><small>CARTE</small><h2>Opportunités & expositions</h2><p>Une vue géographique de ce que le Radar a trouvé.</p></div><div class="toolbar-actions"><button class="secondary-btn" id="mapRefresh">Actualiser la carte</button></div></div>
-      <div class="map-workspace panel" id="mapWorkspace"><div class="map-grid-lines"></div><div class="map-caption"><strong>PLUG ART MAP</strong><span id="mapCount">0 point</span></div></div>
+      <div class="page-toolbar">
+        <div><small>CARTE INTERNATIONALE</small><h2>Opportunités & expositions</h2><p>Explorer les appels et lieux sur une vraie carte interactive.</p></div>
+        <div class="toolbar-actions"><button class="secondary-btn" id="mapReset">Vue Europe</button><button class="primary-btn" id="mapRefresh">Actualiser</button></div>
+      </div>
+      <div class="map-shell">
+        <aside class="map-sidebar panel">
+          <div class="map-search-row"><span>⌕</span><input id="mapSearch" placeholder="Ville, pays, exposition…"></div>
+          <div class="map-filter-chips">
+            <button class="active" data-map-filter="all">Tout</button>
+            <button data-map-filter="opportunity">Open Calls</button>
+            <button data-map-filter="exhibition">Expositions</button>
+          </div>
+          <div class="map-list-head"><strong id="mapCount">0 point</strong><span>dans la vue</span></div>
+          <div class="map-list" id="mapList"></div>
+        </aside>
+        <section class="map-workspace panel" id="mapWorkspace">
+          <div id="realMap" class="real-map"></div>
+          <div class="map-loading" id="mapLoading"><i></i><span>Chargement de la carte…</span></div>
+          <div class="map-caption"><strong>PLUG ART MAP</strong><span>Europe · Radar vivant</span></div>
+          <aside class="map-detail" id="mapDetail" hidden></aside>
+        </section>
+      </div>
     </section>
   </main>
 </div>
@@ -219,7 +240,7 @@
   </div>
   <div class="plugy-stage">
     <div class="plugy-energy e1"></div><div class="plugy-energy e2"></div>
-    <model-viewer id="plugyModel" loading="lazy" src="/assets/plugy-v113-premium.glb?v=128.20260924.2" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity=".78" shadow-softness=".82" exposure="1.12" camera-orbit="0deg 76deg 3.05m" field-of-view="27deg" alt="PLUGY"></model-viewer>
+    <model-viewer id="plugyModel" loading="lazy" src="/assets/plugy-v113-premium.glb?v=129.20260924.1" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity=".42" shadow-softness=".95" exposure=".94" camera-orbit="0deg 76deg 3.05m" field-of-view="27deg" alt="PLUGY"></model-viewer>
     <div class="plugy-state" id="plugyState"><i></i><span>Prêt</span></div>
   </div>
   <div class="plugy-context" id="plugyContext">Contexte : Dashboard</div>
@@ -247,7 +268,56 @@
   </div>
 </div>
 
+<div class="overlay design-lab-overlay" id="designLabOverlay">
+  <div class="overlay-card design-lab-card">
+    <div class="design-lab-head">
+      <div><small>ÉDITION VISUELLE</small><h2>Interface Lab</h2><p>Ajuste le langage visuel du workspace en direct.</p></div>
+      <button id="designLabClose">×</button>
+    </div>
+    <div class="design-lab-grid">
+      <section class="design-lab-controls">
+        <label>Accent
+          <select id="uiAccent"><option value="violet">Violet</option><option value="cyan">Cyan</option><option value="coral">Rose</option><option value="cobalt">Bleu</option><option value="mono">Noir</option></select>
+        </label>
+        <label>Surface
+          <select id="uiSurface"><option value="editorial">Éditorial</option><option value="glass">Verre</option><option value="flat">Minimal</option></select>
+        </label>
+        <label>Densité
+          <select id="uiDensity"><option value="airy">Aérée</option><option value="balanced">Équilibrée</option><option value="compact">Compacte</option></select>
+        </label>
+        <label>Arrondis <output id="uiRadiusOut">22</output>
+          <input id="uiRadius" type="range" min="12" max="34" step="1" value="22">
+        </label>
+        <label>Échelle typo <output id="uiFontScaleOut">100%</output>
+          <input id="uiFontScale" type="range" min="88" max="116" step="1" value="100">
+        </label>
+        <label>Mouvement
+          <select id="uiMotion"><option value="subtle">Subtil</option><option value="expressive">Expressif</option><option value="off">Aucun</option></select>
+        </label>
+        <label>Navigation
+          <select id="uiSidebar"><option value="standard">Standard</option><option value="compact">Compacte</option></select>
+        </label>
+      </section>
+      <section class="design-lab-preview">
+        <div class="design-preview-device">
+          <div class="design-preview-nav"><i></i><span></span><span></span><b></b></div>
+          <div class="design-preview-hero"><small>PLUG ART</small><h3>Un workspace plus clair.</h3><p>Hiérarchie forte, beaucoup d’air, une action évidente.</p><button>Action principale</button></div>
+          <div class="design-preview-cards"><i></i><i></i><i></i></div>
+        </div>
+        <div class="design-lab-presets">
+          <button data-ui-preset="ultra">Ultra</button>
+          <button data-ui-preset="editorial">Éditorial</button>
+          <button data-ui-preset="minimal">Minimal</button>
+          <button data-ui-preset="night">Contraste</button>
+        </div>
+        <div class="design-lab-history"><select id="uiVersionPicker"><option value="">Historique</option></select><button id="uiRestoreVersion">Restaurer</button></div>
+      </section>
+    </div>
+    <div class="design-lab-actions"><span id="uiDesignStatus">Aperçu local</span><button id="uiResetDesign">Réinitialiser</button><button class="primary-btn" id="uiSaveDesign">Enregistrer sur le site</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
-<script defer src="/static/plugart_v107.js?v=128.20260924.2"></script>
+<script defer src="/static/plugart_v107.js?v=129.20260924.1"></script>
 </body>
 </html>
