@@ -61,7 +61,7 @@ const viewDataFamilies={
   prospection:['leads'],
   network:['artists'],
   social:[],
-  map:['map']
+  map:['map','opportunities']
 };
 function requiredFamilies(id){return viewDataFamilies[id]||[]}
 const routeRuntimeReady=new Set();
@@ -981,11 +981,12 @@ const HUB_PROJECTS={
   millenaire:{title:'PLUG ART HUB · Le Millénaire',eyebrow:'CENTRE COMMERCIAL · AUBERVILLIERS',summary:'Transformer des cellules vacantes en destination culturelle active, avec une galerie publique côté canal et un HUB de production dans une seconde cellule.',areas:['Galerie des Docks','Terrasse canal','Ateliers individuels','Coworking','Studio image & contenu','Plug Talk','Atelier collectif'],documents:[['Dossier Projet Le Millénaire','33 pages'],['Dossier final écosystème 2026','11 pages']]},
   aubervilliers:{title:'PLUG ART HUB · Aubervilliers',eyebrow:'BÂTIMENT INDUSTRIEL · PIERRE CURIE',summary:'Un HUB artistique dans une enveloppe industrielle, organisé entre galerie, expérimentation, ateliers, bureau et production de contenus.',areas:['Galerie industrielle','Salle expérimentation','Ateliers artistes','Bureau / coordination','Studio contenu','Circulation / accueil'],documents:[['Dossier complet Aubervilliers 2026','38 pages']]}
 };
-function hubImage(){
-  return window.PLUG_HUB_ASSETS?.millenaire_gallery||'';
+function hubImage(key='millenaire_gallery'){
+  return window.PLUG_HUB_ASSETS?.[key]||'';
 }
 function renderHubWorkspace(project='millenaire'){
-  const img=hubImage(),visual=$('#hubMillenaireVisual');if(visual&&img){visual.style.backgroundImage='url("'+img+'")';visual.classList.add('has-image')}
+  const img=hubImage('millenaire_gallery'),visual=$('#hubMillenaireVisual');if(visual&&img){visual.style.backgroundImage='url("'+img+'")';visual.classList.add('has-image')}
+  const aub=$('.hub-project-card.aubervilliers .hub-project-visual'),aubImg=hubImage('aubervilliers_workshop');if(aub&&aubImg){aub.style.backgroundImage='url("'+aubImg+'")';aub.classList.add('has-image')}
   $$('[data-hub-project]').forEach(b=>b.onclick=()=>renderHubProjectDetail(b.dataset.hubProject));
   $$('[data-hub-create]').forEach(b=>b.onclick=()=>createHubNote(b.dataset.hubCreate));
   $('#hubExportPdf')?.addEventListener('click',exportHubPdf,{once:true});
@@ -2836,8 +2837,9 @@ function handleLocalPlugy(message){
   if(/(ouvre|va|aller|affiche).*(prospection|contacts?|crm)/.test(m))return go('prospection','J’ouvre Contacts & Prospection.');
   if(/(ouvre|va|aller|affiche).*(agenda|calendrier|deadlines?|échéances?)/.test(m))return go('agenda','J’ouvre l’Agenda.');
   if(/(ouvre|va|aller|affiche).*(création|creation|studio|contenu)/.test(m))return go('creation','J’ouvre le Studio de contenu.');
-  if(/(ouvre|va|aller|affiche).*(carte|map)/.test(m))return go('map','J’ouvre la Carte.');
+  if(/(ouvre|va|aller|affiche|montre).*(carte|map|opportunités sur la carte|opportunites sur la carte)/.test(m))return go('map','J’ouvre la Map des opportunités.');
   if(/(ouvre|va|aller|affiche).*(instagram|insta|feed)/.test(m))return go('social','J’ouvre Instagram.');
+  if(/(ouvre|va|aller|affiche).*(hub|millénaire|millenaire|aubervilliers)/.test(m)){route('bureau');setTimeout(()=>setBureauMode('hub'),40);return 'J’ouvre le HUB dans le Bureau.';}
   if(/(plein écran|plein ecran|page plugy|mode plugy)/.test(m)){location.href='/plugy';return 'J’ouvre mon espace dédié.';}
   if(/(nouveau|crée|cree).*(document|note)/.test(m)){route('bureau');clearDoc();return 'Nouveau document prêt dans le Bureau.'}
   if(/(nouveau|ajoute|crée|cree).*(contact)/.test(m)){route('prospection');setTimeout(()=>$('#leadNew')?.click(),20);return 'Nouvelle fiche contact ouverte.'}
