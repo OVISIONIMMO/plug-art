@@ -171,13 +171,13 @@ function playMotion(name='Idle',loop=false){
     if(!target)return;
     try{
       mv.animationName=target;
-      mv.timeScale=(name==='Blink'||name==='Wink')?1.65:(name==='Think'||name==='Charge')?.94:(name==='Speak'?1.12:1);
+      mv.timeScale=(name==='Blink'||name==='Wink')?.92:(name==='Think'||name==='Charge')?.94:(name==='Speak'?1.12:1);
       mv.play({repetitions:loop?Infinity:1});
     }catch{}
   };
   if(mv.loaded)run();else mv.addEventListener('load',run,{once:true});
   clearTimeout(playMotion.t);
-  if(!loop&&name!=='Idle')playMotion.t=setTimeout(()=>playMotion('Idle',true),((name==='Blink'||name==='Wink')?430:(name==='Think'||name==='Charge')?1750:1200));
+  if(!loop&&name!=='Idle')playMotion.t=setTimeout(()=>playMotion('Idle',true),((name==='Blink'||name==='Wink')?520:(name==='Think'||name==='Charge')?1750:1200));
 }
 function tunePlugyMaterials(){
   const mv=$('#plugyModel');if(!mv)return;
@@ -252,10 +252,24 @@ function ensurePlugyFollower(){
   return host;
 }
 function plugyFollowerStage(){return ensurePlugyFollower()}
+function plugyFramingFor(target){
+  const follower=$('#plugyFollower');
+  if(target&&follower&&target===follower)return{orbit:'0deg 76deg 3.72m',fov:'29deg'};
+  if(target&&target===plugyDashboardStage())return{orbit:'0deg 76deg 3.28m',fov:'28deg'};
+  return{orbit:'0deg 76deg 3.08m',fov:'27deg'};
+}
+function applyPlugyFraming(target){
+  const mv=$('#plugyModel');if(!mv)return;
+  const f=plugyFramingFor(target||mv.parentElement);
+  try{mv.setAttribute('camera-orbit',f.orbit);mv.setAttribute('field-of-view',f.fov)}catch{}
+}
 function movePlugyModel(target){
-  const mv=$('#plugyModel');if(!mv||!target||mv.parentElement===target)return;
-  const stateEl=target.querySelector('#plugyState');
-  if(stateEl)target.insertBefore(mv,stateEl);else target.appendChild(mv);
+  const mv=$('#plugyModel');if(!mv||!target)return;
+  if(mv.parentElement!==target){
+    const stateEl=target.querySelector('#plugyState');
+    if(stateEl)target.insertBefore(mv,stateEl);else target.appendChild(mv);
+  }
+  applyPlugyFraming(target);
 }
 function syncPlugyHomeMount(){
   const drawer=$('#plugyDrawer'),open=drawer?.classList.contains('open'),hero=state.view==='dashboard'&&dashboardSlideIndex===0&&plugyDashboardStage();
@@ -3119,12 +3133,13 @@ function plugyAvailable(name){
 }
 function plugySoftGaze(){
   const mv=$('#plugyModel');if(!mv||state.voice)return;
-  const yaw=(Math.random()*7-3.5).toFixed(1),pitch=(74+Math.random()*4).toFixed(1);
-  mv.style.setProperty('--plugy-gaze-x',(Math.random()*5-2.5).toFixed(1)+'px');
-  mv.style.setProperty('--plugy-gaze-y',(Math.random()*3-1.5).toFixed(1)+'px');
-  try{mv.setAttribute('camera-orbit',yaw+'deg '+pitch+'deg 3.05m')}catch{}
+  const base=plugyFramingFor(mv.parentElement),distance=(base.orbit.match(/([0-9.]+)m$/)||[])[1]||'3.08';
+  const yaw=(Math.random()*4-2).toFixed(1),pitch=(75+Math.random()*2).toFixed(1);
+  mv.style.setProperty('--plugy-gaze-x',(Math.random()*2.4-1.2).toFixed(1)+'px');
+  mv.style.setProperty('--plugy-gaze-y',(Math.random()*1.6-.8).toFixed(1)+'px');
+  try{mv.setAttribute('camera-orbit',yaw+'deg '+pitch+'deg '+distance+'m')}catch{}
   clearTimeout(plugyGazeTimer);
-  plugyGazeTimer=setTimeout(()=>{try{mv.setAttribute('camera-orbit','0deg 76deg 3.05m')}catch{};mv.style.setProperty('--plugy-gaze-x','0px');mv.style.setProperty('--plugy-gaze-y','0px')},2200+Math.random()*1800);
+  plugyGazeTimer=setTimeout(()=>{applyPlugyFraming(mv.parentElement);mv.style.setProperty('--plugy-gaze-x','0px');mv.style.setProperty('--plugy-gaze-y','0px')},2600+Math.random()*1800);
 }
 function plugyIsVisible(){
   const mv=$('#plugyModel');return !!(mv&&(plugyDrawerStage()?.contains(mv)||plugyDashboardStage()?.contains(mv)||$('#plugyFollower')?.contains(mv)));
@@ -3134,15 +3149,10 @@ function schedulePlugyBlink(){
   schedulePlugyBlink.t=setTimeout(()=>{
     const busy=['Think','Charge','Listen','Speak'].includes(document.body.dataset.plugyMotion||'');
     if(!state.voice&&!busy&&document.visibilityState==='visible'&&plugyIsVisible()&&plugyAvailable('Blink')){
-      const expressive=Math.random();
-      if(expressive<.14&&plugyAvailable('Wink'))playMotion('Wink');
-      else{
-        playMotion('Blink');
-        if(expressive>.78)setTimeout(()=>{if(!state.voice&&plugyIsVisible())playMotion('Blink')},210+Math.random()*150);
-      }
+      playMotion('Blink');
     }
     schedulePlugyBlink();
-  },2600+Math.random()*3000);
+  },14000+Math.random()*10000);
 }
 function schedulePlugyAmbient(){
   clearTimeout(plugyAmbientTimer);
@@ -3170,8 +3180,7 @@ function startPlugyAmbient(){
 }
 const pm=$('#plugyModel');
 pm?.addEventListener('click',()=>{
-  if(plugyAvailable('Wink')){playMotion('Wink');setTimeout(()=>playMotion(plugyAvailable('Happy')?'Happy':'Curious'),360)}
-  else playMotion(plugyAvailable('Happy')?'Happy':'Curious');
+  playMotion(plugyAvailable('Happy')?'Happy':'Curious');
   plugySoftGaze();
 });
 pm?.addEventListener('pointerdown',()=>{clearTimeout(plugyPressTimer);plugyPressTimer=setTimeout(()=>{initVoice();playMotion('Attentive',true)},650)});
