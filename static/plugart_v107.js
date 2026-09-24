@@ -944,6 +944,41 @@ $('#contentToBureau')?.addEventListener('click',async()=>{const sourceId=$('#con
 
 function bureauPackageStatusLabel(v){return({preparing:'En préparation',ready:'Prêt',submitted:'Envoyé',followup:'Relance',closed:'Clos'})[v]||v||'En préparation'}
 function bureauChecklistLabel(k){return({source_checked:'Source vérifiée',letter:'Lettre',bio:'Bio',artist_statement:'Note artistique',portfolio:'Portfolio',visuals:'Visuels',links:'Liens',submitted:'Envoyé'})[k]||k}
+const BUREAU_PACKAGE_KEYS=['source_checked','letter','bio','artist_statement','portfolio','visuals','links','submitted'];
+const bureauPackageReconciled=new Set();
+function packageProgress(p){
+  const check=p?.checklist||{},done=BUREAU_PACKAGE_KEYS.filter(k=>!!check[k]).length;
+  const missing=BUREAU_PACKAGE_KEYS.filter(k=>!check[k]);
+  return {done,total:BUREAU_PACKAGE_KEYS.length,missing,ratio:BUREAU_PACKAGE_KEYS.length?Math.round(done/BUREAU_PACKAGE_KEYS.length*100):0};
+}
+function packageNextAction(p){
+  if(p?.progress?.next_action)return p.progress.next_action;
+  const key=packageProgress(p).missing[0];
+  return ({source_checked:'Vérifier la source officielle',letter:'Finaliser la lettre de candidature',bio:'Finaliser la bio',artist_statement:'Finaliser la note artistique',portfolio:'Ajouter le portfolio',visuals:'Ajouter les visuels',links:'Vérifier les liens',submitted:'Envoyer la candidature'})[key]||'Dossier complet';
+}
+async function reconcileBureauPackage(id,{render=true,silent=true}={}){
+  try{
+    const saved=await api('/api/v140/bureau/packages/'+id+'/reconcile',{method:'POST'});
+    const i=state.bureauPackages.findIndex(x=>Number(x.id)===Number(saved.id));
+    if(i>=0)state.bureauPackages[i]=saved;else state.bureauPackages.unshift(saved);
+    bureauPackageReconciled.add(Number(id));
+    if(render)renderBureauPackages();
+    if(!silent)toast('Dossier synchronisé');
+    return saved;
+  }catch(e){
+    bureauPackageReconciled.delete(Number(id));
+    if(!silent)toast('Synchronisation du dossier impossible');
+    throw e;
+  }
+}
+async function markActivePackageReady(){
+  const p=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage));if(!p)return;
+  let saved=await reconcileBureauPackage(p.id,{render:false,silent:true}).catch(()=>p);
+  const missing=packageProgress(saved).missing.filter(k=>k!=='submitted');
+  if(missing.length)return toast('Il reste '+missing.length+' élément'+(missing.length>1?'s':'')+' à finaliser avant de marquer le dossier prêt');
+  await patchActivePackage({status:'ready'});toast('Dossier prêt');
+}
+
 function installBureauWorkspace(){
   if($('#bureauModeBar'))return;
   const view=$('#view-bureau'),toolbar=view?.querySelector('.page-toolbar'),layout=view?.querySelector('.bureau-layout');
@@ -980,7 +1015,7 @@ function installBureauWorkspace(){
       .bureau-folder-bar{display:flex;gap:5px;flex-wrap:wrap;padding:0 0 9px}.bureau-folder-bar button{border:1px solid #e3e5ea;background:#fafbfc;border-radius:999px;padding:7px 9px;font-size:8px;font-weight:800}.bureau-folder-bar button.active{background:#111318;color:#fff;border-color:#111318}
       .bureau-packages-mode,.bureau-templates-mode{grid-template-columns:300px minmax(0,1fr);gap:12px}
       .bureau-package-create{display:grid;grid-template-columns:1fr auto;gap:7px;margin-bottom:10px}.bureau-package-create select,.bureau-package-create button,.bureau-template-search input{padding:9px;border:1px solid #dfe2e8;border-radius:10px;background:#fff;font-size:9px}
-      .bureau-package-list,.bureau-template-list{display:grid;gap:6px}.bureau-package-item,.bureau-template-item{border:1px solid #e6e8ed;background:#fafbfc;border-radius:13px;padding:10px;text-align:left}.bureau-package-item.active,.bureau-template-item.active{border-color:#c7bff2;background:#faf8ff}.bureau-package-item strong,.bureau-package-item span,.bureau-template-item strong,.bureau-template-item span{display:block}.bureau-package-item strong,.bureau-template-item strong{font-size:10px}.bureau-package-item span,.bureau-template-item span{font-size:8px;color:#8e929d;margin-top:3px}
+      .bureau-package-list,.bureau-template-list{display:grid;gap:6px}.bureau-package-item,.bureau-template-item{border:1px solid #e6e8ed;background:#fafbfc;border-radius:13px;padding:10px;text-align:left}.bureau-package-item.active,.bureau-template-item.active{border-color:#c7bff2;background:#faf8ff}.bureau-package-item strong,.bureau-package-item span,.bureau-template-item strong,.bureau-template-item span{display:block}.bureau-package-item small{display:block;font-size:7px;color:#9a9da7;margin-top:4px}.package-mini-progress{height:3px;background:#eceef2;border-radius:999px;margin-top:7px;overflow:hidden}.package-mini-progress i{display:block;height:100%;background:linear-gradient(90deg,#7560df,#57cfd8);border-radius:999px}.package-progress-card{margin:10px 0;padding:12px;border:1px solid #e5e7ec;background:linear-gradient(135deg,#fbfaff,#f7fbfc);border-radius:14px}.package-progress-top{display:grid;grid-template-columns:1fr 1fr;gap:10px}.package-progress-top small,.package-progress-top strong{display:block}.package-progress-top small{font-size:7px;color:#979aa5;letter-spacing:.7px}.package-progress-top strong{font-size:10px;margin-top:3px}.package-progress-track{height:6px;background:#e8eaf0;border-radius:999px;overflow:hidden;margin:10px 0}.package-progress-track i{display:block;height:100%;background:linear-gradient(90deg,#7657ff,#59d3d4);border-radius:999px}.package-missing{display:flex;gap:5px;flex-wrap:wrap}.package-missing span{font-size:7px;padding:5px 7px;border-radius:999px;background:#fff;border:1px solid #e5e7ec;color:#737784}.package-complete{font-size:8px;font-weight:800;color:#438268}.package-doc-row.incomplete span{color:#c87842}.package-doc-row.complete span{color:#55856b}.bureau-package-item strong,.bureau-template-item strong{font-size:10px}.bureau-package-item span,.bureau-template-item span{font-size:8px;color:#8e929d;margin-top:3px}
       .package-detail-head,.template-editor-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding-bottom:10px;border-bottom:1px solid #eceef2}.package-detail-head h3,.template-editor-head h3{margin:2px 0 0;font-size:18px}.package-detail-head small,.template-editor-head small{font-size:8px;color:#969aa5;letter-spacing:.8px}.package-detail-actions{display:flex;gap:6px;flex-wrap:wrap}.package-detail-actions button,.template-editor-actions button{border:1px solid #dfe2e8;background:#fff;border-radius:9px;padding:8px 9px;font-size:8px;font-weight:800}.package-detail-actions .primary,.template-editor-actions .primary{background:#111318;color:#fff;border-color:#111318}
       .package-source{margin:10px 0;padding:10px;border-radius:12px;background:#f7f8fa}.package-source strong,.package-source span{display:block}.package-source strong{font-size:10px}.package-source span{font-size:8px;color:#8e929d;margin-top:3px}
       .package-status-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.package-status-row label,.template-editor-grid label{display:grid;gap:5px;font-size:8px;color:#90949f;font-weight:800;text-transform:uppercase}.package-status-row select,.package-status-row textarea,.template-editor-grid input,.template-editor-grid select,.template-editor-grid textarea{padding:9px;border:1px solid #dfe2e8;border-radius:10px;background:#fff;font-size:10px;text-transform:none}
@@ -1076,32 +1111,55 @@ function renderBureauPackages(){
   renderBureauSources();const list=$('#bureauPackageList'),detail=$('#bureauPackageDetail');if(!list||!detail)return;
   if(state.activePackage&&!state.bureauPackages.some(x=>Number(x.id)===Number(state.activePackage)))state.activePackage=null;
   if(!state.activePackage&&state.bureauPackages[0])state.activePackage=state.bureauPackages[0].id;
-  list.innerHTML=state.bureauPackages.map(p=>'<button class="bureau-package-item '+(Number(p.id)===Number(state.activePackage)?'active':'')+'" data-package="'+p.id+'"><strong>'+esc(p.title||'Dossier')+'</strong><span>'+esc(bureauPackageStatusLabel(p.status))+(p.opportunity?.deadline?' · '+esc(p.opportunity.deadline):'')+'</span></button>').join('')||'<div class="empty">Aucun dossier.</div>';
-  $$('[data-package]',list).forEach(b=>b.onclick=()=>{state.activePackage=Number(b.dataset.package);renderBureauPackages()});
+  list.innerHTML=state.bureauPackages.map(p=>{
+    const prog=packageProgress(p);
+    return '<button class="bureau-package-item '+(Number(p.id)===Number(state.activePackage)?'active':'')+'" data-package="'+p.id+'">'+
+      '<strong>'+esc(p.title||'Dossier')+'</strong>'+
+      '<span>'+esc(bureauPackageStatusLabel(p.status))+(p.opportunity?.deadline?' · '+esc(p.opportunity.deadline):'')+'</span>'+
+      '<div class="package-mini-progress"><i style="width:'+prog.ratio+'%"></i></div>'+
+      '<small>'+prog.done+' / '+prog.total+' éléments prêts</small>'+
+    '</button>';
+  }).join('')||'<div class="empty">Aucun dossier.</div>';
+  $$('[data-package]',list).forEach(b=>b.onclick=()=>{state.activePackage=Number(b.dataset.package);renderBureauPackages();reconcileBureauPackage(state.activePackage,{render:true,silent:true}).catch(()=>{})});
   renderBureauPackageDetail();
+  const active=Number(state.activePackage);
+  if(active&&!bureauPackageReconciled.has(active)){bureauPackageReconciled.add(active);reconcileBureauPackage(active,{render:true,silent:true}).catch(()=>{})}
 }
 function renderBureauPackageDetail(){
   const box=$('#bureauPackageDetail');if(!box)return;const p=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage));
   if(!p){box.innerHTML='<div class="empty">Sélectionne un dossier de candidature.</div>';return}
-  const opp=p.opportunity||{},check=p.checklist||{},docs=(p.document_ids||[]).map(id=>state.bureau.find(n=>Number(n.id)===Number(id))).filter(Boolean);
-  box.innerHTML='<div class="package-detail-head"><div><small>DOSSIER DE CANDIDATURE</small><h3>'+esc(p.title||'Dossier')+'</h3></div><div class="package-detail-actions"><button id="packageOpenCall" '+(!opp.id?'disabled':'')+'>Open Call ↗</button><button id="packageStarterPack">Créer le pack de base</button><button class="primary" id="packageGenerateAI">✦ Générer avec PLUGY</button><button id="packageToCreation">Vers Création</button><button id="packageReady">Marquer prêt</button></div></div>'+
+  const opp=p.opportunity||{},check=p.checklist||{},docs=(p.document_ids||[]).map(id=>state.bureau.find(n=>Number(n.id)===Number(id))).filter(Boolean),prog=packageProgress(p),next=packageNextAction(p);
+  const missingNames=prog.missing.filter(k=>k!=='submitted').slice(0,4).map(bureauChecklistLabel);
+  box.innerHTML=
+    '<div class="package-detail-head"><div><small>DOSSIER DE CANDIDATURE</small><h3>'+esc(p.title||'Dossier')+'</h3></div><div class="package-detail-actions">'+
+      '<button id="packageOpenCall" '+(!opp.id?'disabled':'')+'>Open Call ↗</button>'+
+      '<button id="packageSync">↻ Synchroniser</button>'+
+      '<button id="packageStarterPack">Créer les pièces manquantes</button>'+
+      '<button class="primary" id="packageGenerateAI">✦ Générer avec PLUGY</button>'+
+      '<button id="packageToCreation">Vers Création</button>'+
+      (opp.id?'<button id="packageToCarousel">Carrousel</button>':'')+
+      '<button id="packageReady">Marquer prêt</button>'+
+    '</div></div>'+
+    '<div class="package-progress-card"><div class="package-progress-top"><div><small>PROGRESSION</small><strong>'+prog.done+' / '+prog.total+' éléments prêts</strong></div><div><small>PROCHAINE ACTION</small><strong>'+esc(next)+'</strong></div></div><div class="package-progress-track"><i style="width:'+prog.ratio+'%"></i></div>'+(missingNames.length?'<div class="package-missing">'+missingNames.map(x=>'<span>'+esc(x)+'</span>').join('')+'</div>':'<div class="package-complete">Dossier complet · prêt pour envoi</div>')+'</div>'+
     (opp.id?'<div class="package-source"><strong>'+esc(opp.title||'Open Call')+'</strong><span>'+esc([opp.city,opp.country,opp.deadline?'Deadline '+opp.deadline:''].filter(Boolean).join(' · '))+'</span></div>':'')+
     '<div class="package-status-row"><label>Statut<select id="packageStatus">'+['preparing','ready','submitted','followup','closed'].map(v=>'<option value="'+v+'" '+(p.status===v?'selected':'')+'>'+bureauPackageStatusLabel(v)+'</option>').join('')+'</select></label><label>Notes<textarea id="packageNotes" rows="3">'+esc(p.notes||'')+'</textarea></label></div>'+
-    '<div class="package-checklist">'+Object.keys({source_checked:1,letter:1,bio:1,artist_statement:1,portfolio:1,visuals:1,links:1,submitted:1}).map(k=>'<button class="package-check '+(check[k]?'done':'')+'" data-package-check="'+k+'">'+(check[k]?'✓ ':'○ ')+esc(bureauChecklistLabel(k))+'</button>').join('')+'</div>'+
-    '<div class="package-docs">'+(docs.length?docs.map(n=>'<div class="package-doc-row"><button data-package-doc="'+n.id+'">'+esc(n.title||'Document')+'</button><span>'+esc(n.folder||'Candidatures')+'</span></div>').join(''):'<div class="empty">Aucun document lié.</div>')+'</div>'+
+    '<div class="package-checklist">'+BUREAU_PACKAGE_KEYS.map(k=>'<button class="package-check '+(check[k]?'done':'')+'" data-package-check="'+k+'">'+(check[k]?'✓ ':'○ ')+esc(bureauChecklistLabel(k))+'</button>').join('')+'</div>'+
+    '<div class="package-docs">'+(docs.length?docs.map(n=>{const incomplete=/\[[^\]]{3,}\]|\[À COMPLÉTER\]|\[A COMPLETER\]/i.test(String(n.body||''));return '<div class="package-doc-row '+(incomplete?'incomplete':'complete')+'"><button data-package-doc="'+n.id+'">'+esc(n.title||'Document')+'</button><span>'+(incomplete?'À compléter':esc(n.folder||'Candidatures'))+'</span></div>'}).join(''):'<div class="empty">Aucun document lié.</div>')+'</div>'+
     '<div class="package-create-doc"><select id="packageTemplateSelect">'+state.bureauTemplates.map(t=>'<option value="'+t.id+'">'+esc(t.category+' · '+t.name)+'</option>').join('')+'</select><button id="packageCreateDoc">＋ Créer le document</button></div>'+
     '<div class="template-editor-actions"><button id="packageSent">Marquer envoyé</button><span class="spacer"></span><button class="danger-text" id="packageDelete">Supprimer le dossier</button></div>';
   $('#packageStatus').onchange=e=>patchActivePackage({status:e.target.value});
   let noteT=0;$('#packageNotes').oninput=e=>{clearTimeout(noteT);noteT=setTimeout(()=>patchActivePackage({notes:e.target.value},true),700)};
-  $$('[data-package-check]',box).forEach(b=>b.onclick=()=>{const next={...(p.checklist||{})};next[b.dataset.packageCheck]=!next[b.dataset.packageCheck];patchActivePackage({checklist:next})});
+  $$('[data-package-check]',box).forEach(b=>b.onclick=()=>{const nextCheck={...(p.checklist||{})};nextCheck[b.dataset.packageCheck]=!nextCheck[b.dataset.packageCheck];patchActivePackage({checklist:nextCheck})});
   $$('[data-package-doc]',box).forEach(b=>b.onclick=()=>{setBureauMode('documents');selectDoc(Number(b.dataset.packageDoc))});
   $('#packageCreateDoc').onclick=createDocumentFromPackage;
   $('#packageStarterPack').onclick=createPackageStarterPack;
   $('#packageGenerateAI').onclick=generatePackageWithPlugy;
+  $('#packageSync').onclick=()=>reconcileBureauPackage(p.id,{render:true,silent:false});
   $('#packageOpenCall').onclick=()=>{if(opp.id){route('opencalls');setTimeout(()=>openOpportunity(Number(opp.id)),40)}};
   $('#packageToCreation').onclick=()=>packageToCreation(p);
-  $('#packageReady').onclick=()=>patchActivePackage({status:'ready'});
-  $('#packageSent').onclick=async()=>{const next={...(p.checklist||{}),submitted:true};await patchActivePackage({status:'submitted',checklist:next});if(p.opportunity_id)persistWorkflow(p.opportunity_id,{workflow_status:'submitted',next_action:'Suivre la réponse'}).catch(()=>{});toast('Dossier marqué envoyé')};
+  $('#packageToCarousel')?.addEventListener('click',()=>{if(opp.id)createCarouselForOpportunity(Number(opp.id))});
+  $('#packageReady').onclick=markActivePackageReady;
+  $('#packageSent').onclick=async()=>{const nextCheck={...(p.checklist||{}),submitted:true};await patchActivePackage({status:'submitted',checklist:nextCheck});if(p.opportunity_id)persistWorkflow(p.opportunity_id,{workflow_status:'submitted',next_action:'Suivre la réponse'}).catch(()=>{});toast('Dossier marqué envoyé')};
   $('#packageDelete').onclick=deleteActivePackage;
 }
 
@@ -1209,35 +1267,53 @@ async function deleteActivePackage(){
 async function createDocumentFromPackage(){
   const p=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage)),tid=Number($('#packageTemplateSelect')?.value||0);if(!p||!tid)return;
   const b=$('#packageCreateDoc'),old=b.textContent;b.disabled=true;b.textContent='Création…';
-  try{const out=await api('/api/v120/bureau/packages/'+p.id+'/document',{method:'POST',body:JSON.stringify({template_id:tid})});if(out.document){state.bureau.unshift(out.document);const i=state.bureauPackages.findIndex(x=>Number(x.id)===Number(out.package.id));if(i>=0)state.bureauPackages[i]=out.package;state.activeDoc=out.document.id;setBureauMode('documents');selectDoc(out.document.id);toast('Document créé depuis le modèle')}}catch{toast('Création du document impossible')}finally{b.disabled=false;b.textContent=old}
+  try{
+    const out=await api('/api/v120/bureau/packages/'+p.id+'/document',{method:'POST',body:JSON.stringify({template_id:tid})});
+    if(out.document){
+      if(!state.bureau.some(x=>Number(x.id)===Number(out.document.id)))state.bureau.unshift(out.document);
+      if(out.package){const i=state.bureauPackages.findIndex(x=>Number(x.id)===Number(out.package.id));if(i>=0)state.bureauPackages[i]=out.package}
+      bureauPackageReconciled.delete(Number(p.id));await reconcileBureauPackage(p.id,{render:false,silent:true}).catch(()=>{});
+      state.activeDoc=out.document.id;setBureauMode('documents');selectDoc(out.document.id);toast('Document créé depuis le modèle');
+    }
+  }catch{toast('Création du document impossible')}finally{b.disabled=false;b.textContent=old}
 }
+
 async function createPackageStarterPack(){
   const p=state.bureauPackages.find(x=>Number(x.id)===Number(state.activePackage));if(!p)return;
   const wanted=['Lettre de candidature','Bio courte','Note artistique'];
   const existingTitles=new Set((p.document_ids||[]).map(id=>state.bureau.find(n=>Number(n.id)===Number(id))?.title).filter(Boolean));
   const templates=wanted.map(name=>state.bureauTemplates.find(t=>t.name===name)).filter(Boolean).filter(t=>!existingTitles.has(t.name));
-  if(!templates.length)return toast('Le pack de base est déjà créé');
+  if(!templates.length)return toast('Les pièces de base existent déjà');
   const b=$('#packageStarterPack'),old=b?.textContent;if(b){b.disabled=true;b.textContent='Création…'}
   try{
-    let current=p;
     for(const t of templates){
       if(b)b.textContent='Création · '+t.name;
       const out=await api('/api/v120/bureau/packages/'+p.id+'/document',{method:'POST',body:JSON.stringify({template_id:t.id,title:t.name})});
       if(out.document&&!state.bureau.some(x=>Number(x.id)===Number(out.document.id)))state.bureau.unshift(out.document);
-      if(out.package)current=out.package;
+      if(out.package){const i=state.bureauPackages.findIndex(x=>Number(x.id)===Number(out.package.id));if(i>=0)state.bureauPackages[i]=out.package}
     }
-    const checklist={...(current.checklist||{}),letter:true,bio:true,artist_statement:true};
-    const saved=await api('/api/v120/bureau/packages/'+p.id,{method:'PATCH',body:JSON.stringify({checklist})});
-    const i=state.bureauPackages.findIndex(x=>Number(x.id)===Number(saved.id));if(i>=0)state.bureauPackages[i]=saved;
-    renderBureauPackages();toast('Pack de candidature créé');
-  }catch{toast('Création du pack impossible')}
+    bureauPackageReconciled.delete(Number(p.id));await reconcileBureauPackage(p.id,{render:true,silent:true});
+    toast('Pièces de base créées · elles restent à compléter');
+  }catch{toast('Création des pièces impossible')}
   finally{if(b){b.disabled=false;b.textContent=old}}
 }
 
-function packageToCreation(p){
-  const id=(p.document_ids||[])[0];if(id){state.activeDoc=Number(id);sendCurrentBureauToCreation();return}
-  toast('Crée d’abord un document dans ce dossier');
+async function packageToCreation(p){
+  const docs=(p.document_ids||[]).map(id=>state.bureau.find(n=>Number(n.id)===Number(id))).filter(Boolean);
+  if(!docs.length)return toast('Crée d’abord au moins un document dans ce dossier');
+  route('creation');setCreationMode('text');
+  try{await ensureViewData('creation')}catch{}
+  const opp=p.opportunity||{},combined=docs.map(n=>'### '+(n.title||'Document')+'\n'+String(n.body||'')).join('\n\n---\n\n');
+  setTimeout(()=>{
+    if($('#contentTitle'))$('#contentTitle').value=p.title||'Dossier de candidature';
+    if($('#contentObjective'))$('#contentObjective').value='Finaliser, adapter ou décliner ce dossier de candidature.';
+    if($('#contentBrief'))$('#contentBrief').value=['OPEN CALL : '+(opp.title||''),opp.deadline?'Deadline : '+opp.deadline:'',p.notes?'Notes : '+p.notes:'',combined].filter(Boolean).join('\n\n');
+    if($('#contentSource')&&opp.id){$('#contentSource').value=String(opp.id);$('#contentSource').dispatchEvent(new Event('change'))}
+    if($('#contentStatus'))$('#contentStatus').textContent='Dossier importé';
+    toast('Dossier complet chargé dans Création');
+  },60);
 }
+
 function renderBureauTemplates(){
   const list=$('#bureauTemplateList'),editor=$('#bureauTemplateEditor');if(!list||!editor)return;
   const term=clean($('#templateSearch')?.value).toLowerCase(),rows=state.bureauTemplates.filter(t=>!term||[t.name,t.category,t.tags,t.body].join(' ').toLowerCase().includes(term));
