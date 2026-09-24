@@ -1,6 +1,6 @@
 from pathlib import Path
 from fastapi import Body, HTTPException, Query, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 import base64, hashlib, json, os, re, time, requests
 
 import app_extra_v31 as v31
@@ -165,6 +165,142 @@ def plugy_v32(payload: dict = Body(default={})):
         print(f"PLUGY_V32_FALLBACK {type(exc).__name__}: {str(exc)[:240]}", flush=True)
         return result
 
+
+
+def _plugy_stream_payload(payload: dict):
+    message = re.sub(r"\s+", " ", str((payload or {}).get("message") or "")).strip()[:8000]
+    if not message:
+        raise HTTPException(422, "Message vide")
+    page = re.sub(r"[^a-z0-9_-]", "", str((payload or {}).get("page") or "explorer").lower())[:40] or "explorer"
+    mode = str((payload or {}).get("mode") or "fast").lower()
+    if mode not in {"fast","deep"}: mode = "fast"
+    model = DEEP_MODEL if mode == "deep" else FAST_MODEL
+    history_limit = 8 if mode == "deep" else 4
+    history = []
+    for item in ((payload or {}).get("history") or [])[-history_limit:]:
+        if not isinstance(item, dict): continue
+        role = "assistant" if item.get("role") == "assistant" else "user"
+        content = re.sub(r"\s+", " ", str(item.get("content") or "")).strip()[:1200 if mode == "deep" else 800]
+        if content: history.append({"role": role, "content": content})
+    ctx = _context(7 if mode == "deep" else 4)
+    instructions = (
+        "Tu es PLUGY, l'assistant personnel de PLUG ART. Tu es proactif, très concis et utile. "
+        "Tu connais la page ouverte, les chiffres du Radar et les opportunités fournies. "
+        "Tu aides à décider, organiser, créer des contenus et préparer les prochaines actions. "
+        "N'invente jamais une date, un prix, un lieu, un lien ou un statut. Si une donnée manque, dis qu'elle doit être vérifiée. "
+        "Réponds en français. En mode fast, réponds en 1 à 4 phrases courtes et au maximum 2 actions. "
+        "En mode deep, tu peux développer davantage pour produire un texte réellement exploitable."
+    )
+    memory = "\n".join(f"{x['role'].upper()}: {x['content']}" for x in history[-(6 if mode == "deep" else 4):])
+    user_input = (
+        f"PAGE ACTIVE: {page}\n"
+        f"CONTEXTE PLUG ART: {json.dumps(ctx, ensure_ascii=False, separators=(',', ':'))}\n"
+        f"HISTORIQUE RÉCENT:\n{memory}\n"
+        f"DEMANDE ACTUELLE: {message}"
+    )
+    body = {
+        "model": model,
+        "instructions": instructions,
+        "input": user_input,
+        "store": False,
+        "stream": True,
+        "max_output_tokens": 520 if mode == "deep" else 220,
+        "text": {"verbosity": "low"},
+        "stream_options": {"include_obfuscation": False}
+    }
+    return message,page,mode,model,ctx,body
+
+
+@app.post("/api/v125/plugy/stream")
+def plugy_stream_v125(payload: dict = Body(default={})):
+    message,page,mode,model,ctx,body = _plugy_stream_payload(payload)
+    key = os.getenv("OPENAI_API_KEY", "").strip()
+
+    def sse(event, data):
+        return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False, separators=(',', ':'))}\n\n"
+
+    def generate():
+        started = time.time()
+        first_delta_ms = None
+        answer_parts = []
+        if not key:
+            result = core.plugy(core.PlugyMessage(message=message))
+            answer = str(result.get("answer") or result.get("message") or "").strip()
+            if answer:
+                yield sse("delta", {"delta": answer})
+            yield sse("done", {"answer": answer, "ai": False, "model": "local-radar", "page": page, "latency_ms": int((time.time()-started)*1000)})
+            return
+        try:
+            timeout_cap = 40 if mode == "deep" else 28
+            with OPENAI_SESSION.post(
+                OPENAI_RESPONSES,
+                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json", "Accept": "text/event-stream"},
+                json=body,
+                timeout=(8, min(int(os.getenv("PLUGART_OPENAI_TIMEOUT", "32") or 32), timeout_cap)),
+                stream=True
+            ) as upstream:
+                if not upstream.ok:
+                    raise RuntimeError(f"HTTP {upstream.status_code}: {upstream.text[:240]}")
+                for raw_line in upstream.iter_lines(decode_unicode=True):
+                    if not raw_line or not raw_line.startswith("data:"):
+                        continue
+                    raw = raw_line[5:].strip()
+                    if not raw or raw == "[DONE]":
+                        continue
+                    try:
+                        event = json.loads(raw)
+                    except Exception:
+                        continue
+                    etype = event.get("type")
+                    if etype == "response.output_text.delta":
+                        delta = str(event.get("delta") or "")
+                        if not delta:
+                            continue
+                        if first_delta_ms is None:
+                            first_delta_ms = int((time.time()-started)*1000)
+                        answer_parts.append(delta)
+                        yield sse("delta", {"delta": delta})
+                    elif etype == "error":
+                        err = event.get("message") or (event.get("error") or {}).get("message") or "Erreur OpenAI"
+                        raise RuntimeError(str(err)[:240])
+            answer = "".join(answer_parts).strip()
+            elapsed = int((time.time()-started)*1000)
+            print(f"PLUGY_V126_STREAM_OK model={model} mode={mode} first_delta_ms={first_delta_ms or elapsed} elapsed_ms={elapsed} page={page} chars={len(answer)}", flush=True)
+            yield sse("done", {
+                "answer": answer,
+                "ai": True,
+                "model": model,
+                "mode": mode,
+                "page": page,
+                "first_delta_ms": first_delta_ms or elapsed,
+                "latency_ms": elapsed
+            })
+        except Exception as exc:
+            elapsed = int((time.time()-started)*1000)
+            if answer_parts:
+                answer = "".join(answer_parts).strip()
+                print(f"PLUGY_V126_STREAM_PARTIAL {type(exc).__name__} elapsed_ms={elapsed} chars={len(answer)}", flush=True)
+                yield sse("done", {"answer": answer, "ai": True, "partial": True, "model": model, "page": page, "latency_ms": elapsed})
+                return
+            try:
+                result = core.plugy(core.PlugyMessage(message=message))
+                answer = str(result.get("answer") or result.get("message") or "").strip()
+            except Exception:
+                answer = "Je n’arrive pas à joindre mon moteur pour le moment."
+            print(f"PLUGY_V126_STREAM_FALLBACK {type(exc).__name__}: {str(exc)[:180]}", flush=True)
+            if answer:
+                yield sse("delta", {"delta": answer})
+            yield sse("done", {"answer": answer, "ai": False, "fallback": True, "model": "local-radar", "page": page, "latency_ms": elapsed})
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive"
+        }
+    )
 
 # ---------------- IMAGE V32 ----------------
 # Flare est priorisé pour la fluidité; Sunburst reste le fallback qualité.
