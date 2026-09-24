@@ -2455,6 +2455,8 @@ function handleLocalPlugy(message){
   if(/(ouvre|va|aller|affiche).*(agenda|calendrier|deadlines?|échéances?)/.test(m))return go('agenda','J’ouvre l’Agenda.');
   if(/(ouvre|va|aller|affiche).*(création|creation|studio|contenu)/.test(m))return go('creation','J’ouvre le Studio de contenu.');
   if(/(ouvre|va|aller|affiche).*(carte|map)/.test(m))return go('map','J’ouvre la Carte.');
+  if(/(ouvre|va|aller|affiche).*(instagram|insta|feed)/.test(m))return go('social','J’ouvre Instagram.');
+  if(/(plein écran|plein ecran|page plugy|mode plugy)/.test(m)){location.href='/plugy';return 'J’ouvre mon espace dédié.';}
   if(/(nouveau|crée|cree).*(document|note)/.test(m)){route('bureau');clearDoc();return 'Nouveau document prêt dans le Bureau.'}
   if(/(nouveau|ajoute|crée|cree).*(contact)/.test(m)){route('prospection');setTimeout(()=>$('#leadNew')?.click(),20);return 'Nouvelle fiche contact ouverte.'}
   if(/(lance|actualise|démarre|demarre).*(radar|recherche)/.test(m)){route('radar');setTimeout(()=>$('#radarRun')?.click(),30);return 'Je lance le Radar.'}
@@ -2496,8 +2498,10 @@ function installMobileShell(){
     '<button data-mobile-route="agenda"><b>◷</b><span>Agenda</span></button>'+
     '<button data-mobile-route="network"><b>◌</b><span>Artistes</span></button>'+
     '<button data-mobile-route="map"><b>⌖</b><span>Carte</span></button>'+
+    '<button data-mobile-route="social"><b>◎</b><span>Instagram</span></button>'+
     '<button data-mobile-action="search"><b>⌕</b><span>Recherche</span></button>'+
     '<button data-mobile-action="plugy"><b>⌁</b><span>PLUGY</span></button>'+
+    '<a class="mobile-plugy-full" href="/plugy"><b>◉</b><span>PLUGY plein écran</span></a>'+
   '</div>';
   document.body.appendChild(sheet);
 
