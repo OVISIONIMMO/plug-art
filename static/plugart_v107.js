@@ -2104,7 +2104,7 @@ function syncLayerInspector(){
   $('#layerDelete')?.addEventListener('click',deleteCanvasLayer);$('#layerDuplicate')?.addEventListener('click',duplicateCanvasLayer);$('#layerBack')?.addEventListener('click',()=>moveCanvasLayer('back'));$('#layerFront')?.addEventListener('click',()=>moveCanvasLayer('front'));
 }
 function setStudioTool(tool){
-  state.canvasTool=tool;$$('[data-studio-tool]').forEach(b=>b.classList.toggle('active',b.dataset.studioTool===tool));$$('[data-tool-panel]').forEach(p=>p.classList.toggle('active',p.dataset.toolPanel===tool));
+  state.canvasTool=tool;$$$('[data-studio-tool]').forEach(b=>b.classList.toggle('active',b.dataset.studioTool===tool));$$('[data-tool-panel]').forEach(p=>p.classList.toggle('active',p.dataset.toolPanel===tool));
 }
 function processCanvasUpload(file){
   if(!file)return;
@@ -2275,12 +2275,12 @@ function installCreationModes(){
   ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
   ['slideLayout','slideAccent','slideAlign'].forEach(id=>$('#'+id)?.addEventListener('change',updateSlideDesignFromControls));
   ['slideFontScale','slideImageOpacity','slideImageUrl'].forEach(id=>$('#'+id)?.addEventListener('input',updateSlideDesignFromControls));
-  $$('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));
+  $$$('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));
   $$('[data-slide-help]').forEach(b=>b.onclick=()=>assistSlideDesign(b.dataset.slideHelp));
-  $('[data-marketing-template]').forEach(b=>b.onclick=()=>applyMarketingTemplate(b.dataset.marketingTemplate));
-  $('[data-studio-tool]').forEach(b=>b.onclick=()=>setStudioTool(b.dataset.studioTool));
-  $('[data-add-text]').forEach(b=>b.onclick=()=>{const kind=b.dataset.addText;addCanvasLayer('text',kind==='heading'?{text:'Nouveau titre',size:38,w:70,h:16}:kind==='label'?{text:'PLUG ART',size:15,weight:800,w:30,h:8,color:'#7657ff'}:{text:'Ajoute ton texte ici.',size:22,weight:500,w:68,h:18})});
-  $('[data-add-shape]').forEach(b=>b.onclick=()=>{const shape=b.dataset.addShape;addCanvasLayer('shape',shape==='circle'?{shape,color:'#7657ff',w:18,h:18,radius:60}:shape==='pill'?{shape,color:'#111318',w:34,h:10,radius:60}:shape==='line'?{shape,color:'#111318',w:46,h:1.2,radius:0}:{shape,color:'#7657ff'})});
+  $$('[data-marketing-template]').forEach(b=>b.onclick=()=>applyMarketingTemplate(b.dataset.marketingTemplate));
+  $$('[data-studio-tool]').forEach(b=>b.onclick=()=>setStudioTool(b.dataset.studioTool));
+  $$('[data-add-text]').forEach(b=>b.onclick=()=>{const kind=b.dataset.addText;addCanvasLayer('text',kind==='heading'?{text:'Nouveau titre',size:38,w:70,h:16}:kind==='label'?{text:'PLUG ART',size:15,weight:800,w:30,h:8,color:'#7657ff'}:{text:'Ajoute ton texte ici.',size:22,weight:500,w:68,h:18})});
+  $$('[data-add-shape]').forEach(b=>b.onclick=()=>{const shape=b.dataset.addShape;addCanvasLayer('shape',shape==='circle'?{shape,color:'#7657ff',w:18,h:18,radius:60}:shape==='pill'?{shape,color:'#111318',w:34,h:10,radius:60}:shape==='line'?{shape,color:'#111318',w:46,h:1.2,radius:0}:{shape,color:'#7657ff'})});
   $('#canvasImageUpload')?.addEventListener('change',e=>{processCanvasUpload(e.target.files?.[0]);e.target.value=''});
   $('#canvasUseGenerated')?.addEventListener('click',()=>state.visual.url?addCanvasLayer('image',{src:state.visual.url}):toast('Génère d’abord un visuel'));
   $('#slideUseVisual')?.addEventListener('click',()=>{const s=state.carousel.slides[state.carousel.active];if(!s)return;if(!state.visual.url)return toast('Aucun visuel généré à utiliser');pushCreationHistory();s.image=state.visual.url;renderCarousel();scheduleDraftAutosave()});
@@ -2293,7 +2293,7 @@ function installCreationModes(){
 
   $$('[data-studio-start]').forEach(b=>b.onclick=()=>{const mode=b.dataset.studioStart;setCreationMode(mode);if(b.dataset.marketingTemplate)applyMarketingTemplate(b.dataset.marketingTemplate);if(b.dataset.visualUsecase)applyVisualPreset(b.dataset.visualUsecase);document.querySelector('.creation-studio-shell')?.scrollIntoView({behavior:'smooth',block:'start'})});
   $$('[data-creative-prompt]').forEach(b=>b.onclick=()=>{const brief=clean($('#contentBrief')?.value),body=clean($('#contentBody')?.value);askPlugy(b.dataset.creativePrompt+' Contexte : '+(brief||body||'aucun brief encore'),'#contentBody')});
-  $('[data-copy-action]').forEach(b=>b.onclick=()=>improveTextContent(b.dataset.copyAction));
+  $$('[data-copy-action]').forEach(b=>b.onclick=()=>improveTextContent(b.dataset.copyAction));
 
   const quickMode=$('#creationQuickMode'),quickDirection=$('#creationQuickDirection'),quickFormat=$('#creationQuickFormat'),quickScale=$('#creationQuickScale'),quickMood=$('#creationQuickMood');
   const quickCopy={
@@ -2532,7 +2532,7 @@ function deleteCarouselSlideManual(){
 function renderCarousel(){
   const slides=state.carousel.slides,s=slides[state.carousel.active]||{},d=slideDesign(s);$('#carouselCounter').textContent=slides.length+' slide'+(slides.length>1?'s':'');
   $('#carouselSlides').innerHTML=slides.map((x,i)=>'<button class="carousel-slide-thumb '+(i===state.carousel.active?'active':'')+'" draggable="true" data-carousel-slide="'+i+'"><b>'+esc(x.kicker||'PLUG ART')+'</b><span>'+esc((x.title||'Sans titre').slice(0,50))+'</span></button>').join('')||'<div class="empty">Aucune slide.</div>';
-  $('[data-carousel-slide]').forEach(b=>{
+  $$('[data-carousel-slide]').forEach(b=>{
     b.onclick=()=>{state.carousel.active=Number(b.dataset.carouselSlide);renderCarousel()};
     b.ondragstart=e=>{e.dataTransfer.setData('text/plain',b.dataset.carouselSlide);e.dataTransfer.effectAllowed='move';b.classList.add('dragging')};
     b.ondragend=()=>b.classList.remove('dragging');
@@ -2547,7 +2547,7 @@ function renderCarousel(){
   if($('#slideFontScale'))$('#slideFontScale').value=d.fontScale;if($('#slideFontScaleOut'))$('#slideFontScaleOut').textContent=d.fontScale+'%';
   if($('#slideImageOpacity'))$('#slideImageOpacity').value=d.imageOpacity;if($('#slideImageOpacityOut'))$('#slideImageOpacityOut').textContent=d.imageOpacity+'%';
   if($('#slideImageUrl'))$('#slideImageUrl').value=s.image||'';
-  $('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
+  $$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
   renderCanvasLayers();renderStudioImages();
 }
 
