@@ -307,7 +307,11 @@ def _plugy_rig_summary_v139():
             mats=[]
             for p in m.get('primitives') or []:
                 if isinstance(p,dict):mats.append(p.get('material'))
-            meshes.append({'i':i,'name':m.get('name'),'materials':mats,'weights':m.get('weights'),'targetNames':(m.get('extras') or {}).get('targetNames') if isinstance(m.get('extras'),dict) else None})
+            prims=[]
+            for p in m.get('primitives') or []:
+                if isinstance(p,dict):
+                    prims.append({'keys':list(p.keys()),'mode':p.get('mode'),'indices':p.get('indices'),'attributes':p.get('attributes'),'extensions':p.get('extensions'),'targets':len(p.get('targets') or [])})
+            meshes.append({'i':i,'name':m.get('name'),'materials':mats,'weights':m.get('weights'),'targetNames':(m.get('extras') or {}).get('targetNames') if isinstance(m.get('extras'),dict) else None,'primitives':prims})
         materials=[{'i':i,'name':m.get('name')} for i,m in enumerate(doc.get('materials') or []) if isinstance(m,dict)]
         skins=[{'i':i,'name':x.get('name'),'joints':x.get('joints'),'skeleton':x.get('skeleton')} for i,x in enumerate(doc.get('skins') or []) if isinstance(x,dict)]
         return {'nodes':nodes,'meshes':meshes,'materials':materials,'skins':skins,'animations':[a.get('name') for a in doc.get('animations') or [] if isinstance(a,dict)]}
