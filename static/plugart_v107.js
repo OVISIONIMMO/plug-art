@@ -181,13 +181,13 @@ function tunePlugyMaterials(){
     const materials=mv.model?.materials||[];
     materials.forEach(mat=>{
       const pbr=mat?.pbrMetallicRoughness;
-      try{pbr?.setMetallicFactor?.(.04)}catch{}
-      try{pbr?.setRoughnessFactor?.(.64)}catch{}
-      try{mat?.clearcoat?.setClearcoatFactor?.(.06)}catch{}
-      try{mat?.clearcoat?.setClearcoatRoughnessFactor?.(.78)}catch{}
+      try{pbr?.setMetallicFactor?.(.02)}catch{}
+      try{pbr?.setRoughnessFactor?.(.72)}catch{}
+      try{mat?.clearcoat?.setClearcoatFactor?.(.03)}catch{}
+      try{mat?.clearcoat?.setClearcoatRoughnessFactor?.(.88)}catch{}
     });
-    mv.setAttribute('exposure','.94');
-    mv.setAttribute('shadow-intensity','.42');
+    mv.setAttribute('exposure','.90');
+    mv.setAttribute('shadow-intensity','.32');
     mv.setAttribute('shadow-softness','.95');
     mv.dataset.finish='soft-pearl';
   }catch(e){console.warn('[PLUGY finish]',e)}
@@ -915,7 +915,7 @@ function installBureauWorkspace(){
   if(!view||!toolbar||!layout)return;
   layout.id='bureauDocumentsMode';
   const bar=document.createElement('div');bar.id='bureauModeBar';bar.className='bureau-mode-bar';
-  bar.innerHTML='<button class="active" data-bureau-mode="documents">Documents</button><button data-bureau-mode="packages">Dossiers</button><button data-bureau-mode="templates">Modèles</button><span></span><button id="bureauQuickNewPackage">＋ Dossier</button><button id="bureauQuickNewTemplate">＋ Modèle</button>';
+  bar.innerHTML='<button class="active" data-bureau-mode="documents">Documents</button><button data-bureau-mode="packages">Dossiers</button><button data-bureau-mode="templates">Modèles</button><button class="hub-mode-tab" data-bureau-mode="hub">HUB</button><span></span><button id="bureauQuickNewPackage">＋ Dossier</button><button id="bureauQuickNewTemplate">＋ Modèle</button>';
   toolbar.insertAdjacentElement('afterend',bar);
 
   const folders=document.createElement('div');folders.id='bureauFolderBar';folders.className='bureau-folder-bar';
@@ -928,6 +928,15 @@ function installBureauWorkspace(){
   const templates=document.createElement('section');templates.id='bureauTemplatesMode';templates.className='bureau-mode-panel bureau-templates-mode';
   templates.innerHTML='<aside class="panel bureau-template-list-panel"><div class="bureau-template-search"><input id="templateSearch" placeholder="Rechercher un modèle…"></div><div id="bureauTemplateList" class="bureau-template-list"></div></aside><section class="panel bureau-template-editor" id="bureauTemplateEditor"><div class="empty">Sélectionne un modèle.</div></section>';
   view.appendChild(templates);
+
+  const hub=document.createElement('section');hub.id='bureauHubMode';hub.className='bureau-mode-panel bureau-hub-mode';
+  hub.innerHTML='<section class="hub-hero panel"><div><small>PLUG ART HUB</small><h3>Les lieux deviennent des projets.</h3><p>Millénaire, Aubervilliers, programmation, aménagement, images, dossiers et prochaines actions au même endroit.</p></div><div class="hub-hero-actions"><button id="hubExportPdf">Exporter la synthèse PDF</button><button class="primary-btn" id="hubPlugy">✦ Travailler avec PLUGY</button></div></section>'+
+    '<div class="hub-project-grid">'+
+      '<article class="hub-project-card millenaire"><div class="hub-project-visual" id="hubMillenaireVisual"><span>LE MILLÉNAIRE</span></div><div class="hub-project-copy"><small>AUBERVILLIERS · CANAL</small><h3>Le Millénaire</h3><p>Galerie des Docks + HUB créatif dans les cellules vacantes. Galerie côté canal, ateliers, coworking, studio contenu et programmation.</p><div class="hub-tags"><span>Galerie</span><span>Ateliers</span><span>Studio</span><span>Canal</span></div><div class="hub-card-actions"><button data-hub-project="millenaire">Ouvrir le projet</button><button data-hub-create="millenaire">＋ Note projet</button></div></div></article>'+
+      '<article class="hub-project-card aubervilliers"><div class="hub-project-visual hub-industrial"><span>AUBERVILLIERS</span></div><div class="hub-project-copy"><small>PIERRE CURIE · BÂTIMENT INDUSTRIEL</small><h3>HUB Aubervilliers</h3><p>Réhabilitation légère et réversible : galerie, ateliers individuels, espace expérimental, studio contenu et organisation par niveaux.</p><div class="hub-tags"><span>Industriel</span><span>Galerie</span><span>Ateliers</span><span>3D</span></div><div class="hub-card-actions"><button data-hub-project="aubervilliers">Ouvrir le projet</button><button data-hub-create="aubervilliers">＋ Note projet</button></div></div></article>'+
+    '</div>'+
+    '<section class="hub-project-detail panel" id="hubProjectDetail"></section>';
+  view.appendChild(hub);
 
   if(!$('#bureauWorkspaceStyles')){
     const st=document.createElement('style');st.id='bureauWorkspaceStyles';st.textContent=`
@@ -957,16 +966,58 @@ function installBureauWorkspace(){
 function setBureauMode(mode){
   state.bureauMode=mode;
   $$('[data-bureau-mode]').forEach(b=>b.classList.toggle('active',b.dataset.bureauMode===mode));
-  const docs=$('#bureauDocumentsMode'),packages=$('#bureauPackagesMode'),templates=$('#bureauTemplatesMode');
+  const docs=$('#bureauDocumentsMode'),packages=$('#bureauPackagesMode'),templates=$('#bureauTemplatesMode'),hub=$('#bureauHubMode');
   if(docs)docs.style.display=mode==='documents'?'grid':'none';
   packages?.classList.toggle('active',mode==='packages');
-  templates?.classList.toggle('active',mode==='templates');
+  templates?.classList.toggle('active',mode==='templates');hub?.classList.toggle('active',mode==='hub');
   if($('#bureauNew'))$('#bureauNew').style.display=mode==='documents'?'':'none';
   if(mode==='documents'){renderBureauFolders();renderBureau()}
   if(mode==='packages')renderBureauPackages();
   if(mode==='templates')renderBureauTemplates();
+  if(mode==='hub')renderHubWorkspace();
   renderPlugyActions();
 }
+const HUB_PROJECTS={
+  millenaire:{title:'PLUG ART HUB · Le Millénaire',eyebrow:'CENTRE COMMERCIAL · AUBERVILLIERS',summary:'Transformer des cellules vacantes en destination culturelle active, avec une galerie publique côté canal et un HUB de production dans une seconde cellule.',areas:['Galerie des Docks','Terrasse canal','Ateliers individuels','Coworking','Studio image & contenu','Plug Talk','Atelier collectif'],documents:[['Dossier Projet Le Millénaire','33 pages'],['Dossier final écosystème 2026','11 pages']]},
+  aubervilliers:{title:'PLUG ART HUB · Aubervilliers',eyebrow:'BÂTIMENT INDUSTRIEL · PIERRE CURIE',summary:'Un HUB artistique dans une enveloppe industrielle, organisé entre galerie, expérimentation, ateliers, bureau et production de contenus.',areas:['Galerie industrielle','Salle expérimentation','Ateliers artistes','Bureau / coordination','Studio contenu','Circulation / accueil'],documents:[['Dossier complet Aubervilliers 2026','38 pages']]}
+};
+function hubImage(){
+  return window.PLUG_HUB_ASSETS?.millenaire_gallery||'';
+}
+function renderHubWorkspace(project='millenaire'){
+  const img=hubImage(),visual=$('#hubMillenaireVisual');if(visual&&img){visual.style.backgroundImage='url("'+img+'")';visual.classList.add('has-image')}
+  $$('[data-hub-project]').forEach(b=>b.onclick=()=>renderHubProjectDetail(b.dataset.hubProject));
+  $$('[data-hub-create]').forEach(b=>b.onclick=()=>createHubNote(b.dataset.hubCreate));
+  $('#hubExportPdf')?.addEventListener('click',exportHubPdf,{once:true});
+  $('#hubPlugy')?.addEventListener('click',()=>openPlugy('Travaille avec moi sur le projet PLUG ART HUB. Compare Le Millénaire et Aubervilliers, puis propose les prochaines actions concrètes.'),{once:true});
+  renderHubProjectDetail(project);
+}
+function renderHubProjectDetail(key){
+  const p=HUB_PROJECTS[key],box=$('#hubProjectDetail');if(!p||!box)return;
+  box.innerHTML='<div class="hub-detail-head"><div><small>'+esc(p.eyebrow)+'</small><h3>'+esc(p.title)+'</h3><p>'+esc(p.summary)+'</p></div><button data-hub-create="'+esc(key)+'">＋ Ajouter une note</button></div>'+
+    '<div class="hub-detail-grid"><div><small>ESPACES / PROGRAMME</small><div class="hub-area-list">'+p.areas.map(a=>'<span>'+esc(a)+'</span>').join('')+'</div></div><div><small>DOSSIERS SOURCE</small><div class="hub-doc-list">'+p.documents.map(d=>'<div><b>PDF</b><span><strong>'+esc(d[0])+'</strong><small>'+esc(d[1])+' · source projet</small></span></div>').join('')+'</div></div><div><small>PROCHAINE ÉTAPE</small><p>Centraliser les visuels, décisions, interlocuteurs et versions du dossier avant présentation aux structures.</p><button class="plugy-inline" id="hubDetailPlugy">✦ Préparer la prochaine étape</button></div></div>';
+  $$('[data-hub-create]',box).forEach(b=>b.onclick=()=>createHubNote(b.dataset.hubCreate));
+  $('#hubDetailPlugy')?.addEventListener('click',()=>openPlugy('Projet HUB : '+p.title+'. '+p.summary+' Prépare une liste courte des prochaines actions et documents à finaliser.'));
+}
+async function createHubNote(key){
+  const p=HUB_PROJECTS[key];if(!p)return;
+  try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:p.title+' · Note',body:p.summary+'\n\nEspaces :\n- '+p.areas.join('\n- ')+'\n\nProchaine action :',folder:'HUB',tags:'HUB, projet, '+key})});state.bureau.unshift(n);toast('Note HUB créée');setBureauMode('documents');state.bureauFolderFilter='HUB';renderBureauFolders();renderBureau();selectDoc(n.id)}catch{toast('Création de la note impossible')}
+}
+async function loadJsPdf(){
+  if(window.jspdf?.jsPDF)return window.jspdf.jsPDF;
+  await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js';s.onload=resolve;s.onerror=reject;document.head.appendChild(s)});
+  return window.jspdf?.jsPDF;
+}
+async function exportHubPdf(){
+  const b=$('#hubExportPdf'),old=b?.textContent;if(b){b.disabled=true;b.textContent='Préparation PDF…'}
+  try{
+    const PDF=await loadJsPdf();if(!PDF)throw new Error('pdf');const doc=new PDF({unit:'mm',format:'a4'}),margin=18;
+    doc.setFont('helvetica','bold');doc.setFontSize(22);doc.text('PLUG ART HUB',margin,25);doc.setFontSize(10);doc.setFont('helvetica','normal');doc.text('Synthèse projets · Le Millénaire & Aubervilliers',margin,33);
+    let y=48;for(const p of Object.values(HUB_PROJECTS)){doc.setFont('helvetica','bold');doc.setFontSize(15);doc.text(p.title,margin,y);y+=8;doc.setFont('helvetica','normal');doc.setFontSize(9);const lines=doc.splitTextToSize(p.summary,170);doc.text(lines,margin,y);y+=lines.length*4.5+4;doc.setFont('helvetica','bold');doc.text('Espaces',margin,y);y+=6;doc.setFont('helvetica','normal');for(const a of p.areas){doc.text('• '+a,margin+2,y);y+=5}y+=5;if(y>245){doc.addPage();y=25}}
+    doc.save('plug-art-hub-synthese.pdf');toast('PDF HUB exporté');
+  }catch{toast('Export PDF indisponible')}finally{if(b){b.disabled=false;b.textContent=old}}
+}
+
 function renderBureauFolders(){
   const box=$('#bureauFolderBar');if(!box)return;
   const counts={};state.bureau.forEach(n=>counts[n.folder||'Notes']=(counts[n.folder||'Notes']||0)+1);
@@ -1500,19 +1551,41 @@ function ensureLeaflet(){
   }).catch(err=>{plugArtLeafletPromise=null;throw err});
   return plugArtLeafletPromise;
 }
+const MAP_CITY_COORDS={
+  paris:[48.8566,2.3522],aubervilliers:[48.9137,2.3833],'saint-denis':[48.9362,2.3574],montreuil:[48.8638,2.4485],pantin:[48.8966,2.4017],
+  marseille:[43.2965,5.3698],lyon:[45.764,4.8357],madrid:[40.4168,-3.7038],barcelona:[41.3874,2.1686],barcelone:[41.3874,2.1686],
+  milan:[45.4642,9.19],milano:[45.4642,9.19],florence:[43.7696,11.2558],firenze:[43.7696,11.2558],rome:[41.9028,12.4964],
+  london:[51.5072,-.1276],londres:[51.5072,-.1276],amsterdam:[52.3676,4.9041],brussels:[50.8503,4.3517],bruxelles:[50.8503,4.3517],
+  lisbon:[38.7223,-9.1393],lisbonne:[38.7223,-9.1393],porto:[41.1579,-8.6291],berlin:[52.52,13.405],geneva:[46.2044,6.1432],genève:[46.2044,6.1432]
+};
+function mapCityCoords(city){
+  const key=clean(city).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const hit=Object.entries(MAP_CITY_COORDS).find(([k])=>key===k.normalize('NFD').replace(/[\u0300-\u036f]/g,'')||key.includes(k.normalize('NFD').replace(/[\u0300-\u036f]/g,'')));
+  return hit?.[1]||null;
+}
+function mergedMapRows(){
+  const direct=(state.bootstrap?.map||[]).map(p=>({...p}));
+  const seen=new Set(direct.filter(p=>p.kind==='opportunity').map(p=>String(p.id)));
+  for(const o of state.bootstrap?.opportunities||[]){
+    if(seen.has(String(o.id)))continue;
+    const c=mapCityCoords(o.city);if(!c)continue;
+    direct.push({...o,lat:c[0],lon:c[1],kind:'opportunity',approximate_location:true});
+  }
+  return direct;
+}
 function filteredMapRows(){
   const q=clean(state.mapSearch||'').toLowerCase(),filter=state.mapFilter||'all';
-  return (state.bootstrap?.map||[]).filter(p=>{
+  return mergedMapRows().filter(p=>{
     if(!Number.isFinite(Number(p.lat))||!Number.isFinite(Number(p.lon)))return false;
     const kind=String(p.kind||p.type||'opportunity').toLowerCase();
     if(filter==='exhibition'&&!kind.includes('exhibition')&&!kind.includes('expo'))return false;
     if(filter==='opportunity'&&(kind.includes('exhibition')||kind.includes('expo')))return false;
     if(q){
-      const hay=[p.title,p.city,p.country,p.kind,p.type,p.summary].filter(Boolean).join(' ').toLowerCase();
+      const hay=[p.title,p.city,p.country,p.kind,p.type,p.summary,p.organizer].filter(Boolean).join(' ').toLowerCase();
       if(!hay.includes(q))return false;
     }
     return true;
-  }).slice(0,160);
+  }).slice(0,220);
 }
 function mapKind(p){
   const k=String(p?.kind||p?.type||'opportunity').toLowerCase();
@@ -1572,7 +1645,7 @@ function selectMapPoint(p,index=0){
   const detail=$('#mapDetail');if(!detail)return;
   const loc=[p.city,p.country].filter(Boolean).join(' · '),kind=mapKind(p);
   detail.hidden=false;
-  detail.innerHTML='<button class="map-detail-close" id="mapDetailClose">×</button><small>'+esc(kind==='exhibition'?'EXPOSITION':'OPPORTUNITÉ')+'</small><h3>'+esc(p.title||p.city||'Point')+'</h3><p class="map-detail-loc">'+esc(loc||'Localisation disponible')+'</p><p>'+esc(p.summary||p.description||'Aucune description supplémentaire.')+'</p><div class="map-detail-actions">'+(p.source_url?'<a href="'+esc(p.source_url)+'" target="_blank" rel="noopener">Source officielle</a>':'')+'<button id="mapDetailPlugy">✦ Analyser avec PLUGY</button></div>';
+  detail.innerHTML='<button class="map-detail-close" id="mapDetailClose">×</button><small>'+esc(kind==='exhibition'?'EXPOSITION':'OPPORTUNITÉ')+'</small><h3>'+esc(p.title||p.city||'Point')+'</h3><p class="map-detail-loc">'+esc(loc||'Localisation disponible')+(p.approximate_location?' · position ville':'')+'</p><p>'+esc(p.summary||p.description||'Aucune description supplémentaire.')+'</p><div class="map-detail-actions">'+(p.source_url?'<a href="'+esc(p.source_url)+'" target="_blank" rel="noopener">Source officielle</a>':'')+'<button id="mapDetailPlugy">✦ Analyser avec PLUGY</button></div>';
   $('#mapDetailClose').onclick=()=>{detail.hidden=true};
   $('#mapDetailPlugy').onclick=()=>openPlugy('Analyse cette opportunité sur la carte : '+clean(p.title||p.city)+'. Lieu : '+clean(loc)+'. Donne-moi les informations utiles et la prochaine action.');
 }
@@ -2796,13 +2869,14 @@ function installMobileShell(){
     '<button data-route="radar"><b>◉</b><span>Radar</span></button>'+
     '<button data-route="creation" class="mobile-creation-direct"><b>✦</b><span>Créer</span></button>'+
     '<button data-route="social" class="mobile-instagram-direct"><b>◎</b><span>Insta</span></button>'+
-    '<button data-route="opencalls"><b>◇</b><span>Calls</span></button>'+
+    '<button data-route="map" class="mobile-map-direct"><b>⌖</b><span>Map</span></button>'+
     '<button class="mobile-more" id="mobileMoreButton"><b>•••</b><span>Plus</span></button>';
   document.body.appendChild(dock);
 
   const sheet=document.createElement('div');
   sheet.className='mobile-more-sheet';sheet.id='mobileMoreSheet';
   sheet.innerHTML='<div class="mobile-more-grid">'+
+    '<button data-mobile-route="opencalls"><b>◇</b><span>Open Calls</span></button>'+
     '<button data-mobile-route="bureau"><b>▤</b><span>Bureau</span></button>'+
     '<button data-mobile-route="prospection"><b>◎</b><span>Contacts</span></button>'+
     '<button data-mobile-route="agenda"><b>◷</b><span>Agenda</span></button>'+
@@ -2824,13 +2898,13 @@ function installMobileShell(){
   $('#mobileMoreButton').onclick=()=>{
     const open=!sheet.classList.contains('open');
     sheet.classList.toggle('open',open);
-    $('#mobileMoreButton').classList.toggle('active',open||['bureau','prospection','agenda','network','map'].includes(state.view));
+    $('#mobileMoreButton').classList.toggle('active',open||['opencalls','bureau','prospection','agenda','network'].includes(state.view));
   };
   document.addEventListener('pointerdown',e=>{
     if(!sheet.classList.contains('open'))return;
     if(sheet.contains(e.target)||dock.contains(e.target))return;
     sheet.classList.remove('open');
-    $('#mobileMoreButton')?.classList.toggle('active',['bureau','prospection','agenda','network','map'].includes(state.view));
+    $('#mobileMoreButton')?.classList.toggle('active',['opencalls','bureau','prospection','agenda','network'].includes(state.view));
   });
 }
 
