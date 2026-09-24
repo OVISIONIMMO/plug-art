@@ -2030,8 +2030,14 @@ function deleteCarouselSlideManual(){
 
 function renderCarousel(){
   const slides=state.carousel.slides,s=slides[state.carousel.active]||{},d=slideDesign(s);$('#carouselCounter').textContent=slides.length+' slide'+(slides.length>1?'s':'');
-  $('#carouselSlides').innerHTML=slides.map((x,i)=>'<button class="carousel-slide-thumb '+(i===state.carousel.active?'active':'')+'" data-carousel-slide="'+i+'"><b>'+String(i+1).padStart(2,'0')+' · '+esc(x.kicker||'PLUG ART')+'</b><span>'+esc((x.title||'Sans titre').slice(0,50))+'</span></button>').join('')||'<div class="empty">Aucune slide.</div>';
-  $$('[data-carousel-slide]').forEach(b=>b.onclick=()=>{state.carousel.active=Number(b.dataset.carouselSlide);renderCarousel()});
+  $('#carouselSlides').innerHTML=slides.map((x,i)=>'<button class="carousel-slide-thumb '+(i===state.carousel.active?'active':'')+'" draggable="true" data-carousel-slide="'+i+'"><b>'+esc(x.kicker||'PLUG ART')+'</b><span>'+esc((x.title||'Sans titre').slice(0,50))+'</span></button>').join('')||'<div class="empty">Aucune slide.</div>';
+  $('[data-carousel-slide]').forEach(b=>{
+    b.onclick=()=>{state.carousel.active=Number(b.dataset.carouselSlide);renderCarousel()};
+    b.ondragstart=e=>{e.dataTransfer.setData('text/plain',b.dataset.carouselSlide);e.dataTransfer.effectAllowed='move';b.classList.add('dragging')};
+    b.ondragend=()=>b.classList.remove('dragging');
+    b.ondragover=e=>{e.preventDefault();e.dataTransfer.dropEffect='move'};
+    b.ondrop=e=>{e.preventDefault();const from=Number(e.dataTransfer.getData('text/plain')),to=Number(b.dataset.carouselSlide);if(!Number.isFinite(from)||from===to)return;const moved=state.carousel.slides.splice(from,1)[0];state.carousel.slides.splice(to,0,moved);state.carousel.active=to;renderCarousel();scheduleDraftAutosave()};
+  });
   $('#carouselKicker').textContent=s.kicker||'PLUG ART';$('#carouselTitle').textContent=s.title||'Ton carrousel apparaîtra ici';$('#carouselBody').textContent=s.body||'Choisis une source ou écris un brief.';$('#carouselCta').textContent=s.cta||'Découvrir →';
   const img=$('#carouselImage');img.style.backgroundImage=s.image?'url("'+String(s.image).replace(/"/g,'%22')+'")':'none';img.style.opacity=String(Math.max(0,Math.min(100,Number(d.imageOpacity||0)))/100);
   const canvas=$('#carouselCanvas');canvas.style.aspectRatio=state.carousel.format==='1:1'?'1/1':state.carousel.format==='9:16'?'9/16':'4/5';canvas.dataset.theme=d.theme||'ultra';canvas.dataset.layout=d.layout||'editorial';canvas.dataset.align=d.align||'left';canvas.style.setProperty('--slide-accent',slideAccentColor(d.accent));canvas.style.setProperty('--slide-font-scale',String(Number(d.fontScale||100)/100));canvas.style.setProperty('--slide-radius',(d.radius||26)+'px');
