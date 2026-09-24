@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='135.0'
+app.version='136.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v130.html'
@@ -16,7 +16,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='135.20260924.1'
+VERSION='136.20260924.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -275,14 +275,15 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'135.0',
-      'ui':'plug-art-v135-creation-lab',
+      'version':'136.0',
+      'ui':'plug-art-v136-living-plugy',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
       'migration_backup_ready':backup_ready
     }
 
+@app.get('/api/v136/ui-manifest')
 @app.get('/api/v135/ui-manifest')
 @app.get('/api/v134/ui-manifest')
 @app.get('/api/v133/ui-manifest')
@@ -295,20 +296,20 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v107.js'
     css_path=BASE/'static'/'plugart_v122_slide.css'
-    expected='135.20260924.1'
+    expected='136.20260924.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v130.js').exists() and (BASE/'static'/'plugy_v130.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
-      'version':'135.0',
-      'ui':'plug-art-v135-creation-lab',
+      'version':'136.0',
+      'ui':'plug-art-v136-living-plugy',
       'asset_version':expected,
       'html_has_js':f'plugart_v107.js?v={expected}' in html,
       'html_has_slide_css':f'plugart_v122_slide.css?v={expected}' in html,
-      'html_has_sidebar_version':'V135' in html,
+      'html_has_sidebar_version':'V136' in html,
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
         'premium-cockpit','free-canvas-editor','layer-inspector','image-upload','marketing-template-library','manual-carousel-editor','drag-reorder','undo-redo','preview-zoom',
-        'persistent-interface-lab','glass-navigation','floating-actions','spatial-dashboard','liquid-editorial-ui','non-card-create-scene','creation-path-launcher','creation-reference-lab','simple-studio-controls','organic-plugy-gaze','leaflet-map','map-direct-access','city-map-fallback',
+        'persistent-interface-lab','glass-navigation','floating-actions','spatial-dashboard','liquid-editorial-ui','non-card-create-scene','creation-path-launcher','creation-reference-lab','simple-studio-controls','organic-plugy-gaze','persistent-plugy-mini','fast-blink-cycle','low-glare-plugy','thinking-energy-state','leaflet-map','map-direct-access','city-map-fallback',
         'hub-workspace','hub-real-project-previews','hub-pdf-export','organized-bureau',
         'standalone-plugy','watch-responsive','plugy-refined-finish','chat-style-conversation',
         'instagram-priority-access','instagram-social-studio','marketing-visual-generator','expanded-local-radar','streaming-assistant','lean-bootstrap'
@@ -323,7 +324,7 @@ def plugy_page_v130(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'135.0',
+      'X-Plug-Art-Version':'136.0',
       'X-Plug-Art-UI':'plugy-v130-standalone'
     }
     if request.headers.get('if-none-match')==etag:
@@ -338,8 +339,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'135.0',
-      'X-Plug-Art-UI':'plug-art-v135-creation-lab'
+      'X-Plug-Art-Version':'136.0',
+      'X-Plug-Art-UI':'plug-art-v136-living-plugy'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -2120,8 +2121,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'135.0',
-      'ui':'plug-art-v135-creation-lab',
+      'version':'136.0',
+      'ui':'plug-art-v136-living-plugy',
       'reference_direction':'V130 PLUG ART: premium product-style workspace with standalone PLUGY conversation, watch-responsive UI, manual creative studio, Instagram control center, expanded local Radar and interactive map',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -2148,13 +2149,13 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print(f"PLUG_ART_READY ui=v135_creation_lab standalone_plugy=on watch_ui=on mobile_creation=direct mobile_instagram=direct mobile_map=direct creation=free_canvas_layers hub=on hub_pdf=on editor=marketing_manual_ai_drag_resize_undo_zoom design_lab=persistent glass_ui=on map=leaflet_city_fallback radar_local_venues=on instagram=social_studio plugy_finish=refined_soft_pearl voice=streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_READY ui=v136_living_plugy standalone_plugy=on watch_ui=on mobile_creation=direct mobile_instagram=direct mobile_map=direct creation=free_canvas_layers hub=on hub_pdf=on editor=marketing_manual_ai_drag_resize_undo_zoom design_lab=persistent glass_ui=on map=leaflet_city_fallback radar_local_venues=on instagram=social_studio plugy_finish=refined_soft_pearl voice=streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
       ('GET','/api/health'),
       ('GET','/plugy'),
-      ('GET','/api/v135/ui-manifest'),
+      ('GET','/api/v136/ui-manifest'),
       ('GET','/api/v90/builder/config'),
       ('PATCH','/api/v90/builder/config'),
       ('GET','/api/map'),
