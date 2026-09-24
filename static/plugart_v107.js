@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='123.20260924.1';
+const VERSION='124.20260924.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -61,6 +61,16 @@ const viewDataFamilies={
   map:['map']
 };
 function requiredFamilies(id){return viewDataFamilies[id]||[]}
+const routeRuntimeReady=new Set();
+function ensureRouteRuntime(id){
+  if(routeRuntimeReady.has(id))return;
+  if(id==='agenda')installAgenda();
+  if(id==='radar'){installRadarPresets();installMobileRadarControls()}
+  if(id==='opencalls')installOpenWorkflowFilters();
+  if(id==='creation')installCreationModes();
+  if(id==='bureau'){installBureauWorkspace();ensureBureauBridge()}
+  routeRuntimeReady.add(id);
+}
 async function ensureDataFamily(name,force=false){
   if(state.dataLoaded[name]&&!force)return true;
   if(state.dataPromises[name])return state.dataPromises[name];
@@ -110,6 +120,7 @@ function renderRouteView(id=state.view){
 
 function route(id,push=true){
   if(!viewMeta[id])id='dashboard';
+  ensureRouteRuntime(id);
   state.view=id;document.body.dataset.view=id;
   $$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+id));
   $$('[data-route]').forEach(b=>b.classList.toggle('active',b.dataset.route===id));
@@ -1344,7 +1355,7 @@ async function initVoice(){
 $('#plugyVoice')?.addEventListener('click',initVoice);
 installConversationButton();
 
-const DASH_BOOT_CACHE='plugart:v123:dashboard-bootstrap';
+const DASH_BOOT_CACHE='plugart:v124:dashboard-bootstrap';
 function applyDashboardBoot(boot){
   if(!boot||typeof boot!=='object')return false;
   state.bootstrap=boot;
@@ -1370,7 +1381,7 @@ async function loadAll(){
   const cached=readDashboardBootCache();
   if(cached&&applyDashboardBoot(cached)){renderDashboard();renderNavBadges()}
   try{
-    const boot=await api('/api/v112/dashboard-bootstrap',{timeout:12000});
+    const boot=await api('/api/v124/dashboard-bootstrap',{timeout:8000,cache:'default'});
     applyDashboardBoot(boot);writeDashboardBootCache(boot);
     renderDashboard();renderNavBadges();
     if(requiredFamilies(state.view).length){
@@ -1379,7 +1390,7 @@ async function loadAll(){
     }else if(state.view!=='dashboard')renderRouteView(state.view);
     toast(cached?'Workspace actualisé':'Workspace synchronisé');
   }catch(e){
-    console.warn('[PLUG ART V123]',e);
+    console.warn('[PLUG ART V124]',e);
     renderNavBadges();renderRouteView(state.view);toast(cached?'Mode instantané · actualisation différée':'Synchronisation partielle');
   }
 }
@@ -1410,7 +1421,7 @@ function renderNavBadges(){
 function installAgenda(){
   if($('#view-agenda'))return;
   const navGroups=$$('.nav-group');const organize=navGroups[1]||navGroups[0];const prospect=organize?.querySelector('[data-route="prospection"]');
-  if(prospect){
+  if(prospect&&!$('.nav-item[data-route="agenda"]')){
     const b=document.createElement('button');b.className='nav-item';b.dataset.route='agenda';b.innerHTML='<b>◷</b><span>Agenda</span>';prospect.insertAdjacentElement('afterend',b);b.onclick=()=>route('agenda');
   }
   const section=document.createElement('section');section.className='view';section.id='view-agenda';
@@ -2061,14 +2072,7 @@ function installMobileShell(){
 installMobileShell();
 installMobileViewportBehavior();
 ensureSaveStatus();syncNetworkState();
-installAgenda();
-installOpenWorkflowFilters();
 adaptDashboardForDrafts();
-installRadarPresets();
-installMobileRadarControls();
-installCreationModes();
-installBureauWorkspace();
-ensureBureauBridge();
 injectOperationalUI();
 installSlideDashboard();
 
