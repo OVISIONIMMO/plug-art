@@ -51,25 +51,35 @@ def _prepare_plugy(payload: dict):
     if mode not in {"fast","deep"}:
         mode = "fast"
     model = DEEP_MODEL if mode == "deep" else FAST_MODEL
-    history_limit = 8 if mode == "deep" else 4
+    standalone = page == "plugy"
+    history_limit = (14 if mode == "deep" else 8) if standalone else (8 if mode == "deep" else 4)
     history = []
     for item in ((payload or {}).get("history") or [])[-history_limit:]:
         if not isinstance(item, dict):
             continue
         role = "assistant" if item.get("role") == "assistant" else "user"
-        content = re.sub(r"\s+", " ", str(item.get("content") or "")).strip()[:1200 if mode == "deep" else 800]
+        item_cap = (1800 if mode == "deep" else 1200) if standalone else (1200 if mode == "deep" else 800)
+        content = re.sub(r"\s+", " ", str(item.get("content") or "")).strip()[:item_cap]
         if content:
             history.append({"role": role, "content": content})
     ctx = _context(7 if mode == "deep" else 4)
     instructions = (
-        "Tu es PLUGY, l'assistant personnel de PLUG ART. Tu es proactif, très concis et utile. "
+        "Tu es PLUGY, l'assistant personnel de PLUG ART. Tu es proactif, naturel, précis et utile. "
         "Tu connais la page ouverte, les chiffres du Radar et les opportunités fournies. "
         "Tu aides à décider, organiser, créer des contenus et préparer les prochaines actions. "
         "N'invente jamais une date, un prix, un lieu, un lien ou un statut. Si une donnée manque, dis qu'elle doit être vérifiée. "
-        "Réponds en français. En mode fast, réponds en 1 à 4 phrases courtes et au maximum 2 actions. "
-        "En mode deep, tu peux développer davantage pour produire un texte réellement exploitable."
+        "Réponds en français. "
+        + (
+          "Sur la page PLUGY dédiée, converse de façon fluide comme un assistant principal : réponds directement à la demande, "
+          "garde le fil de la conversation, évite les listes mécaniques si elles ne sont pas utiles, et adapte naturellement la longueur. "
+          "En mode fast, sois rapide mais pas télégraphique. En mode deep, développe quand cela améliore réellement la réponse."
+          if standalone else
+          "En mode fast, réponds en 1 à 4 phrases courtes et au maximum 2 actions. "
+          "En mode deep, tu peux développer davantage pour produire un texte réellement exploitable."
+        )
     )
-    memory = "\n".join(f"{x['role'].upper()}: {x['content']}" for x in history[-(6 if mode == "deep" else 4):])
+    memory_take = (12 if mode == "deep" else 8) if standalone else (6 if mode == "deep" else 4)
+    memory = "\n".join(f"{x['role'].upper()}: {x['content']}" for x in history[-memory_take:])
     user_input = (
         f"PAGE ACTIVE: {page}\n"
         f"CONTEXTE PLUG ART: {json.dumps(ctx, ensure_ascii=False, separators=(',', ':'))}\n"
@@ -81,8 +91,8 @@ def _prepare_plugy(payload: dict):
         "instructions": instructions,
         "input": user_input,
         "store": False,
-        "max_output_tokens": 520 if mode == "deep" else 220,
-        "text": {"verbosity": "low"}
+        "max_output_tokens": (760 if mode == "deep" else 360) if standalone else (520 if mode == "deep" else 220),
+        "text": {"verbosity": "medium" if standalone and mode == "deep" else "low"}
     }
     return message,page,mode,model,ctx,body
 
