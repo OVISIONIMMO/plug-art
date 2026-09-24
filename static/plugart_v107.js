@@ -1136,7 +1136,7 @@ function renderBureauPackageDetail(){
       '<button id="packageSync">↻ Synchroniser</button>'+
       '<button id="packageStarterPack">Créer les pièces manquantes</button>'+
       '<button class="primary" id="packageGenerateAI">✦ Générer avec PLUGY</button>'+
-      '<button id="packageToCreation">Vers Création</button>'+
+      '<button id="packageToCreation">Vers Création</button><button id="packageExportPdf">Exporter PDF</button>'+
       (opp.id?'<button id="packageToCarousel">Carrousel</button>':'')+
       '<button id="packageReady">Marquer prêt</button>'+
     '</div></div>'+
@@ -1157,6 +1157,7 @@ function renderBureauPackageDetail(){
   $('#packageSync').onclick=()=>reconcileBureauPackage(p.id,{render:true,silent:false});
   $('#packageOpenCall').onclick=()=>{if(opp.id){route('opencalls');setTimeout(()=>openOpportunity(Number(opp.id)),40)}};
   $('#packageToCreation').onclick=()=>packageToCreation(p);
+  $('#packageExportPdf').onclick=()=>exportPackagePdf(p);
   $('#packageToCarousel')?.addEventListener('click',()=>{if(opp.id)createCarouselForOpportunity(Number(opp.id))});
   $('#packageReady').onclick=markActivePackageReady;
   $('#packageSent').onclick=async()=>{const nextCheck={...(p.checklist||{}),submitted:true};await patchActivePackage({status:'submitted',checklist:nextCheck});if(p.opportunity_id)persistWorkflow(p.opportunity_id,{workflow_status:'submitted',next_action:'Suivre la réponse'}).catch(()=>{});toast('Dossier marqué envoyé')};
@@ -1312,6 +1313,48 @@ async function packageToCreation(p){
     if($('#contentStatus'))$('#contentStatus').textContent='Dossier importé';
     toast('Dossier complet chargé dans Création');
   },60);
+}
+
+async function exportPackagePdf(p){
+  const docs=(p.document_ids||[]).map(id=>state.bureau.find(n=>Number(n.id)===Number(id))).filter(Boolean);
+  if(!docs.length)return toast('Ajoute au moins un document au dossier');
+  const b=$('#packageExportPdf'),old=b?.textContent;if(b){b.disabled=true;b.textContent='Préparation PDF…'}
+  try{
+    const PDF=await loadJsPdf();if(!PDF)throw new Error('pdf');
+    const doc=new PDF({unit:'mm',format:'a4'}),margin=17,pageW=210,pageH=297,maxW=pageW-margin*2;
+    const opp=p.opportunity||{},check=p.checklist||{};
+    let y=22;
+    const ensure=(need=12)=>{if(y+need>pageH-18){doc.addPage();y=20}};
+    const text=(value,size=9,bold=false,space=5)=>{
+      const str=String(value||'').trim();if(!str)return;
+      doc.setFont('helvetica',bold?'bold':'normal');doc.setFontSize(size);
+      const lines=doc.splitTextToSize(str,maxW);
+      for(const line of lines){ensure(size*.45+2);doc.text(line,margin,y);y+=size*.42+1.5}
+      y+=space;
+    };
+    doc.setFont('helvetica','bold');doc.setFontSize(20);doc.text('PLUG ART · DOSSIER DE CANDIDATURE',margin,y);y+=10;
+    text(p.title||'Dossier',15,true,4);
+    if(opp.title)text('Open Call · '+opp.title,10,true,2);
+    text([opp.city,opp.country,opp.deadline?'Deadline '+opp.deadline:'',opp.fee||''].filter(Boolean).join(' · '),8,false,6);
+
+    const done=BUREAU_PACKAGE_KEYS.filter(k=>!!check[k]).length;
+    text('Avancement · '+done+' / '+BUREAU_PACKAGE_KEYS.length+' éléments prêts',9,true,2);
+    const checklistLines=BUREAU_PACKAGE_KEYS.map(k=>(check[k]?'✓ ':'○ ')+bureauChecklistLabel(k));
+    text(checklistLines.join('   ·   '),8,false,6);
+
+    if(p.notes){text('NOTES',9,true,2);text(p.notes,9,false,7)}
+
+    for(const item of docs){
+      ensure(24);
+      doc.setDrawColor(225,227,233);doc.line(margin,y,pageW-margin,y);y+=7;
+      text(item.title||'Document',13,true,4);
+      text(item.body||'',9,false,7);
+    }
+
+    const base=String(p.title||'dossier-candidature').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,70)||'dossier-candidature';
+    doc.save(base+'.pdf');toast('Dossier PDF exporté');
+  }catch(e){console.warn('[PLUG ART package PDF]',e);toast('Export PDF indisponible')}
+  finally{if(b){b.disabled=false;b.textContent=old}}
 }
 
 function renderBureauTemplates(){
