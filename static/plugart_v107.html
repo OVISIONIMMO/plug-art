@@ -5,10 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f4f5f7">
 <title>PLUG ART — Workspace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <meta name="description" content="PLUG ART Workspace — Radar, Open Calls, création, Bureau, prospection et PLUGY.">
-<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">\n<link rel="preconnect" href="https://ajax.googleapis.com" crossorigin>\n<link rel="dns-prefetch" href="//ajax.googleapis.com">\n<link rel="preload" href="/static/plugart_v107.js?v=129.20260924.1" as="script">
-<link rel="stylesheet" href="/static/plugart_v107.css?v=129.20260924.1">
-<link rel="stylesheet" href="/static/plugart_v122_slide.css?v=129.20260924.1">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">\n<link rel="preconnect" href="https://ajax.googleapis.com" crossorigin>\n<link rel="dns-prefetch" href="//ajax.googleapis.com">\n<link rel="preload" href="/static/plugart_v107.js?v=130.20260924.1" as="script">
+<link rel="stylesheet" href="/static/plugart_v107.css?v=130.20260924.1">
+<link rel="stylesheet" href="/static/plugart_v122_slide.css?v=130.20260924.1">
 </head>
 <body data-view="dashboard" data-plugy-motion="Idle">
 <div class="app-shell">
@@ -33,15 +36,23 @@
         <button class="nav-item" data-route="prospection"><b>◎</b><span>Contacts & Prospection</span></button>
         <button class="nav-item" data-route="network"><b>◌</b><span>Artistes</span></button>
         <button class="nav-item" data-route="map"><b>⌖</b><span>Carte</span></button>
+        <button class="nav-item" data-route="social"><b>◎</b><span>Instagram</span></button>
+      </div>
+      <div class="nav-group nav-assistant-group">
+        <small>ASSISTANT</small>
+        <a class="nav-item nav-link" href="/plugy"><b>⌁</b><span>PLUGY plein écran</span></a>
       </div>
     </nav>
 
-    <button class="sidebar-plugy" id="sidebarPlugy">
-      <span class="mini-energy"></span>
-      <span><strong>PLUGY</strong><small>Assistant contextuel</small></span>
-      <b>⌁</b>
-    </button>
-    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small>V129</small></div>
+    <div class="sidebar-plugy-wrap">
+      <button class="sidebar-plugy" id="sidebarPlugy">
+        <span class="mini-energy"></span>
+        <span><strong>PLUGY</strong><small>Assistant contextuel</small></span>
+        <b>⌁</b>
+      </button>
+      <a class="plugy-full-link" href="/plugy">Plein écran ↗</a>
+    </div>
+    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small>V130</small></div>
   </aside>
 
   <main class="workspace">
@@ -206,6 +217,36 @@
       <div class="artist-grid" id="artistGrid"></div>
     </section>
 
+    <section class="view" id="view-social">
+      <div class="page-toolbar social-toolbar">
+        <div><small>INSTAGRAM</small><h2>Social Studio</h2><p>Feed, création, publication et commentaires dans un espace inspiré d’Instagram.</p></div>
+        <div class="toolbar-actions"><button class="secondary-btn" id="igRefresh">Actualiser</button><button class="primary-btn" id="igConnect">Connecter Instagram</button></div>
+      </div>
+      <div class="ig-shell">
+        <aside class="ig-profile panel">
+          <div class="ig-profile-head">
+            <div class="ig-avatar" id="igAvatar"><span>IG</span></div>
+            <div><strong id="igUsername">@plugart</strong><span id="igConnectionState">Non connecté</span></div>
+          </div>
+          <div class="ig-stats"><div><strong id="igFollowers">—</strong><span>abonnés</span></div><div><strong id="igMediaCount">—</strong><span>publications</span></div></div>
+          <button class="secondary-btn wide" id="igOpenCreation">✦ Créer une publication</button>
+          <button class="secondary-btn wide" id="igDiagnostics">Vérifier la connexion Meta</button>
+          <div class="ig-diagnostic-list" id="igDiagnosticList"></div>
+        </aside>
+        <section class="ig-feed-panel panel">
+          <div class="panel-head"><div><small>FEED</small><h2>Publications récentes</h2></div><span id="igFeedStatus">Compte requis</span></div>
+          <div class="ig-feed-grid" id="igFeedGrid"><div class="empty">Connecte Instagram pour afficher le feed.</div></div>
+        </section>
+        <aside class="ig-publisher panel">
+          <div class="panel-head"><div><small>PUBLICATION</small><h2>Publier maintenant</h2></div></div>
+          <label>Média public<input id="igMediaUrl" placeholder="https://… image ou vidéo"></label>
+          <label>Légende<textarea id="igCaption" rows="10" placeholder="Écris ta légende…"></textarea></label>
+          <div class="ig-publisher-actions"><button class="plugy-inline" id="igCaptionPlugy">✦ Améliorer avec PLUGY</button><button class="primary-btn" id="igPublish">Publier</button></div>
+          <small class="ig-note">Pour un carrousel, utilise le Studio Création puis “Publier sur Instagram”.</small>
+        </aside>
+      </div>
+    </section>
+
     <section class="view" id="view-map">
       <div class="page-toolbar">
         <div><small>CARTE INTERNATIONALE</small><h2>Opportunités & expositions</h2><p>Explorer les appels et lieux sur une vraie carte interactive.</p></div>
@@ -240,7 +281,7 @@
   </div>
   <div class="plugy-stage">
     <div class="plugy-energy e1"></div><div class="plugy-energy e2"></div>
-    <model-viewer id="plugyModel" loading="lazy" src="/assets/plugy-v113-premium.glb?v=129.20260924.1" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity=".42" shadow-softness=".95" exposure=".94" camera-orbit="0deg 76deg 3.05m" field-of-view="27deg" alt="PLUGY"></model-viewer>
+    <model-viewer id="plugyModel" loading="lazy" src="/assets/plugy-v113-premium.glb?v=130.20260924.1" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity=".42" shadow-softness=".95" exposure=".94" camera-orbit="0deg 76deg 3.05m" field-of-view="27deg" alt="PLUGY"></model-viewer>
     <div class="plugy-state" id="plugyState"><i></i><span>Prêt</span></div>
   </div>
   <div class="plugy-context" id="plugyContext">Contexte : Dashboard</div>
@@ -318,6 +359,6 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<script defer src="/static/plugart_v107.js?v=129.20260924.1"></script>
+<script defer src="/static/plugart_v107.js?v=130.20260924.1"></script>
 </body>
 </html>
