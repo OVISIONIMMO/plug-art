@@ -1,10 +1,10 @@
 (function(){
 'use strict';
-const VERSION='128.20260924.2';
+const VERSION='129.20260924.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,recognition:null,plugyBusy:false,creationMode:'text',creationDirty:false,radarPreset:'all',carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
+const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,recognition:null,plugyBusy:false,creationMode:'text',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -171,7 +171,24 @@ function playMotion(name='Idle',loop=false){
   clearTimeout(playMotion.t);
   if(!loop&&name!=='Idle')playMotion.t=setTimeout(()=>playMotion('Idle',true),(name==='Think'||name==='Charge')?1900:1450);
 }
-$('#plugyModel')?.addEventListener('load',()=>{if($('#plugyState span'))$('#plugyState span').textContent='Prêt';playMotion('Idle',true)},{once:true});
+function tunePlugyMaterials(){
+  const mv=$('#plugyModel');if(!mv)return;
+  try{
+    const materials=mv.model?.materials||[];
+    materials.forEach(mat=>{
+      const pbr=mat?.pbrMetallicRoughness;
+      try{pbr?.setMetallicFactor?.(.04)}catch{}
+      try{pbr?.setRoughnessFactor?.(.64)}catch{}
+      try{mat?.clearcoat?.setClearcoatFactor?.(.06)}catch{}
+      try{mat?.clearcoat?.setClearcoatRoughnessFactor?.(.78)}catch{}
+    });
+    mv.setAttribute('exposure','.94');
+    mv.setAttribute('shadow-intensity','.42');
+    mv.setAttribute('shadow-softness','.95');
+    mv.dataset.finish='soft-pearl';
+  }catch(e){console.warn('[PLUGY finish]',e)}
+}
+$('#plugyModel')?.addEventListener('load',()=>{tunePlugyMaterials();if($('#plugyState span'))$('#plugyState span').textContent='Prêt';playMotion('Idle',true)},{once:true});
 $('#plugyModel')?.addEventListener('pointerenter',()=>playMotion('Curious'));
 $('#plugyModel')?.addEventListener('dblclick',()=>{openPlugy();playMotion('Attentive')});
 
@@ -1384,11 +1401,156 @@ function renderArtists(){
   box.innerHTML=rows.map((a,i)=>'<article class="artist-card"><div class="artist-visual" style="background:linear-gradient(145deg,'+grad[i%4]+',#e7d8f4)">'+esc((a.name||'?').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase())+'</div><div class="artist-body"><h3>'+esc(a.name||'Artiste')+'</h3><p>'+esc(a.discipline||a.city||'Artiste émergent')+'</p><div class="card-actions"><button data-artist-plugy="'+a.id+'">Analyser avec PLUGY</button></div></div></article>').join('')||'<div class="empty">Aucun artiste.</div>';
   $$('[data-artist-plugy]').forEach(b=>b.onclick=()=>{const a=rows.find(x=>String(x.id)===b.dataset.artistPlugy);askPlugy('Analyse le profil de '+clean(a?.name)+'. Discipline : '+clean(a?.discipline)+'. Propose les prochaines actions utiles.')});
 }
-function renderMap(){
-  const box=$('#mapWorkspace');$$('.map-pin',box).forEach(x=>x.remove());const rows=state.bootstrap?.map||[];const bounds={minLon:-11,maxLon:24,minLat:35,maxLat:58};let count=0;
-  rows.filter(x=>Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lon))).slice(0,80).forEach(p=>{const lon=Math.max(bounds.minLon,Math.min(bounds.maxLon,Number(p.lon))),lat=Math.max(bounds.minLat,Math.min(bounds.maxLat,Number(p.lat))),x=5+(lon-bounds.minLon)/(bounds.maxLon-bounds.minLon)*90,y=7+(bounds.maxLat-lat)/(bounds.maxLat-bounds.minLat)*86;const pin=document.createElement('button');pin.className='map-pin '+(p.kind==='exhibition'?'exhibition':'');pin.style.left=x+'%';pin.style.top=y+'%';pin.title=p.title||p.city||'';pin.onclick=()=>askPlugy('Analyse cette piste sur la carte : '+clean(p.title||p.city)+'. Donne-moi les informations utiles et la prochaine action.');box.appendChild(pin);count++});$('#mapCount').textContent=count+' point'+(count>1?'s':'');
+let plugArtLeafletPromise=null,plugArtMap=null,plugArtMapLayer=null,plugArtMapRows=[],plugArtMapMarkers=new Map();
+
+function ensureLeaflet(){
+  if(window.L)return Promise.resolve(window.L);
+  if(plugArtLeafletPromise)return plugArtLeafletPromise;
+  plugArtLeafletPromise=new Promise((resolve,reject)=>{
+    if(!document.querySelector('link[data-plugart-leaflet]')){
+      const link=document.createElement('link');link.rel='stylesheet';link.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';link.crossOrigin='';link.dataset.plugartLeaflet='1';document.head.appendChild(link);
+    }
+    const existing=document.querySelector('script[data-plugart-leaflet]');
+    if(existing){existing.addEventListener('load',()=>resolve(window.L),{once:true});existing.addEventListener('error',reject,{once:true});return}
+    const s=document.createElement('script');s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';s.crossOrigin='';s.dataset.plugartLeaflet='1';
+    s.onload=()=>window.L?resolve(window.L):reject(new Error('Leaflet indisponible'));
+    s.onerror=()=>reject(new Error('Leaflet indisponible'));
+    document.head.appendChild(s);
+  }).catch(err=>{plugArtLeafletPromise=null;throw err});
+  return plugArtLeafletPromise;
 }
-$('#mapRefresh')?.addEventListener('click',loadAll);
+function filteredMapRows(){
+  const q=clean(state.mapSearch||'').toLowerCase(),filter=state.mapFilter||'all';
+  return (state.bootstrap?.map||[]).filter(p=>{
+    if(!Number.isFinite(Number(p.lat))||!Number.isFinite(Number(p.lon)))return false;
+    const kind=String(p.kind||p.type||'opportunity').toLowerCase();
+    if(filter==='exhibition'&&!kind.includes('exhibition')&&!kind.includes('expo'))return false;
+    if(filter==='opportunity'&&(kind.includes('exhibition')||kind.includes('expo')))return false;
+    if(q){
+      const hay=[p.title,p.city,p.country,p.kind,p.type,p.summary].filter(Boolean).join(' ').toLowerCase();
+      if(!hay.includes(q))return false;
+    }
+    return true;
+  }).slice(0,160);
+}
+function mapKind(p){
+  const k=String(p?.kind||p?.type||'opportunity').toLowerCase();
+  return (k.includes('exhibition')||k.includes('expo'))?'exhibition':'opportunity';
+}
+function mapPointKey(p,i=0){return String(p?.id??p?.opportunity_id??([p?.title,p?.city,p?.lat,p?.lon,i].join('|')))}
+function renderMapList(rows){
+  const list=$('#mapList');if(!list)return;
+  list.innerHTML=rows.map((p,i)=>{
+    const kind=mapKind(p),loc=[p.city,p.country].filter(Boolean).join(' · ');
+    return '<button class="map-list-item" data-map-row="'+i+'"><i class="'+kind+'"></i><span><strong>'+esc(p.title||p.city||'Point')+'</strong><small>'+esc(loc||p.kind||'')+'</small></span><b>→</b></button>';
+  }).join('')||'<div class="map-empty"><strong>Aucun point ici.</strong><span>Élargis le filtre ou actualise le Radar.</span></div>';
+  $$('[data-map-row]',list).forEach(b=>b.onclick=()=>selectMapPoint(rows[Number(b.dataset.mapRow)],Number(b.dataset.mapRow)));
+}
+function renderMapFallback(rows){
+  const box=$('#mapWorkspace');if(!box)return;
+  let fallback=$('#mapFallback');
+  if(!fallback){fallback=document.createElement('div');fallback.id='mapFallback';fallback.className='map-fallback';box.appendChild(fallback)}
+  fallback.innerHTML='<div class="map-grid-lines"></div>';
+  const bounds={minLon:-12,maxLon:30,minLat:34,maxLat:60};
+  rows.forEach((p,i)=>{
+    const lon=Math.max(bounds.minLon,Math.min(bounds.maxLon,Number(p.lon))),lat=Math.max(bounds.minLat,Math.min(bounds.maxLat,Number(p.lat)));
+    const x=4+(lon-bounds.minLon)/(bounds.maxLon-bounds.minLon)*92,y=5+(bounds.maxLat-lat)/(bounds.maxLat-bounds.minLat)*90;
+    const pin=document.createElement('button');pin.className='map-pin '+mapKind(p);pin.style.left=x+'%';pin.style.top=y+'%';pin.onclick=()=>selectMapPoint(p,i);fallback.appendChild(pin);
+  });
+  $('#realMap')?.classList.add('unavailable');$('#mapLoading')?.classList.add('hidden');
+}
+function renderLeafletMap(rows){
+  const L=window.L,host=$('#realMap');if(!L||!host)return renderMapFallback(rows);
+  $('#mapFallback')?.remove();host.classList.remove('unavailable');
+  if(!plugArtMap){
+    plugArtMap=L.map(host,{zoomControl:false,preferCanvas:true,worldCopyJump:true,minZoom:3,maxZoom:18,attributionControl:true}).setView([48.6,5.5],5);
+    L.control.zoom({position:'bottomright'}).addTo(plugArtMap);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(plugArtMap);
+  }
+  if(plugArtMapLayer)plugArtMap.removeLayer(plugArtMapLayer);
+  plugArtMapLayer=L.layerGroup().addTo(plugArtMap);plugArtMapMarkers.clear();
+  const bounds=[];
+  rows.forEach((p,i)=>{
+    const lat=Number(p.lat),lon=Number(p.lon),kind=mapKind(p),key=mapPointKey(p,i);
+    const icon=L.divIcon({className:'plugart-leaflet-icon',html:'<span class="'+kind+'"></span>',iconSize:[22,22],iconAnchor:[11,11]});
+    const marker=L.marker([lat,lon],{icon,keyboard:true,title:p.title||p.city||'PLUG ART'}).addTo(plugArtMapLayer);
+    marker.on('click',()=>selectMapPoint(p,i));plugArtMapMarkers.set(key,marker);bounds.push([lat,lon]);
+  });
+  setTimeout(()=>plugArtMap?.invalidateSize?.(),60);
+  if(bounds.length>1)plugArtMap.fitBounds(bounds,{padding:[48,48],maxZoom:7,animate:true});
+  else if(bounds.length===1)plugArtMap.setView(bounds[0],7,{animate:true});
+  else plugArtMap.setView([48.6,5.5],5,{animate:true});
+  $('#mapLoading')?.classList.add('hidden');
+}
+function selectMapPoint(p,index=0){
+  if(!p)return;
+  const key=mapPointKey(p,index),marker=plugArtMapMarkers.get(key),lat=Number(p.lat),lon=Number(p.lon);
+  if(plugArtMap&&Number.isFinite(lat)&&Number.isFinite(lon))plugArtMap.flyTo([lat,lon],Math.max(7,plugArtMap.getZoom()),{duration:.65});
+  if(marker)marker.openTooltip?.();
+  $$('.map-list-item').forEach(b=>b.classList.toggle('active',Number(b.dataset.mapRow)===index));
+  const detail=$('#mapDetail');if(!detail)return;
+  const loc=[p.city,p.country].filter(Boolean).join(' · '),kind=mapKind(p);
+  detail.hidden=false;
+  detail.innerHTML='<button class="map-detail-close" id="mapDetailClose">×</button><small>'+esc(kind==='exhibition'?'EXPOSITION':'OPPORTUNITÉ')+'</small><h3>'+esc(p.title||p.city||'Point')+'</h3><p class="map-detail-loc">'+esc(loc||'Localisation disponible')+'</p><p>'+esc(p.summary||p.description||'Aucune description supplémentaire.')+'</p><div class="map-detail-actions">'+(p.source_url?'<a href="'+esc(p.source_url)+'" target="_blank" rel="noopener">Source officielle</a>':'')+'<button id="mapDetailPlugy">✦ Analyser avec PLUGY</button></div>';
+  $('#mapDetailClose').onclick=()=>{detail.hidden=true};
+  $('#mapDetailPlugy').onclick=()=>openPlugy('Analyse cette opportunité sur la carte : '+clean(p.title||p.city)+'. Lieu : '+clean(loc)+'. Donne-moi les informations utiles et la prochaine action.');
+}
+function renderMap(){
+  const rows=filteredMapRows();plugArtMapRows=rows;
+  $('#mapCount').textContent=rows.length+' point'+(rows.length>1?'s':'');renderMapList(rows);
+  $('#mapLoading')?.classList.remove('hidden');
+  ensureLeaflet().then(()=>renderLeafletMap(rows)).catch(()=>renderMapFallback(rows));
+}
+$('#mapSearch')?.addEventListener('input',e=>{state.mapSearch=e.target.value;renderMap()});
+$$('[data-map-filter]').forEach(b=>b.addEventListener('click',()=>{
+  state.mapFilter=b.dataset.mapFilter;$$('[data-map-filter]').forEach(x=>x.classList.toggle('active',x===b));renderMap();
+}));
+$('#mapReset')?.addEventListener('click',()=>{state.mapFilter='all';state.mapSearch='';if($('#mapSearch'))$('#mapSearch').value='';$$('[data-map-filter]').forEach(x=>x.classList.toggle('active',x.dataset.mapFilter==='all'));renderMap()});
+$('#mapRefresh')?.addEventListener('click',()=>ensureDataFamily('map',true).then(renderMap).catch(()=>toast('Carte momentanément indisponible')));
+
+const UI_DEFAULT={accent:'mono',surface:'editorial',density:'airy',radius:26,fontScale:1,motion:'subtle',sidebar:'standard',plugyConcept:'pearl'};
+const UI_PRESETS={
+  ultra:{accent:'mono',surface:'editorial',density:'airy',radius:28,fontScale:1.04,motion:'subtle',sidebar:'standard',plugyConcept:'pearl'},
+  editorial:{accent:'violet',surface:'editorial',density:'balanced',radius:24,fontScale:1,motion:'subtle',sidebar:'standard',plugyConcept:'pearl'},
+  minimal:{accent:'mono',surface:'flat',density:'airy',radius:18,fontScale:.98,motion:'subtle',sidebar:'compact',plugyConcept:'pearl'},
+  night:{accent:'cobalt',surface:'glass',density:'balanced',radius:26,fontScale:1,motion:'expressive',sidebar:'standard',plugyConcept:'halo'}
+};
+function applyInterfaceConfig(raw){
+  const cfg={...UI_DEFAULT,...(raw||{})};state.uiConfig=cfg;
+  const accents={
+    violet:['#7657ff','#57dce6','#f15ba8'],cyan:['#38bfcf','#62dfe7','#8d78ff'],coral:['#e66caa','#7edce4','#ff8bbd'],cobalt:['#416df2','#6fdce5','#9c72ff'],lime:['#70b56d','#78ddd5','#9a7bea'],mono:['#111318','#8b8f99','#b4b7c0']
+  },a=accents[cfg.accent]||accents.mono,root=document.documentElement;
+  root.style.setProperty('--violet',a[0]);root.style.setProperty('--cyan',a[1]);root.style.setProperty('--pink',a[2]);root.style.setProperty('--r',(Number(cfg.radius)||26)+'px');root.style.setProperty('--ui-font-scale',String(Number(cfg.fontScale)||1));
+  document.body.dataset.uiSurface=cfg.surface;document.body.dataset.uiDensity=cfg.density;document.body.dataset.uiMotion=cfg.motion;document.body.dataset.uiAccent=cfg.accent;
+  document.body.classList.toggle('sidebar-small',cfg.sidebar==='compact');
+}
+function syncInterfaceLab(cfg=state.uiConfig||UI_DEFAULT,versions=[]){
+  const set=(id,v)=>{const el=$('#'+id);if(el)el.value=String(v)};
+  set('uiAccent',cfg.accent);set('uiSurface',cfg.surface);set('uiDensity',cfg.density);set('uiRadius',cfg.radius);set('uiFontScale',Math.round(Number(cfg.fontScale||1)*100));set('uiMotion',cfg.motion);set('uiSidebar',cfg.sidebar);
+  if($('#uiRadiusOut'))$('#uiRadiusOut').textContent=cfg.radius;if($('#uiFontScaleOut'))$('#uiFontScaleOut').textContent=Math.round(Number(cfg.fontScale||1)*100)+'%';
+  const p=$('#uiVersionPicker');if(p){const cur=p.value;p.innerHTML='<option value="">Historique</option>'+versions.slice(0,12).map(v=>'<option value="'+v.id+'">'+esc(v.name||('Version '+v.id))+(v.published?' · publiée':'')+'</option>').join('');if(cur)p.value=cur}
+}
+function collectInterfaceLab(){
+  return{accent:$('#uiAccent')?.value||'mono',surface:$('#uiSurface')?.value||'editorial',density:$('#uiDensity')?.value||'airy',radius:Number($('#uiRadius')?.value||26),fontScale:Number($('#uiFontScale')?.value||100)/100,motion:$('#uiMotion')?.value||'subtle',sidebar:$('#uiSidebar')?.value||'standard',plugyConcept:state.uiConfig?.plugyConcept||'pearl'};
+}
+async function loadInterfaceDesign(silent=false){
+  try{const out=await api('/api/v90/builder/config',{timeout:12000});applyInterfaceConfig(out.config||UI_DEFAULT);syncInterfaceLab(state.uiConfig,out.versions||[]);return out}catch(e){if(!silent)toast('Réglages visuels indisponibles');applyInterfaceConfig(UI_DEFAULT);return null}
+}
+function previewInterfaceLab(){const cfg=collectInterfaceLab();applyInterfaceConfig(cfg);syncInterfaceLab(cfg);if($('#uiDesignStatus'))$('#uiDesignStatus').textContent='Aperçu non enregistré'}
+async function saveInterfaceLab(){
+  const cfg=collectInterfaceLab(),b=$('#uiSaveDesign'),old=b?.textContent;if(b){b.disabled=true;b.textContent='Enregistrement…'}
+  try{const out=await api('/api/v90/builder/config',{method:'PATCH',body:JSON.stringify({config:cfg,name:'V129 · Interface Lab',publish:true})});applyInterfaceConfig(out.config||cfg);syncInterfaceLab(state.uiConfig,out.versions||[]);if($('#uiDesignStatus'))$('#uiDesignStatus').textContent='Enregistré sur le site';toast('Design de l’interface enregistré')}catch{toast('Enregistrement du design impossible')}finally{if(b){b.disabled=false;b.textContent=old}}
+}
+function openInterfaceLab(){loadInterfaceDesign(true).finally(()=>$('#designLabOverlay')?.classList.add('open'))}
+function installInterfaceLab(){
+  $('#designLabButton')?.addEventListener('click',openInterfaceLab);$('#designLabClose')?.addEventListener('click',()=>$('#designLabOverlay')?.classList.remove('open'));
+  ['uiAccent','uiSurface','uiDensity','uiMotion','uiSidebar'].forEach(id=>$('#'+id)?.addEventListener('change',previewInterfaceLab));
+  ['uiRadius','uiFontScale'].forEach(id=>$('#'+id)?.addEventListener('input',previewInterfaceLab));
+  $$('[data-ui-preset]').forEach(b=>b.onclick=()=>{const cfg={...UI_DEFAULT,...UI_PRESETS[b.dataset.uiPreset]};applyInterfaceConfig(cfg);syncInterfaceLab(cfg);if($('#uiDesignStatus'))$('#uiDesignStatus').textContent='Preset '+b.textContent+' · non enregistré'});
+  $('#uiResetDesign')?.addEventListener('click',()=>{applyInterfaceConfig(UI_DEFAULT);syncInterfaceLab(UI_DEFAULT);if($('#uiDesignStatus'))$('#uiDesignStatus').textContent='Réinitialisé · non enregistré'});
+  $('#uiSaveDesign')?.addEventListener('click',saveInterfaceLab);
+  $('#uiRestoreVersion')?.addEventListener('click',async()=>{const id=Number($('#uiVersionPicker')?.value||0);if(!id)return toast('Choisis une version');try{const out=await api('/api/v90/builder/versions/'+id+'/restore',{method:'POST'});applyInterfaceConfig(out.config||UI_DEFAULT);syncInterfaceLab(state.uiConfig);toast('Version restaurée')}catch{toast('Restauration impossible')}});
+}
 
 function openSearch(){
   $('#searchOverlay').classList.add('open');const i=$('#commandInput');i.value='';renderCommand('');setTimeout(()=>i.focus(),60)
@@ -1566,6 +1728,24 @@ function installCreationModes(){
   const carousel=document.createElement('section');carousel.id='carouselCreationPanel';carousel.className='creation-mode-panel';
   carousel.innerHTML='<div class="carousel-controls panel"><div class="panel-head"><div><small>CARROUSEL</small><h2>Structure éditoriale</h2></div></div><label>Source<select id="carouselSource"><option value="">Brief libre</option></select></label><label>Nombre de slides<select id="carouselCount"><option>4</option><option selected>5</option><option>6</option><option>7</option></select></label><label>Format<select id="carouselFormat"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><label>Brief<textarea id="carouselBrief" rows="7" placeholder="Angle, informations essentielles, CTA…"></textarea></label><button class="primary-btn wide" id="carouselGenerate">✦ Générer la structure</button><button class="secondary-btn wide" id="carouselGenerateImage">Générer l’image de la slide</button><button class="secondary-btn wide" id="carouselGenerateAll">Générer toutes les images</button><button class="secondary-btn wide" id="carouselExport">Exporter la slide PNG</button><button class="secondary-btn wide" id="carouselExportAll">Exporter toutes les slides</button><label>Instagram<textarea id="carouselCaption" rows="5" placeholder="Légende Instagram…"></textarea></label><button class="secondary-btn wide" id="carouselCaptionGenerate">✦ Préparer la légende</button><button class="primary-btn wide" id="carouselPublishInstagram">Publier sur Instagram</button><button class="secondary-btn wide" id="carouselToBureau">▤ Envoyer au Bureau</button></div><div class="carousel-preview panel"><div class="carousel-canvas" id="carouselCanvas"><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Ton carrousel apparaîtra ici</h3><p id="carouselBody">Choisis une source ou écris un brief.</p><b id="carouselCta">Découvrir →</b></div></div><div class="carousel-edit"><input id="slideKicker" placeholder="Kicker"><input id="slideTitle" placeholder="Titre"><textarea id="slideBody" rows="4" placeholder="Texte"></textarea><input id="slideCta" placeholder="CTA"></div></div><aside class="carousel-strip panel"><div class="panel-head"><div><small>SLIDES</small><h2 id="carouselCounter">0 slide</h2></div></div><div id="carouselSlides"></div></aside>';
   view.appendChild(carousel);
+  const carouselEdit=$('.carousel-edit',carousel);
+  if(carouselEdit){
+    const stack=document.createElement('div');stack.className='carousel-edit-stack';
+    carouselEdit.parentNode.insertBefore(stack,carouselEdit);stack.appendChild(carouselEdit);
+    const tools=document.createElement('section');tools.className='carousel-design-tools';
+    tools.innerHTML='<div class="design-tools-head"><div><small>DESIGN MANUEL</small><strong>Finition de la slide</strong></div><span>LIVE</span></div>'+
+      '<div class="design-preset-row"><button data-slide-preset="ultra">Ultra</button><button data-slide-preset="editorial">Éditorial</button><button data-slide-preset="soft">Soft</button><button data-slide-preset="night">Sombre</button></div>'+
+      '<label>Mise en page<select id="slideLayout"><option value="editorial">Éditorial</option><option value="split">Split</option><option value="poster">Poster</option><option value="minimal">Minimal</option></select></label>'+
+      '<label>Accent<select id="slideAccent"><option value="black">Noir</option><option value="violet">Violet</option><option value="cyan">Cyan</option><option value="pink">Rose</option></select></label>'+
+      '<label>Alignement<select id="slideAlign"><option value="left">Gauche</option><option value="center">Centre</option></select></label>'+
+      '<label>Taille titre <output id="slideFontScaleOut">100%</output><input id="slideFontScale" type="range" min="85" max="125" value="100"></label>'+
+      '<label>Présence image <output id="slideImageOpacityOut">64%</output><input id="slideImageOpacity" type="range" min="0" max="100" value="64"></label>'+
+      '<label>Image / visuel<input id="slideImageUrl" placeholder="URL du visuel"></label>'+
+      '<button class="secondary-btn wide" id="slideUseVisual">Utiliser le dernier visuel généré</button>'+
+      '<div class="design-help-row"><button data-slide-help="hierarchy">✦ Hiérarchie</button><button data-slide-help="premium">✦ Plus premium</button><button data-slide-help="direct">✦ Plus direct</button></div>'+
+      '<div class="design-slide-actions"><button id="slideAdd">＋ Ajouter</button><button id="slideDuplicate">Dupliquer</button><button class="danger-text" id="slideDeleteManual">Supprimer</button></div>';
+    stack.appendChild(tools);
+  }
   const visual=document.createElement('section');visual.id='visualCreationPanel';visual.className='creation-mode-panel';
   visual.innerHTML='<div class="visual-controls panel"><div class="panel-head"><div><small>VISUEL</small><h2>Génération d’image</h2></div></div><label>Prompt<textarea id="visualPrompt" rows="9" placeholder="Décris le visuel à créer…"></textarea></label><label>Style<select id="visualStyle"><option value="gallery">Galerie / éditorial</option><option value="editorial">Éditorial</option><option value="art">Art contemporain</option><option value="photo">Photographique</option></select></label><label>Format<select id="visualRatio"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><button class="primary-btn wide" id="visualGenerate">✦ Générer le visuel</button><button class="secondary-btn wide" id="visualDownload">Télécharger le visuel</button><button class="secondary-btn wide" id="visualToBureau">▤ Envoyer au Bureau</button></div><div class="visual-preview panel"><div id="visualImage"><span>Le visuel apparaîtra ici.</span></div></div>';
   view.appendChild(visual);
@@ -1581,6 +1761,12 @@ function installCreationModes(){
   $('#carouselFormat').onchange=e=>{state.carousel.format=e.target.value;renderCarousel()};
   ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
   $('#visualGenerate').onclick=generateVisual;$('#visualDownload').onclick=downloadVisual;$('#visualToBureau').onclick=visualToBureau;
+  ['slideLayout','slideAccent','slideAlign'].forEach(id=>$('#'+id)?.addEventListener('change',updateSlideDesignFromControls));
+  ['slideFontScale','slideImageOpacity','slideImageUrl'].forEach(id=>$('#'+id)?.addEventListener('input',updateSlideDesignFromControls));
+  $('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));
+  $('[data-slide-help]').forEach(b=>b.onclick=()=>assistSlideDesign(b.dataset.slideHelp));
+  $('#slideUseVisual')?.addEventListener('click',()=>{const s=state.carousel.slides[state.carousel.active];if(!s)return;if(!state.visual.url)return toast('Aucun visuel généré à utiliser');s.image=state.visual.url;renderCarousel();scheduleDraftAutosave()});
+  $('#slideAdd')?.addEventListener('click',addCarouselSlide);$('#slideDuplicate')?.addEventListener('click',duplicateCarouselSlide);$('#slideDeleteManual')?.addEventListener('click',deleteCarouselSlideManual);
   setCreationMode('text');fillCreationSources();bindDraftAutosave();refreshLocalDraftRecovery();
 }
 
@@ -1711,15 +1897,71 @@ async function generateCarousel(){
   catch{state.carousel.slides=fallbackCarousel(count,source,brief)}
   state.carousel.active=0;state.carousel.format=$('#carouselFormat').value||'4:5';renderCarousel();scheduleDraftAutosave();if(source)persistWorkflow(source.id,{workflow_status:'drafting',next_action:'Finaliser le carrousel'}).catch(()=>{});playMotion('Happy');btn.disabled=false;btn.textContent=old;
 }
+function slideDesign(s){
+  if(!s)return{theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,imageOpacity:64,radius:26};
+  s.design={theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,imageOpacity:64,radius:26,...(s.design||{})};
+  return s.design;
+}
+function slideAccentColor(name){return({black:'#111318',violet:'#735cff',cyan:'#45cbd7',pink:'#e96cae'})[name]||'#111318'}
+function setSlideDesignPreset(name){
+  const s=state.carousel.slides[state.carousel.active];if(!s)return toast('Génère d’abord une slide');
+  const presets={
+    ultra:{theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:105,imageOpacity:58,radius:28},
+    editorial:{theme:'editorial',layout:'split',accent:'violet',align:'left',fontScale:98,imageOpacity:84,radius:24},
+    soft:{theme:'soft',layout:'editorial',accent:'pink',align:'left',fontScale:100,imageOpacity:67,radius:30},
+    night:{theme:'night',layout:'poster',accent:'cyan',align:'left',fontScale:108,imageOpacity:72,radius:24}
+  };
+  s.design={...slideDesign(s),...(presets[name]||presets.ultra)};renderCarousel();scheduleDraftAutosave();
+}
+function updateSlideDesignFromControls(){
+  const s=state.carousel.slides[state.carousel.active];if(!s)return;
+  const d=slideDesign(s);d.layout=$('#slideLayout')?.value||d.layout;d.accent=$('#slideAccent')?.value||d.accent;d.align=$('#slideAlign')?.value||d.align;
+  d.fontScale=Number($('#slideFontScale')?.value||d.fontScale);d.imageOpacity=Number($('#slideImageOpacity')?.value||d.imageOpacity);
+  const url=String($('#slideImageUrl')?.value||'').trim();if(url!==String(s.image||''))s.image=url;
+  renderCarousel();scheduleDraftAutosave();
+}
+async function assistSlideDesign(kind){
+  const s=state.carousel.slides[state.carousel.active];if(!s)return toast('Aucune slide active');
+  const instructions={
+    hierarchy:'Améliore la hiérarchie éditoriale. Raccourcis si nécessaire, garde un titre très lisible et un texte utile.',
+    premium:'Rends cette slide plus premium, sobre et éditoriale. Peu de mots, aucune formule creuse.',
+    direct:'Rends cette slide plus directe et immédiate, sans perdre les faits ni inventer.'
+  };
+  const prompt=(instructions[kind]||instructions.premium)+' Réponds uniquement en JSON valide {"kicker":"","title":"","body":"","cta":""}. Données : '+JSON.stringify({kicker:s.kicker,title:s.title,body:s.body,cta:s.cta});
+  try{
+    const out=await api('/api/v32/plugy',{method:'POST',body:JSON.stringify({message:prompt,page:'content',mode:'fast'})});
+    const parsed=parseLooseJSON(out.answer);['kicker','title','body','cta'].forEach(k=>{if(typeof parsed[k]==='string')s[k]=parsed[k]});
+    renderCarousel();scheduleDraftAutosave();toast('Slide affinée');
+  }catch{toast('PLUGY n’a pas pu modifier la slide')}
+}
+function addCarouselSlide(){
+  const at=Math.max(0,state.carousel.active+1),base={kicker:'PLUG ART',title:'Nouvelle slide',body:'Ajoute ton message.',cta:'Découvrir →',image:'',image_prompt:'',design:{theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,imageOpacity:64,radius:26}};
+  state.carousel.slides.splice(at,0,base);state.carousel.active=at;renderCarousel();scheduleDraftAutosave();
+}
+function duplicateCarouselSlide(){
+  const s=state.carousel.slides[state.carousel.active];if(!s)return;
+  const copy=JSON.parse(JSON.stringify(s)),at=state.carousel.active+1;state.carousel.slides.splice(at,0,copy);state.carousel.active=at;renderCarousel();scheduleDraftAutosave();
+}
+function deleteCarouselSlideManual(){
+  if(!state.carousel.slides.length)return;if(state.carousel.slides.length===1)return toast('Garde au moins une slide');
+  state.carousel.slides.splice(state.carousel.active,1);state.carousel.active=Math.max(0,Math.min(state.carousel.active,state.carousel.slides.length-1));renderCarousel();scheduleDraftAutosave();
+}
+
 function renderCarousel(){
-  const slides=state.carousel.slides,s=slides[state.carousel.active]||{};$('#carouselCounter').textContent=slides.length+' slide'+(slides.length>1?'s':'');
+  const slides=state.carousel.slides,s=slides[state.carousel.active]||{},d=slideDesign(s);$('#carouselCounter').textContent=slides.length+' slide'+(slides.length>1?'s':'');
   $('#carouselSlides').innerHTML=slides.map((x,i)=>'<button class="carousel-slide-thumb '+(i===state.carousel.active?'active':'')+'" data-carousel-slide="'+i+'"><b>'+String(i+1).padStart(2,'0')+' · '+esc(x.kicker||'PLUG ART')+'</b><span>'+esc((x.title||'Sans titre').slice(0,50))+'</span></button>').join('')||'<div class="empty">Aucune slide.</div>';
   $$('[data-carousel-slide]').forEach(b=>b.onclick=()=>{state.carousel.active=Number(b.dataset.carouselSlide);renderCarousel()});
   $('#carouselKicker').textContent=s.kicker||'PLUG ART';$('#carouselTitle').textContent=s.title||'Ton carrousel apparaîtra ici';$('#carouselBody').textContent=s.body||'Choisis une source ou écris un brief.';$('#carouselCta').textContent=s.cta||'Découvrir →';
-  const img=$('#carouselImage');img.style.backgroundImage=s.image?'url("'+s.image.replace(/"/g,'%22')+'")':'none';
-  const canvas=$('#carouselCanvas');canvas.style.aspectRatio=state.carousel.format==='1:1'?'1/1':state.carousel.format==='9:16'?'9/16':'4/5';
+  const img=$('#carouselImage');img.style.backgroundImage=s.image?'url("'+String(s.image).replace(/"/g,'%22')+'")':'none';img.style.opacity=String(Math.max(0,Math.min(100,Number(d.imageOpacity||0)))/100);
+  const canvas=$('#carouselCanvas');canvas.style.aspectRatio=state.carousel.format==='1:1'?'1/1':state.carousel.format==='9:16'?'9/16':'4/5';canvas.dataset.theme=d.theme||'ultra';canvas.dataset.layout=d.layout||'editorial';canvas.dataset.align=d.align||'left';canvas.style.setProperty('--slide-accent',slideAccentColor(d.accent));canvas.style.setProperty('--slide-font-scale',String(Number(d.fontScale||100)/100));canvas.style.setProperty('--slide-radius',(d.radius||26)+'px');
   $('#slideKicker').value=s.kicker||'';$('#slideTitle').value=s.title||'';$('#slideBody').value=s.body||'';$('#slideCta').value=s.cta||'';
+  if($('#slideLayout'))$('#slideLayout').value=d.layout;if($('#slideAccent'))$('#slideAccent').value=d.accent;if($('#slideAlign'))$('#slideAlign').value=d.align;
+  if($('#slideFontScale'))$('#slideFontScale').value=d.fontScale;if($('#slideFontScaleOut'))$('#slideFontScaleOut').textContent=d.fontScale+'%';
+  if($('#slideImageOpacity'))$('#slideImageOpacity').value=d.imageOpacity;if($('#slideImageOpacityOut'))$('#slideImageOpacityOut').textContent=d.imageOpacity+'%';
+  if($('#slideImageUrl'))$('#slideImageUrl').value=s.image||'';
+  $$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
 }
+
 function syncActiveSlideEdit(){
   const s=state.carousel.slides[state.carousel.active];if(!s)return;s.kicker=$('#slideKicker').value;s.title=$('#slideTitle').value;s.body=$('#slideBody').value;s.cta=$('#slideCta').value;renderCarousel();
 }
@@ -1772,26 +2014,43 @@ function triggerBlobDownload(blob,filename){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);
 }
 async function renderCarouselSlideBlob(index){
-  const s=state.carousel.slides[index];if(!s)return null;
+  const s=state.carousel.slides[index];if(!s)return null;const d=slideDesign(s);
   const [w,h]=exportDimensions(state.carousel.format||'4:5'),canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d');
-  const base=ctx.createLinearGradient(0,0,w,h);base.addColorStop(0,'#eef1ff');base.addColorStop(.48,'#e4dcff');base.addColorStop(1,'#f3d2e3');ctx.fillStyle=base;ctx.fillRect(0,0,w,h);
-  const img=await loadCanvasImage(s.image);
-  if(img){ctx.save();ctx.globalAlpha=.74;drawCoverImage(ctx,img,w,h);ctx.restore()}
-  const veil=ctx.createLinearGradient(0,h*.18,0,h);veil.addColorStop(0,'rgba(255,255,255,0)');veil.addColorStop(.56,'rgba(255,255,255,.18)');veil.addColorStop(1,'rgba(255,255,255,.96)');ctx.fillStyle=veil;ctx.fillRect(0,0,w,h);
-  const x=Math.round(w*.075),maxW=Math.round(w*.85),bottom=Math.round(h*.075),scale=h/1350;
-  ctx.fillStyle='#17181e';ctx.textBaseline='top';
-  ctx.font='800 '+Math.max(24,Math.round(27*scale))+'px Arial, sans-serif';ctx.fillText(String(s.kicker||'PLUG ART').toUpperCase(),x,Math.round(h*.60),maxW);
-  ctx.font='800 '+Math.max(52,Math.round(76*scale))+'px Arial, sans-serif';
-  const titleLines=canvasTextLines(ctx,s.title||'Sans titre',maxW,4),titleY=Math.round(h*.64),titleLH=Math.round(Math.max(58,84*scale));
+  const themes={
+    ultra:['#f7f7f5','#ffffff','#111318'],editorial:['#eef1ff','#f4e9ff','#17181e'],soft:['#fbf7f8','#f2eaf3','#17181e'],night:['#111318','#242631','#ffffff']
+  },theme=themes[d.theme]||themes.ultra;
+  const base=ctx.createLinearGradient(0,0,w,h);base.addColorStop(0,theme[0]);base.addColorStop(1,theme[1]);ctx.fillStyle=base;ctx.fillRect(0,0,w,h);
+  const img=await loadCanvasImage(s.image),opacity=Math.max(0,Math.min(1,Number(d.imageOpacity||0)/100));
+  if(img&&d.layout!=='minimal'){
+    ctx.save();ctx.globalAlpha=opacity;
+    if(d.layout==='split'){
+      const iw=Math.round(w*.48),scale=Math.max(iw/img.naturalWidth,h/img.naturalHeight),dw=img.naturalWidth*scale,dh=img.naturalHeight*scale;
+      ctx.beginPath();ctx.rect(0,0,iw,h);ctx.clip();ctx.drawImage(img,(iw-dw)/2,(h-dh)/2,dw,dh);
+    }else drawCoverImage(ctx,img,w,h);
+    ctx.restore();
+  }
+  if(d.layout!=='split'){
+    const veil=ctx.createLinearGradient(0,h*.16,0,h);veil.addColorStop(0,'rgba(255,255,255,0)');veil.addColorStop(.54,d.theme==='night'?'rgba(17,19,24,.10)':'rgba(255,255,255,.12)');veil.addColorStop(1,d.theme==='night'?'rgba(17,19,24,.94)':'rgba(255,255,255,.96)');ctx.fillStyle=veil;ctx.fillRect(0,0,w,h);
+  }
+  const scaleText=Math.max(.85,Math.min(1.25,Number(d.fontScale||100)/100)),ink=theme[2],accent=slideAccentColor(d.accent);
+  let x=Math.round(w*.075),maxW=Math.round(w*.85),titleY=Math.round(h*.61),align=d.align==='center'?'center':'left';
+  if(d.layout==='split'){x=Math.round(w*.55);maxW=Math.round(w*.38);titleY=Math.round(h*.22)}
+  if(d.layout==='minimal'){titleY=Math.round(h*.34)}
+  if(align==='center'&&d.layout!=='split'){x=Math.round(w/2);maxW=Math.round(w*.82)}
+  ctx.textAlign=align;ctx.textBaseline='top';ctx.fillStyle=accent;ctx.fillRect(align==='center'?Math.round(w*.45):x,Math.max(40,titleY-Math.round(58*scaleText)),align==='center'?Math.round(w*.1):Math.round(w*.075),Math.max(7,Math.round(8*scaleText)));
+  ctx.fillStyle=ink;ctx.font='800 '+Math.max(22,Math.round(27*scaleText))+'px Arial, sans-serif';ctx.fillText(String(s.kicker||'PLUG ART').toUpperCase(),x,titleY-Math.round(42*scaleText),maxW);
+  ctx.font='800 '+Math.max(48,Math.round(76*scaleText))+'px Arial, sans-serif';
+  const titleLines=canvasTextLines(ctx,s.title||'Sans titre',maxW,d.layout==='split'?6:4),titleLH=Math.round(Math.max(54,84*scaleText));
   titleLines.forEach((line,i)=>ctx.fillText(line,x,titleY+i*titleLH,maxW));
-  const bodyY=titleY+titleLines.length*titleLH+Math.round(28*scale);
-  ctx.font='400 '+Math.max(24,Math.round(31*scale))+'px Arial, sans-serif';ctx.fillStyle='#343741';
-  const bodyLines=canvasTextLines(ctx,s.body||'',Math.round(maxW*.9),5),bodyLH=Math.round(Math.max(32,43*scale));
-  bodyLines.forEach((line,i)=>ctx.fillText(line,x,bodyY+i*bodyLH,Math.round(maxW*.9)));
-  ctx.fillStyle='#17181e';ctx.font='800 '+Math.max(23,Math.round(28*scale))+'px Arial, sans-serif';
-  ctx.fillText(s.cta||'Découvrir →',x,Math.min(h-bottom-Math.round(30*scale),bodyY+bodyLines.length*bodyLH+Math.round(30*scale)),maxW);
+  const bodyY=titleY+titleLines.length*titleLH+Math.round(28*scaleText);
+  ctx.font='400 '+Math.max(22,Math.round(30*scaleText))+'px Arial, sans-serif';ctx.fillStyle=d.theme==='night'?'#d7d9e1':'#343741';
+  const bodyLines=canvasTextLines(ctx,s.body||'',maxW,5),bodyLH=Math.round(Math.max(31,42*scaleText));
+  bodyLines.forEach((line,i)=>ctx.fillText(line,x,bodyY+i*bodyLH,maxW));
+  ctx.fillStyle=ink;ctx.font='800 '+Math.max(22,Math.round(27*scaleText))+'px Arial, sans-serif';
+  ctx.fillText(s.cta||'Découvrir →',x,Math.min(h-Math.round(h*.075)-Math.round(30*scaleText),bodyY+bodyLines.length*bodyLH+Math.round(28*scaleText)),maxW);
   return await new Promise(resolve=>canvas.toBlob(resolve,'image/png',.96));
 }
+
 async function exportCarouselSlide(index,quiet=false){
   const blob=await renderCarouselSlideBlob(index);
   if(!blob){if(!quiet)toast('Export PNG impossible');return false}
@@ -2183,6 +2442,8 @@ function installMobileShell(){
 
 installMobileShell();
 installMobileViewportBehavior();
+installInterfaceLab();
+loadInterfaceDesign(true);
 ensureSaveStatus();syncNetworkState();
 adaptDashboardForDrafts();
 injectOperationalUI();
