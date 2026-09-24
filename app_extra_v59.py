@@ -5,26 +5,17 @@ from urllib.parse import urljoin, urlencode
 import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64,hmac,math,struct,io,zipfile,sqlite3,shutil
 import app as core
 import plugy_runtime_v127 as runtime_v127
-from build_plugy_official_v84 import build_plugy_official_v84
 
 app=core.app
-app.version='127.0'
+app.version='127.1'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
-GLB=BASE/'static'/'plugy_official_v84.glb'
-try:
-    _glb_cached=GLB.exists() and GLB.stat().st_size>10000 and GLB.open('rb').read(4)==b'glTF'
-except Exception:
-    _glb_cached=False
-if _glb_cached:
-    RESULT={'animation':'IdleBlink','material':'cached-official','official_base':'V26','profile':'cached-v84'}
-    print(f"PLUGY_V127_OFFICIAL_REUSE bytes={GLB.stat().st_size}",flush=True)
-else:
-    RESULT=build_plugy_official_v84(GLB)
-    print(f"PLUGY_V127_OFFICIAL_REBUILT bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
-PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
+GLB=BASE/'static'/'PLUGY_final_animated.glb'
+RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-premium','profile':'runtime-fallback'}
+print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='127.20260924.1'
+VERSION='127.20260924.2'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -283,7 +274,7 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'127.0',
+      'version':'127.1',
       'ui':'plug-art-v127-lean-runtime',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
@@ -299,7 +290,7 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'127.0',
+      'X-Plug-Art-Version':'127.1',
       'X-Plug-Art-UI':'plug-art-v127-lean-runtime'
     }
     if request.headers.get('if-none-match')==etag:
@@ -2081,7 +2072,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'127.0',
+      'version':'127.1',
       'ui':'plug-art-v127-lean-runtime',
       'reference_direction':'V120 PLUG ART: compact internal work cockpit with a three-mode Bureau for Documents, application Packages and reusable Templates, starter application packs, direct Open Call routing, CRM outreach, PLUGY operator, Instagram Studio and mobile-first workflows',
       'marketing_blocks':False,
