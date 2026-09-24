@@ -526,3 +526,51 @@ body[data-view="dashboard"] .topbar{background:rgba(248,248,249,.86);border-bott
   .create-orbit-studio{left:0}.create-orbit-docs{right:-2%}.create-orbit-pack{left:2%}.create-orbit-models{right:-2%}
   .create-orbit em{display:none}
 }
+
+
+/* V134 · dashboard liquid hierarchy */
+.slide-dashboard{
+  background:rgba(255,255,255,.16)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.48),0 30px 90px rgba(30,34,45,.035)!important;
+  backdrop-filter:blur(16px) saturate(1.08);
+}
+.slide-dashboard-nav{background:rgba(245,247,249,.42)!important;border-bottom-color:rgba(255,255,255,.52)!important}
+.slide-tabs{background:transparent!important;padding:0!important;gap:14px!important}
+.slide-tabs button{position:relative;border-radius:0!important;padding:9px 3px!important;color:#858892!important}
+.slide-tabs button.active{background:transparent!important;color:#17181d!important;box-shadow:none!important}
+.slide-tabs button.active:after{content:"";position:absolute;left:4px;right:4px;bottom:2px;height:2px;border-radius:99px;background:#17181d}
+.slide-arrows button{border:0!important;background:rgba(255,255,255,.34)!important;border-radius:50%!important}
+.slide-today-card,.slide-data-panel{background:rgba(255,255,255,.28)!important;border-color:rgba(255,255,255,.52)!important;box-shadow:none!important;backdrop-filter:blur(24px)}
+.slide-tool-grid{gap:0!important}
+.slide-tool-card{
+  min-height:0!important;border:0!important;border-bottom:1px solid rgba(93,98,111,.13)!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;padding:18px 12px!important;position:relative
+}
+.slide-tool-card:first-child{border-top:1px solid rgba(93,98,111,.13)!important}
+.slide-tool-card:hover{transform:translateX(7px)!important;background:rgba(255,255,255,.26)!important;box-shadow:none!important}
+.slide-tool-card>span{margin:0 0 18px!important;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.38);font-size:15px!important}
+.slide-network-grid{gap:0!important}
+.slide-network-card{
+  border:0!important;border-right:1px solid rgba(93,98,111,.13)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+  min-height:260px!important;transition:transform .24s ease,background .24s ease!important
+}
+.slide-network-card:last-child{border-right:0!important}.slide-network-card:hover{transform:translateY(-5px);background:rgba(255,255,255,.25)!important}
+.slide-crm-main{border:0!important;border-radius:34px!important;background:rgba(17,18,23,.93)!important}
+.create-orbit{background:rgba(255,255,255,.30)!important;border-color:rgba(255,255,255,.58)!important;box-shadow:none!important}
+.create-orbit:hover{background:rgba(255,255,255,.58)!important;box-shadow:0 22px 55px rgba(30,34,45,.055)!important}
+.create-resume-stream #slideWorkResume>button{background:transparent!important;border:0!important;border-right:1px solid rgba(93,98,111,.12)!important;border-radius:0!important;box-shadow:none!important}
+.slide-plugy-companion{background:rgba(247,248,250,.48)!important;border-color:rgba(255,255,255,.68)!important;backdrop-filter:blur(24px) saturate(1.1)!important}
+
+@media(max-width:820px){
+  .slide-dashboard{background:rgba(255,255,255,.12)!important}
+  .slide-tabs{gap:13px!important;padding:0 5px!important}
+  .slide-tabs button{padding:9px 1px!important}
+  .slide-tool-grid.three,.slide-tool-grid.four{grid-template-columns:1fr!important}
+  .dash-slide-opps .slide-tool-grid.three{grid-template-columns:1fr!important}
+  .slide-tool-card,.slide-tool-card.tall,.dash-slide-opps .slide-tool-card{min-height:78px!important;padding:11px 5px!important;display:grid!important;grid-template-columns:38px 1fr!important;grid-template-rows:auto auto!important;column-gap:11px!important;align-items:center!important}
+  .slide-tool-card>span{grid-row:1/3;margin:0!important}
+  .slide-tool-card small,.slide-tool-card strong,.slide-tool-card p{grid-column:2}
+  .slide-tool-card p{display:none!important}
+  .slide-network-grid{grid-template-columns:1fr!important}
+  .slide-network-card,.slide-network-card.plugy{grid-column:auto!important;min-height:120px!important;border-right:0!important;border-bottom:1px solid rgba(93,98,111,.13)!important;padding:16px 8px!important}
+}
