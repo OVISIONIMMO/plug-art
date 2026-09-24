@@ -8,14 +8,14 @@ import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='123.1'
+app.version='124.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='123.20260924.2'
+VERSION='124.20260924.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -271,8 +271,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'123.1',
-      'X-Plug-Art-UI':'plug-art-v123-fast-workspace'
+      'X-Plug-Art-Version':'124.0',
+      'X-Plug-Art-UI':'plug-art-v124-progressive-workspace'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -293,8 +293,8 @@ async def v85_headers(request:Request,call_next):
         response.headers['Cache-Control']='no-store, no-cache, must-revalidate, max-age=0'
     elif p.startswith('/static/') and any(p.endswith(ext) for ext in ('.css','.js','.glb','.png','.jpg','.jpeg','.webp','.svg','.webmanifest')):
         response.headers['Cache-Control']='public, max-age=31536000, immutable'
-    elif p=='/api/v102/bootstrap':
-        response.headers['Cache-Control']='private, max-age=8, stale-while-revalidate=30'
+    elif p in ('/api/v102/bootstrap','/api/v124/dashboard-bootstrap'):
+        response.headers['Cache-Control']='private, max-age=5, stale-while-revalidate=20'
     elif p.startswith('/api/'):
         response.headers.setdefault('Cache-Control','no-store')
     response.headers.setdefault('Vary','Accept-Encoding')
@@ -1740,6 +1740,79 @@ def dashboard_bootstrap_v112():
         db.close()
 
 
+
+# V124 ultra-light first-screen bootstrap.
+@app.get('/api/v124/dashboard-bootstrap')
+def dashboard_bootstrap_v124():
+    db=core.conn()
+    try:
+        today=str(core.date.today())
+        def scalar(sql,p=()):
+            row=db.execute(sql,p).fetchone()
+            return row[0] if row else 0
+        stats={
+          'opportunities':scalar("select count(*) from opportunities where status in ('open','rolling')"),
+          'urgent':scalar("select count(*) from opportunities where deadline is not null and deadline>=? and deadline<=date(?, '+14 day')",(today,today)),
+          'drafts':scalar("select count(*) from content_drafts"),
+          'contacts':scalar("select count(*) from crm_leads where coalesce(status,'')!='closed'")
+        }
+        fields="""id,title,city,country,deadline,fee,radar_score,score,favorite,source_url,
+                  summary,type,eligibility,status"""
+        priority=[dict(x) for x in db.execute(f"""select {fields} from opportunities
+          where status in ('open','rolling') and (
+            favorite=1 or id in (select opportunity_id from opportunity_workspace where workflow_status!='closed')
+            or (deadline is not null and deadline>=? and deadline<=date(?, '+7 day'))
+          )
+          order by favorite desc,
+                   case when deadline is null then 1 else 0 end,
+                   deadline,
+                   coalesce(radar_score,score,0) desc
+          limit 18""",(today,today)).fetchall()]
+        top=[dict(x) for x in db.execute(f"""select {fields} from opportunities
+          where status in ('open','rolling')
+          order by coalesce(radar_score,score,0) desc,
+                   case when deadline is null then 1 else 0 end,
+                   deadline
+          limit 6""").fetchall()]
+        seen=set();opps=[]
+        for row in priority+top:
+            oid=row.get('id')
+            if oid in seen:continue
+            seen.add(oid);opps.append(row)
+        bureau=[dict(x) for x in db.execute("""select id,title,folder,tags,pinned,source_type,source_id,updated_at
+                                               from bureau_documents
+                                               order by pinned desc,updated_at desc,id desc limit 4""").fetchall()]
+        leads=[dict(x) for x in db.execute("""select id,name,organization,kind,status,city,country,next_action,next_date,updated_at
+                                              from crm_leads
+                                              where coalesce(status,'')!='closed'
+                                              order by case when next_date is null or next_date='' then 1 else 0 end,
+                                                       next_date,updated_at desc,id desc limit 6""").fetchall()]
+        workflow=[dict(x) for x in db.execute("""select opportunity_id,workflow_status,notes,next_action,next_date,created_at,updated_at
+                                                 from opportunity_workspace
+                                                 where workflow_status!='closed'
+                                                 order by case when next_date is null or next_date='' then 1 else 0 end,
+                                                          next_date,updated_at desc limit 20""").fetchall()]
+        drafts=[dict(x) for x in db.execute("""select id,kind,title,source_opportunity_id,created_at,updated_at
+                                               from content_drafts order by updated_at desc,id desc limit 4""").fetchall()]
+        return {
+          'version':'124-lite',
+          'generated_at':time.time(),
+          'stats':stats,
+          'opportunities':opps[:24],
+          'bureau':bureau,
+          'leads':leads,
+          'workflow':workflow,
+          'drafts':drafts,
+          'artists':[],
+          'events':[],
+          'map':[],
+          'radar':{},
+          'candidates':[]
+        }
+    finally:
+        db.close()
+
+
 # V115 rendered carousel exports for ZIP + Instagram publishing.
 _V115_GENERATED_DIR=Path(os.getenv('PLUGART_GENERATED_DIR',str(Path(os.getenv('PLUGART_DB','/data/plugart.db')).parent/'generated-content')))
 _V115_GENERATED_DIR.mkdir(parents=True,exist_ok=True)
@@ -1963,8 +2036,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'123.1',
-      'ui':'plug-art-v123-fast-workspace',
+      'version':'124.0',
+      'ui':'plug-art-v124-progressive-workspace',
       'reference_direction':'V120 PLUG ART: compact internal work cockpit with a three-mode Bureau for Documents, application Packages and reusable Templates, starter application packs, direct Open Call routing, CRM outreach, PLUGY operator, Instagram Studio and mobile-first workflows',
       'marketing_blocks':False,
       'internal_workspace':True,
