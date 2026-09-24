@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='136.20260924.1';
+const VERSION='137.20260924.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -188,19 +188,19 @@ function tunePlugyMaterials(){
       const pbr=mat?.pbrMetallicRoughness;
       const isMetal=/(metal|chrome|prong|pin|antenna|steel|silver)/.test(name);
       const isFace=/(glass|screen|visor|face|black|display)/.test(name);
-      const metallic=isMetal?.72:(isFace?.03:0);
-      const roughness=isMetal?.34:(isFace?.58:.84);
+      const metallic=isMetal?.34:0;
+      const roughness=isMetal?.64:(isFace?.98:1);
       try{pbr?.setMetallicFactor?.(metallic)}catch{}
       try{pbr?.setRoughnessFactor?.(roughness)}catch{}
-      try{mat?.clearcoat?.setClearcoatFactor?.(isMetal?.08:(isFace?.025:.01))}catch{}
-      try{mat?.clearcoat?.setClearcoatRoughnessFactor?.(isMetal?.72:.96)}catch{}
-      try{mat?.specular?.setSpecularFactor?.(isMetal?.62:(isFace?.34:.28))}catch{}
-      try{mat?.iridescence?.setIridescenceFactor?.(.02)}catch{}
+      try{mat?.clearcoat?.setClearcoatFactor?.(0)}catch{}
+      try{mat?.clearcoat?.setClearcoatRoughnessFactor?.(1)}catch{}
+      try{mat?.specular?.setSpecularFactor?.(isMetal?.18:0)}catch{}
+      try{mat?.iridescence?.setIridescenceFactor?.(0)}catch{}
     });
-    mv.setAttribute('exposure','.84');
-    mv.setAttribute('shadow-intensity','.24');
+    mv.setAttribute('exposure','.72');
+    mv.setAttribute('shadow-intensity','.16');
     mv.setAttribute('shadow-softness','1');
-    mv.dataset.finish='matte-pearl-v136';
+    mv.dataset.finish='reflectionless-v137';
   }catch(e){console.warn('[PLUGY finish]',e)}
 }
 $('#plugyModel')?.addEventListener('load',()=>{tunePlugyMaterials();if($('#plugyState span'))$('#plugyState span').textContent='Prêt';playMotion('Idle',true)},{once:true});
@@ -2251,6 +2251,17 @@ function installCreationModes(){
   $('#creationQuickReset')?.addEventListener('click',()=>{if(quickMode)quickMode.value='carousel';if(quickDirection)quickDirection.value='open-call';if(quickFormat)quickFormat.value='4:5';if(quickScale)quickScale.value='100';if(quickMood)quickMood.value='editorial';refreshQuickCreation()});
   $('#creationQuickPreview button')?.addEventListener('click',openQuickCreation);
   refreshQuickCreation();
+
+  // V137: fail-safe binding audit. Any interactive Studio control left without a handler
+  // is surfaced in the console instead of silently pretending to be a button.
+  const creationInteractive=$('#view-creation button, #view-creation select, #view-creation input, #view-creation textarea');
+  const inert=creationInteractive.filter(el=>el.tagName==='BUTTON'&&!el.onclick&&!el.dataset.bound&&
+    !el.matches('[data-route],[data-create-mode],[data-studio-start],[data-creative-prompt],[data-copy-action],[data-marketing-template],[data-studio-tool],[data-add-text],[data-add-shape],[data-slide-preset],[data-slide-help],[data-visual-preset],[data-visual-help]'));
+  inert.forEach(el=>{
+    el.dataset.bound='fallback';
+    el.addEventListener('click',()=>toast('Commande indisponible : '+clean(el.textContent||el.id||'outil')));
+  });
+  if(inert.length)console.warn('[Creation V137] controls with fallback binding',inert.map(x=>x.id||clean(x.textContent)));
 
   setCreationMode('text');fillCreationSources();bindDraftAutosave();refreshLocalDraftRecovery();
 }
