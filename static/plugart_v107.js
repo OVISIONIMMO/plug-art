@@ -1799,12 +1799,46 @@ function renderAgenda(){
   $$('[data-agenda]',box).forEach(b=>b.onclick=()=>{const [kind,id]=b.dataset.agenda.split('-');if(kind==='crm'){route('prospection');setTimeout(()=>selectLead(Number(id)),30)}else openOpportunity(Number(id))});
 }
 
+const creationHistory=[],creationRedo=[];
+function creationSnapshotLocal(){
+  try{return JSON.parse(JSON.stringify(draftSnapshot()))}catch{return null}
+}
+function pushCreationHistory(){
+  const snap=creationSnapshotLocal();if(!snap)return;
+  const raw=JSON.stringify(snap),last=creationHistory.length?JSON.stringify(creationHistory[creationHistory.length-1]):'';
+  if(raw===last)return;
+  creationHistory.push(snap);if(creationHistory.length>30)creationHistory.shift();creationRedo.length=0;syncCreationHistoryButtons();
+}
+function restoreCreationHistory(snap){
+  if(!snap)return;
+  const draft=state.currentDraft;applyCreationSnapshot(JSON.parse(JSON.stringify(snap)));state.currentDraft=draft;state.creationDirty=true;renderDraftPicker();syncCreationHistoryButtons();
+}
+function undoCreation(){
+  if(!creationHistory.length)return toast('Rien à annuler');
+  const current=creationSnapshotLocal();if(current)creationRedo.push(current);
+  restoreCreationHistory(creationHistory.pop());
+}
+function redoCreation(){
+  if(!creationRedo.length)return toast('Rien à rétablir');
+  const current=creationSnapshotLocal();if(current)creationHistory.push(current);
+  restoreCreationHistory(creationRedo.pop());
+}
+function syncCreationHistoryButtons(){
+  const u=$('#creationUndo'),r=$('#creationRedo');if(u)u.disabled=!creationHistory.length;if(r)r.disabled=!creationRedo.length;
+}
+function setCreationPreviewZoom(){
+  const scale=Number($('#creationZoom')?.value||1);
+  const target=state.creationMode==='carousel'?$('#carouselCanvas'):state.creationMode==='visual'?$('#visualImage'):$('#textCreationPanel');
+  [$('#carouselCanvas'),$('#visualImage'),$('#textCreationPanel')].forEach(el=>{if(el){el.style.transform='';el.style.transformOrigin='center top'}});
+  if(target){target.style.transform='scale('+scale+')';target.style.transformOrigin='center top'}
+}
+
 function installCreationModes(){
   const view=$('#view-creation');if(!view||$('#creationModeBar'))return;
   const toolbar=view.querySelector('.page-toolbar'),textPanel=view.querySelector('.creation-layout');
   if(textPanel)textPanel.id='textCreationPanel';
   const bar=document.createElement('div');bar.id='creationModeBar';bar.className='creation-mode-bar';
-  bar.innerHTML='<button class="active" data-create-mode="text">Texte</button><button data-create-mode="carousel">Carrousel</button><button data-create-mode="visual">Visuel</button><span class="mode-spacer"></span><select id="draftPicker"><option value="">Brouillons</option></select><button id="draftRecover" hidden>Récupérer local</button><button id="draftSave">Enregistrer</button><button id="draftDelete" title="Supprimer le brouillon">×</button>';
+  bar.innerHTML='<button class="active" data-create-mode="text">Texte</button><button data-create-mode="carousel">Carrousel</button><button data-create-mode="visual">Visuel</button><span class="mode-spacer"></span><button id="creationUndo" title="Annuler">↶</button><button id="creationRedo" title="Rétablir">↷</button><select id="creationZoom" title="Zoom aperçu"><option value="0.8">80%</option><option value="1" selected>100%</option><option value="1.2">120%</option></select><select id="draftPicker"><option value="">Brouillons</option></select><button id="draftRecover" hidden>Récupérer local</button><button id="draftSave">Enregistrer</button><button id="draftDelete" title="Supprimer le brouillon">×</button>';
   toolbar.insertAdjacentElement('afterend',bar);
   const carousel=document.createElement('section');carousel.id='carouselCreationPanel';carousel.className='creation-mode-panel';
   carousel.innerHTML='<div class="carousel-controls panel"><div class="panel-head"><div><small>CARROUSEL</small><h2>Structure éditoriale</h2></div></div><label>Source<select id="carouselSource"><option value="">Brief libre</option></select></label><label>Nombre de slides<select id="carouselCount"><option>4</option><option selected>5</option><option>6</option><option>7</option></select></label><label>Format<select id="carouselFormat"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><label>Brief<textarea id="carouselBrief" rows="7" placeholder="Angle, informations essentielles, CTA…"></textarea></label><button class="primary-btn wide" id="carouselGenerate">✦ Générer la structure</button><button class="secondary-btn wide" id="carouselGenerateImage">Générer l’image de la slide</button><button class="secondary-btn wide" id="carouselGenerateAll">Générer toutes les images</button><button class="secondary-btn wide" id="carouselExport">Exporter la slide PNG</button><button class="secondary-btn wide" id="carouselExportAll">Exporter toutes les slides</button><label>Instagram<textarea id="carouselCaption" rows="5" placeholder="Légende Instagram…"></textarea></label><button class="secondary-btn wide" id="carouselCaptionGenerate">✦ Préparer la légende</button><button class="primary-btn wide" id="carouselPublishInstagram">Publier sur Instagram</button><button class="secondary-btn wide" id="carouselToBureau">▤ Envoyer au Bureau</button></div><div class="carousel-preview panel"><div class="carousel-canvas" id="carouselCanvas"><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Ton carrousel apparaîtra ici</h3><p id="carouselBody">Choisis une source ou écris un brief.</p><b id="carouselCta">Découvrir →</b></div></div><div class="carousel-edit"><input id="slideKicker" placeholder="Kicker"><input id="slideTitle" placeholder="Titre"><textarea id="slideBody" rows="4" placeholder="Texte"></textarea><input id="slideCta" placeholder="CTA"></div></div><aside class="carousel-strip panel"><div class="panel-head"><div><small>SLIDES</small><h2 id="carouselCounter">0 slide</h2></div></div><div id="carouselSlides"></div></aside>';
@@ -1838,6 +1872,7 @@ function installCreationModes(){
   $('#draftRecover').onclick=restoreLocalCreationBackup;
   $('#draftSave').onclick=saveDraft;
   $('#draftDelete').onclick=deleteDraft;
+  $('#creationUndo').onclick=undoCreation;$('#creationRedo').onclick=redoCreation;$('#creationZoom').onchange=setCreationPreviewZoom;syncCreationHistoryButtons();
   $('#carouselSource').onchange=syncCarouselBrief;$('#carouselGenerate').onclick=generateCarousel;$('#carouselGenerateImage').onclick=()=>generateCarouselImage(state.carousel.active);$('#carouselGenerateAll').onclick=generateAllCarouselImages;$('#carouselExport').onclick=()=>exportCarouselSlide(state.carousel.active);$('#carouselExportAll').onclick=exportAllCarouselSlides;$('#carouselCaptionGenerate').onclick=prepareInstagramCaption;$('#carouselPublishInstagram').onclick=publishCarouselInstagram;$('#carouselToBureau').onclick=carouselToBureau;
   $('#carouselFormat').onchange=e=>{state.carousel.format=e.target.value;renderCarousel()};
   ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
@@ -1952,6 +1987,7 @@ function setCreationMode(mode){
   $('#textCreationPanel')?.style.setProperty('display',mode==='text'?'grid':'none');
   $('#carouselCreationPanel')?.classList.toggle('active',mode==='carousel');
   $('#visualCreationPanel')?.classList.toggle('active',mode==='visual');
+  setTimeout(setCreationPreviewZoom,0);
 }
 function fillCreationSources(){
   const sel=$('#carouselSource');if(!sel)return;const cur=sel.value;
@@ -1985,6 +2021,7 @@ function slideDesign(s){
 }
 function slideAccentColor(name){return({black:'#111318',violet:'#735cff',cyan:'#45cbd7',pink:'#e96cae'})[name]||'#111318'}
 function setSlideDesignPreset(name){
+  pushCreationHistory();
   const s=state.carousel.slides[state.carousel.active];if(!s)return toast('Génère d’abord une slide');
   const presets={
     ultra:{theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:105,imageOpacity:58,radius:28},
@@ -1995,6 +2032,7 @@ function setSlideDesignPreset(name){
   s.design={...slideDesign(s),...(presets[name]||presets.ultra)};renderCarousel();scheduleDraftAutosave();
 }
 function updateSlideDesignFromControls(){
+  pushCreationHistory();
   const s=state.carousel.slides[state.carousel.active];if(!s)return;
   const d=slideDesign(s);d.layout=$('#slideLayout')?.value||d.layout;d.accent=$('#slideAccent')?.value||d.accent;d.align=$('#slideAlign')?.value||d.align;
   d.fontScale=Number($('#slideFontScale')?.value||d.fontScale);d.imageOpacity=Number($('#slideImageOpacity')?.value||d.imageOpacity);
@@ -2016,14 +2054,17 @@ async function assistSlideDesign(kind){
   }catch{toast('PLUGY n’a pas pu modifier la slide')}
 }
 function addCarouselSlide(){
+  pushCreationHistory();
   const at=Math.max(0,state.carousel.active+1),base={kicker:'PLUG ART',title:'Nouvelle slide',body:'Ajoute ton message.',cta:'Découvrir →',image:'',image_prompt:'',design:{theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,imageOpacity:64,radius:26}};
   state.carousel.slides.splice(at,0,base);state.carousel.active=at;renderCarousel();scheduleDraftAutosave();
 }
 function duplicateCarouselSlide(){
+  pushCreationHistory();
   const s=state.carousel.slides[state.carousel.active];if(!s)return;
   const copy=JSON.parse(JSON.stringify(s)),at=state.carousel.active+1;state.carousel.slides.splice(at,0,copy);state.carousel.active=at;renderCarousel();scheduleDraftAutosave();
 }
 function deleteCarouselSlideManual(){
+  pushCreationHistory();
   if(!state.carousel.slides.length)return;if(state.carousel.slides.length===1)return toast('Garde au moins une slide');
   state.carousel.slides.splice(state.carousel.active,1);state.carousel.active=Math.max(0,Math.min(state.carousel.active,state.carousel.slides.length-1));renderCarousel();scheduleDraftAutosave();
 }
@@ -2036,7 +2077,7 @@ function renderCarousel(){
     b.ondragstart=e=>{e.dataTransfer.setData('text/plain',b.dataset.carouselSlide);e.dataTransfer.effectAllowed='move';b.classList.add('dragging')};
     b.ondragend=()=>b.classList.remove('dragging');
     b.ondragover=e=>{e.preventDefault();e.dataTransfer.dropEffect='move'};
-    b.ondrop=e=>{e.preventDefault();const from=Number(e.dataTransfer.getData('text/plain')),to=Number(b.dataset.carouselSlide);if(!Number.isFinite(from)||from===to)return;const moved=state.carousel.slides.splice(from,1)[0];state.carousel.slides.splice(to,0,moved);state.carousel.active=to;renderCarousel();scheduleDraftAutosave()};
+    b.ondrop=e=>{e.preventDefault();pushCreationHistory();const from=Number(e.dataTransfer.getData('text/plain')),to=Number(b.dataset.carouselSlide);if(!Number.isFinite(from)||from===to)return;const moved=state.carousel.slides.splice(from,1)[0];state.carousel.slides.splice(to,0,moved);state.carousel.active=to;renderCarousel();scheduleDraftAutosave()};
   });
   $('#carouselKicker').textContent=s.kicker||'PLUG ART';$('#carouselTitle').textContent=s.title||'Ton carrousel apparaîtra ici';$('#carouselBody').textContent=s.body||'Choisis une source ou écris un brief.';$('#carouselCta').textContent=s.cta||'Découvrir →';
   const img=$('#carouselImage');img.style.backgroundImage=s.image?'url("'+String(s.image).replace(/"/g,'%22')+'")':'none';img.style.opacity=String(Math.max(0,Math.min(100,Number(d.imageOpacity||0)))/100);
@@ -2050,6 +2091,7 @@ function renderCarousel(){
 }
 
 function syncActiveSlideEdit(){
+  pushCreationHistory();
   const s=state.carousel.slides[state.carousel.active];if(!s)return;s.kicker=$('#slideKicker').value;s.title=$('#slideTitle').value;s.body=$('#slideBody').value;s.cta=$('#slideCta').value;renderCarousel();
 }
 async function generateCarouselImage(index){
