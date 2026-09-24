@@ -565,14 +565,15 @@ function installSlideDashboard(){
         '<div class="slide-data-panel"><div class="slide-card-head"><span>PRIORITÉS</span><button data-route="opencalls">Tout voir →</button></div><div class="slide-opportunity-list" id="slideOpportunityList"></div></div>'+
       '</section>'+
       '<section class="dash-slide dash-slide-create" data-slide-index="2">'+
-        '<div class="slide-section-head"><span class="slide-kicker">PRODUIRE</span><h2>Créer & rédiger</h2><p>Du brief jusqu’au contenu final sans quitter PLUG ART.</p></div>'+
-        '<div class="slide-tool-grid four">'+
-          '<button class="slide-tool-card tall accent-d" data-route="creation"><span>✦</span><small>STUDIO</small><strong>Texte, carrousel, visuel</strong><p>Créer, exporter en PNG/ZIP et publier sur Instagram.</p></button>'+
-          '<button class="slide-tool-card tall accent-e" data-route="bureau"><span>▤</span><small>BUREAU</small><strong>Documents</strong><p>Rédiger, corriger, transformer et organiser.</p></button>'+
-          '<button class="slide-tool-card tall accent-f" data-bureau-slide="packages"><span>◫</span><small>DOSSIERS</small><strong>Candidatures</strong><p>Assembler un dossier depuis un Open Call avec PLUGY.</p></button>'+
-          '<button class="slide-tool-card tall accent-g" data-bureau-slide="templates"><span>≡</span><small>MODÈLES</small><strong>Réutiliser tes bases</strong><p>Bio, mails, notes artistiques et candidatures.</p></button>'+
+        '<div class="slide-create-intro"><span class="slide-kicker">PRODUIRE</span><h2>Créer <em>&</em><br>rédiger</h2><p>Un espace de production continu. Choisis une intention, pas une case.</p><button class="create-main-action" data-route="creation"><i>✦</i><span><small>COMMENCER</small><strong>Ouvrir le Studio</strong></span><b>↗</b></button></div>'+
+        '<div class="create-flow" aria-label="Outils de création">'+
+          '<button class="create-orbit create-orbit-studio" data-route="creation"><i>✦</i><span><small>STUDIO</small><strong>Composer</strong><em>Texte · carrousel · visuel</em></span></button>'+
+          '<button class="create-orbit create-orbit-docs" data-route="bureau"><i>▤</i><span><small>BUREAU</small><strong>Écrire</strong><em>Documents & notes</em></span></button>'+
+          '<button class="create-orbit create-orbit-pack" data-bureau-slide="packages"><i>◫</i><span><small>DOSSIERS</small><strong>Assembler</strong><em>Candidatures avec PLUGY</em></span></button>'+
+          '<button class="create-orbit create-orbit-models" data-bureau-slide="templates"><i>≡</i><span><small>MODÈLES</small><strong>Réutiliser</strong><em>Bases & structures</em></span></button>'+
+          '<div class="create-flow-line" aria-hidden="true"></div>'+
         '</div>'+
-        '<div class="slide-data-panel slide-resume-panel"><div class="slide-card-head"><span>À REPRENDRE</span><button data-route="bureau">Ouvrir le Bureau →</button></div><div id="slideWorkResume"></div></div>'+
+        '<div class="create-resume-stream"><div class="create-resume-head"><span>À REPRENDRE</span><button data-route="bureau">Tout le Bureau ↗</button></div><div id="slideWorkResume"></div></div>'+
       '</section>'+
       '<section class="dash-slide dash-slide-crm" data-slide-index="3">'+
         '<div class="slide-section-head"><span class="slide-kicker">DÉMARCHES</span><h2>Prospection</h2><p>Voir qui contacter, relancer et faire avancer.</p></div>'+
