@@ -9,9 +9,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <meta name="description" content="PLUG ART Workspace — Radar, Open Calls, création, Bureau, prospection et PLUGY.">
-<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">\n<link rel="preconnect" href="https://ajax.googleapis.com" crossorigin>\n<link rel="dns-prefetch" href="//ajax.googleapis.com">\n<link rel="preload" href="/static/plugart_v107.js?v=133.20260924.1" as="script">
-<link rel="stylesheet" href="/static/plugart_v107.css?v=133.20260924.1">
-<link rel="stylesheet" href="/static/plugart_v122_slide.css?v=133.20260924.1">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://ajax.googleapis.com" crossorigin>
+<link rel="dns-prefetch" href="//ajax.googleapis.com">
+<link rel="preload" href="/static/plugart_v107.js?v=134.20260924.1" as="script">
+<link rel="stylesheet" href="/static/plugart_v107.css?v=134.20260924.1">
+<link rel="stylesheet" href="/static/plugart_v122_slide.css?v=134.20260924.1">
 </head>
 <body data-view="dashboard" data-plugy-motion="Idle">
 <div class="app-shell">
@@ -52,14 +55,14 @@
       </button>
       <a class="plugy-full-link" href="/plugy">Plein écran ↗</a>
     </div>
-    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small>V133</small></div>
+    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small>V134</small></div>
   </aside>
 
   <main class="workspace">
     <header class="topbar">
       <div class="top-title">
         <small id="pageEyebrow">WORKSPACE</small>
-        <div class="top-title-line"><h1 id="pageTitle">Dashboard</h1><span class="build-pill">V133</span></div>
+        <div class="top-title-line"><h1 id="pageTitle">Dashboard</h1><span class="build-pill">V134</span></div>
       </div>
       <button class="global-search" id="globalSearch"><span>⌕</span><strong>Rechercher dans PLUG ART</strong><kbd>⌘ K</kbd></button>
       <div class="top-actions">
@@ -156,19 +159,20 @@
         <div class="toolbar-actions"><button class="secondary-btn" id="contentClear">Nouveau projet</button><button class="primary-btn" id="contentGenerate">✦ Générer avec PLUGY</button></div>
       </div>
 
-      <section class="creation-start" id="creationStart">
+      <section class="creation-start creation-launchpad" id="creationStart">
         <div class="creation-start-copy">
           <small>COMMENCER</small>
-          <h3>Un brief. Un format. Une vraie direction visuelle.</h3>
-          <p>Choisis un point de départ, puis affine tout dans l’éditeur.</p>
+          <h3>Quelle histoire<br>veux-tu <em>faire vivre ?</em></h3>
+          <p>Pars d’une intention. PLUG ART ouvre ensuite les bons outils sans t’enfermer dans un format.</p>
+          <button class="creation-free-entry" data-studio-start="carousel"><i>✦</i><span><small>CANVAS LIBRE</small><b>Créer sans modèle</b></span><strong>↗</strong></button>
         </div>
-        <div class="creation-start-grid">
-          <button data-studio-start="carousel" data-marketing-template="open-call"><span>01</span><b>Open Call</b><small>Carrousel éditorial</small></button>
-          <button data-studio-start="carousel" data-marketing-template="event"><span>02</span><b>Événement</b><small>Annonce / exposition</small></button>
-          <button data-studio-start="carousel" data-marketing-template="last-call"><span>03</span><b>Dernier appel</b><small>Deadline / urgence</small></button>
-          <button data-studio-start="visual" data-visual-usecase="campaign"><span>04</span><b>Campagne</b><small>Visuel marketing</small></button>
-          <button data-studio-start="visual" data-visual-usecase="artist"><span>05</span><b>Artiste</b><small>Portrait / focus</small></button>
-          <button data-studio-start="text"><span>06</span><b>Copywriting</b><small>Légende / texte / email</small></button>
+        <div class="creation-paths" aria-label="Points de départ créatifs">
+          <button class="creation-path path-open" data-studio-start="carousel" data-marketing-template="open-call"><i>↗</i><span><b>Open Call</b><small>Transformer un appel en histoire éditoriale</small></span><em>CARROUSEL</em></button>
+          <button class="creation-path path-event" data-studio-start="carousel" data-marketing-template="event"><i>○</i><span><b>Événement</b><small>Faire exister une exposition avant son ouverture</small></span><em>ANNONCE</em></button>
+          <button class="creation-path path-last" data-studio-start="carousel" data-marketing-template="last-call"><i>⌁</i><span><b>Dernier appel</b><small>Créer de l’urgence sans faire une affiche criarde</small></span><em>DEADLINE</em></button>
+          <button class="creation-path path-campaign" data-studio-start="visual" data-visual-usecase="campaign"><i>✦</i><span><b>Campagne</b><small>Construire une direction visuelle complète</small></span><em>VISUEL</em></button>
+          <button class="creation-path path-artist" data-studio-start="visual" data-visual-usecase="artist"><i>◌</i><span><b>Artiste</b><small>Mettre une pratique et un univers au premier plan</small></span><em>PORTRAIT</em></button>
+          <button class="creation-path path-copy" data-studio-start="text"><i>¶</i><span><b>Copywriting</b><small>Trouver les mots, l’angle et le rythme</small></span><em>TEXTE</em></button>
         </div>
       </section>
 
@@ -322,7 +326,7 @@
   </div>
   <div class="plugy-stage">
     <div class="plugy-energy e1"></div><div class="plugy-energy e2"></div>
-    <model-viewer id="plugyModel" loading="lazy" src="/assets/plugy-v113-premium.glb?v=133.20260924.1" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity=".42" shadow-softness=".95" exposure=".94" camera-orbit="0deg 76deg 3.05m" field-of-view="27deg" alt="PLUGY"></model-viewer>
+    <model-viewer id="plugyModel" loading="lazy" src="/assets/plugy-v113-premium.glb?v=134.20260924.1" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity=".42" shadow-softness=".95" exposure=".94" camera-orbit="0deg 76deg 3.05m" field-of-view="27deg" alt="PLUGY"></model-viewer>
     <div class="plugy-state" id="plugyState"><i></i><span>Prêt</span></div>
   </div>
   <div class="plugy-context" id="plugyContext">Contexte : Dashboard</div>
@@ -400,7 +404,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<script defer src="/static/plugart_v107.js?v=133.20260924.1"></script>
-<script src="/static/hub_v132_assets.js?v=133.20260924.1"></script>
+<script defer src="/static/plugart_v107.js?v=134.20260924.1"></script>
+<script src="/static/hub_v132_assets.js?v=134.20260924.1"></script>
 </body>
 </html>
