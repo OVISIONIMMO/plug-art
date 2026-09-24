@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='128.1'
+app.version='128.2'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 GLB=BASE/'static'/'PLUGY_final_animated.glb'
@@ -15,7 +15,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='128.20260924.2'
+VERSION='128.20260924.3'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -29,15 +29,15 @@ def _v123_prepare_region_migration_backup():
     db_path=Path(os.getenv('PLUGART_DB','/data/plugart.db'))
     try:
         if not db_path.exists():
-            print('PLUG_ART_V123_BACKUP_SKIP reason=db-missing',flush=True);return
+            print('PLUG_ART_BACKUP_SKIP reason=db-missing',flush=True);return
         src_bytes=db_path.stat().st_size
         usage=shutil.disk_usage('/data')
-        print(f"PLUG_ART_V123_STORAGE db_bytes={src_bytes} free_bytes={usage.free} used_bytes={usage.used} total_bytes={usage.total}",flush=True)
+        print(f"PLUG_ART_STORAGE db_bytes={src_bytes} free_bytes={usage.free} used_bytes={usage.used} total_bytes={usage.total}",flush=True)
         if MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0:
-            print(f"PLUG_ART_V123_BACKUP_READY bytes={MIGRATION_BACKUP.stat().st_size} existing=true",flush=True);return
+            print(f"PLUG_ART_BACKUP_READY bytes={MIGRATION_BACKUP.stat().st_size} existing=true",flush=True);return
         required=max(src_bytes*2,32*1024*1024)
         if usage.free<required:
-            print(f"PLUG_ART_V123_BACKUP_SKIP reason=insufficient-space required={required} free={usage.free}",flush=True);return
+            print(f"PLUG_ART_BACKUP_SKIP reason=insufficient-space required={required} free={usage.free}",flush=True);return
         MIGRATION_BACKUP.parent.mkdir(parents=True,exist_ok=True)
         source=sqlite3.connect(str(db_path),timeout=30)
         target=sqlite3.connect(str(MIGRATION_BACKUP),timeout=30)
@@ -47,9 +47,9 @@ def _v123_prepare_region_migration_backup():
             target.commit()
         finally:
             target.close();source.close()
-        print(f"PLUG_ART_V123_BACKUP_READY bytes={MIGRATION_BACKUP.stat().st_size} existing=false",flush=True)
+        print(f"PLUG_ART_BACKUP_READY bytes={MIGRATION_BACKUP.stat().st_size} existing=false",flush=True)
     except Exception as exc:
-        print(f"PLUG_ART_V123_BACKUP_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
+        print(f"PLUG_ART_BACKUP_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
 
 _v123_prepare_region_migration_backup()
 
@@ -274,12 +274,34 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'128.1',
+      'version':'128.2',
       'ui':'plug-art-v128-premium-cockpit',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
       'migration_backup_ready':backup_ready
+    }
+
+@app.get('/api/v128/ui-manifest')
+def ui_manifest_v128():
+    html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
+    js_path=BASE/'static'/'plugart_v107.js'
+    css_path=BASE/'static'/'plugart_v122_slide.css'
+    expected='128.20260924.2'
+    return {
+      'ok': bool(html and js_path.exists() and css_path.exists()),
+      'version':'128.2',
+      'ui':'plug-art-v128-premium-cockpit',
+      'asset_version':expected,
+      'html_has_js':f'plugart_v107.js?v={expected}' in html,
+      'html_has_slide_css':f'plugart_v122_slide.css?v={expected}' in html,
+      'html_has_sidebar_version':'V128.1' in html,
+      'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
+      'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
+      'features':[
+        'premium-cockpit','contextual-plugy','plugy-depth','streaming-assistant',
+        'progressive-runtime','lean-bootstrap','conditional-html-cache'
+      ]
     }
 
 @app.get('/',response_class=HTMLResponse,include_in_schema=False)
@@ -290,7 +312,7 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'128.1',
+      'X-Plug-Art-Version':'128.2',
       'X-Plug-Art-UI':'plug-art-v128-premium-cockpit'
     }
     if request.headers.get('if-none-match')==etag:
@@ -1836,7 +1858,7 @@ def _v124_bootstrap_smoke():
         payload=dashboard_bootstrap_v124()
         raw=json.dumps(payload,ensure_ascii=False,separators=(',',':')).encode('utf-8')
         print(
-          f"PLUG_ART_V124_BOOTSTRAP_READY bytes={len(raw)} "
+          f"PLUG_ART_BOOTSTRAP_READY bytes={len(raw)} "
           f"opportunities={len(payload.get('opportunities') or [])} "
           f"workflow={len(payload.get('workflow') or [])} "
           f"leads={len(payload.get('leads') or [])} "
@@ -1844,7 +1866,7 @@ def _v124_bootstrap_smoke():
           flush=True
         )
     except Exception as exc:
-        print(f"PLUG_ART_V124_BOOTSTRAP_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
+        print(f"PLUG_ART_BOOTSTRAP_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
 
 threading.Thread(target=_v124_bootstrap_smoke,daemon=True).start()
 
@@ -2072,7 +2094,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'128.1',
+      'version':'128.2',
       'ui':'plug-art-v128-premium-cockpit',
       'reference_direction':'V120 PLUG ART: compact internal work cockpit with a three-mode Bureau for Documents, application Packages and reusable Templates, starter application packs, direct Open Call routing, CRM outreach, PLUGY operator, Instagram Studio and mobile-first workflows',
       'marketing_blocks':False,
@@ -2100,11 +2122,12 @@ def status_v90():
       'background':'compact PLUG ART internal workspace with lightweight dashboard-first loading, modular operational data and integrated content studio'
     }
 
-print(f"PLUG_ART_V122_READY ui=internal_dashboard bureau=persistent prospection=crm open_call_workflow=on drafts=persistent realistic=on contextual_motion=on plugy=single_drawer instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_READY ui=internal_dashboard bureau=persistent prospection=crm open_call_workflow=on drafts=persistent realistic=on contextual_motion=on plugy=single_drawer instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
       ('GET','/api/health'),
+      ('GET','/api/v128/ui-manifest'),
       ('GET','/api/v124/dashboard-bootstrap'),
       ('POST','/api/v125/plugy/stream'),
       ('POST','/api/v32/plugy'),
@@ -2142,7 +2165,7 @@ def _v127_runtime_smoke():
         quick=f"{type(exc).__name__}:{str(exc)[:120]}"
     ok=(not missing and not table_missing and db_ok)
     print(
-      f"PLUG_ART_V127_SMOKE ok={str(ok).lower()} routes={len(required_routes)-len(missing)}/{len(required_routes)} "
+      f"PLUG_ART_SMOKE ok={str(ok).lower()} routes={len(required_routes)-len(missing)}/{len(required_routes)} "
       f"tables={len(required_tables)-len(table_missing)}/{len(required_tables)} db={quick} "
       f"missing_routes={','.join(m+' '+p for m,p in missing) or 'none'} "
       f"missing_tables={','.join(table_missing) or 'none'}",
