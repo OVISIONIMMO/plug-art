@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='137.20260924.1';
+const VERSION='138.20260924.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -197,10 +197,10 @@ function tunePlugyMaterials(){
       try{mat?.specular?.setSpecularFactor?.(isMetal?.18:0)}catch{}
       try{mat?.iridescence?.setIridescenceFactor?.(0)}catch{}
     });
-    mv.setAttribute('exposure','.72');
-    mv.setAttribute('shadow-intensity','.16');
+    mv.setAttribute('exposure','.70');
+    mv.setAttribute('shadow-intensity','.12');
     mv.setAttribute('shadow-softness','1');
-    mv.dataset.finish='reflectionless-v137';
+    mv.dataset.finish='reflectionless-baked-v138';
   }catch(e){console.warn('[PLUGY finish]',e)}
 }
 $('#plugyModel')?.addEventListener('load',()=>{tunePlugyMaterials();if($('#plugyState span'))$('#plugyState span').textContent='Prêt';playMotion('Idle',true)},{once:true});
