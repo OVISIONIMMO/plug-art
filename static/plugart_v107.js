@@ -1,10 +1,10 @@
 (function(){
 'use strict';
-const VERSION='131.20260924.2';
+const VERSION='132.20260924.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,recognition:null,plugyBusy:false,creationMode:'text',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''}};
+const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,recognition:null,plugyBusy:false,creationMode:'text',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''},canvasLayer:null,canvasTool:'templates'};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -1833,6 +1833,109 @@ function setCreationPreviewZoom(){
   if(target){target.style.transform='scale('+scale+')';target.style.transformOrigin='center top'}
 }
 
+function slideLayers(s){
+  if(!s)return[];
+  if(!Array.isArray(s.layers))s.layers=[];
+  return s.layers;
+}
+function activeCanvasLayer(){
+  const s=state.carousel.slides[state.carousel.active];if(!s)return null;
+  return slideLayers(s).find(l=>String(l.id)===String(state.canvasLayer))||null;
+}
+function newLayerId(){return 'ly-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6)}
+function addCanvasLayer(type,payload={}){
+  const s=state.carousel.slides[state.carousel.active];if(!s)return toast('Crée ou charge une slide');
+  pushCreationHistory();
+  const defaults=type==='text'
+    ?{type:'text',text:'Nouveau texte',x:12,y:14,w:62,h:12,size:26,weight:700,color:'#111318',opacity:1,align:'left'}
+    :type==='image'
+      ?{type:'image',src:state.visual.url||'',x:18,y:18,w:52,h:38,opacity:1,radius:18}
+      :{type:'shape',shape:'rect',x:18,y:20,w:34,h:18,opacity:.92,color:'#7657ff',radius:22};
+  const layer={id:newLayerId(),...defaults,...payload};
+  slideLayers(s).push(layer);state.canvasLayer=layer.id;renderCarousel();scheduleDraftAutosave();
+}
+function duplicateCanvasLayer(){
+  const s=state.carousel.slides[state.carousel.active],l=activeCanvasLayer();if(!s||!l)return;
+  pushCreationHistory();const copy=JSON.parse(JSON.stringify(l));copy.id=newLayerId();copy.x=Math.min(90,(copy.x||0)+4);copy.y=Math.min(90,(copy.y||0)+4);slideLayers(s).push(copy);state.canvasLayer=copy.id;renderCarousel();scheduleDraftAutosave();
+}
+function deleteCanvasLayer(){
+  const s=state.carousel.slides[state.carousel.active];if(!s||!state.canvasLayer)return;
+  pushCreationHistory();s.layers=slideLayers(s).filter(l=>String(l.id)!==String(state.canvasLayer));state.canvasLayer=null;renderCarousel();scheduleDraftAutosave();
+}
+function moveCanvasLayer(dir){
+  const s=state.carousel.slides[state.carousel.active],layers=slideLayers(s),idx=layers.findIndex(l=>String(l.id)===String(state.canvasLayer));if(idx<0)return;
+  pushCreationHistory();const [l]=layers.splice(idx,1);if(dir==='front')layers.push(l);else layers.unshift(l);renderCarousel();scheduleDraftAutosave();
+}
+function layerStyle(l){
+  return 'left:'+Number(l.x||0)+'%;top:'+Number(l.y||0)+'%;width:'+Number(l.w||20)+'%;height:'+Number(l.h||12)+'%;opacity:'+Number(l.opacity??1)+';'+
+    (l.type==='text'?'color:'+esc(l.color||'#111318')+';font-size:'+Number(l.size||24)+'px;font-weight:'+Number(l.weight||700)+';text-align:'+(l.align||'left')+';':'')+
+    (l.type==='shape'?'background:'+esc(l.color||'#7657ff')+';border-radius:'+Number(l.radius||18)+'px;':'')+
+    (l.type==='image'?'border-radius:'+Number(l.radius||18)+'px;':'');
+}
+function renderCanvasLayers(){
+  const box=$('#canvasLayers');if(!box)return;
+  const s=state.carousel.slides[state.carousel.active],layers=slideLayers(s);
+  box.innerHTML=layers.map(l=>{
+    const selected=String(l.id)===String(state.canvasLayer)?' selected':'';
+    const inner=l.type==='text'?'<span contenteditable="true" spellcheck="false">'+esc(l.text||'Texte')+'</span>':l.type==='image'?(l.src?'<img src="'+esc(l.src)+'" alt="">':'<span class="layer-placeholder">Image</span>'):'';
+    return '<div class="canvas-layer layer-'+esc(l.type)+selected+'" data-layer-id="'+esc(l.id)+'" style="'+layerStyle(l)+'">'+inner+'<i class="layer-resize"></i></div>';
+  }).join('');
+  $$('[data-layer-id]',box).forEach(el=>{
+    const id=el.dataset.layerId,l=layers.find(x=>String(x.id)===String(id));if(!l)return;
+    el.addEventListener('pointerdown',e=>{
+      if(e.target.classList.contains('layer-resize'))return;
+      state.canvasLayer=id;$$('[data-layer-id]',box).forEach(x=>x.classList.toggle('selected',x===el));syncLayerInspector();
+      const canvas=$('#carouselCanvas'),r=canvas.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ox=Number(l.x||0),oy=Number(l.y||0);el.setPointerCapture?.(e.pointerId);
+      const move=ev=>{l.x=Math.max(0,Math.min(94,ox+(ev.clientX-sx)/r.width*100));l.y=Math.max(0,Math.min(94,oy+(ev.clientY-sy)/r.height*100));el.style.left=l.x+'%';el.style.top=l.y+'%'};
+      const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);scheduleDraftAutosave()};
+      el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);
+    });
+    el.querySelector('.layer-resize')?.addEventListener('pointerdown',e=>{
+      e.stopPropagation();state.canvasLayer=id;syncLayerInspector();const canvas=$('#carouselCanvas'),r=canvas.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ow=Number(l.w||20),oh=Number(l.h||12);el.setPointerCapture?.(e.pointerId);
+      const move=ev=>{l.w=Math.max(8,Math.min(94,ow+(ev.clientX-sx)/r.width*100));l.h=Math.max(5,Math.min(94,oh+(ev.clientY-sy)/r.height*100));el.style.width=l.w+'%';el.style.height=l.h+'%'};
+      const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);scheduleDraftAutosave()};
+      el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);
+    });
+    const editable=el.querySelector('[contenteditable="true"]');
+    editable?.addEventListener('input',()=>{l.text=editable.innerText;scheduleDraftAutosave()});
+    editable?.addEventListener('pointerdown',e=>e.stopPropagation());
+  });
+  syncLayerInspector();
+}
+function syncLayerInspector(){
+  const l=activeCanvasLayer(),box=$('#layerInspector');if(!box)return;
+  box.classList.toggle('empty',!l);
+  if(!l){box.innerHTML='<span>Sélectionne un élément sur le canvas.</span>';return}
+  box.innerHTML='<div class="layer-inspector-head"><strong>'+esc(l.type==='text'?'Texte':l.type==='image'?'Image':'Élément')+'</strong><button id="layerDelete">×</button></div>'+
+    '<label>X <input id="layerX" type="range" min="0" max="92" value="'+Number(l.x||0)+'"></label>'+
+    '<label>Y <input id="layerY" type="range" min="0" max="92" value="'+Number(l.y||0)+'"></label>'+
+    '<label>Largeur <input id="layerW" type="range" min="8" max="94" value="'+Number(l.w||20)+'"></label>'+
+    '<label>Opacité <input id="layerOpacity" type="range" min="10" max="100" value="'+Math.round(Number(l.opacity??1)*100)+'"></label>'+
+    (l.type==='text'?'<label>Taille <input id="layerSize" type="range" min="12" max="72" value="'+Number(l.size||26)+'"></label><label>Couleur <input id="layerColor" type="color" value="'+esc(l.color||'#111318')+'"></label>':l.type==='shape'?'<label>Couleur <input id="layerColor" type="color" value="'+esc(l.color||'#7657ff')+'"></label><label>Arrondis <input id="layerRadius" type="range" min="0" max="60" value="'+Number(l.radius||18)+'"></label>':'<label>Arrondis <input id="layerRadius" type="range" min="0" max="60" value="'+Number(l.radius||18)+'"></label>')+
+    '<div class="layer-order-actions"><button id="layerBack">Arrière</button><button id="layerDuplicate">Dupliquer</button><button id="layerFront">Avant</button></div>';
+  const bind=(id,key,transform=v=>Number(v))=>$('#'+id)?.addEventListener('input',e=>{l[key]=transform(e.target.value);renderCanvasLayers();scheduleDraftAutosave()});
+  bind('layerX','x');bind('layerY','y');bind('layerW','w');bind('layerOpacity','opacity',v=>Number(v)/100);bind('layerSize','size');bind('layerRadius','radius');
+  $('#layerColor')?.addEventListener('input',e=>{l.color=e.target.value;renderCanvasLayers();scheduleDraftAutosave()});
+  $('#layerDelete')?.addEventListener('click',deleteCanvasLayer);$('#layerDuplicate')?.addEventListener('click',duplicateCanvasLayer);$('#layerBack')?.addEventListener('click',()=>moveCanvasLayer('back'));$('#layerFront')?.addEventListener('click',()=>moveCanvasLayer('front'));
+}
+function setStudioTool(tool){
+  state.canvasTool=tool;$$('[data-studio-tool]').forEach(b=>b.classList.toggle('active',b.dataset.studioTool===tool));$$('[data-tool-panel]').forEach(p=>p.classList.toggle('active',p.dataset.toolPanel===tool));
+}
+function processCanvasUpload(file){
+  if(!file)return;
+  const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{
+    const max=1400,scale=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*scale));c.height=Math.max(1,Math.round(img.height*scale));c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    addCanvasLayer('image',{src:c.toDataURL('image/jpeg',.82),w:55,h:Math.max(22,55*c.height/c.width)});
+  };img.src=String(reader.result)};reader.readAsDataURL(file);
+}
+function renderStudioImages(){
+  const box=$('#studioImageLibrary');if(!box)return;
+  const urls=[];if(state.visual.url)urls.push({url:state.visual.url,label:'Dernier visuel'});
+  state.carousel.slides.forEach((s,i)=>{if(s.image)urls.push({url:s.image,label:'Slide '+(i+1)})});
+  box.innerHTML=urls.slice(0,12).map((x,i)=>'<button data-studio-image="'+i+'" style="background-image:url(&quot;'+esc(x.url).replace(/"/g,'%22')+'&quot;)"><span>'+esc(x.label)+'</span></button>').join('')||'<div class="studio-image-empty">Tes images générées apparaîtront ici.</div>';
+  $$('[data-studio-image]',box).forEach(b=>b.onclick=()=>{const x=urls[Number(b.dataset.studioImage)];if(x)addCanvasLayer('image',{src:x.url})});
+}
+
 const MARKETING_TEMPLATES={
   'open-call':{label:'Open Call',count:5,theme:'ultra',accent:'black',layout:'editorial',slides:[
     ['OPEN CALL','Titre de l’opportunité','Lieu · deadline · discipline','Découvrir →'],
@@ -1909,14 +2012,18 @@ function installCreationModes(){
   const carousel=document.createElement('section');carousel.id='carouselCreationPanel';carousel.className='creation-mode-panel studio-designer';
   carousel.innerHTML=
     '<aside class="studio-library panel">'+
-      '<div class="studio-panel-title"><small>TEMPLATES</small><strong>Design marketing</strong></div>'+
+      '<div class="studio-tool-tabs"><button class="active" data-studio-tool="templates">Templates</button><button data-studio-tool="images">Images</button><button data-studio-tool="text">Texte</button><button data-studio-tool="elements">Éléments</button></div>'+
+      '<div class="studio-tool-panel active" data-tool-panel="templates"><div class="studio-panel-title"><small>TEMPLATES</small><strong>Design marketing</strong></div>'+
       '<div class="marketing-template-grid">'+
         '<button data-marketing-template="open-call"><i class="mk-open"></i><span><b>Open Call</b><small>Éditorial clair</small></span></button>'+
         '<button data-marketing-template="event"><i class="mk-event"></i><span><b>Événement</b><small>Galerie / expo</small></span></button>'+
         '<button data-marketing-template="last-call"><i class="mk-last"></i><span><b>Dernier appel</b><small>Urgence premium</small></span></button>'+
         '<button data-marketing-template="artist"><i class="mk-artist"></i><span><b>Artiste</b><small>Portrait / focus</small></span></button>'+
         '<button data-marketing-template="partnership"><i class="mk-partner"></i><span><b>Partenariat</b><small>Pro / institutionnel</small></span></button>'+
-      '</div>'+
+      '</div></div>'+
+      '<div class="studio-tool-panel" data-tool-panel="images"><div class="studio-panel-title"><small>IMAGES</small><strong>Médias</strong></div><label class="studio-upload">Importer une image<input id="canvasImageUpload" type="file" accept="image/*"></label><button class="secondary-btn wide" id="canvasUseGenerated">Utiliser le dernier visuel généré</button><div class="studio-image-library" id="studioImageLibrary"></div></div>'+
+      '<div class="studio-tool-panel" data-tool-panel="text"><div class="studio-panel-title"><small>TEXTE</small><strong>Ajouter</strong></div><button class="studio-add-item" data-add-text="heading"><b>Aa</b><span>Titre</span></button><button class="studio-add-item" data-add-text="body"><b>Ag</b><span>Paragraphe</span></button><button class="studio-add-item" data-add-text="label"><b>TAG</b><span>Label</span></button></div>'+
+      '<div class="studio-tool-panel" data-tool-panel="elements"><div class="studio-panel-title"><small>ÉLÉMENTS</small><strong>Formes</strong></div><div class="studio-element-grid"><button data-add-shape="rect"><i></i><span>Bloc</span></button><button data-add-shape="pill"><i class="pill"></i><span>Pill</span></button><button data-add-shape="circle"><i class="circle"></i><span>Cercle</span></button><button data-add-shape="line"><i class="line"></i><span>Ligne</span></button></div></div>'+
       '<div class="studio-library-divider"></div>'+
       '<label>Source<select id="carouselSource"><option value="">Brief libre</option></select></label>'+
       '<label>Slides<select id="carouselCount"><option>4</option><option selected>5</option><option>6</option><option>7</option></select></label>'+
@@ -1926,7 +2033,7 @@ function installCreationModes(){
     '</aside>'+
     '<section class="studio-stage panel">'+
       '<div class="studio-stage-head"><div><small>CANVAS</small><strong>Aperçu temps réel</strong></div><div class="stage-actions"><button id="carouselGenerateImage">✦ Image</button><button id="carouselExport">PNG</button><button id="carouselExportAll">Tout exporter</button></div></div>'+
-      '<div class="studio-canvas-frame"><div class="carousel-canvas" id="carouselCanvas"><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Choisis un template ou génère un carrousel</h3><p id="carouselBody">Le canvas reste entièrement modifiable.</p><b id="carouselCta">Découvrir →</b></div></div></div>'+
+      '<div class="studio-canvas-frame"><div class="carousel-canvas free-canvas" id="carouselCanvas"><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Choisis un template ou génère un carrousel</h3><p id="carouselBody">Le canvas reste entièrement modifiable.</p><b id="carouselCta">Découvrir →</b></div><div class="canvas-layers" id="canvasLayers"></div></div></div>'+
       '<div class="carousel-strip premium-strip"><div class="strip-head"><span id="carouselCounter">0 slide</span><div><button id="slideAdd">＋</button><button id="slideDuplicate">Dupliquer</button><button id="slideDeleteManual">Supprimer</button></div></div><div id="carouselSlides"></div></div>'+
       '<div class="instagram-export-row"><textarea id="carouselCaption" rows="3" placeholder="Légende Instagram…"></textarea><div><button id="carouselCaptionGenerate">✦ Légende</button><button class="primary-btn" id="carouselPublishInstagram">Publier Instagram</button><button id="carouselToBureau">Bureau</button></div></div>'+
     '</section>'+
@@ -1942,6 +2049,7 @@ function installCreationModes(){
       '<label>Image<input id="slideImageUrl" placeholder="URL du visuel"></label>'+
       '<button class="secondary-btn wide" id="slideUseVisual">Utiliser le dernier visuel généré</button>'+
       '<div class="design-help-row"><button data-slide-help="hierarchy">✦ Hiérarchie</button><button data-slide-help="premium">✦ Premium</button><button data-slide-help="direct">✦ Direct</button></div>'+
+      '<div class="inspector-section layer-inspector-section"><small>ÉLÉMENT SÉLECTIONNÉ</small><div class="layer-inspector empty" id="layerInspector"><span>Sélectionne un élément sur le canvas.</span></div></div>'+
     '</aside>';
   carouselMount.appendChild(carousel);
 
@@ -1984,7 +2092,12 @@ function installCreationModes(){
   ['slideFontScale','slideImageOpacity','slideImageUrl'].forEach(id=>$('#'+id)?.addEventListener('input',updateSlideDesignFromControls));
   $$('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));
   $$('[data-slide-help]').forEach(b=>b.onclick=()=>assistSlideDesign(b.dataset.slideHelp));
-  $$('[data-marketing-template]').forEach(b=>b.onclick=()=>applyMarketingTemplate(b.dataset.marketingTemplate));
+  $('[data-marketing-template]').forEach(b=>b.onclick=()=>applyMarketingTemplate(b.dataset.marketingTemplate));
+  $('[data-studio-tool]').forEach(b=>b.onclick=()=>setStudioTool(b.dataset.studioTool));
+  $('[data-add-text]').forEach(b=>b.onclick=()=>{const kind=b.dataset.addText;addCanvasLayer('text',kind==='heading'?{text:'Nouveau titre',size:38,w:70,h:16}:kind==='label'?{text:'PLUG ART',size:15,weight:800,w:30,h:8,color:'#7657ff'}:{text:'Ajoute ton texte ici.',size:22,weight:500,w:68,h:18})});
+  $('[data-add-shape]').forEach(b=>b.onclick=()=>{const shape=b.dataset.addShape;addCanvasLayer('shape',shape==='circle'?{shape,color:'#7657ff',w:18,h:18,radius:60}:shape==='pill'?{shape,color:'#111318',w:34,h:10,radius:60}:shape==='line'?{shape,color:'#111318',w:46,h:1.2,radius:0}:{shape,color:'#7657ff'})});
+  $('#canvasImageUpload')?.addEventListener('change',e=>{processCanvasUpload(e.target.files?.[0]);e.target.value=''});
+  $('#canvasUseGenerated')?.addEventListener('click',()=>state.visual.url?addCanvasLayer('image',{src:state.visual.url}):toast('Génère d’abord un visuel'));
   $('#slideUseVisual')?.addEventListener('click',()=>{const s=state.carousel.slides[state.carousel.active];if(!s)return;if(!state.visual.url)return toast('Aucun visuel généré à utiliser');pushCreationHistory();s.image=state.visual.url;renderCarousel();scheduleDraftAutosave()});
   $('#slideAdd')?.addEventListener('click',addCarouselSlide);$('#slideDuplicate')?.addEventListener('click',duplicateCarouselSlide);$('#slideDeleteManual')?.addEventListener('click',deleteCarouselSlideManual);
 
@@ -2202,7 +2315,8 @@ function renderCarousel(){
   if($('#slideFontScale'))$('#slideFontScale').value=d.fontScale;if($('#slideFontScaleOut'))$('#slideFontScaleOut').textContent=d.fontScale+'%';
   if($('#slideImageOpacity'))$('#slideImageOpacity').value=d.imageOpacity;if($('#slideImageOpacityOut'))$('#slideImageOpacityOut').textContent=d.imageOpacity+'%';
   if($('#slideImageUrl'))$('#slideImageUrl').value=s.image||'';
-  $$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
+  $('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
+  renderCanvasLayers();renderStudioImages();
 }
 
 function syncActiveSlideEdit(){
@@ -2292,6 +2406,14 @@ async function renderCarouselSlideBlob(index){
   bodyLines.forEach((line,i)=>ctx.fillText(line,x,bodyY+i*bodyLH,maxW));
   ctx.fillStyle=ink;ctx.font='800 '+Math.max(22,Math.round(27*scaleText))+'px Arial, sans-serif';
   ctx.fillText(s.cta||'Découvrir →',x,Math.min(h-Math.round(h*.075)-Math.round(30*scaleText),bodyY+bodyLines.length*bodyLH+Math.round(28*scaleText)),maxW);
+  for(const l of slideLayers(s)){
+    const lx=w*Number(l.x||0)/100,ly=h*Number(l.y||0)/100,lw=w*Number(l.w||20)/100,lh=h*Number(l.h||12)/100;
+    ctx.save();ctx.globalAlpha=Number(l.opacity??1);
+    if(l.type==='shape'){ctx.fillStyle=l.color||'#7657ff';const r=Math.min(Number(l.radius||0)/100*Math.min(lw,lh),Math.min(lw,lh)/2);ctx.beginPath();if(ctx.roundRect)ctx.roundRect(lx,ly,lw,lh,r);else ctx.rect(lx,ly,lw,lh);ctx.fill()}
+    if(l.type==='text'){ctx.fillStyle=l.color||'#111318';ctx.textAlign=l.align||'left';ctx.textBaseline='top';ctx.font=String(l.weight||700)+' '+Math.max(12,Number(l.size||24)*w/1080)+'px Arial, sans-serif';const lines=canvasTextLines(ctx,l.text||'',lw,6);lines.forEach((line,i)=>ctx.fillText(line,lx+(l.align==='center'?lw/2:0),ly+i*Math.max(18,Number(l.size||24)*1.18*w/1080),lw))}
+    if(l.type==='image'&&l.src){const im=await loadCanvasImage(l.src,7000);if(im){ctx.beginPath();ctx.rect(lx,ly,lw,lh);ctx.clip();const scale=Math.max(lw/im.naturalWidth,lh/im.naturalHeight),dw=im.naturalWidth*scale,dh=im.naturalHeight*scale;ctx.drawImage(im,lx+(lw-dw)/2,ly+(lh-dh)/2,dw,dh)}}
+    ctx.restore();
+  }
   return await new Promise(resolve=>canvas.toBlob(resolve,'image/png',.96));
 }
 
