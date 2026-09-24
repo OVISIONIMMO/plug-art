@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='126.20260924.1';
+const VERSION='128.20260924.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -598,6 +598,20 @@ function installSlideDashboard(){
     e.preventDefault();
     goDashboardSlide(dashboardSlideIndex+(e.deltaY>0?1:-1));
   },{passive:false});
+  const plugyZone=$('.slide-plugy-zone',deck);
+  if(plugyZone){
+    plugyZone.addEventListener('pointermove',e=>{
+      const r=plugyZone.getBoundingClientRect();
+      const x=((e.clientX-r.left)/Math.max(1,r.width)-.5)*18;
+      const y=((e.clientY-r.top)/Math.max(1,r.height)-.5)*14;
+      plugyZone.style.setProperty('--plugy-x',x.toFixed(2)+'px');
+      plugyZone.style.setProperty('--plugy-y',y.toFixed(2)+'px');
+    },{passive:true});
+    plugyZone.addEventListener('pointerleave',()=>{
+      plugyZone.style.setProperty('--plugy-x','0px');
+      plugyZone.style.setProperty('--plugy-y','0px');
+    },{passive:true});
+  }
   syncPlugyHomeMount();renderSlideDashboard();
 }
 document.addEventListener('keydown',e=>{
