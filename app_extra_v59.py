@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='137.0'
+app.version='138.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v130.html'
@@ -16,7 +16,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='137.20260924.1'
+VERSION='138.20260924.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -99,35 +99,22 @@ def _inject_v106_motion(raw:bytes):
 
         materials=doc.get('materials') or []
         if materials:
-            used=doc.setdefault('extensionsUsed',[])
-            for ext_name in ('KHR_materials_clearcoat','KHR_materials_specular','KHR_materials_ior','KHR_materials_iridescence'):
-                if ext_name not in used:used.append(ext_name)
+            # V138: bake a reflectionless finish into the GLB itself. Keep emissive/color
+            # textures intact, but remove the glossy PBR layer that produced white hotspots.
             for mat in materials:
                 if not isinstance(mat,dict):continue
                 name=str(mat.get('name') or '').lower()
                 pbr=mat.setdefault('pbrMetallicRoughness',{})
-                ext=mat.setdefault('extensions',{})
-                def lower_rough(target):
-                    try:cur=float(pbr.get('roughnessFactor',.5))
-                    except Exception:cur=.5
-                    pbr['roughnessFactor']=max(.04,min(cur,target))
-                if any(k in name for k in ('metal','chrome','prong','pin','antenna','steel','silver')):
-                    pbr['metallicFactor']=max(float(pbr.get('metallicFactor',0) or 0),.88);lower_rough(.16)
-                    ext['KHR_materials_clearcoat']={'clearcoatFactor':.28,'clearcoatRoughnessFactor':.10}
-                    ext['KHR_materials_specular']={'specularFactor':.96,'specularColorFactor':[.98,.99,1.0]}
-                elif any(k in name for k in ('glass','screen','visor','face','black','display')):
-                    pbr['metallicFactor']=max(float(pbr.get('metallicFactor',0) or 0),.28);lower_rough(.10)
-                    ext['KHR_materials_clearcoat']={'clearcoatFactor':.86,'clearcoatRoughnessFactor':.06}
-                    ext['KHR_materials_specular']={'specularFactor':.92,'specularColorFactor':[.88,.96,1.0]}
-                    ext['KHR_materials_ior']={'ior':1.46}
-                else:
-                    try:cur_m=float(pbr.get('metallicFactor',0) or 0)
-                    except Exception:cur_m=0
-                    pbr['metallicFactor']=min(cur_m,.12);lower_rough(.22)
-                    ext['KHR_materials_clearcoat']={'clearcoatFactor':.72,'clearcoatRoughnessFactor':.13}
-                    ext['KHR_materials_specular']={'specularFactor':.74,'specularColorFactor':[.96,.98,1.0]}
-                    ext['KHR_materials_ior']={'ior':1.42}
-                    ext['KHR_materials_iridescence']={'iridescenceFactor':.18,'iridescenceIor':1.3,'iridescenceThicknessMinimum':110,'iridescenceThicknessMaximum':320}
+                is_metal=any(k in name for k in ('metal','chrome','prong','pin','antenna','steel','silver'))
+                pbr['metallicFactor']=.12 if is_metal else 0.0
+                pbr['roughnessFactor']=.88 if is_metal else 1.0
+                ext=mat.get('extensions')
+                if isinstance(ext,dict):
+                    ext.pop('KHR_materials_clearcoat',None)
+                    ext.pop('KHR_materials_specular',None)
+                    ext.pop('KHR_materials_ior',None)
+                    ext.pop('KHR_materials_iridescence',None)
+                    if not ext:mat.pop('extensions',None)
         blob=bytearray(bin_blob)
         while len(blob)%4:blob.append(0)
 
@@ -198,7 +185,7 @@ def _inject_v106_motion(raw:bytes):
 
         doc['buffers'][0]['byteLength']=len(blob)
         asset=doc.setdefault('asset',{'version':'2.0'})
-        asset['generator']=str(asset.get('generator',''))+' + PLUGAR V113 Premium Motion + PBR Layer'
+        asset['generator']=str(asset.get('generator',''))+' + PLUGAR V138 Motion + Reflectionless Materials'
         j=_v106_pad4(json.dumps(doc,separators=(',',':')).encode('utf-8'),b' ')
         b=_v106_pad4(bytes(blob),bytes((0,)))
         chunks=[(b'JSON',j),(bytes((66,73,78,0)),b)]+extras
@@ -211,15 +198,76 @@ def _inject_v106_motion(raw:bytes):
         print(f"PLUGY_V106_MOTION_PATCH_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
         return raw
 
+def _patch_plugy_reflectionless_v138(raw:bytes):
+    """Rewrite only the GLB JSON material chunk; geometry, textures and animations stay byte-identical."""
+    if len(raw)<20 or raw[:4]!=b'glTF':return raw,False
+    try:
+        _,version,_=struct.unpack_from('<4sII',raw,0)
+        pos=12;chunks=[];doc=None
+        while pos+8<=len(raw):
+            ln,kind=struct.unpack_from('<I4s',raw,pos);pos+=8
+            chunk=bytes(raw[pos:pos+ln]);pos+=ln
+            if kind==b'JSON':
+                doc=json.loads(chunk.decode('utf-8').rstrip(' ').rstrip(chr(0)))
+                chunks.append((kind,None))
+            else:chunks.append((kind,chunk))
+        if not isinstance(doc,dict):return raw,False
+        asset=doc.setdefault('asset',{'version':'2.0'})
+        extras=asset.setdefault('extras',{})
+        if extras.get('plugyFinish')=='reflectionless-v138':return raw,False
+        changed=0
+        for mat in doc.get('materials') or []:
+            if not isinstance(mat,dict):continue
+            name=str(mat.get('name') or '').lower()
+            is_metal=any(k in name for k in ('metal','chrome','prong','pin','antenna','steel','silver'))
+            pbr=mat.setdefault('pbrMetallicRoughness',{})
+            pbr['metallicFactor']=.12 if is_metal else 0.0
+            pbr['roughnessFactor']=.88 if is_metal else 1.0
+            ext=mat.get('extensions')
+            if isinstance(ext,dict):
+                for k in ('KHR_materials_clearcoat','KHR_materials_specular','KHR_materials_ior','KHR_materials_iridescence'):
+                    ext.pop(k,None)
+                if not ext:mat.pop('extensions',None)
+            changed+=1
+        # Keep extension declarations only when another material still uses them.
+        active=set()
+        for mat in doc.get('materials') or []:
+            if isinstance(mat,dict) and isinstance(mat.get('extensions'),dict):active.update(mat['extensions'].keys())
+        for key in ('extensionsUsed','extensionsRequired'):
+            if isinstance(doc.get(key),list):
+                doc[key]=[x for x in doc[key] if x not in {'KHR_materials_clearcoat','KHR_materials_specular','KHR_materials_ior','KHR_materials_iridescence'} or x in active]
+                if not doc[key]:doc.pop(key,None)
+        extras['plugyFinish']='reflectionless-v138'
+        extras['materialCount']=changed
+        asset['generator']=str(asset.get('generator','')).replace(' + PLUGAR V113 Premium Motion + PBR Layer','')+' + PLUGAR V138 Reflectionless'
+        j=_v106_pad4(json.dumps(doc,separators=(',',':')).encode('utf-8'),b' ')
+        rebuilt=[]
+        for kind,chunk in chunks:rebuilt.append((kind,j if kind==b'JSON' else chunk))
+        total=12+sum(8+len(chunk) for _,chunk in rebuilt)
+        out=bytearray(struct.pack('<4sII',b'glTF',version,total))
+        for kind,chunk in rebuilt:
+            out.extend(struct.pack('<I4s',len(chunk),kind));out.extend(chunk)
+        return bytes(out),True
+    except Exception as exc:
+        print(f"PLUGY_V138_MATERIAL_PATCH_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
+        return raw,False
+
 def _ensure_realistic_plugy():
     try:
         if REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>10000:
+            patched,changed=_patch_plugy_reflectionless_v138(REALISTIC_PLUGY.read_bytes())
+            if changed:
+                tmp=REALISTIC_PLUGY.with_suffix('.v138.tmp');tmp.write_bytes(patched);tmp.replace(REALISTIC_PLUGY)
+                print(f"PLUGY_V138_REFLECTIONLESS_READY bytes={REALISTIC_PLUGY.stat().st_size} persisted=true",flush=True)
             return True
     except Exception:
         pass
     with REALISTIC_PLUGY_LOCK:
         try:
             if REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>10000:
+                patched,changed=_patch_plugy_reflectionless_v138(REALISTIC_PLUGY.read_bytes())
+                if changed:
+                    tmp=REALISTIC_PLUGY.with_suffix('.v138.tmp');tmp.write_bytes(patched);tmp.replace(REALISTIC_PLUGY)
                 return True
         except Exception:
             pass
@@ -228,9 +276,11 @@ def _ensure_realistic_plugy():
             if rr.ok and len(rr.content)>10000 and rr.content[:4]==b'glTF':
                 REALISTIC_PLUGY.parent.mkdir(parents=True,exist_ok=True)
                 tmp=REALISTIC_PLUGY.with_suffix('.tmp')
-                tmp.write_bytes(_inject_v106_motion(rr.content))
+                prepared=_inject_v106_motion(rr.content)
+                prepared,_=_patch_plugy_reflectionless_v138(prepared)
+                tmp.write_bytes(prepared)
                 tmp.replace(REALISTIC_PLUGY)
-                print(f"PLUGY_V113_PREMIUM_READY bytes={REALISTIC_PLUGY.stat().st_size} motion=embedded",flush=True)
+                print(f"PLUGY_V138_REFLECTIONLESS_READY bytes={REALISTIC_PLUGY.stat().st_size} motion=embedded materials=baked",flush=True)
                 return True
         except Exception as exc:
             print(f"PLUGY_V113_PREMIUM_FETCH_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
@@ -258,7 +308,7 @@ def plugy_v106_realistic_asset():
 @app.get('/api/v106/plugy-realistic/status')
 def plugy_v106_realistic_status():
     ready=REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>10000
-    return {'ok':True,'ready':ready,'bytes':REALISTIC_PLUGY.stat().st_size if ready else 0,'asset':'/assets/plugy-v113-premium.glb','profile':'premium-pbr-motion-v113'}
+    return {'ok':True,'ready':ready,'bytes':REALISTIC_PLUGY.stat().st_size if ready else 0,'asset':'/assets/plugy-v113-premium.glb','profile':'reflectionless-baked-motion-v138'}
 
 for route in list(app.router.routes):
     route_path=getattr(route,'path',None)
@@ -275,14 +325,15 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'137.0',
-      'ui':'plug-art-v137-reflectionless-studio',
+      'version':'138.0',
+      'ui':'plug-art-v138-baked-plugy',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
       'migration_backup_ready':backup_ready
     }
 
+@app.get('/api/v138/ui-manifest')
 @app.get('/api/v137/ui-manifest')
 @app.get('/api/v136/ui-manifest')
 @app.get('/api/v135/ui-manifest')
@@ -297,20 +348,20 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v107.js'
     css_path=BASE/'static'/'plugart_v122_slide.css'
-    expected='137.20260924.1'
+    expected='138.20260924.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v130.js').exists() and (BASE/'static'/'plugy_v130.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
-      'version':'137.0',
-      'ui':'plug-art-v137-reflectionless-studio',
+      'version':'138.0',
+      'ui':'plug-art-v138-baked-plugy',
       'asset_version':expected,
       'html_has_js':f'plugart_v107.js?v={expected}' in html,
       'html_has_slide_css':f'plugart_v122_slide.css?v={expected}' in html,
-      'html_has_sidebar_version':'V137' in html,
+      'html_has_sidebar_version':'V138' in html,
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
         'premium-cockpit','free-canvas-editor','layer-inspector','image-upload','marketing-template-library','manual-carousel-editor','drag-reorder','undo-redo','preview-zoom',
-        'persistent-interface-lab','glass-navigation','floating-actions','spatial-dashboard','liquid-editorial-ui','non-card-create-scene','creation-path-launcher','creation-reference-lab','simple-studio-controls','organic-plugy-gaze','persistent-plugy-mini','fast-blink-cycle','low-glare-plugy','thinking-energy-state','reflectionless-plugy','creation-control-audit','leaflet-map','map-direct-access','city-map-fallback',
+        'persistent-interface-lab','glass-navigation','floating-actions','spatial-dashboard','liquid-editorial-ui','non-card-create-scene','creation-path-launcher','creation-reference-lab','simple-studio-controls','organic-plugy-gaze','persistent-plugy-mini','fast-blink-cycle','low-glare-plugy','thinking-energy-state','reflectionless-plugy','creation-control-audit','glb-baked-reflectionless-materials','leaflet-map','map-direct-access','city-map-fallback',
         'hub-workspace','hub-real-project-previews','hub-pdf-export','organized-bureau',
         'standalone-plugy','watch-responsive','plugy-refined-finish','chat-style-conversation',
         'instagram-priority-access','instagram-social-studio','marketing-visual-generator','expanded-local-radar','streaming-assistant','lean-bootstrap'
@@ -325,7 +376,7 @@ def plugy_page_v130(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'137.0',
+      'X-Plug-Art-Version':'138.0',
       'X-Plug-Art-UI':'plugy-v130-standalone'
     }
     if request.headers.get('if-none-match')==etag:
@@ -340,8 +391,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'137.0',
-      'X-Plug-Art-UI':'plug-art-v137-reflectionless-studio'
+      'X-Plug-Art-Version':'138.0',
+      'X-Plug-Art-UI':'plug-art-v138-baked-plugy'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -2122,8 +2173,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'137.0',
-      'ui':'plug-art-v137-reflectionless-studio',
+      'version':'138.0',
+      'ui':'plug-art-v138-baked-plugy',
       'reference_direction':'V130 PLUG ART: premium product-style workspace with standalone PLUGY conversation, watch-responsive UI, manual creative studio, Instagram control center, expanded local Radar and interactive map',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -2150,13 +2201,13 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print(f"PLUG_ART_READY ui=v137_reflectionless_studio standalone_plugy=on watch_ui=on mobile_creation=direct mobile_instagram=direct mobile_map=direct creation=free_canvas_layers hub=on hub_pdf=on editor=marketing_manual_ai_drag_resize_undo_zoom design_lab=persistent glass_ui=on map=leaflet_city_fallback radar_local_venues=on instagram=social_studio plugy_finish=refined_soft_pearl voice=streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_READY ui=v138_baked_plugy standalone_plugy=on watch_ui=on mobile_creation=direct mobile_instagram=direct mobile_map=direct creation=free_canvas_layers hub=on hub_pdf=on editor=marketing_manual_ai_drag_resize_undo_zoom design_lab=persistent glass_ui=on map=leaflet_city_fallback radar_local_venues=on instagram=social_studio plugy_finish=refined_soft_pearl voice=streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
       ('GET','/api/health'),
       ('GET','/plugy'),
-      ('GET','/api/v137/ui-manifest'),
+      ('GET','/api/v138/ui-manifest'),
       ('GET','/api/v90/builder/config'),
       ('PATCH','/api/v90/builder/config'),
       ('GET','/api/map'),
