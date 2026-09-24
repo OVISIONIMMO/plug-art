@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='125.20260924.1';
+const VERSION='126.20260924.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -353,22 +353,89 @@ function setPlugyBusy(on){
   if(form)form.setAttribute('aria-busy',on?'true':'false');
   if(submit)submit.disabled=!!on;
 }
+async function streamPlugyRequest(payload,onDelta){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),payload.mode==='deep'?45000:30000);
+  try{
+    const r=await fetch('/api/v125/plugy/stream',{
+      method:'POST',cache:'no-store',signal:controller.signal,
+      headers:{'Accept':'text/event-stream','Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    if(!r.ok||!r.body)throw new Error((await r.text())||('HTTP '+r.status));
+    const reader=r.body.getReader(),decoder=new TextDecoder();let buffer='',meta=null;
+    const consume=block=>{
+      let event='message',data='';
+      block.replace(/\r/g,'').split('\n').forEach(line=>{
+        if(line.startsWith('event:'))event=line.slice(6).trim();
+        else if(line.startsWith('data:'))data+=(data?'\n':'')+line.slice(5).trim();
+      });
+      if(!data)return;
+      let parsed;try{parsed=JSON.parse(data)}catch{return}
+      if(event==='delta'&&parsed.delta)onDelta(String(parsed.delta));
+      if(event==='done')meta=parsed;
+    };
+    while(true){
+      const {value,done}=await reader.read();
+      if(value)buffer+=decoder.decode(value,{stream:!done});
+      buffer=buffer.replace(/\r\n/g,'\n');
+      let cut;
+      while((cut=buffer.indexOf('\n\n'))>=0){consume(buffer.slice(0,cut));buffer=buffer.slice(cut+2)}
+      if(done)break;
+    }
+    if(buffer.trim())consume(buffer);
+    return meta||{};
+  }finally{clearTimeout(timer)}
+}
+function createProgressiveSpeaker(){
+  if(!state.voiceReply||!('speechSynthesis' in window))return null;
+  try{speechSynthesis.cancel()}catch{}
+  let spoken=0,queued=0,finished=false;
+  const finish=()=>{if(!finished||queued>0)return;state.voiceReply=false;$('#plugyState span').textContent='Prêt';playMotion('Idle',true);resumeConversationListening(430)};
+  const enqueue=text=>{
+    text=clean(text);if(!text)return;
+    queued++;const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';u.rate=1.12;u.pitch=1;
+    u.onstart=()=>{$('#plugyState span').textContent='Parle…';playMotion('Speak',true)};
+    const done=()=>{queued=Math.max(0,queued-1);finish()};u.onend=done;u.onerror=done;speechSynthesis.speak(u);
+  };
+  return {
+    push(full,final=false){
+      const pending=String(full||'').slice(spoken);if(!pending&&!final)return;
+      if(final){spoken=String(full||'').length;enqueue(pending);finished=true;finish();return}
+      if(pending.length<28)return;
+      let cut=-1,m;const re=/[.!?…](?:\s|$)/g;while((m=re.exec(pending)))cut=m.index+m[0].length;
+      if(cut>0){const chunk=pending.slice(0,cut);spoken+=cut;enqueue(chunk)}
+    }
+  };
+}
 async function askPlugy(message,injectTarget=null){
   message=clean(message);if(!message)return;
   const local=handleLocalPlugy(message);if(local){openPlugy();addMsg(message,'user');addMsg(local,'bot');playMotion('Happy');if(state.voiceReply)speakPlugy(local);return local;}
   if(state.plugyBusy){toast('PLUGY répond déjà');return}
   openPlugy();setPlugyBusy(true);addMsg(message,'user');state.history.push({role:'user',content:message});
   $('#plugyState span').textContent='Réflexion…';playMotion('Charge',true);
-  const wait=addMsg('…','bot');
-  const ctx='Contexte PLUG ART. '+plugyEntityContext();
-  const mode=injectTarget?'deep':'fast';
+  const wait=addMsg('…','bot'),ctx='Contexte PLUG ART. '+plugyEntityContext(),mode=injectTarget?'deep':'fast';
+  const payload={message:ctx+message,page:state.view,mode,history:state.history.slice(-4)};
+  let answer='',received=false;const progressiveVoice=mode==='fast'?createProgressiveSpeaker():null;
+  const append=delta=>{
+    if(!received){received=true;wait.textContent='';$('#plugyState span').textContent='Répond…';playMotion('Present',true)}
+    answer+=delta;wait.textContent=answer;wait.parentElement&&(wait.parentElement.scrollTop=wait.parentElement.scrollHeight);
+    progressiveVoice?.push(answer,false);
+  };
   try{
-    const data=await api('/api/v32/plugy',{method:'POST',timeout:mode==='deep'?42000:28000,body:JSON.stringify({message:ctx+message,page:state.view,mode,history:state.history.slice(-4)})});
-    const answer=clean(data.answer||data.message||'Je suis prêt.');
-    wait.textContent=answer;state.history.push({role:'assistant',content:answer});
-    $('#plugyState span').textContent='Prêt';playMotion('Present');
+    let meta={};
+    try{meta=await streamPlugyRequest(payload,append)}
+    catch(streamErr){
+      if(received&&answer)meta={answer,partial:true};
+      else{
+        const data=await api('/api/v32/plugy',{method:'POST',timeout:mode==='deep'?42000:28000,body:JSON.stringify(payload)});
+        answer=clean(data.answer||data.message||'Je suis prêt.');wait.textContent=answer;meta=data;
+      }
+    }
+    answer=clean(answer||meta.answer||wait.textContent||'Je suis prêt.');wait.textContent=answer;
+    state.history.push({role:'assistant',content:answer});
     if(injectTarget){const el=$(injectTarget);if(el)el.value=answer}
-    if(state.voiceReply)speakPlugy(answer);
+    if(progressiveVoice)progressiveVoice.push(answer,true);else if(state.voiceReply)speakPlugy(answer);
+    if(!state.voiceReply){$('#plugyState span').textContent='Prêt';playMotion('Present')}
     return answer;
   }catch(e){
     wait.textContent='Je n’arrive pas à joindre mon moteur pour le moment.';
