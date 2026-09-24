@@ -2,25 +2,56 @@ from pathlib import Path
 from fastapi import Request, HTTPException
 from fastapi.responses import HTMLResponse, Response, RedirectResponse, FileResponse
 from urllib.parse import urljoin, urlencode
-import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64,hmac,math,struct,io,zipfile
+import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64,hmac,math,struct,io,zipfile,sqlite3,shutil
 import app as core
 import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='123.0'
+app.version='123.1'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='123.20260924.1'
+VERSION='123.20260924.2'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
 REALISTIC_PLUGY=Path('/data/plugy_v113_realistic_premium.glb') if Path('/data').exists() else BASE/'static'/'plugy_v113_realistic_premium.glb'
 REALISTIC_PLUGY_LOCK=threading.Lock()
+
+MIGRATION_BACKUP=Path('/data/backups/pre-eu-migration-v123.db') if Path('/data').exists() else None
+
+def _v123_prepare_region_migration_backup():
+    if MIGRATION_BACKUP is None:return
+    db_path=Path(os.getenv('PLUGART_DB','/data/plugart.db'))
+    try:
+        if not db_path.exists():
+            print('PLUG_ART_V123_BACKUP_SKIP reason=db-missing',flush=True);return
+        src_bytes=db_path.stat().st_size
+        usage=shutil.disk_usage('/data')
+        print(f"PLUG_ART_V123_STORAGE db_bytes={src_bytes} free_bytes={usage.free} used_bytes={usage.used} total_bytes={usage.total}",flush=True)
+        if MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0:
+            print(f"PLUG_ART_V123_BACKUP_READY bytes={MIGRATION_BACKUP.stat().st_size} existing=true",flush=True);return
+        required=max(src_bytes*2,32*1024*1024)
+        if usage.free<required:
+            print(f"PLUG_ART_V123_BACKUP_SKIP reason=insufficient-space required={required} free={usage.free}",flush=True);return
+        MIGRATION_BACKUP.parent.mkdir(parents=True,exist_ok=True)
+        source=sqlite3.connect(str(db_path),timeout=30)
+        target=sqlite3.connect(str(MIGRATION_BACKUP),timeout=30)
+        try:
+            source.backup(target,pages=256,sleep=0.01)
+            target.execute('pragma quick_check').fetchone()
+            target.commit()
+        finally:
+            target.close();source.close()
+        print(f"PLUG_ART_V123_BACKUP_READY bytes={MIGRATION_BACKUP.stat().st_size} existing=false",flush=True)
+    except Exception as exc:
+        print(f"PLUG_ART_V123_BACKUP_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
+
+_v123_prepare_region_migration_backup()
 
 def _v106_pad4(raw:bytes,pad=b' '):
     return raw + pad*((4-len(raw)%4)%4)
@@ -240,7 +271,7 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'123.0',
+      'X-Plug-Art-Version':'123.1',
       'X-Plug-Art-UI':'plug-art-v123-fast-workspace'
     }
     if request.headers.get('if-none-match')==etag:
@@ -1932,7 +1963,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'123.0',
+      'version':'123.1',
       'ui':'plug-art-v123-fast-workspace',
       'reference_direction':'V120 PLUG ART: compact internal work cockpit with a three-mode Bureau for Documents, application Packages and reusable Templates, starter application packs, direct Open Call routing, CRM outreach, PLUGY operator, Instagram Studio and mobile-first workflows',
       'marketing_blocks':False,
