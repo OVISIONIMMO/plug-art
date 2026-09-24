@@ -1266,3 +1266,13 @@ body[data-plugy-motion="Think"] .plugy-energy.e2{opacity:.37!important;transform
   body[data-plugy-motion="Charge"] .plugy-follower:after,
   .plugy-follower-spark{animation:none!important}
 }
+
+
+/* V137 · PLUGY reflectionless render */
+#plugyModel,.plugy-stage model-viewer,.slide-plugy-mount model-viewer,.plugy-follower #plugyModel{
+  filter:drop-shadow(0 18px 24px rgba(34,37,49,.075)) saturate(.96)!important;
+}
+body[data-plugy-motion="Think"] #plugyModel,
+body[data-plugy-motion="Charge"] #plugyModel{
+  filter:drop-shadow(0 20px 27px rgba(103,83,209,.12)) saturate(.98)!important;
+}
