@@ -1865,12 +1865,18 @@ def _v140_package_reconcile_row(package_id:int,persist:bool=True):
     if ids:
         marks=','.join('?' for _ in ids)
         docs=core.rows(f'select id,title,body,tags,folder from bureau_documents where id in ({marks})',tuple(ids))
-    hay=' '.join(str(d.get('title') or '')+' '+str(d.get('tags') or '') for d in docs).lower()
-    has=lambda pattern:bool(re.search(pattern,hay,re.I))
+    def complete_doc(pattern):
+        for d in docs:
+            meta=(str(d.get('title') or '')+' '+str(d.get('tags') or ''))
+            if not re.search(pattern,meta,re.I):continue
+            body=str(d.get('body') or '').strip()
+            if body and '[À COMPLÉTER]' not in body.upper() and '[A COMPLETER]' not in body.upper():
+                return True
+        return False
     checklist['source_checked']=bool(out.get('opportunity')) or bool(checklist.get('source_checked'))
-    checklist['letter']=has(r'lettre|candidature') or bool(checklist.get('letter'))
-    checklist['bio']=has(r'\bbio\b|biographie') or bool(checklist.get('bio'))
-    checklist['artist_statement']=has(r'note artistique|artist statement|d[eé]marche') or bool(checklist.get('artist_statement'))
+    checklist['letter']=complete_doc(r'lettre|candidature')
+    checklist['bio']=complete_doc(r'\bbio\b|biographie')
+    checklist['artist_statement']=complete_doc(r'note artistique|artist statement|d[eé]marche')
     if str(out.get('status') or '')=='submitted':checklist['submitted']=True
     done=sum(1 for k in _v120_default_checklist() if checklist.get(k))
     total=len(_v120_default_checklist())
