@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='130.20260924.1';
+const VERSION='131.20260924.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -1833,58 +1833,173 @@ function setCreationPreviewZoom(){
   if(target){target.style.transform='scale('+scale+')';target.style.transformOrigin='center top'}
 }
 
+const MARKETING_TEMPLATES={
+  'open-call':{label:'Open Call',count:5,theme:'ultra',accent:'black',layout:'editorial',slides:[
+    ['OPEN CALL','Titre de l’opportunité','Lieu · deadline · discipline','Découvrir →'],
+    ['POUR QUI','À qui s’adresse cet appel ?','Résume les critères importants.','Vérifier →'],
+    ['LE PROJET','Pourquoi c’est intéressant','Explique la proposition sans surcharger.','Voir plus →'],
+    ['INFOS','Les détails à retenir','Deadline · frais · lieu · format','Enregistrer'],
+    ['ACTION','Prêt à candidater ?','Vérifie la source officielle avant envoi.','PLUG 🔌']
+  ]},
+  event:{label:'Événement',count:5,theme:'editorial',accent:'violet',layout:'split',slides:[
+    ['ÉVÉNEMENT','Nom de l’exposition','Date · lieu · artistes','Découvrir →'],
+    ['À VOIR','Une raison de venir','Mets en avant l’expérience ou le thème.','Explorer →'],
+    ['PROGRAMME','Temps forts','Vernissage · rencontres · programmation','Voir le programme'],
+    ['PRATIQUE','Prépare ta visite','Adresse · horaires · accès','Enregistrer'],
+    ['RENDEZ-VOUS','On s’y retrouve ?','Une conclusion courte et claire.','Partager →']
+  ]},
+  'last-call':{label:'Dernier appel',count:4,theme:'night',accent:'pink',layout:'poster',slides:[
+    ['DERNIER APPEL','Deadline imminente','L’essentiel immédiatement visible.','Candidater →'],
+    ['À SAVOIR','Les critères clés','Discipline · lieu · frais · éligibilité','Vérifier →'],
+    ['POURQUOI','Pourquoi regarder maintenant','Une raison concrète et factuelle.','Découvrir →'],
+    ['ACTION','Dernière vérification','Consulte la source officielle avant envoi.','PLUG 🔌']
+  ]},
+  artist:{label:'Focus artiste',count:5,theme:'soft',accent:'pink',layout:'editorial',slides:[
+    ['FOCUS ARTISTE','Nom de l’artiste','Discipline · ville · univers','Découvrir →'],
+    ['PRATIQUE','Sa démarche','Une idée forte, pas une biographie entière.','Explorer →'],
+    ['ŒUVRE','Ce qui distingue son travail','Matière · geste · sujet · technique','Voir →'],
+    ['PARCOURS','Repères','Expositions · projets · collaborations','En savoir plus'],
+    ['À SUIVRE','Retrouver l’artiste','Lien, exposition ou prochaine actualité.','Suivre →']
+  ]},
+  partnership:{label:'Partenariat',count:4,theme:'ultra',accent:'cyan',layout:'minimal',slides:[
+    ['PARTENARIAT','Une collaboration qui a du sens','Présente la valeur commune.','Découvrir →'],
+    ['OBJECTIF','Ce que le projet apporte','Audience · lieu · expérience · visibilité','Comprendre →'],
+    ['FORMAT','Comment ça fonctionne','Activation · exposition · contenu · événement','Voir le projet'],
+    ['CONTACT','Construisons la suite','CTA simple et professionnel.','Nous contacter →']
+  ]}
+};
+const VISUAL_PRESETS={
+  campaign:{label:'Campagne',style:'editorial',ratio:'4:5',prompt:'Campagne artistique premium, composition publicitaire contemporaine, espace négatif maîtrisé, lumière éditoriale, sujet central fort, esthétique galerie et direction artistique haut de gamme.'},
+  event:{label:'Événement',style:'gallery',ratio:'4:5',prompt:'Visuel d’annonce pour exposition contemporaine, image forte adaptée à une affiche et à Instagram, composition éditoriale, matière artistique, lumière de galerie, espace réservé pour une future titraille.'},
+  artist:{label:'Portrait artiste',style:'photo',ratio:'4:5',prompt:'Portrait éditorial d’artiste contemporain, lumière studio premium, environnement atelier ou galerie, naturel, crédible, magazine culturel haut de gamme.'},
+  story:{label:'Story',style:'editorial',ratio:'9:16',prompt:'Visuel vertical Instagram Story pour art contemporain, composition dynamique mais élégante, profondeur, espace négatif pour interface et titrage, esthétique premium.'},
+  partnership:{label:'Partenariat',style:'editorial',ratio:'1:1',prompt:'Visuel de partenariat culturel premium, deux univers qui se rencontrent, composition sobre et institutionnelle, esthétique contemporaine, espace négatif, rendu haut de gamme.'},
+  launch:{label:'Lancement',style:'art',ratio:'4:5',prompt:'Key visual de lancement créatif, art contemporain, impact immédiat, composition campagne, profondeur, matière et lumière contrôlées, premium et mémorable.'}
+};
+function makeMarketingSlides(key){
+  const t=MARKETING_TEMPLATES[key]||MARKETING_TEMPLATES['open-call'];
+  return t.slides.map(([kicker,title,body,cta])=>({kicker,title,body,cta,image:'',image_prompt:'',design:{theme:t.theme,layout:t.layout,accent:t.accent,align:'left',fontScale:100,imageOpacity:t.layout==='split'?82:60,radius:28}}));
+}
+function applyMarketingTemplate(key){
+  const t=MARKETING_TEMPLATES[key];if(!t)return;
+  pushCreationHistory();setCreationMode('carousel');
+  state.carousel.slides=makeMarketingSlides(key);state.carousel.active=0;
+  if($('#carouselCount'))$('#carouselCount').value=String(t.count);
+  if($('#carouselBrief'))$('#carouselBrief').value='Template '+t.label+' · Remplace les textes par les informations réelles ou demande à PLUGY de générer depuis une source.';
+  renderCarousel();scheduleDraftAutosave();toast('Template '+t.label+' chargé');
+}
+function applyVisualPreset(key){
+  const p=VISUAL_PRESETS[key];if(!p)return;
+  setCreationMode('visual');
+  if($('#visualUseCase'))$('#visualUseCase').value=key;
+  if($('#visualStyle'))$('#visualStyle').value=p.style;
+  if($('#visualRatio'))$('#visualRatio').value=p.ratio;
+  if($('#visualPrompt'))$('#visualPrompt').value=p.prompt;
+  $$('[data-visual-preset]').forEach(b=>b.classList.toggle('active',b.dataset.visualPreset===key));
+  scheduleDraftAutosave();
+}
 function installCreationModes(){
   const view=$('#view-creation');if(!view||$('#creationModeBar'))return;
-  const toolbar=view.querySelector('.page-toolbar'),textPanel=view.querySelector('.creation-layout');
-  if(textPanel)textPanel.id='textCreationPanel';
-  const bar=document.createElement('div');bar.id='creationModeBar';bar.className='creation-mode-bar';
-  bar.innerHTML='<button class="active" data-create-mode="text">Texte</button><button data-create-mode="carousel">Carrousel</button><button data-create-mode="visual">Visuel</button><span class="mode-spacer"></span><button id="creationUndo" title="Annuler">↶</button><button id="creationRedo" title="Rétablir">↷</button><select id="creationZoom" title="Zoom aperçu"><option value="0.8">80%</option><option value="1" selected>100%</option><option value="1.2">120%</option></select><select id="draftPicker"><option value="">Brouillons</option></select><button id="draftRecover" hidden>Récupérer local</button><button id="draftSave">Enregistrer</button><button id="draftDelete" title="Supprimer le brouillon">×</button>';
-  toolbar.insertAdjacentElement('afterend',bar);
-  const carousel=document.createElement('section');carousel.id='carouselCreationPanel';carousel.className='creation-mode-panel';
-  carousel.innerHTML='<div class="carousel-controls panel"><div class="panel-head"><div><small>CARROUSEL</small><h2>Structure éditoriale</h2></div></div><label>Source<select id="carouselSource"><option value="">Brief libre</option></select></label><label>Nombre de slides<select id="carouselCount"><option>4</option><option selected>5</option><option>6</option><option>7</option></select></label><label>Format<select id="carouselFormat"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><label>Brief<textarea id="carouselBrief" rows="7" placeholder="Angle, informations essentielles, CTA…"></textarea></label><button class="primary-btn wide" id="carouselGenerate">✦ Générer la structure</button><button class="secondary-btn wide" id="carouselGenerateImage">Générer l’image de la slide</button><button class="secondary-btn wide" id="carouselGenerateAll">Générer toutes les images</button><button class="secondary-btn wide" id="carouselExport">Exporter la slide PNG</button><button class="secondary-btn wide" id="carouselExportAll">Exporter toutes les slides</button><label>Instagram<textarea id="carouselCaption" rows="5" placeholder="Légende Instagram…"></textarea></label><button class="secondary-btn wide" id="carouselCaptionGenerate">✦ Préparer la légende</button><button class="primary-btn wide" id="carouselPublishInstagram">Publier sur Instagram</button><button class="secondary-btn wide" id="carouselToBureau">▤ Envoyer au Bureau</button></div><div class="carousel-preview panel"><div class="carousel-canvas" id="carouselCanvas"><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Ton carrousel apparaîtra ici</h3><p id="carouselBody">Choisis une source ou écris un brief.</p><b id="carouselCta">Découvrir →</b></div></div><div class="carousel-edit"><input id="slideKicker" placeholder="Kicker"><input id="slideTitle" placeholder="Titre"><textarea id="slideBody" rows="4" placeholder="Texte"></textarea><input id="slideCta" placeholder="CTA"></div></div><aside class="carousel-strip panel"><div class="panel-head"><div><small>SLIDES</small><h2 id="carouselCounter">0 slide</h2></div></div><div id="carouselSlides"></div></aside>';
-  view.appendChild(carousel);
-  const carouselEdit=$('.carousel-edit',carousel);
-  if(carouselEdit){
-    const stack=document.createElement('div');stack.className='carousel-edit-stack';
-    carouselEdit.parentNode.insertBefore(stack,carouselEdit);stack.appendChild(carouselEdit);
-    const tools=document.createElement('section');tools.className='carousel-design-tools';
-    tools.innerHTML='<div class="design-tools-head"><div><small>DESIGN MANUEL</small><strong>Finition de la slide</strong></div><span>LIVE</span></div>'+
-      '<div class="design-preset-row"><button data-slide-preset="ultra">Ultra</button><button data-slide-preset="editorial">Éditorial</button><button data-slide-preset="soft">Soft</button><button data-slide-preset="night">Sombre</button></div>'+
+  const mount=$('#creationModeMount'),carouselMount=$('#carouselMount'),visualMount=$('#visualMount');if(!mount||!carouselMount||!visualMount)return;
+
+  const bar=document.createElement('div');bar.id='creationModeBar';bar.className='creation-mode-bar studio-switcher';
+  bar.innerHTML='<div class="studio-switcher-main"><button class="active" data-create-mode="text">Écrire</button><button data-create-mode="carousel">Designer</button><button data-create-mode="visual">Générer un visuel</button></div><div class="studio-switcher-tools"><button id="creationUndo" title="Annuler">↶</button><button id="creationRedo" title="Rétablir">↷</button><select id="creationZoom" title="Zoom aperçu"><option value="0.8">80%</option><option value="1" selected>100%</option><option value="1.2">120%</option></select><select id="draftPicker"><option value="">Brouillons</option></select><button id="draftRecover" hidden>Récupérer</button><button id="draftSave">Enregistrer</button><button id="draftDelete" title="Supprimer">×</button></div>';
+  mount.appendChild(bar);
+
+  const carousel=document.createElement('section');carousel.id='carouselCreationPanel';carousel.className='creation-mode-panel studio-designer';
+  carousel.innerHTML=
+    '<aside class="studio-library panel">'+
+      '<div class="studio-panel-title"><small>TEMPLATES</small><strong>Design marketing</strong></div>'+
+      '<div class="marketing-template-grid">'+
+        '<button data-marketing-template="open-call"><i class="mk-open"></i><span><b>Open Call</b><small>Éditorial clair</small></span></button>'+
+        '<button data-marketing-template="event"><i class="mk-event"></i><span><b>Événement</b><small>Galerie / expo</small></span></button>'+
+        '<button data-marketing-template="last-call"><i class="mk-last"></i><span><b>Dernier appel</b><small>Urgence premium</small></span></button>'+
+        '<button data-marketing-template="artist"><i class="mk-artist"></i><span><b>Artiste</b><small>Portrait / focus</small></span></button>'+
+        '<button data-marketing-template="partnership"><i class="mk-partner"></i><span><b>Partenariat</b><small>Pro / institutionnel</small></span></button>'+
+      '</div>'+
+      '<div class="studio-library-divider"></div>'+
+      '<label>Source<select id="carouselSource"><option value="">Brief libre</option></select></label>'+
+      '<label>Slides<select id="carouselCount"><option>4</option><option selected>5</option><option>6</option><option>7</option></select></label>'+
+      '<label>Format<select id="carouselFormat"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label>'+
+      '<label>Brief<textarea id="carouselBrief" rows="6" placeholder="Sujet, angle, données obligatoires…"></textarea></label>'+
+      '<div class="studio-generate-actions"><button class="primary-btn wide" id="carouselGenerate">✦ Générer avec PLUGY</button><button class="secondary-btn wide" id="carouselGenerateAll">Générer toutes les images</button></div>'+
+    '</aside>'+
+    '<section class="studio-stage panel">'+
+      '<div class="studio-stage-head"><div><small>CANVAS</small><strong>Aperçu temps réel</strong></div><div class="stage-actions"><button id="carouselGenerateImage">✦ Image</button><button id="carouselExport">PNG</button><button id="carouselExportAll">Tout exporter</button></div></div>'+
+      '<div class="studio-canvas-frame"><div class="carousel-canvas" id="carouselCanvas"><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Choisis un template ou génère un carrousel</h3><p id="carouselBody">Le canvas reste entièrement modifiable.</p><b id="carouselCta">Découvrir →</b></div></div></div>'+
+      '<div class="carousel-strip premium-strip"><div class="strip-head"><span id="carouselCounter">0 slide</span><div><button id="slideAdd">＋</button><button id="slideDuplicate">Dupliquer</button><button id="slideDeleteManual">Supprimer</button></div></div><div id="carouselSlides"></div></div>'+
+      '<div class="instagram-export-row"><textarea id="carouselCaption" rows="3" placeholder="Légende Instagram…"></textarea><div><button id="carouselCaptionGenerate">✦ Légende</button><button class="primary-btn" id="carouselPublishInstagram">Publier Instagram</button><button id="carouselToBureau">Bureau</button></div></div>'+
+    '</section>'+
+    '<aside class="studio-inspector panel">'+
+      '<div class="studio-panel-title"><small>INSPECTEUR</small><strong>Slide active</strong></div>'+
+      '<div class="carousel-edit"><label>Kicker<input id="slideKicker" placeholder="PLUG ART"></label><label>Titre<textarea id="slideTitle" rows="3" placeholder="Titre"></textarea></label><label>Texte<textarea id="slideBody" rows="5" placeholder="Texte"></textarea></label><label>CTA<input id="slideCta" placeholder="CTA"></label></div>'+
+      '<div class="inspector-section"><small>STYLE</small><div class="design-preset-row"><button data-slide-preset="ultra">Ultra</button><button data-slide-preset="editorial">Éditorial</button><button data-slide-preset="soft">Soft</button><button data-slide-preset="night">Sombre</button></div></div>'+
       '<label>Mise en page<select id="slideLayout"><option value="editorial">Éditorial</option><option value="split">Split</option><option value="poster">Poster</option><option value="minimal">Minimal</option></select></label>'+
       '<label>Accent<select id="slideAccent"><option value="black">Noir</option><option value="violet">Violet</option><option value="cyan">Cyan</option><option value="pink">Rose</option></select></label>'+
       '<label>Alignement<select id="slideAlign"><option value="left">Gauche</option><option value="center">Centre</option></select></label>'+
       '<label>Taille titre <output id="slideFontScaleOut">100%</output><input id="slideFontScale" type="range" min="85" max="125" value="100"></label>'+
       '<label>Présence image <output id="slideImageOpacityOut">64%</output><input id="slideImageOpacity" type="range" min="0" max="100" value="64"></label>'+
-      '<label>Image / visuel<input id="slideImageUrl" placeholder="URL du visuel"></label>'+
+      '<label>Image<input id="slideImageUrl" placeholder="URL du visuel"></label>'+
       '<button class="secondary-btn wide" id="slideUseVisual">Utiliser le dernier visuel généré</button>'+
-      '<div class="design-help-row"><button data-slide-help="hierarchy">✦ Hiérarchie</button><button data-slide-help="premium">✦ Plus premium</button><button data-slide-help="direct">✦ Plus direct</button></div>'+
-      '<div class="design-slide-actions"><button id="slideAdd">＋ Ajouter</button><button id="slideDuplicate">Dupliquer</button><button class="danger-text" id="slideDeleteManual">Supprimer</button></div>';
-    stack.appendChild(tools);
-  }
-  const visual=document.createElement('section');visual.id='visualCreationPanel';visual.className='creation-mode-panel';
-  visual.innerHTML='<div class="visual-controls panel"><div class="panel-head"><div><small>VISUEL</small><h2>Génération d’image</h2></div></div><label>Prompt<textarea id="visualPrompt" rows="9" placeholder="Décris le visuel à créer…"></textarea></label><label>Style<select id="visualStyle"><option value="gallery">Galerie / éditorial</option><option value="editorial">Éditorial</option><option value="art">Art contemporain</option><option value="photo">Photographique</option></select></label><label>Format<select id="visualRatio"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><button class="primary-btn wide" id="visualGenerate">✦ Générer le visuel</button><button class="secondary-btn wide" id="visualDownload">Télécharger le visuel</button><button class="secondary-btn wide" id="visualToBureau">▤ Envoyer au Bureau</button></div><div class="visual-preview panel"><div id="visualImage"><span>Le visuel apparaîtra ici.</span></div></div>';
-  view.appendChild(visual);
-  const st=document.createElement('style');st.textContent=`
-  .creation-mode-bar{display:flex;gap:6px;margin:0 0 12px;align-items:center}.creation-mode-bar .mode-spacer{flex:1}.creation-mode-bar select{border:1px solid #e0e2e8;background:#fff;border-radius:999px;padding:8px 11px;font-size:9px;max-width:220px}.creation-mode-bar button{border:1px solid #e0e2e8;background:#fff;border-radius:999px;padding:9px 13px;font-size:10px;font-weight:800}.creation-mode-bar button.active{background:#111318;color:#fff;border-color:#111318}.creation-mode-panel{display:none}.creation-mode-panel.active{display:grid}.carouselCreationPanel{}.carousel-controls,.visual-controls{display:grid;gap:11px;align-self:start}.carousel-controls label,.visual-controls label{display:grid;gap:5px;font-size:8px;color:#90939e;font-weight:800;text-transform:uppercase;letter-spacing:.65px}.carousel-controls input,.carousel-controls select,.carousel-controls textarea,.visual-controls select,.visual-controls textarea{padding:10px;font-size:10px;text-transform:none;letter-spacing:0}.wide{width:100%}#carouselCreationPanel{grid-template-columns:260px minmax(0,1fr) 210px;gap:14px}.carousel-preview{min-height:650px;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:14px;align-items:center}.carousel-canvas{position:relative;overflow:hidden;aspect-ratio:4/5;border-radius:24px;background:linear-gradient(145deg,#eef1ff,#e4dcff 48%,#f3d2e3);box-shadow:0 25px 60px rgba(30,34,56,.12)}.carousel-image{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.72}.carousel-image:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.88) 70%)}.carousel-copy{position:absolute;z-index:2;left:7%;right:7%;bottom:6%;color:#17181e}.carousel-copy small{font-size:9px;font-weight:900;letter-spacing:1.1px}.carousel-copy h3{font-size:clamp(28px,3vw,50px);line-height:.95;letter-spacing:-2px;margin:10px 0 13px}.carousel-copy p{font-size:11px;line-height:1.45;max-width:85%}.carousel-copy b{font-size:10px}.carousel-edit{display:grid;gap:8px}.carousel-edit input,.carousel-edit textarea{padding:10px;font-size:10px}.carousel-strip{align-self:start;max-height:650px;overflow:auto}.carousel-slide-thumb{width:100%;border:1px solid #e4e5ea;background:#f8f9fa;border-radius:13px;padding:10px;text-align:left;margin-bottom:7px}.carousel-slide-thumb.active{border-color:#bfb6f4;background:#f8f6ff}.carousel-slide-thumb b,.carousel-slide-thumb span{display:block}.carousel-slide-thumb b{font-size:9px}.carousel-slide-thumb span{font-size:8px;color:#9295a0;margin-top:3px}#visualCreationPanel{grid-template-columns:300px 1fr;gap:14px}.visual-preview{min-height:660px;display:grid;place-items:center}.visual-preview #visualImage{width:min(540px,100%);aspect-ratio:4/5;border-radius:24px;background:#f0f2f6 center/cover no-repeat;display:grid;place-items:center;color:#9295a0;font-size:10px;box-shadow:0 24px 60px rgba(30,34,50,.08)}@media(max-width:1100px){#carouselCreationPanel{grid-template-columns:240px 1fr}.carousel-strip{grid-column:1/-1;display:flex;gap:7px;overflow:auto}.carousel-slide-thumb{min-width:150px}.carousel-preview{grid-template-columns:1fr}}@media(max-width:760px){#carouselCreationPanel,#visualCreationPanel{grid-template-columns:1fr}.carousel-preview{min-height:auto}.carousel-canvas{max-width:440px;margin:auto}.visual-preview{min-height:430px}}
-  `;document.head.appendChild(st);
-  $$('[data-create-mode]',bar).forEach(b=>b.onclick=()=>setCreationMode(b.dataset.createMode));
+      '<div class="design-help-row"><button data-slide-help="hierarchy">✦ Hiérarchie</button><button data-slide-help="premium">✦ Premium</button><button data-slide-help="direct">✦ Direct</button></div>'+
+    '</aside>';
+  carouselMount.appendChild(carousel);
+
+  const visual=document.createElement('section');visual.id='visualCreationPanel';visual.className='creation-mode-panel visual-lab';
+  visual.innerHTML=
+    '<aside class="visual-preset-panel panel">'+
+      '<div class="studio-panel-title"><small>DIRECTION ARTISTIQUE</small><strong>Design marketing</strong></div>'+
+      '<div class="visual-preset-grid">'+
+        '<button data-visual-preset="campaign"><i class="vp-campaign"></i><b>Campagne</b><small>Key visual</small></button>'+
+        '<button data-visual-preset="event"><i class="vp-event"></i><b>Événement</b><small>Expo / affiche</small></button>'+
+        '<button data-visual-preset="artist"><i class="vp-artist"></i><b>Artiste</b><small>Portrait éditorial</small></button>'+
+        '<button data-visual-preset="story"><i class="vp-story"></i><b>Story</b><small>Vertical 9:16</small></button>'+
+        '<button data-visual-preset="partnership"><i class="vp-partner"></i><b>Partenariat</b><small>Institutionnel</small></button>'+
+        '<button data-visual-preset="launch"><i class="vp-launch"></i><b>Lancement</b><small>Impact</small></button>'+
+      '</div>'+
+    '</aside>'+
+    '<section class="visual-generator panel">'+
+      '<div class="studio-stage-head"><div><small>GÉNÉRATEUR</small><strong>Visuel de campagne</strong></div><span>PLUG ART IMAGE</span></div>'+
+      '<label>Cas d’usage<select id="visualUseCase"><option value="campaign">Campagne</option><option value="event">Événement</option><option value="artist">Portrait artiste</option><option value="story">Story</option><option value="partnership">Partenariat</option><option value="launch">Lancement</option></select></label>'+
+      '<label>Prompt<textarea id="visualPrompt" rows="9" placeholder="Décris l’image, l’ambiance, le sujet, la composition…"></textarea></label>'+
+      '<div class="visual-settings-row"><label>Direction<select id="visualStyle"><option value="editorial">Éditorial premium</option><option value="gallery">Galerie / culturel</option><option value="art">Art contemporain</option><option value="photo">Photographique</option></select></label><label>Format<select id="visualRatio"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label></div>'+
+      '<div class="visual-prompt-tools"><button data-visual-help="art-direction">✦ Direction artistique</button><button data-visual-help="marketing">✦ Plus marketing</button><button data-visual-help="premium">✦ Plus premium</button></div>'+
+      '<button class="primary-btn wide visual-generate-main" id="visualGenerate">✦ Générer le visuel</button>'+
+    '</section>'+
+    '<section class="visual-preview panel"><div class="visual-preview-head"><small>APERÇU</small><div><button id="visualDownload">Télécharger</button><button id="visualToBureau">Bureau</button></div></div><div id="visualImage"><span>Choisis une direction ou écris ton prompt.</span></div></section>';
+  visualMount.appendChild(visual);
+
+  $$('[data-create-mode]').forEach(b=>b.onclick=()=>setCreationMode(b.dataset.createMode));
   $('#draftPicker').onchange=e=>{if(e.target.value)loadDraft(Number(e.target.value))};
-  $('#draftRecover').onclick=restoreLocalCreationBackup;
-  $('#draftSave').onclick=saveDraft;
-  $('#draftDelete').onclick=deleteDraft;
+  $('#draftRecover').onclick=restoreLocalCreationBackup;$('#draftSave').onclick=saveDraft;$('#draftDelete').onclick=deleteDraft;
   $('#creationUndo').onclick=undoCreation;$('#creationRedo').onclick=redoCreation;$('#creationZoom').onchange=setCreationPreviewZoom;syncCreationHistoryButtons();
-  $('#carouselSource').onchange=syncCarouselBrief;$('#carouselGenerate').onclick=generateCarousel;$('#carouselGenerateImage').onclick=()=>generateCarouselImage(state.carousel.active);$('#carouselGenerateAll').onclick=generateAllCarouselImages;$('#carouselExport').onclick=()=>exportCarouselSlide(state.carousel.active);$('#carouselExportAll').onclick=exportAllCarouselSlides;$('#carouselCaptionGenerate').onclick=prepareInstagramCaption;$('#carouselPublishInstagram').onclick=publishCarouselInstagram;$('#carouselToBureau').onclick=carouselToBureau;
+
+  $('#carouselSource').onchange=syncCarouselBrief;$('#carouselGenerate').onclick=generateCarousel;
+  $('#carouselGenerateImage').onclick=()=>generateCarouselImage(state.carousel.active);$('#carouselGenerateAll').onclick=generateAllCarouselImages;
+  $('#carouselExport').onclick=()=>exportCarouselSlide(state.carousel.active);$('#carouselExportAll').onclick=exportAllCarouselSlides;
+  $('#carouselCaptionGenerate').onclick=prepareInstagramCaption;$('#carouselPublishInstagram').onclick=publishCarouselInstagram;$('#carouselToBureau').onclick=carouselToBureau;
   $('#carouselFormat').onchange=e=>{state.carousel.format=e.target.value;renderCarousel()};
   ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
-  $('#visualGenerate').onclick=generateVisual;$('#visualDownload').onclick=downloadVisual;$('#visualToBureau').onclick=visualToBureau;
   ['slideLayout','slideAccent','slideAlign'].forEach(id=>$('#'+id)?.addEventListener('change',updateSlideDesignFromControls));
   ['slideFontScale','slideImageOpacity','slideImageUrl'].forEach(id=>$('#'+id)?.addEventListener('input',updateSlideDesignFromControls));
-  $('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));
-  $('[data-slide-help]').forEach(b=>b.onclick=()=>assistSlideDesign(b.dataset.slideHelp));
-  $('#slideUseVisual')?.addEventListener('click',()=>{const s=state.carousel.slides[state.carousel.active];if(!s)return;if(!state.visual.url)return toast('Aucun visuel généré à utiliser');s.image=state.visual.url;renderCarousel();scheduleDraftAutosave()});
+  $$('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));
+  $$('[data-slide-help]').forEach(b=>b.onclick=()=>assistSlideDesign(b.dataset.slideHelp));
+  $$('[data-marketing-template]').forEach(b=>b.onclick=()=>applyMarketingTemplate(b.dataset.marketingTemplate));
+  $('#slideUseVisual')?.addEventListener('click',()=>{const s=state.carousel.slides[state.carousel.active];if(!s)return;if(!state.visual.url)return toast('Aucun visuel généré à utiliser');pushCreationHistory();s.image=state.visual.url;renderCarousel();scheduleDraftAutosave()});
   $('#slideAdd')?.addEventListener('click',addCarouselSlide);$('#slideDuplicate')?.addEventListener('click',duplicateCarouselSlide);$('#slideDeleteManual')?.addEventListener('click',deleteCarouselSlideManual);
+
+  $('#visualGenerate').onclick=generateVisual;$('#visualDownload').onclick=downloadVisual;$('#visualToBureau').onclick=visualToBureau;
+  $$('[data-visual-preset]').forEach(b=>b.onclick=()=>applyVisualPreset(b.dataset.visualPreset));
+  $('#visualUseCase').onchange=e=>applyVisualPreset(e.target.value);
+  $$('[data-visual-help]').forEach(b=>b.onclick=()=>improveVisualPrompt(b.dataset.visualHelp));
+
+  $$('[data-studio-start]').forEach(b=>b.onclick=()=>{const mode=b.dataset.studioStart;setCreationMode(mode);if(b.dataset.marketingTemplate)applyMarketingTemplate(b.dataset.marketingTemplate);if(b.dataset.visualUsecase)applyVisualPreset(b.dataset.visualUsecase);document.querySelector('.creation-studio-shell')?.scrollIntoView({behavior:'smooth',block:'start'})});
+  $$('[data-creative-prompt]').forEach(b=>b.onclick=()=>{const brief=clean($('#contentBrief')?.value),body=clean($('#contentBody')?.value);askPlugy(b.dataset.creativePrompt+' Contexte : '+(brief||body||'aucun brief encore'),'#contentBody')});
+  $$('[data-copy-action]').forEach(b=>b.onclick=()=>improveTextContent(b.dataset.copyAction));
+
   setCreationMode('text');fillCreationSources();bindDraftAutosave();refreshLocalDraftRecovery();
 }
+
 
 
 const LOCAL_CREATION_KEY='plugart.creation.backup.v113';
@@ -2289,9 +2404,33 @@ async function carouselToBureau(){
   const body=state.carousel.slides.map((s,i)=>'SLIDE '+(i+1)+'\n'+[s.kicker,s.title,s.body,s.cta,s.image?'Visuel : '+s.image:''].filter(Boolean).join('\n')).join('\n\n');
   try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:'Carrousel · '+(source?.title||state.carousel.slides[0].title||'PLUG ART'),body,folder:'Contenus',tags:'carrousel, instagram, PLUG ART',source_type:sourceId?'opportunity':'',source_id:sourceId||''})});state.bureau.unshift(n);if(sourceId)await persistWorkflow(sourceId,{workflow_status:'drafting',next_action:'Finaliser le carrousel dans le Bureau'});toast('Carrousel envoyé au Bureau')}catch{toast('Enregistrement impossible')}
 }
+async function improveTextContent(kind){
+  const current=clean($('#contentBody')?.value),brief=clean($('#contentBrief')?.value);if(!current&&!brief)return toast('Ajoute un texte ou un brief');
+  const rules={
+    shorten:'Raccourcis ce contenu de 30 à 40 % tout en gardant toutes les informations utiles.',
+    premium:'Réécris ce contenu dans une direction premium, éditoriale et naturelle, sans jargon creux.',
+    instagram:'Adapte ce contenu pour Instagram avec une accroche forte, une lecture mobile fluide et un CTA clair.',
+    direct:'Rends ce contenu plus direct, plus lisible et plus concret. Supprime les répétitions.'
+  };
+  const out=await askPlugy((rules[kind]||rules.premium)+' N’invente aucun fait. Contenu : '+(current||brief),'#contentBody');if(out)$('#contentStatus').textContent='Affiné';
+}
+async function improveVisualPrompt(kind){
+  const current=clean($('#visualPrompt')?.value);if(!current)return toast('Choisis un preset ou écris un prompt');
+  const rules={
+    'art-direction':'Transforme ce brief en prompt de direction artistique précis pour une image marketing premium : composition, lumière, matière, profondeur et sujet. Aucun texte lisible dans l’image.',
+    marketing:'Renforce ce prompt pour obtenir un vrai key visual de campagne : point focal clair, impact immédiat, espace négatif utile, composition publicitaire contemporaine. Aucun texte lisible.',
+    premium:'Rends ce prompt plus haut de gamme, plus éditorial et moins générique. Contrôle lumière, matière, palette et profondeur. Aucun texte lisible.'
+  };
+  try{
+    const out=await api('/api/v32/plugy',{method:'POST',body:JSON.stringify({message:(rules[kind]||rules['art-direction'])+' Brief : '+current,page:'content',mode:'fast'})});
+    if(out.answer){$('#visualPrompt').value=String(out.answer).trim();scheduleDraftAutosave()}
+  }catch{toast('PLUGY n’a pas pu affiner le prompt')}
+}
+
 async function generateVisual(){
-  const prompt=clean($('#visualPrompt').value);if(!prompt)return toast('Ajoute un prompt');const b=$('#visualGenerate'),old=b.textContent;b.disabled=true;b.textContent='Génération…';playMotion('Think',true);
-  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt:prompt+' Aucun texte lisible, aucun logo, aucun watermark.',style:$('#visualStyle').value||'gallery',ratio:$('#visualRatio').value||'4:5',quality:'medium'})});if(r.url){state.visual={url:r.url,prompt};scheduleDraftAutosave();$('#visualImage').style.backgroundImage='url("'+r.url.replace(/"/g,'%22')+'")';$('#visualImage').innerHTML='';playMotion('Happy')}}catch{toast('Génération image indisponible')}finally{b.disabled=false;b.textContent=old}
+  const prompt=clean($('#visualPrompt').value);if(!prompt)return toast('Ajoute un prompt');const b=$('#visualGenerate'),old=b.textContent,usecase=$('#visualUseCase')?.value||'campaign',preset=VISUAL_PRESETS[usecase];b.disabled=true;b.textContent='Génération…';playMotion('Think',true);
+  const productionPrompt=prompt+' '+(preset?.prompt||'')+' Direction PLUG ART : image marketing contemporaine, premium, crédible, composition forte. Aucun texte lisible, aucun logo, aucun watermark.';
+  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt:productionPrompt,style:$('#visualStyle').value||preset?.style||'editorial',ratio:$('#visualRatio').value||preset?.ratio||'4:5',quality:'medium'})});if(r.url){state.visual={url:r.url,prompt};scheduleDraftAutosave();$('#visualImage').style.backgroundImage='url("'+r.url.replace(/"/g,'%22')+'")';$('#visualImage').innerHTML='';playMotion('Happy')}}catch{toast('Génération image indisponible')}finally{b.disabled=false;b.textContent=old}
 }
 async function visualToBureau(){
   if(!state.visual.url)return toast('Génère d’abord un visuel');try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:'Visuel PLUG ART',body:'Prompt : '+state.visual.prompt+'\n\nVisuel : '+state.visual.url,folder:'Contenus',tags:'visuel, image, PLUG ART'})});state.bureau.unshift(n);toast('Visuel envoyé au Bureau')}catch{toast('Enregistrement impossible')}
