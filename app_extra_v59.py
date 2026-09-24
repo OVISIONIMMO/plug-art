@@ -1854,6 +1854,49 @@ def bureau_package_document_v120(package_id:int,body:dict):
       (json.dumps(ids[-50:]),_now_v85(),package_id));c.commit();c.close()
     return {'ok':True,'document':doc,'package':_v120_package_out(core.one('select * from application_packages where id=?',(package_id,)))}
 
+# V140 Bureau package reconciliation.
+def _v140_package_reconcile_row(package_id:int,persist:bool=True):
+    row=core.one('select * from application_packages where id=?',(package_id,))
+    if not row:raise HTTPException(404,'Dossier introuvable')
+    out=_v120_package_out(row)
+    checklist=dict(out.get('checklist') or _v120_default_checklist())
+    ids=[int(x) for x in (out.get('document_ids') or []) if str(x).isdigit()]
+    docs=[]
+    if ids:
+        marks=','.join('?' for _ in ids)
+        docs=core.rows(f'select id,title,body,tags,folder from bureau_documents where id in ({marks})',tuple(ids))
+    hay=' '.join(str(d.get('title') or '')+' '+str(d.get('tags') or '') for d in docs).lower()
+    has=lambda pattern:bool(re.search(pattern,hay,re.I))
+    checklist['source_checked']=bool(out.get('opportunity')) or bool(checklist.get('source_checked'))
+    checklist['letter']=has(r'lettre|candidature') or bool(checklist.get('letter'))
+    checklist['bio']=has(r'\bbio\b|biographie') or bool(checklist.get('bio'))
+    checklist['artist_statement']=has(r'note artistique|artist statement|d[eé]marche') or bool(checklist.get('artist_statement'))
+    if str(out.get('status') or '')=='submitted':checklist['submitted']=True
+    done=sum(1 for k in _v120_default_checklist() if checklist.get(k))
+    total=len(_v120_default_checklist())
+    missing=[k for k in _v120_default_checklist() if not checklist.get(k)]
+    next_map={
+      'source_checked':'Vérifier la source officielle',
+      'letter':'Préparer la lettre de candidature',
+      'bio':'Ajouter ou finaliser la bio',
+      'artist_statement':'Ajouter ou finaliser la note artistique',
+      'portfolio':'Ajouter le portfolio',
+      'visuals':'Ajouter les visuels',
+      'links':'Vérifier les liens',
+      'submitted':'Envoyer la candidature'
+    }
+    if persist and checklist!=(out.get('checklist') or {}):
+        c=core.conn();c.execute('update application_packages set checklist_json=?,updated_at=? where id=?',
+          (json.dumps(checklist,ensure_ascii=False),_now_v85(),package_id));c.commit();c.close()
+        row=core.one('select * from application_packages where id=?',(package_id,));out=_v120_package_out(row)
+    out['progress']={'done':done,'total':total,'missing':missing,'next_action':next_map.get(missing[0],'Dossier complet') if missing else 'Dossier complet'}
+    out['documents']=docs
+    return out
+
+@app.post('/api/v140/bureau/packages/{package_id}/reconcile')
+def bureau_package_reconcile_v140(package_id:int):
+    return _v140_package_reconcile_row(package_id,True)
+
 @app.get('/api/v107/workspace')
 def workspace_v107():
     today=time.strftime('%Y-%m-%d')
