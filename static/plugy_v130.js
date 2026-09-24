@@ -8,7 +8,7 @@ function clean(v){return String(v??'').replace(/\s+/g,' ').trim()}
 function setState(name,label){
   document.body.dataset.plugyState=name;
   $('#plugyLiveState span').textContent=label;$('#topState').textContent=label;
-  const animMap={idle:'Idle',listen:'Listen',think:'Think',speak:'Speak',happy:'Happy',curious:'Curious',wave:'Wave',charge:'Charge'};
+  const animMap={idle:'Idle',listen:'Listen',think:'Think',speak:'Speak',happy:'Happy',curious:'Curious',wave:'Wave',charge:'Charge',blink:'Blink',softturn:'SoftTurn'};
   const target=animMap[name]||'Idle',run=()=>{
     try{
       const a=mv?.availableAnimations||[],pick=a.includes(target)?target:(a.includes('Idle')?'Idle':a[0]);
@@ -111,12 +111,34 @@ mv?.addEventListener('load',()=>{tuneMaterials();setState('idle','Prêt')},{once
 mv?.addEventListener('click',modelInteract);
 mv?.addEventListener('pointerdown',()=>{clearTimeout(state.pressTimer);state.pressTimer=setTimeout(startVoice,650)});
 ['pointerup','pointercancel','pointerleave'].forEach(ev=>mv?.addEventListener(ev,()=>clearTimeout(state.pressTimer)));
+function hasAnim(name){return !!(mv?.availableAnimations||[]).includes(name)}
+let ambientTimer=0,gazeReset=0;
+function softGaze(x=null,y=null){
+  if(!mv||state.busy||state.listening)return;
+  const gx=x==null?(Math.random()*6-3):x,gy=y==null?(Math.random()*3.6-1.8):y;
+  mv.style.setProperty('--standalone-gaze-x',gx.toFixed(1)+'px');mv.style.setProperty('--standalone-gaze-y',gy.toFixed(1)+'px');
+  try{mv.setAttribute('camera-orbit',(gx*.72).toFixed(1)+'deg '+(76+gy*.35).toFixed(1)+'deg 3.05m')}catch{}
+  clearTimeout(gazeReset);gazeReset=setTimeout(()=>{mv.style.setProperty('--standalone-gaze-x','0px');mv.style.setProperty('--standalone-gaze-y','0px');try{mv.setAttribute('camera-orbit','0deg 76deg 3.05m')}catch{}},2100+Math.random()*1700);
+}
 mv?.addEventListener('pointermove',e=>{
-  const r=mv.getBoundingClientRect(),x=((e.clientX-r.left)/Math.max(r.width,1)-.5)*8,y=((e.clientY-r.top)/Math.max(r.height,1)-.5)*6;
-  mv.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px)';
+  const r=mv.getBoundingClientRect(),x=((e.clientX-r.left)/Math.max(r.width,1)-.5)*5,y=((e.clientY-r.top)/Math.max(r.height,1)-.5)*3;
+  softGaze(x,y);
 });
-mv?.addEventListener('pointerleave',()=>{mv.style.transform=''});
-setInterval(()=>{if(state.busy||state.listening)return;const moves=['idle','curious','wave'];const m=moves[Math.floor(Math.random()*moves.length)];setState(m,m==='idle'?'Prêt':'Présent');if(m!=='idle')setTimeout(()=>setState('idle','Prêt'),1000)},9000);
+mv?.addEventListener('pointerleave',()=>softGaze(0,0));
+function scheduleAmbient(){
+  clearTimeout(ambientTimer);
+  ambientTimer=setTimeout(()=>{
+    if(!state.busy&&!state.listening){
+      const roll=Math.random();
+      if(roll<.55&&hasAnim('Blink')){setState('blink','Présent');setTimeout(()=>setState('idle','Prêt'),720)}
+      else if(roll<.78&&hasAnim('SoftTurn')){setState('softturn','Présent');setTimeout(()=>setState('idle','Prêt'),1500)}
+      else if(roll<.9){setState('curious','Présent');setTimeout(()=>setState('idle','Prêt'),1250)}
+      softGaze();
+    }
+    scheduleAmbient();
+  },6000+Math.random()*10000);
+}
+scheduleAmbient();
 
 form?.addEventListener('submit',e=>{e.preventDefault();ask(input.value)});
 input?.addEventListener('input',autoGrow);
