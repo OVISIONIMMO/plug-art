@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='127.1'
+app.version='127.2'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 GLB=BASE/'static'/'PLUGY_final_animated.glb'
@@ -15,7 +15,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='127.20260924.2'
+VERSION='127.20260924.3'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -274,7 +274,7 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'127.1',
+      'version':'127.2',
       'ui':'plug-art-v127-lean-runtime',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
@@ -290,7 +290,7 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'127.1',
+      'X-Plug-Art-Version':'127.2',
       'X-Plug-Art-UI':'plug-art-v127-lean-runtime'
     }
     if request.headers.get('if-none-match')==etag:
@@ -2072,7 +2072,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'127.1',
+      'version':'127.2',
       'ui':'plug-art-v127-lean-runtime',
       'reference_direction':'V120 PLUG ART: compact internal work cockpit with a three-mode Bureau for Documents, application Packages and reusable Templates, starter application packs, direct Open Call routing, CRM outreach, PLUGY operator, Instagram Studio and mobile-first workflows',
       'marketing_blocks':False,
@@ -2101,3 +2101,52 @@ def status_v90():
     }
 
 print(f"PLUG_ART_V122_READY ui=internal_dashboard bureau=persistent prospection=crm open_call_workflow=on drafts=persistent realistic=on contextual_motion=on plugy=single_drawer instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+
+def _v127_runtime_smoke():
+    required_routes={
+      ('GET','/api/health'),
+      ('GET','/api/v124/dashboard-bootstrap'),
+      ('POST','/api/v125/plugy/stream'),
+      ('POST','/api/v32/plugy'),
+      ('POST','/api/v32/content/image'),
+      ('GET','/api/v86/crm'),
+      ('GET','/api/v107/bureau'),
+      ('GET','/api/v107/open-calls/workflow'),
+      ('GET','/api/v108/drafts'),
+      ('GET','/api/v88/instagram/status')
+    }
+    active=set()
+    for route in app.router.routes:
+        path=getattr(route,'path',None)
+        methods=getattr(route,'methods',set()) or set()
+        if not path:continue
+        for method in methods:
+            active.add((str(method).upper(),path))
+    missing=sorted(required_routes-active)
+    required_tables=[
+      'opportunities','artists','crm_leads','crm_history','bureau_documents',
+      'bureau_templates','application_packages','opportunity_workspace','content_drafts'
+    ]
+    table_missing=[]
+    db_ok=False
+    quick='unknown'
+    try:
+        c=core.conn()
+        existing={str(x[0]) for x in c.execute("select name from sqlite_master where type='table'").fetchall()}
+        table_missing=[t for t in required_tables if t not in existing]
+        row=c.execute('pragma quick_check').fetchone()
+        quick=str(row[0] if row else 'unknown')
+        db_ok=(quick.lower()=='ok')
+        c.close()
+    except Exception as exc:
+        quick=f"{type(exc).__name__}:{str(exc)[:120]}"
+    ok=(not missing and not table_missing and db_ok)
+    print(
+      f"PLUG_ART_V127_SMOKE ok={str(ok).lower()} routes={len(required_routes)-len(missing)}/{len(required_routes)} "
+      f"tables={len(required_tables)-len(table_missing)}/{len(required_tables)} db={quick} "
+      f"missing_routes={','.join(m+' '+p for m,p in missing) or 'none'} "
+      f"missing_tables={','.join(table_missing) or 'none'}",
+      flush=True
+    )
+
+_v127_runtime_smoke()
