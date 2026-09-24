@@ -1825,10 +1825,10 @@ function renderMap(){
   ensureLeaflet().then(()=>renderLeafletMap(rows)).catch(()=>renderMapFallback(rows));
 }
 $('#mapSearch')?.addEventListener('input',e=>{state.mapSearch=e.target.value;renderMap()});
-$$('[data-map-filter]').forEach(b=>b.addEventListener('click',()=>{
-  state.mapFilter=b.dataset.mapFilter;$$('[data-map-filter]').forEach(x=>x.classList.toggle('active',x===b));renderMap();
+$$$('[data-map-filter]').forEach(b=>b.addEventListener('click',()=>{
+  state.mapFilter=b.dataset.mapFilter;$$$('[data-map-filter]').forEach(x=>x.classList.toggle('active',x===b));renderMap();
 }));
-$('#mapReset')?.addEventListener('click',()=>{state.mapFilter='all';state.mapSearch='';if($('#mapSearch'))$('#mapSearch').value='';$$('[data-map-filter]').forEach(x=>x.classList.toggle('active',x.dataset.mapFilter==='all'));renderMap()});
+$('#mapReset')?.addEventListener('click',()=>{state.mapFilter='all';state.mapSearch='';if($('#mapSearch'))$('#mapSearch').value='';$$$('[data-map-filter]').forEach(x=>x.classList.toggle('active',x.dataset.mapFilter==='all'));renderMap()});
 $('#mapRefresh')?.addEventListener('click',()=>ensureDataFamily('map',true).then(renderMap).catch(()=>toast('Carte momentanément indisponible')));
 
 const UI_DEFAULT={accent:'mono',surface:'editorial',density:'airy',radius:26,fontScale:1,motion:'subtle',sidebar:'standard',plugyConcept:'pearl'};
@@ -2359,7 +2359,7 @@ function installCreationModes(){
   ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
   ['slideLayout','slideAccent','slideAlign'].forEach(id=>$('#'+id)?.addEventListener('change',updateSlideDesignFromControls));
   ['slideFontScale','slideImageOpacity','slideImageUrl'].forEach(id=>$('#'+id)?.addEventListener('input',updateSlideDesignFromControls));
-  $('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));
+  $$('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));
   $$('[data-slide-help]').forEach(b=>b.onclick=()=>assistSlideDesign(b.dataset.slideHelp));
   $$('[data-marketing-template]').forEach(b=>b.onclick=()=>applyMarketingTemplate(b.dataset.marketingTemplate));
   $$('[data-studio-tool]').forEach(b=>b.onclick=()=>setStudioTool(b.dataset.studioTool));
@@ -2596,7 +2596,7 @@ function renderCarousel(){
   if($('#slideFontScale'))$('#slideFontScale').value=d.fontScale;if($('#slideFontScaleOut'))$('#slideFontScaleOut').textContent=d.fontScale+'%';
   if($('#slideImageOpacity'))$('#slideImageOpacity').value=d.imageOpacity;if($('#slideImageOpacityOut'))$('#slideImageOpacityOut').textContent=d.imageOpacity+'%';
   if($('#slideImageUrl'))$('#slideImageUrl').value=s.image||'';
-  $$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
+  $$$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
   renderCanvasLayers();renderStudioImages();
 }
 
