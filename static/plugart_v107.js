@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='122.20260924.2';
+const VERSION='123.20260924.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -165,21 +165,22 @@ $('#plugyModel')?.addEventListener('pointerenter',()=>playMotion('Curious'));
 $('#plugyModel')?.addEventListener('dblclick',()=>{openPlugy();playMotion('Attentive')});
 
 
-let plugyWarmPromise=null;
+let plugyWarmPromise=null,plugy3DRequested=false;
 function warmPlugy3D(reason='intent'){
+  plugy3DRequested=true;
   const mv=$('#plugyModel');if(mv)mv.setAttribute('loading','eager');
   if(plugyWarmPromise)return plugyWarmPromise;
   plugyWarmPromise=ensureModelViewer()
     .then(()=>true)
-    .catch(err=>{plugyWarmPromise=null;throw err});
+    .catch(err=>{plugyWarmPromise=null;plugy3DRequested=false;throw err});
   return plugyWarmPromise;
 }
 function scheduleSmartPlugyWarm(){
   const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
   if(conn?.saveData||['slow-2g','2g'].includes(String(conn?.effectiveType||'')))return;
   const warm=()=>{if(document.visibilityState==='visible')warmPlugy3D('idle').catch(()=>{})};
-  if('requestIdleCallback' in window)requestIdleCallback(warm,{timeout:7000});
-  else setTimeout(warm,5200);
+  if('requestIdleCallback' in window)requestIdleCallback(warm,{timeout:2800});
+  else setTimeout(warm,1600);
 }
 function bindPlugyWarmIntent(){
   const targets=[$('#sidebarPlugy'),$('#topPlugy'),...$$('[data-open-plugy]')].filter(Boolean);
@@ -203,7 +204,7 @@ function syncPlugyHomeMount(){
   if(open){movePlugyModel(plugyDrawerStage());return}
   if(state.view==='dashboard'&&plugyDashboardStage()){
     movePlugyModel(plugyDashboardStage());
-    warmPlugy3D('dashboard').then(()=>playMotion('Idle',true)).catch(()=>{});
+    if(plugy3DRequested||customElements.get('model-viewer'))warmPlugy3D('dashboard').then(()=>playMotion('Idle',true)).catch(()=>{});
   }else movePlugyModel(plugyDrawerStage());
 }
 
@@ -1343,24 +1344,43 @@ async function initVoice(){
 $('#plugyVoice')?.addEventListener('click',initVoice);
 installConversationButton();
 
+const DASH_BOOT_CACHE='plugart:v123:dashboard-bootstrap';
+function applyDashboardBoot(boot){
+  if(!boot||typeof boot!=='object')return false;
+  state.bootstrap=boot;
+  state.bureau=Array.isArray(boot.bureau)?boot.bureau:[];
+  state.leads=Array.isArray(boot.leads)?boot.leads:[];
+  state.workflow=Array.isArray(boot.workflow)?boot.workflow:[];
+  state.drafts=Array.isArray(boot.drafts)?boot.drafts:[];
+  return true;
+}
+function readDashboardBootCache(){
+  try{
+    const raw=sessionStorage.getItem(DASH_BOOT_CACHE);if(!raw)return null;
+    const payload=JSON.parse(raw);
+    if(!payload?.savedAt||Date.now()-payload.savedAt>120000||!payload.boot)return null;
+    return payload.boot;
+  }catch{return null}
+}
+function writeDashboardBootCache(boot){
+  try{sessionStorage.setItem(DASH_BOOT_CACHE,JSON.stringify({savedAt:Date.now(),boot}))}catch{}
+}
 async function loadAll(){
   state.dataLoaded={opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false};state.dataPromises={};
+  const cached=readDashboardBootCache();
+  if(cached&&applyDashboardBoot(cached)){renderDashboard();renderNavBadges()}
   try{
     const boot=await api('/api/v112/dashboard-bootstrap',{timeout:12000});
-    state.bootstrap=boot;
-    state.bureau=Array.isArray(boot.bureau)?boot.bureau:[];
-    state.leads=Array.isArray(boot.leads)?boot.leads:[];
-    state.workflow=Array.isArray(boot.workflow)?boot.workflow:[];
-    state.drafts=Array.isArray(boot.drafts)?boot.drafts:[];
+    applyDashboardBoot(boot);writeDashboardBootCache(boot);
     renderDashboard();renderNavBadges();
     if(requiredFamilies(state.view).length){
       await ensureViewData(state.view,true);
       renderRouteView(state.view);
     }else if(state.view!=='dashboard')renderRouteView(state.view);
-    toast('Workspace synchronisé');
+    toast(cached?'Workspace actualisé':'Workspace synchronisé');
   }catch(e){
-    console.warn('[PLUG ART V112]',e);
-    renderNavBadges();renderRouteView(state.view);toast('Synchronisation partielle');
+    console.warn('[PLUG ART V123]',e);
+    renderNavBadges();renderRouteView(state.view);toast(cached?'Mode instantané · actualisation différée':'Synchronisation partielle');
   }
 }
 
