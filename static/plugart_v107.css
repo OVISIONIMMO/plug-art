@@ -1166,3 +1166,103 @@ body[data-plugy-motion="Blink"] #plugyModel{filter:drop-shadow(0 27px 35px rgba(
   #view-creation .visual-preview{min-height:520px}
   #view-creation .visual-preview #visualImage{min-height:450px}
 }
+
+
+/* V136 · PLUGY living companion, low-glare finish and persistent miniature */
+#plugyModel{
+  filter:drop-shadow(0 22px 26px rgba(34,37,49,.10))!important;
+  transition:translate .55s cubic-bezier(.22,.72,.24,1),transform .28s cubic-bezier(.2,.8,.2,1),filter .22s ease!important;
+  will-change:transform,translate;
+}
+.plugy-stage model-viewer,.slide-plugy-mount model-viewer{
+  filter:drop-shadow(0 22px 26px rgba(34,37,49,.10))!important;
+}
+body[data-plugy-motion="Think"] #plugyModel,
+body[data-plugy-motion="Charge"] #plugyModel{
+  filter:drop-shadow(0 24px 30px rgba(103,83,209,.18))!important;
+}
+body[data-plugy-motion="Speak"] #plugyModel{filter:drop-shadow(0 23px 28px rgba(65,191,204,.15))!important}
+
+.plugy-follower{
+  position:fixed;right:22px;bottom:24px;z-index:245;width:136px;height:158px;
+  display:block;opacity:0;visibility:hidden;pointer-events:none;
+  transform:translate3d(18px,12px,0) scale(.82);
+  transition:opacity .2s ease,transform .34s cubic-bezier(.18,.82,.22,1),visibility .2s;
+  cursor:pointer;isolation:isolate;contain:layout paint;
+}
+.plugy-follower.visible{opacity:1;visibility:visible;pointer-events:auto;transform:translate3d(0,0,0) scale(1)}
+.plugy-follower.travelling{transform:translate3d(0,-6px,0) scale(.98)}
+.plugy-follower #plugyModel{
+  position:absolute;inset:-12px -15px 10px;width:166px!important;height:166px!important;z-index:3;
+  background:transparent!important;filter:drop-shadow(0 17px 18px rgba(36,38,52,.12))!important;
+}
+.plugy-follower-aura{
+  position:absolute;z-index:1;left:50%;top:48%;width:92px;height:92px;transform:translate(-50%,-50%);
+  border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.82) 0,rgba(143,126,226,.09) 42%,rgba(92,211,219,.045) 60%,transparent 74%);
+  filter:blur(5px);transition:transform .28s ease,opacity .28s ease;
+}
+.plugy-follower-status{
+  position:absolute;z-index:6;left:50%;bottom:2px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;
+  padding:4px 7px;border-radius:999px;background:rgba(248,249,247,.72);border:1px solid rgba(255,255,255,.8);
+  backdrop-filter:blur(14px);font-size:5.5px;font-weight:900;letter-spacing:.7px;color:#5d6064;box-shadow:0 8px 22px rgba(35,38,48,.05)
+}
+.plugy-follower-status i{width:4px;height:4px;border-radius:50%;background:#54c996;box-shadow:0 0 0 3px rgba(84,201,150,.10)}
+.plugy-follower-spark{
+  position:absolute;z-index:5;width:4px;height:4px;border-radius:50%;opacity:0;pointer-events:none;
+  background:#7d69e8;box-shadow:0 0 8px rgba(125,105,232,.7)
+}
+.plugy-follower-spark.s1{left:23px;top:46px}.plugy-follower-spark.s2{right:22px;top:68px;background:#61d4dc;box-shadow:0 0 8px rgba(97,212,220,.72)}
+
+body[data-plugy-motion="Think"] .plugy-follower:before,
+body[data-plugy-motion="Think"] .plugy-follower:after,
+body[data-plugy-motion="Charge"] .plugy-follower:before,
+body[data-plugy-motion="Charge"] .plugy-follower:after{
+  content:"";position:absolute;z-index:2;left:50%;top:47%;border-radius:50%;pointer-events:none;
+  transform:translate(-50%,-50%);border:1px solid rgba(119,97,224,.34);
+}
+body[data-plugy-motion="Think"] .plugy-follower:before,
+body[data-plugy-motion="Charge"] .plugy-follower:before{
+  width:105px;height:105px;border-left-color:transparent;border-bottom-color:transparent;animation:plugyMiniThink .78s linear infinite
+}
+body[data-plugy-motion="Think"] .plugy-follower:after,
+body[data-plugy-motion="Charge"] .plugy-follower:after{
+  width:124px;height:124px;border-color:rgba(87,211,222,.25);border-right-color:transparent;border-top-color:transparent;animation:plugyMiniThinkReverse 1.08s linear infinite
+}
+body[data-plugy-motion="Think"] .plugy-follower-aura,
+body[data-plugy-motion="Charge"] .plugy-follower-aura{transform:translate(-50%,-50%) scale(1.22);opacity:.95}
+body[data-plugy-motion="Think"] .plugy-follower-spark,
+body[data-plugy-motion="Charge"] .plugy-follower-spark{animation:plugyMiniSpark .72s ease-in-out infinite alternate}
+body[data-plugy-motion="Think"] .plugy-follower-spark.s2,
+body[data-plugy-motion="Charge"] .plugy-follower-spark.s2{animation-delay:.22s}
+@keyframes plugyMiniThink{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes plugyMiniThinkReverse{to{transform:translate(-50%,-50%) rotate(-360deg)}}
+@keyframes plugyMiniSpark{0%{opacity:.05;transform:scale(.4) translateY(3px)}100%{opacity:1;transform:scale(1.3) translateY(-5px)}}
+
+/* Thinking is now visible around the full-size PLUGY too, without blasting the model with fake gloss. */
+body[data-plugy-motion="Think"] .plugy-stage:before{animation-duration:.78s!important;border-color:rgba(119,97,224,.28)!important;border-left-color:transparent!important;border-bottom-color:transparent!important}
+body[data-plugy-motion="Think"] .plugy-stage:after{animation-duration:1.08s!important;border-color:rgba(87,211,222,.22)!important;border-right-color:transparent!important;border-top-color:transparent!important}
+body[data-plugy-motion="Think"] .plugy-energy.e1{opacity:.34!important;transform:scale(1.12)!important}
+body[data-plugy-motion="Think"] .plugy-energy.e2{opacity:.37!important;transform:scale(1.20)!important}
+
+/* The old companion chip is redundant once the actual 3D PLUGY follows the user. */
+#slidePlugyCompanion{display:none!important}
+
+@media(max-width:820px){
+  .plugy-follower{right:8px;bottom:calc(82px + env(safe-area-inset-bottom));width:96px;height:112px}
+  .plugy-follower #plugyModel{inset:-8px -12px 7px;width:120px!important;height:120px!important}
+  .plugy-follower-aura{width:70px;height:70px}
+  .plugy-follower-status{bottom:0;font-size:5px;padding:3px 6px}
+  body[data-plugy-motion="Think"] .plugy-follower:before,
+  body[data-plugy-motion="Charge"] .plugy-follower:before{width:78px;height:78px}
+  body[data-plugy-motion="Think"] .plugy-follower:after,
+  body[data-plugy-motion="Charge"] .plugy-follower:after{width:91px;height:91px}
+  .plugy-follower-spark.s1{left:13px;top:34px}.plugy-follower-spark.s2{right:12px;top:48px}
+}
+@media(prefers-reduced-motion:reduce){
+  .plugy-follower,.plugy-follower #plugyModel{transition:none!important}
+  body[data-plugy-motion="Think"] .plugy-follower:before,
+  body[data-plugy-motion="Think"] .plugy-follower:after,
+  body[data-plugy-motion="Charge"] .plugy-follower:before,
+  body[data-plugy-motion="Charge"] .plugy-follower:after,
+  .plugy-follower-spark{animation:none!important}
+}
