@@ -20,12 +20,12 @@ function setState(name,label){
 function tuneMaterials(){
   try{
     (mv?.model?.materials||[]).forEach(mat=>{
-      try{mat.pbrMetallicRoughness?.setMetallicFactor?.(.03)}catch{}
-      try{mat.pbrMetallicRoughness?.setRoughnessFactor?.(.68)}catch{}
-      try{mat.clearcoat?.setClearcoatFactor?.(.04)}catch{}
-      try{mat.clearcoat?.setClearcoatRoughnessFactor?.(.82)}catch{}
+      try{mat.pbrMetallicRoughness?.setMetallicFactor?.(.02)}catch{}
+      try{mat.pbrMetallicRoughness?.setRoughnessFactor?.(.74)}catch{}
+      try{mat.clearcoat?.setClearcoatFactor?.(.025)}catch{}
+      try{mat.clearcoat?.setClearcoatRoughnessFactor?.(.9)}catch{}
     });
-    mv.setAttribute('exposure','.92');mv.setAttribute('shadow-intensity','.35');mv.setAttribute('shadow-softness','1');
+    mv.setAttribute('exposure','.89');mv.setAttribute('shadow-intensity','.28');mv.setAttribute('shadow-softness','1');
   }catch{}
 }
 function saveHistory(){try{localStorage.setItem(STORAGE,JSON.stringify(state.history.slice(-30)))}catch{}}
