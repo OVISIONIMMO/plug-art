@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='133.20260924.1';
+const VERSION='134.20260924.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -193,7 +193,12 @@ function tunePlugyMaterials(){
   }catch(e){console.warn('[PLUGY finish]',e)}
 }
 $('#plugyModel')?.addEventListener('load',()=>{tunePlugyMaterials();if($('#plugyState span'))$('#plugyState span').textContent='Prêt';playMotion('Idle',true)},{once:true});
-$('#plugyModel')?.addEventListener('pointerenter',()=>playMotion('Curious'));
+$('#plugyModel')?.addEventListener('pointerenter',()=>{playMotion('Curious');plugySoftGaze()});
+$('#plugyModel')?.addEventListener('pointermove',e=>{
+  const mv=$('#plugyModel'),r=mv?.getBoundingClientRect();if(!mv||!r||state.voice)return;
+  const nx=((e.clientX-r.left)/Math.max(1,r.width)-.5),ny=((e.clientY-r.top)/Math.max(1,r.height)-.5);
+  mv.style.setProperty('--plugy-gaze-x',(nx*5).toFixed(1)+'px');mv.style.setProperty('--plugy-gaze-y',(ny*3).toFixed(1)+'px');
+});
 $('#plugyModel')?.addEventListener('dblclick',()=>{openPlugy();playMotion('Attentive')});
 
 
@@ -2921,20 +2926,40 @@ injectOperationalUI();
 installSlideDashboard();
 
 // PLUGY V107.1 interaction layer: one model, richer behavior.
-let plugyAmbientTimer=0,plugyPressTimer=0;
-function startPlugyAmbient(){
-  clearInterval(plugyAmbientTimer);
-  plugyAmbientTimer=setInterval(()=>{
-    if(state.voice)return;
-    const drawerOpen=$('#plugyDrawer')?.classList.contains('open');
-    const dashboardVisible=state.view==='dashboard'&&plugyDashboardStage()?.contains($('#plugyModel'));
-    if(!drawerOpen&&!dashboardVisible)return;
-    const moves=['Blink','Curious','SoftTurn','Bounce'];
-    playMotion(moves[Math.floor(Math.random()*moves.length)]);
-  },7800);
+let plugyAmbientTimer=0,plugyPressTimer=0,plugyGazeTimer=0;
+function plugyAvailable(name){
+  const mv=$('#plugyModel');return !!(mv?.availableAnimations||[]).includes(name);
 }
+function plugySoftGaze(){
+  const mv=$('#plugyModel');if(!mv||state.voice)return;
+  const yaw=(Math.random()*7-3.5).toFixed(1),pitch=(74+Math.random()*4).toFixed(1);
+  mv.style.setProperty('--plugy-gaze-x',(Math.random()*5-2.5).toFixed(1)+'px');
+  mv.style.setProperty('--plugy-gaze-y',(Math.random()*3-1.5).toFixed(1)+'px');
+  try{mv.setAttribute('camera-orbit',yaw+'deg '+pitch+'deg 3.05m')}catch{}
+  clearTimeout(plugyGazeTimer);
+  plugyGazeTimer=setTimeout(()=>{try{mv.setAttribute('camera-orbit','0deg 76deg 3.05m')}catch{};mv.style.setProperty('--plugy-gaze-x','0px');mv.style.setProperty('--plugy-gaze-y','0px')},2200+Math.random()*1800);
+}
+function schedulePlugyAmbient(){
+  clearTimeout(plugyAmbientTimer);
+  plugyAmbientTimer=setTimeout(()=>{
+    if(!state.voice){
+      const drawerOpen=$('#plugyDrawer')?.classList.contains('open');
+      const dashboardVisible=state.view==='dashboard'&&plugyDashboardStage()?.contains($('#plugyModel'));
+      if(drawerOpen||dashboardVisible){
+        const roll=Math.random();
+        if(roll<.52&&plugyAvailable('Blink'))playMotion('Blink');
+        else if(roll<.76&&plugyAvailable('SoftTurn'))playMotion('SoftTurn');
+        else if(roll<.9&&plugyAvailable('Curious'))playMotion('Curious');
+        else plugySoftGaze();
+        if(Math.random()<.62)plugySoftGaze();
+      }
+    }
+    schedulePlugyAmbient();
+  },5600+Math.random()*9000);
+}
+function startPlugyAmbient(){schedulePlugyAmbient()}
 const pm=$('#plugyModel');
-pm?.addEventListener('click',()=>playMotion(Math.random()>.5?'Happy':'Bounce'));
+pm?.addEventListener('click',()=>{playMotion(plugyAvailable('Happy')?'Happy':'Curious');plugySoftGaze()});
 pm?.addEventListener('pointerdown',()=>{clearTimeout(plugyPressTimer);plugyPressTimer=setTimeout(()=>{initVoice();playMotion('Attentive',true)},650)});
 ['pointerup','pointercancel','pointerleave'].forEach(ev=>pm?.addEventListener(ev,()=>clearTimeout(plugyPressTimer)));
 startPlugyAmbient();
