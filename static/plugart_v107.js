@@ -2146,6 +2146,13 @@ function renderCanvasLayers(){
   });
   syncLayerInspector();
 }
+function updateCanvasLayerVisual(l){
+  if(!l)return;
+  const el=$$('[data-layer-id]').find(x=>String(x.dataset.layerId)===String(l.id));
+  if(!el)return;
+  el.setAttribute('style',layerStyle(l));
+  el.classList.toggle('locked',!!l.locked);
+}
 function syncLayerInspector(){
   const l=activeCanvasLayer(),box=$('#layerInspector');if(!box)return;
   box.classList.toggle('empty',!l);
@@ -2175,15 +2182,15 @@ function syncLayerInspector(){
         :range('layerRadius','Arrondis',0,80,Number(l.radius||18),1,' px'))+
     '<div class="layer-order-actions"><button id="layerBack">Arrière</button><button id="layerDuplicate">Dupliquer</button><button id="layerFront">Avant</button></div>';
   const bind=(id,key,transform=v=>Number(v),unit='')=>$('#'+id)?.addEventListener('input',e=>{
-    l[key]=transform(e.target.value);const o=$('#'+id+'Out');if(o)o.textContent=String(e.target.value)+unit;renderCanvasLayers();scheduleDraftAutosave()
+    l[key]=transform(e.target.value);const o=$('#'+id+'Out');if(o)o.textContent=String(e.target.value)+unit;updateCanvasLayerVisual(l);scheduleDraftAutosave()
   });
   bind('layerX','x',v=>Number(v),'%');bind('layerY','y',v=>Number(v),'%');bind('layerW','w',v=>Number(v),'%');bind('layerH','h',v=>Number(v),'%');
   bind('layerRotate','rotate',v=>Number(v),'°');bind('layerOpacity','opacity',v=>Number(v)/100,'%');bind('layerSize','size',v=>Number(v),' px');bind('layerRadius','radius',v=>Number(v),' px');
   bind('layerLineHeight','lineHeight',v=>Number(v),'×');bind('layerLetterSpacing','letterSpacing',v=>Number(v),' px');
-  if($('#layerFontFamily')){$('#layerFontFamily').value=l.fontFamily||'Inter';$('#layerFontFamily').onchange=e=>{l.fontFamily=e.target.value;renderCanvasLayers();scheduleDraftAutosave()}}
-  if($('#layerWeight')){$('#layerWeight').value=String(l.weight||700);$('#layerWeight').onchange=e=>{l.weight=Number(e.target.value);renderCanvasLayers();scheduleDraftAutosave()}}
-  if($('#layerAlign')){$('#layerAlign').value=l.align||'left';$('#layerAlign').onchange=e=>{l.align=e.target.value;renderCanvasLayers();scheduleDraftAutosave()}}
-  $('#layerColor')?.addEventListener('input',e=>{l.color=e.target.value;renderCanvasLayers();scheduleDraftAutosave()});
+  if($('#layerFontFamily')){$('#layerFontFamily').value=l.fontFamily||'Inter';$('#layerFontFamily').onchange=e=>{l.fontFamily=e.target.value;updateCanvasLayerVisual(l);scheduleDraftAutosave()}}
+  if($('#layerWeight')){$('#layerWeight').value=String(l.weight||700);$('#layerWeight').onchange=e=>{l.weight=Number(e.target.value);updateCanvasLayerVisual(l);scheduleDraftAutosave()}}
+  if($('#layerAlign')){$('#layerAlign').value=l.align||'left';$('#layerAlign').onchange=e=>{l.align=e.target.value;updateCanvasLayerVisual(l);scheduleDraftAutosave()}}
+  $('#layerColor')?.addEventListener('input',e=>{l.color=e.target.value;updateCanvasLayerVisual(l);scheduleDraftAutosave()});
   $('#layerLock')?.addEventListener('click',()=>{l.locked=!l.locked;renderCanvasLayers();scheduleDraftAutosave()});
   $('#layerDelete')?.addEventListener('click',deleteCanvasLayer);$('#layerDuplicate')?.addEventListener('click',duplicateCanvasLayer);$('#layerBack')?.addEventListener('click',()=>moveCanvasLayer('back'));$('#layerFront')?.addEventListener('click',()=>moveCanvasLayer('front'));
 }
