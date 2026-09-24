@@ -290,12 +290,12 @@ def _plugy_rig_summary_v139():
     try:
         raw=REALISTIC_PLUGY.read_bytes()
         if raw[:4]!=b'glTF':return {'error':'not-glb'}
-        pos=12;doc=None
+        pos=12;doc=None;bin_blob=b''
         while pos+8<=len(raw):
             ln,kind=struct.unpack_from('<I4s',raw,pos);pos+=8
             chunk=raw[pos:pos+ln];pos+=ln
-            if kind==b'JSON':
-                doc=json.loads(chunk.decode('utf-8').rstrip(' ').rstrip(chr(0)));break
+            if kind==b'JSON':doc=json.loads(chunk.decode('utf-8').rstrip(' ').rstrip(chr(0)))
+            elif kind==bytes((66,73,78,0)):bin_blob=bytes(chunk)
         if not isinstance(doc,dict):return {'error':'no-json'}
         nodes=[]
         for i,n in enumerate(doc.get('nodes') or []):
@@ -314,7 +314,36 @@ def _plugy_rig_summary_v139():
             meshes.append({'i':i,'name':m.get('name'),'materials':mats,'weights':m.get('weights'),'targetNames':(m.get('extras') or {}).get('targetNames') if isinstance(m.get('extras'),dict) else None,'primitives':prims})
         materials=[{'i':i,'name':m.get('name')} for i,m in enumerate(doc.get('materials') or []) if isinstance(m,dict)]
         skins=[{'i':i,'name':x.get('name'),'joints':x.get('joints'),'skeleton':x.get('skeleton')} for i,x in enumerate(doc.get('skins') or []) if isinstance(x,dict)]
-        return {'nodes':nodes,'meshes':meshes,'materials':materials,'skins':skins,'animations':[a.get('name') for a in doc.get('animations') or [] if isinstance(a,dict)]}
+        topology=[]
+        try:
+            prim=(doc.get('meshes') or [])[0]['primitives'][0]
+            accessors=doc.get('accessors') or [];views=doc.get('bufferViews') or []
+            def read_acc(ai):
+                a=accessors[ai];v=views[a['bufferView']];ct=a['componentType'];typ=a['type'];count=a['count']
+                fm={5121:'B',5123:'H',5125:'I',5126:'f',5122:'h',5120:'b'}[ct];w={'SCALAR':1,'VEC2':2,'VEC3':3,'VEC4':4}[typ]
+                size=struct.calcsize('<'+fm*w);stride=v.get('byteStride',size);base=v.get('byteOffset',0)+a.get('byteOffset',0)
+                return [struct.unpack_from('<'+fm*w,bin_blob,base+i*stride) for i in range(count)]
+            idx=[int(x[0]) for x in read_acc(prim['indices'])];posv=read_acc(prim['attributes']['POSITION'])
+            parent=list(range(len(posv)));sz=[1]*len(posv)
+            def find(x):
+                while parent[x]!=x:parent[x]=parent[parent[x]];x=parent[x]
+                return x
+            def union(a,b):
+                a=find(a);b=find(b)
+                if a==b:return
+                if sz[a]<sz[b]:a,b=b,a
+                parent[b]=a;sz[a]+=sz[b]
+            for k in range(0,len(idx)-2,3):
+                a,b,c=idx[k:k+3];union(a,b);union(b,c)
+            groups={}
+            for vi,p in enumerate(posv):groups.setdefault(find(vi),[]).append((vi,p))
+            comps=[]
+            for g in groups.values():
+                xs=[p[0] for _,p in g];ys=[p[1] for _,p in g];zs=[p[2] for _,p in g]
+                comps.append({'verts':len(g),'min':[round(min(xs),4),round(min(ys),4),round(min(zs),4)],'max':[round(max(xs),4),round(max(ys),4),round(max(zs),4)],'center':[round((min(xs)+max(xs))/2,4),round((min(ys)+max(ys))/2,4),round((min(zs)+max(zs))/2,4)]})
+            topology=sorted(comps,key=lambda x:x['verts'],reverse=True)[:20]
+        except Exception as exc:topology=[{'error':f'{type(exc).__name__}:{str(exc)[:100]}'}]
+        return {'nodes':nodes,'meshes':meshes,'materials':materials,'skins':skins,'topology':topology,'animations':[a.get('name') for a in doc.get('animations') or [] if isinstance(a,dict)]}
     except Exception as exc:return {'error':f'{type(exc).__name__}:{str(exc)[:120]}'}
 
 def _prefetch_realistic_plugy():
