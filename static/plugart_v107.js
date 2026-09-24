@@ -125,6 +125,7 @@ function route(id,push=true){
   if(id!=='bureau')document.body.classList.remove('mobile-bureau-editing');
   if(id!=='prospection')$('#leadDetail')?.classList.remove('mobile-open');
   const missing=requiredFamilies(id).some(name=>!state.dataLoaded[name]);
+  setTimeout(syncPlugyHomeMount,0);
   if(missing&&state.bootstrap){
     renderRouteView(id);
     ensureViewData(id).then(()=>{if(state.view===id)renderRouteView(id)}).catch(()=>{if(state.view===id)toast('Données momentanément indisponibles')});
@@ -189,7 +190,25 @@ function bindPlugyWarmIntent(){
   });
 }
 
+
+function plugyDrawerStage(){return $('#plugyDrawer .plugy-stage')}
+function plugyDashboardStage(){return $('#dashboardPlugyMount')}
+function movePlugyModel(target){
+  const mv=$('#plugyModel');if(!mv||!target||mv.parentElement===target)return;
+  const stateEl=target.querySelector('#plugyState');
+  if(stateEl)target.insertBefore(mv,stateEl);else target.appendChild(mv);
+}
+function syncPlugyHomeMount(){
+  const drawer=$('#plugyDrawer'),open=drawer?.classList.contains('open');
+  if(open){movePlugyModel(plugyDrawerStage());return}
+  if(state.view==='dashboard'&&plugyDashboardStage()){
+    movePlugyModel(plugyDashboardStage());
+    warmPlugy3D('dashboard').then(()=>playMotion('Idle',true)).catch(()=>{});
+  }else movePlugyModel(plugyDrawerStage());
+}
+
 function openPlugy(seed=''){
+  movePlugyModel(plugyDrawerStage());
   $('#plugyDrawer')?.classList.add('open');
   const mv=$('#plugyModel');if(mv&&!mv.loaded)$('#plugyState span').textContent='Chargement 3D…';
   warmPlugy3D('open').then(()=>playMotion('Attentive')).catch(()=>{$('#plugyState span').textContent='Mode texte'});
@@ -204,6 +223,7 @@ function closePlugy(){
   state.voice=false;state.voiceReply=false;state.voiceConversation=false;
   updateConversationButton();
   if($('#plugyState span'))$('#plugyState span').textContent='Prêt';
+  setTimeout(syncPlugyHomeMount,120);
 }
 $('#sidebarPlugy')?.addEventListener('click',()=>openPlugy());
 $('#topPlugy')?.addEventListener('click',()=>openPlugy());
@@ -393,6 +413,161 @@ function adaptDashboardForDrafts(){
   $$('[data-metric-action]').forEach(el=>el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click()}});
 }
 
+
+let dashboardSlideIndex=0;
+const dashboardSlideNames=['Cockpit','Opportunités','Créer','Prospection','Réseau'];
+function installSlideDashboard(){
+  if($('#slideDashboard'))return;
+  const view=$('#view-dashboard'),legacy=view?.querySelector('.dashboard-grid');if(!view||!legacy)return;
+  legacy.hidden=true;legacy.setAttribute('aria-hidden','true');
+
+  const deck=document.createElement('div');deck.id='slideDashboard';deck.className='slide-dashboard';
+  deck.innerHTML=
+    '<div class="slide-dashboard-nav">'+
+      '<div class="slide-nav-copy"><small>PLUG ART WORKSPACE</small><strong id="slideDashboardTitle">Cockpit</strong></div>'+
+      '<div class="slide-tabs">'+dashboardSlideNames.map((n,i)=>'<button data-dash-slide="'+i+'" class="'+(i===0?'active':'')+'"><span>'+String(i+1).padStart(2,'0')+'</span>'+n+'</button>').join('')+'</div>'+
+      '<div class="slide-arrows"><button id="slidePrev" aria-label="Slide précédente">←</button><button id="slideNext" aria-label="Slide suivante">→</button></div>'+
+    '</div>'+
+    '<div class="slide-rail" id="slideRail">'+
+      '<section class="dash-slide dash-slide-hero" data-slide-index="0">'+
+        '<div class="slide-hero-copy">'+
+          '<span class="slide-kicker">ASSISTANT & PRIORITÉS</span>'+
+          '<h2>Ton workspace.<br><em>Avec PLUGY au centre.</em></h2>'+
+          '<p id="slideHeroSummary">Je rassemble ce qui mérite ton attention aujourd’hui et je peux agir directement dans chaque outil.</p>'+
+          '<div class="slide-hero-actions"><button class="slide-primary" data-slide-plugy>Parler à PLUGY</button><button data-route="radar">Lancer le Radar</button><button data-route="creation">Créer</button></div>'+
+          '<div class="slide-metrics" id="slideMetrics"></div>'+
+        '</div>'+
+        '<div class="slide-plugy-zone">'+
+          '<div class="slide-plugy-glow"></div>'+
+          '<div class="slide-plugy-mount" id="dashboardPlugyMount"></div>'+
+          '<div class="slide-plugy-label"><i></i><span>PLUGY · assistant actif</span></div>'+
+        '</div>'+
+        '<div class="slide-today-card"><div class="slide-card-head"><span>AUJOURD’HUI</span><button data-dash-jump="1">Voir les priorités →</button></div><div id="slideTodayList"></div></div>'+
+      '</section>'+
+      '<section class="dash-slide dash-slide-opps" data-slide-index="1">'+
+        '<div class="slide-section-head"><span class="slide-kicker">TROUVER & TRAITER</span><h2>Opportunités</h2><p>Radar, Open Calls et deadlines au même endroit.</p></div>'+
+        '<div class="slide-tool-grid three">'+
+          '<button class="slide-tool-card accent-a" data-route="radar"><span>◉</span><small>RADAR</small><strong>Trouver de nouveaux appels</strong><p>Paris, Europe, collectifs, accessibles et urgents.</p></button>'+
+          '<button class="slide-tool-card accent-b" data-route="opencalls"><span>◇</span><small>OPEN CALLS</small><strong>Suivre les candidatures</strong><p>Favoris, rédaction, envoyés et relances.</p></button>'+
+          '<button class="slide-tool-card accent-c" data-route="agenda"><span>◷</span><small>AGENDA</small><strong>Voir les échéances</strong><p>Deadlines et prochaines actions.</p></button>'+
+        '</div>'+
+        '<div class="slide-data-panel"><div class="slide-card-head"><span>PRIORITÉS</span><button data-route="opencalls">Tout voir →</button></div><div class="slide-opportunity-list" id="slideOpportunityList"></div></div>'+
+      '</section>'+
+      '<section class="dash-slide dash-slide-create" data-slide-index="2">'+
+        '<div class="slide-section-head"><span class="slide-kicker">PRODUIRE</span><h2>Créer & rédiger</h2><p>Du brief jusqu’au contenu final sans quitter PLUG ART.</p></div>'+
+        '<div class="slide-tool-grid four">'+
+          '<button class="slide-tool-card tall accent-d" data-route="creation"><span>✦</span><small>STUDIO</small><strong>Texte, carrousel, visuel</strong><p>Créer, exporter en PNG/ZIP et publier sur Instagram.</p></button>'+
+          '<button class="slide-tool-card tall accent-e" data-route="bureau"><span>▤</span><small>BUREAU</small><strong>Documents</strong><p>Rédiger, corriger, transformer et organiser.</p></button>'+
+          '<button class="slide-tool-card tall accent-f" data-bureau-slide="packages"><span>◫</span><small>DOSSIERS</small><strong>Candidatures</strong><p>Assembler un dossier depuis un Open Call avec PLUGY.</p></button>'+
+          '<button class="slide-tool-card tall accent-g" data-bureau-slide="templates"><span>≡</span><small>MODÈLES</small><strong>Réutiliser tes bases</strong><p>Bio, mails, notes artistiques et candidatures.</p></button>'+
+        '</div>'+
+        '<div class="slide-data-panel slide-resume-panel"><div class="slide-card-head"><span>À REPRENDRE</span><button data-route="bureau">Ouvrir le Bureau →</button></div><div id="slideWorkResume"></div></div>'+
+      '</section>'+
+      '<section class="dash-slide dash-slide-crm" data-slide-index="3">'+
+        '<div class="slide-section-head"><span class="slide-kicker">DÉMARCHES</span><h2>Prospection</h2><p>Voir qui contacter, relancer et faire avancer.</p></div>'+
+        '<div class="slide-crm-layout">'+
+          '<button class="slide-crm-main" data-route="prospection"><span>◎</span><div><small>CONTACTS & PROSPECTION</small><strong>Ouvrir le pipeline</strong><p>Messages PLUGY, historique, relances et prochaines actions.</p></div><b>→</b></button>'+
+          '<div class="slide-data-panel"><div class="slide-card-head"><span>PROCHAINES RELANCES</span><button data-route="prospection">Tout voir →</button></div><div id="slideLeadList"></div></div>'+
+        '</div>'+
+      '</section>'+
+      '<section class="dash-slide dash-slide-network" data-slide-index="4">'+
+        '<div class="slide-section-head"><span class="slide-kicker">ÉCOSYSTÈME</span><h2>Réseau & territoire</h2><p>Artistes, lieux et opportunités géographiques sans surcharger le cockpit.</p></div>'+
+        '<div class="slide-network-grid">'+
+          '<button class="slide-network-card artists" data-route="network"><span>◌</span><small>ARTISTES</small><strong>Explorer le réseau</strong><p>Profils, pratiques, coordonnées et parcours.</p><b>Ouvrir →</b></button>'+
+          '<button class="slide-network-card map" data-route="map"><span>⌖</span><small>CARTE</small><strong>Voir les opportunités</strong><p>Repérer les appels et expositions par territoire.</p><b>Ouvrir →</b></button>'+
+          '<button class="slide-network-card plugy" data-slide-plugy><span>⌁</span><small>PLUGY</small><strong>Demander une prochaine action</strong><p>PLUGY garde le contexte de la rubrique où tu travailles.</p><b>Parler →</b></button>'+
+        '</div>'+
+      '</section>'+
+    '</div>'+
+    '<div class="slide-mobile-dots">'+dashboardSlideNames.map((_,i)=>'<button data-dash-slide="'+i+'" class="'+(i===0?'active':'')+'" aria-label="Slide '+(i+1)+'"></button>').join('')+'</div>';
+  view.insertBefore(deck,legacy);
+
+  const rail=$('#slideRail');
+  $$('[data-dash-slide]',deck).forEach(b=>b.onclick=()=>goDashboardSlide(Number(b.dataset.dashSlide)));
+  $$('[data-dash-jump]',deck).forEach(b=>b.onclick=()=>goDashboardSlide(Number(b.dataset.dashJump)));
+  $$('[data-slide-plugy]',deck).forEach(b=>b.onclick=()=>openPlugy());
+  $$('[data-route]',deck).forEach(b=>b.onclick=()=>route(b.dataset.route));
+  $$('[data-bureau-slide]',deck).forEach(b=>b.onclick=async()=>{
+    route('bureau');try{await ensureViewData('bureau');setBureauMode(b.dataset.bureauSlide)}catch{}
+  });
+  $('#slidePrev').onclick=()=>goDashboardSlide(dashboardSlideIndex-1);
+  $('#slideNext').onclick=()=>goDashboardSlide(dashboardSlideIndex+1);
+  rail.addEventListener('scroll',()=>{
+    clearTimeout(rail._slideTimer);rail._slideTimer=setTimeout(()=>{
+      const i=Math.max(0,Math.min(dashboardSlideNames.length-1,Math.round(rail.scrollLeft/Math.max(1,rail.clientWidth))));
+      setDashboardSlideState(i,false);
+    },70);
+  },{passive:true});
+  rail.addEventListener('wheel',e=>{
+    if(Math.abs(e.deltaY)<=Math.abs(e.deltaX)||Math.abs(e.deltaY)<8)return;
+    e.preventDefault();
+    goDashboardSlide(dashboardSlideIndex+(e.deltaY>0?1:-1));
+  },{passive:false});
+  syncPlugyHomeMount();renderSlideDashboard();
+}
+function setDashboardSlideState(index,animate=true){
+  dashboardSlideIndex=Math.max(0,Math.min(dashboardSlideNames.length-1,index));
+  const deck=$('#slideDashboard');if(!deck)return;
+  $$('[data-dash-slide]',deck).forEach(b=>b.classList.toggle('active',Number(b.dataset.dashSlide)===dashboardSlideIndex));
+  $('#slideDashboardTitle').textContent=dashboardSlideNames[dashboardSlideIndex];
+  $('#slidePrev').disabled=dashboardSlideIndex===0;$('#slideNext').disabled=dashboardSlideIndex===dashboardSlideNames.length-1;
+  deck.dataset.slide=String(dashboardSlideIndex);
+  const motions=['Idle','Attentive','Present','Curious','Travel'];
+  if(state.view==='dashboard'&&!$('#plugyDrawer')?.classList.contains('open'))playMotion(motions[dashboardSlideIndex]||'Idle',dashboardSlideIndex===0);
+}
+function goDashboardSlide(index){
+  const rail=$('#slideRail');if(!rail)return;
+  const next=Math.max(0,Math.min(dashboardSlideNames.length-1,index));setDashboardSlideState(next);
+  rail.scrollTo({left:next*rail.clientWidth,behavior:'smooth'});
+}
+function renderSlideDashboard(){
+  const deck=$('#slideDashboard');if(!deck)return;
+  const stats=state.bootstrap?.stats||{},opps=(state.bootstrap?.opportunities||[]).slice();
+  const tracked=new Set(state.workflow.filter(w=>w.workflow_status!=='closed').map(w=>String(w.opportunity_id)));
+  const priorities=opps.sort((a,b)=>Number(!!b.favorite)-Number(!!a.favorite)||Number(tracked.has(String(b.id)))-Number(tracked.has(String(a.id)))||Number(b.radar_score??b.score??0)-Number(a.radar_score??a.score??0)).slice(0,4);
+  const urgent=opps.filter(o=>{const d=daysLeft(o);return d>=0&&d<=7}).length;
+  $('#slideMetrics').innerHTML=[
+    ['Open Calls',stats.opportunities??opps.length,'opencalls'],
+    ['Urgents',stats.urgent??urgent,'urgent'],
+    ['Brouillons',stats.drafts??state.drafts.length,'creation'],
+    ['Contacts',stats.contacts??state.leads.length,'prospection']
+  ].map(([label,val,action])=>'<button data-slide-metric="'+action+'"><strong>'+esc(val)+'</strong><span>'+label+'</span></button>').join('');
+  $$('[data-slide-metric]',deck).forEach(b=>b.onclick=()=>{
+    if(b.dataset.slideMetric==='urgent'){route('opencalls');setTimeout(()=>{if($('#openStatus')){$('#openStatus').value='urgent';renderOpenCalls()}},60)}
+    else route(b.dataset.slideMetric);
+  });
+
+  const today=[];
+  state.workflow.filter(w=>w.workflow_status!=='closed').forEach(w=>{const o=opportunityById(w.opportunity_id);if(!o)return;const due=w.next_date||o.deadline||'';today.push({title:o.title,sub:w.next_action||workflowLabel(w.workflow_status),date:due,id:o.id,kind:'call'})});
+  state.leads.filter(l=>l.status!=='closed').forEach(l=>{if(l.next_date)today.push({title:l.organization||l.name||'Contact',sub:l.next_action||'Relance',date:l.next_date,id:l.id,kind:'lead'})});
+  today.sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+  $('#slideTodayList').innerHTML=today.slice(0,4).map(x=>'<button data-slide-today-kind="'+x.kind+'" data-slide-today-id="'+x.id+'"><span><strong>'+esc(x.title)+'</strong><small>'+esc(x.sub)+'</small></span><b>'+esc(x.date||'À traiter')+'</b></button>').join('')||'<div class="slide-empty">Aucune urgence immédiate.</div>';
+  $$('[data-slide-today-kind]',deck).forEach(b=>b.onclick=async()=>{
+    const id=Number(b.dataset.slideTodayId);
+    if(b.dataset.slideTodayKind==='lead'){route('prospection');try{await ensureViewData('prospection');selectLead(id)}catch{}}
+    else openOpportunity(id);
+  });
+
+  $('#slideOpportunityList').innerHTML=priorities.map(o=>'<button data-slide-opp="'+o.id+'"><span class="slide-opp-thumb"><img src="/api/v67/opportunities/'+o.id+'/thumbnail" alt="" loading="lazy"></span><span><strong>'+esc(o.title)+'</strong><small>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</small></span><b>'+Number(o.radar_score??o.score??0)+'</b></button>').join('')||'<div class="slide-empty">Aucune opportunité active.</div>';
+  $$('[data-slide-opp]',deck).forEach(b=>b.onclick=()=>openOpportunity(Number(b.dataset.slideOpp)));
+
+  const work=[
+    ...state.drafts.slice(0,2).map(d=>({kind:'draft',id:d.id,title:d.title||'Brouillon',sub:'Brouillon · '+(d.kind||'contenu')})),
+    ...state.bureau.slice(0,2).map(n=>({kind:'doc',id:n.id,title:n.title||'Document',sub:n.folder||'Bureau'}))
+  ].slice(0,4);
+  $('#slideWorkResume').innerHTML=work.map(x=>'<button data-slide-work="'+x.kind+'" data-slide-work-id="'+x.id+'"><span><strong>'+esc(x.title)+'</strong><small>'+esc(x.sub)+'</small></span><b>→</b></button>').join('')||'<div class="slide-empty">Aucun travail en cours.</div>';
+  $$('[data-slide-work]',deck).forEach(b=>b.onclick=async()=>{
+    const id=Number(b.dataset.slideWorkId);
+    if(b.dataset.slideWork==='draft'){route('creation');try{await ensureViewData('creation');loadDraft(id)}catch{}}
+    else{route('bureau');try{await ensureViewData('bureau');selectDoc(id)}catch{}}
+  });
+
+  const leads=state.leads.slice().filter(l=>l.status!=='closed').sort((a,b)=>(a.next_date||'9999').localeCompare(b.next_date||'9999')).slice(0,5);
+  $('#slideLeadList').innerHTML=leads.map(l=>'<button data-slide-lead="'+l.id+'"><span><strong>'+esc(l.organization||l.name||'Contact')+'</strong><small>'+esc(l.next_action||leadStatusLabel(l.status))+'</small></span><b>'+esc(l.next_date||'À suivre')+'</b></button>').join('')||'<div class="slide-empty">Aucune relance planifiée.</div>';
+  $$('[data-slide-lead]',deck).forEach(b=>b.onclick=async()=>{route('prospection');try{await ensureViewData('prospection');selectLead(Number(b.dataset.slideLead))}catch{}});
+  setDashboardSlideState(dashboardSlideIndex,false);
+}
+
 let dashboardResumeTab='drafts';
 function installCompactDashboard(){
   if($('#dashboardResumePanel'))return;
@@ -484,7 +659,7 @@ function renderDashboard(){
   const leads=state.leads.slice().sort((a,b)=>(a.next_date||'9999').localeCompare(b.next_date||'9999')).slice(0,4);
   $('#dashboardProspection').innerHTML=leads.map(l=>'<button class="compact-row" data-dash-lead="'+l.id+'" style="border:0;background:transparent;text-align:left;width:100%"><strong>'+esc(l.organization||l.name||'Contact')+'</strong><span>'+esc(l.next_action||'À suivre')+(l.next_date?' · '+esc(l.next_date):'')+'</span></button>').join('')||'<div class="empty">Aucune relance.</div>';
   $$('[data-dash-lead]').forEach(b=>b.onclick=async()=>{const id=Number(b.dataset.dashLead);route('prospection');try{await ensureViewData('prospection');selectLead(id)}catch{}});
-  renderToday();renderDashboardResume();
+  renderToday();renderDashboardResume();renderSlideDashboard();
 }
 function populateCountry(select,items){
   if(!select)return;const cur=select.value;const countries=[...new Set(items.map(x=>x.country).filter(Boolean))].sort();select.innerHTML='<option value="">Tous</option>'+countries.map(c=>'<option>'+esc(c)+'</option>').join('');select.value=cur;
@@ -1862,7 +2037,7 @@ installCreationModes();
 installBureauWorkspace();
 ensureBureauBridge();
 injectOperationalUI();
-installCompactDashboard();
+installSlideDashboard();
 
 // PLUGY V107.1 interaction layer: one model, richer behavior.
 let plugyAmbientTimer=0,plugyPressTimer=0;
