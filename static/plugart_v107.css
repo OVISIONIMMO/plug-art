@@ -748,3 +748,18 @@ body[data-plugy-motion="Speak"] .plugy-stage:before{animation-duration:.75s;bord
   .visual-preset-grid{grid-template-columns:1fr 1fr}.visual-settings-row{grid-template-columns:1fr}.visual-preview #visualImage{min-height:420px}
   .instagram-access-btn{display:none}
 }
+
+
+/* V131.1 · make the new build unmistakable on mobile */
+.top-title-line{display:flex;align-items:center;gap:8px}
+.top-title-line h1{margin:0}
+.build-pill{display:inline-flex;align-items:center;justify-content:center;min-height:20px;padding:0 7px;border:1px solid #dedfe4;border-radius:999px;background:#fff;color:#777b86;font-size:7px;font-weight:900;letter-spacing:.6px}
+.mobile-creation-direct b{color:#6f5bd2}
+.mobile-instagram-direct b{color:#c52a77}
+.mobile-instagram-direct.active{background:linear-gradient(180deg,rgba(252,243,249,.95),rgba(246,242,255,.96))!important}
+.mobile-creation-direct.active{background:#f3f0ff!important}
+@media(max-width:820px){
+  .top-title-line{gap:6px}
+  .build-pill{min-height:17px;padding:0 5px;font-size:6px}
+  .mobile-dock{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+}
