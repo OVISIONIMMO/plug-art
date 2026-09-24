@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='129.20260924.1';
+const VERSION='130.20260924.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -15,6 +15,7 @@ const viewMeta={
  prospection:['CONTACTS & PROSPECTION','Suivi des démarches','Attentive'],
  agenda:['AGENDA','Deadlines & relances','Attentive'],
  network:['RÉSEAU','Artistes','Happy'],
+ social:['INSTAGRAM','Social Studio','Present'],
  map:['CARTE','Opportunités & expositions','Travel']
 };
 const contexts={
@@ -26,6 +27,7 @@ const contexts={
  prospection:{label:'Prospection',suggestions:['Prépare une relance','Résume ce contact','Propose la prochaine action']},
  agenda:{label:'Agenda',suggestions:['Montre les urgences','Quelles deadlines arrivent ?','Quelles relances sont dues ?']},
  network:{label:'Artistes',suggestions:['Analyse ce profil','Propose des opportunités','Prépare une bio']},
+ social:{label:'Instagram',suggestions:['Prépare une légende','Analyse mon feed','Propose le prochain post']},
  map:{label:'Carte',suggestions:['Trouve autour de Paris','Compare les villes','Montre les opportunités proches']}
 };
 
@@ -58,6 +60,7 @@ const viewDataFamilies={
   bureau:['bureau','bureauMeta'],
   prospection:['leads'],
   network:['artists'],
+  social:[],
   map:['map']
 };
 function requiredFamilies(id){return viewDataFamilies[id]||[]}
@@ -115,6 +118,7 @@ function renderRouteView(id=state.view){
   if(id==='prospection')return renderLeads();
   if(id==='agenda')return renderAgenda();
   if(id==='network')return renderArtists();
+  if(id==='social')return renderInstagramStudio();
   if(id==='map')return renderMap();
 }
 
@@ -130,7 +134,7 @@ function route(id,push=true){
   renderSuggestions();playMotion(viewMeta[id][2],id==='dashboard');
   if(push&&location.hash!=='#'+id)history.pushState({view:id},'','#'+id);
   const mobileMore=$('#mobileMoreButton'),mobileSheet=$('#mobileMoreSheet');
-  if(mobileMore)mobileMore.classList.toggle('active',['creation','agenda','network','map'].includes(id));
+  if(mobileMore)mobileMore.classList.toggle('active',['creation','agenda','network','map','social'].includes(id));
   mobileSheet?.classList.remove('open');
   $('.workspace')?.scrollTo({top:0,behavior:'auto'});
   if(id!=='bureau')document.body.classList.remove('mobile-bureau-editing');
@@ -829,7 +833,7 @@ function installMobileRadarControls(){
 function installRadarPresets(){
   if($('#radarPresets'))return;const view=$('#view-radar'),layout=view?.querySelector('.tool-layout');if(!view||!layout)return;
   const bar=document.createElement('div');bar.id='radarPresets';bar.className='radar-presets';
-  bar.innerHTML='<button data-radar-preset="all">Tout</button><button data-radar-preset="paris">Paris / IDF</button><button data-radar-preset="europe">Europe</button><button data-radar-preset="collective">Collectif / émergent</button><button data-radar-preset="accessible">Accessible</button><button data-radar-preset="urgent">Urgent</button>';
+  bar.innerHTML='<button data-radar-preset="all">Tout</button><button data-radar-preset="paris">Paris / IDF</button><button data-radar-preset="europe">Europe</button><button data-radar-preset="collective">Collectif / émergent</button><button data-radar-preset="accessible">Accessible</button><button data-radar-preset="venues">Petits lieux</button><button data-radar-preset="urgent">Urgent</button>';
   layout.insertAdjacentElement('beforebegin',bar);
   const st=document.createElement('style');st.textContent='.radar-presets{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 11px}.radar-presets button{border:1px solid #e1e3e8;background:#fff;border-radius:999px;padding:8px 10px;font-size:9px;font-weight:800;color:#5f636f}.radar-presets button.active{background:#111318;color:#fff;border-color:#111318}';document.head.appendChild(st);
   $$('[data-radar-preset]',bar).forEach(b=>b.onclick=()=>applyRadarPreset(b.dataset.radarPreset));
@@ -841,15 +845,33 @@ function applyRadarPreset(preset){
   if(preset==='collective'&&type)type.value='collective';
   if(preset==='accessible'&&type)type.value='accessible';
   if(preset==='urgent'&&type)type.value='urgent';
+  if(preset==='venues'&&type)type.value='venue';
   $$('[data-radar-preset]').forEach(b=>b.classList.toggle('active',b.dataset.radarPreset===preset));renderRadar();
 }
 
+function venueRadarMatch(hay,kind='venue'){
+  const all=/restaurant|brasserie|café|cafe|hotel|hôtel|mairie|hôtel de ville|centre commercial|shopping (?:centre|center)|médiathèque|mediatheque|tiers-lieu|concept store|boutique|centre culturel|lieu de vie|pop-up|popup|galerie|gallery/i;
+  const food=/restaurant|brasserie|café|cafe|hotel|hôtel/i;
+  const pub=/mairie|hôtel de ville|médiathèque|mediatheque|centre culturel|bibliothèque|bibliotheque/i;
+  const mall=/centre commercial|shopping (?:centre|center)|pop-up|popup|boutique|concept store/i;
+  if(kind==='restaurant')return food.test(hay);
+  if(kind==='public')return pub.test(hay);
+  if(kind==='mall')return mall.test(hay);
+  return all.test(hay);
+}
 function renderRadar(){
   const all=state.bootstrap?.opportunities||[],term=clean($('#radarSearch')?.value).toLowerCase(),country=$('#radarCountry')?.value||'',min=Number($('#radarScore')?.value||0),type=$('#radarType')?.value||'';
   const europe=['france','belgium','belgique','netherlands','pays-bas','spain','espagne','italy','italie','portugal','germany','allemagne','switzerland','suisse','austria','autriche','united kingdom','uk','royaume-uni','ireland','irlande','denmark','danemark','sweden','suède','norway','norvège','finland','finlande','poland','pologne','czech republic','tchéquie','greece','grèce'];
   const idf=/paris|saint[- ]denis|aubervilliers|montreuil|pantin|bagnolet|rosny|ivry|vitry|clichy|neuilly|nanterre|boulogne|versailles|créteil|creteil|noisy|vincennes|saint-ouen/i;
-  const rows=all.filter(o=>{const hay=[o.title,o.city,o.country,o.type,o.summary,o.eligibility].join(' ').toLowerCase(),d=daysLeft(o),c=String(o.country||'').toLowerCase();const presetOk=state.radarPreset==='paris'?idf.test([o.city,o.title,o.summary].join(' ')):state.radarPreset==='europe'?europe.some(x=>c.includes(x)):true;return presetOk&&(!term||hay.includes(term))&&(!country||o.country===country)&&Number(o.radar_score??o.score??0)>=min&&(!type||(type==='urgent'&&d>=0&&d<=14)||(type==='accessible'&&accessible(o))||(type==='collective'&&collective(o)))});
-  $('#radarCount').textContent=rows.length+' opportunité'+(rows.length>1?'s':'');$('#radarGrid').innerHTML=rows.map(o=>oppCard(o,'radar')).join('')||'<div class="empty">Aucun résultat.</div>';bindOppActions($('#radarGrid'));
+  const rows=all.filter(o=>{
+    const hay=[o.title,o.organizer,o.city,o.country,o.type,o.summary,o.eligibility,o.radar_reason,o.source_name].join(' ').toLowerCase(),d=daysLeft(o),c=String(o.country||'').toLowerCase();
+    const presetOk=state.radarPreset==='paris'?idf.test([o.city,o.title,o.summary].join(' ')):state.radarPreset==='europe'?europe.some(x=>c.includes(x)):true;
+    const typeOk=!type||(type==='urgent'&&d>=0&&d<=14)||(type==='accessible'&&accessible(o))||(type==='collective'&&collective(o))||(['venue','restaurant','public','mall'].includes(type)&&venueRadarMatch(hay,type));
+    return presetOk&&(!term||hay.includes(term))&&(!country||o.country===country)&&Number(o.radar_score??o.score??0)>=min&&typeOk;
+  });
+  $('#radarCount').textContent=rows.length+' piste'+(rows.length>1?'s':'');
+  $('#radarGrid').innerHTML=rows.map(o=>oppCard(o,'radar')).join('')||'<div class="empty">Aucun résultat. Lance le Radar pour élargir la recherche.</div>';
+  bindOppActions($('#radarGrid'));
 }
 
 function installOpenWorkflowFilters(){
@@ -2430,13 +2452,13 @@ function installMobileShell(){
   $('#mobileMoreButton').onclick=()=>{
     const open=!sheet.classList.contains('open');
     sheet.classList.toggle('open',open);
-    $('#mobileMoreButton').classList.toggle('active',open||['creation','agenda','network','map'].includes(state.view));
+    $('#mobileMoreButton').classList.toggle('active',open||['creation','agenda','network','map','social'].includes(state.view));
   };
   document.addEventListener('pointerdown',e=>{
     if(!sheet.classList.contains('open'))return;
     if(sheet.contains(e.target)||dock.contains(e.target))return;
     sheet.classList.remove('open');
-    $('#mobileMoreButton')?.classList.toggle('active',['creation','agenda','network','map'].includes(state.view));
+    $('#mobileMoreButton')?.classList.toggle('active',['creation','agenda','network','map','social'].includes(state.view));
   });
 }
 
