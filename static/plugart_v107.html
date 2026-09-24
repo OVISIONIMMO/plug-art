@@ -9,9 +9,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <meta name="description" content="PLUG ART Workspace — Radar, Open Calls, création, Bureau, prospection et PLUGY.">
-<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">\n<link rel="preconnect" href="https://ajax.googleapis.com" crossorigin>\n<link rel="dns-prefetch" href="//ajax.googleapis.com">\n<link rel="preload" href="/static/plugart_v107.js?v=130.20260924.1" as="script">
-<link rel="stylesheet" href="/static/plugart_v107.css?v=130.20260924.1">
-<link rel="stylesheet" href="/static/plugart_v122_slide.css?v=130.20260924.1">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">\n<link rel="preconnect" href="https://ajax.googleapis.com" crossorigin>\n<link rel="dns-prefetch" href="//ajax.googleapis.com">\n<link rel="preload" href="/static/plugart_v107.js?v=131.20260924.1" as="script">
+<link rel="stylesheet" href="/static/plugart_v107.css?v=131.20260924.1">
+<link rel="stylesheet" href="/static/plugart_v122_slide.css?v=131.20260924.1">
 </head>
 <body data-view="dashboard" data-plugy-motion="Idle">
 <div class="app-shell">
@@ -28,6 +28,7 @@
         <button class="nav-item" data-route="radar"><b>◉</b><span>Radar</span></button>
         <button class="nav-item" data-route="opencalls"><b>◇</b><span>Open Calls</span></button>
         <button class="nav-item" data-route="creation"><b>✦</b><span>Création</span></button>
+        <button class="nav-item instagram-nav" data-route="social"><b>◎</b><span>Instagram</span><i>LIVE</i></button>
       </div>
       <div class="nav-group">
         <small>ORGANISER</small>
@@ -36,7 +37,6 @@
         <button class="nav-item" data-route="prospection"><b>◎</b><span>Contacts & Prospection</span></button>
         <button class="nav-item" data-route="network"><b>◌</b><span>Artistes</span></button>
         <button class="nav-item" data-route="map"><b>⌖</b><span>Carte</span></button>
-        <button class="nav-item" data-route="social"><b>◎</b><span>Instagram</span></button>
       </div>
       <div class="nav-group nav-assistant-group">
         <small>ASSISTANT</small>
@@ -52,7 +52,7 @@
       </button>
       <a class="plugy-full-link" href="/plugy">Plein écran ↗</a>
     </div>
-    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small>V130</small></div>
+    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small>V131</small></div>
   </aside>
 
   <main class="workspace">
@@ -64,6 +64,7 @@
       <button class="global-search" id="globalSearch"><span>⌕</span><strong>Rechercher dans PLUG ART</strong><kbd>⌘ K</kbd></button>
       <div class="top-actions">
         <button class="icon-btn" id="refreshData" title="Actualiser">↻</button>
+        <button class="instagram-access-btn" data-route="social" title="Instagram">◎ Instagram</button>
         <button class="secondary-btn design-lab-trigger" id="designLabButton" title="Édition visuelle">◫ Design</button>
         <button class="primary-btn" id="newAction">＋ Nouveau</button>
         <button class="plugy-btn" id="topPlugy"><i></i> PLUGY</button>
@@ -76,7 +77,8 @@
           <div class="panel-head"><div><small>ACCÈS RAPIDE</small><h2>Que veux-tu faire ?</h2></div><span class="live-pill"><i></i> LIVE</span></div>
           <div class="quick-grid">
             <button data-route="radar"><b>◉</b><strong>Lancer le Radar</strong><span>Trouver de nouvelles opportunités</span></button>
-            <button data-route="creation"><b>✦</b><strong>Créer un contenu</strong><span>Carrousel, candidature, texte</span></button>
+            <button data-route="creation"><b>✦</b><strong>Créer un contenu</strong><span>Studio manuel + génération IA</span></button>
+            <button data-route="social"><b>◎</b><strong>Instagram</strong><span>Feed, création et publication</span></button>
             <button data-route="bureau"><b>▤</b><strong>Ouvrir le Bureau</strong><span>Écrire, réécrire, structurer</span></button>
             <button data-route="prospection"><b>◎</b><strong>Ajouter un contact</strong><span>Suivre une démarche ou relance</span></button>
           </div>
@@ -147,24 +149,61 @@
     </section>
 
     <section class="view" id="view-creation">
-      <div class="page-toolbar">
-        <div><small>CRÉATION</small><h2>Studio de contenu</h2><p>Créer rapidement à partir d’un Open Call, d’un brief ou du Bureau.</p></div>
-        <div class="toolbar-actions"><button class="secondary-btn" id="contentClear">Nouveau</button><button class="primary-btn" id="contentGenerate">✦ Générer avec PLUGY</button></div>
+      <div class="page-toolbar creation-page-toolbar">
+        <div><small>CREATIVE STUDIO</small><h2>Créer sans quitter PLUG ART</h2><p>Compose manuellement, pars d’un design marketing ou laisse PLUGY construire une première version.</p></div>
+        <div class="toolbar-actions"><button class="secondary-btn" id="contentClear">Nouveau projet</button><button class="primary-btn" id="contentGenerate">✦ Générer avec PLUGY</button></div>
       </div>
-      <div class="creation-layout">
-        <aside class="creation-form panel">
-          <label>Source<select id="contentSource"><option value="">Brief libre</option></select></label>
-          <label>Type<select id="contentType"><option>Carrousel Instagram</option><option>Légende Instagram</option><option>Candidature</option><option>Email de prospection</option><option>Texte d’exposition</option></select></label>
-          <label>Objectif<input id="contentObjective" placeholder="Informer, candidater, promouvoir…"></label>
-          <label>Brief<textarea id="contentBrief" rows="8" placeholder="Sujet, angle, informations importantes…"></textarea></label>
-          <button class="plugy-inline" id="contentImprove">✦ Structurer le brief</button>
-        </aside>
-        <section class="editor-panel panel">
-          <div class="editor-toolbar"><input id="contentTitle" class="editor-title" placeholder="Titre du contenu"><span id="contentStatus">Brouillon</span></div>
-          <textarea id="contentBody" class="content-editor" placeholder="Le contenu généré apparaîtra ici…"></textarea>
-          <div class="editor-actions"><button id="contentCopy">Copier</button><button id="contentToBureau">Envoyer au Bureau</button><button class="primary-btn" id="contentRegenerate">Régénérer</button></div>
+
+      <section class="creation-start" id="creationStart">
+        <div class="creation-start-copy">
+          <small>COMMENCER</small>
+          <h3>Un brief. Un format. Une vraie direction visuelle.</h3>
+          <p>Choisis un point de départ, puis affine tout dans l’éditeur.</p>
+        </div>
+        <div class="creation-start-grid">
+          <button data-studio-start="carousel" data-marketing-template="open-call"><span>01</span><b>Open Call</b><small>Carrousel éditorial</small></button>
+          <button data-studio-start="carousel" data-marketing-template="event"><span>02</span><b>Événement</b><small>Annonce / exposition</small></button>
+          <button data-studio-start="carousel" data-marketing-template="last-call"><span>03</span><b>Dernier appel</b><small>Deadline / urgence</small></button>
+          <button data-studio-start="visual" data-visual-usecase="campaign"><span>04</span><b>Campagne</b><small>Visuel marketing</small></button>
+          <button data-studio-start="visual" data-visual-usecase="artist"><span>05</span><b>Artiste</b><small>Portrait / focus</small></button>
+          <button data-studio-start="text"><span>06</span><b>Copywriting</b><small>Légende / texte / email</small></button>
+        </div>
+      </section>
+
+      <section class="creation-studio-shell">
+        <div id="creationModeMount"></div>
+
+        <section class="creation-layout" id="textCreationPanel">
+          <aside class="creation-brief panel">
+            <div class="studio-panel-title"><small>SOURCE & OBJECTIF</small><strong>Brief</strong></div>
+            <label>Source<select id="contentSource"><option value="">Brief libre</option></select></label>
+            <label>Type<select id="contentType"><option>Carrousel Instagram</option><option>Légende Instagram</option><option>Candidature</option><option>Email de prospection</option><option>Texte d’exposition</option><option>Annonce événement</option><option>Présentation artiste</option></select></label>
+            <label>Objectif<input id="contentObjective" placeholder="Informer, candidater, promouvoir…"></label>
+            <label>Brief<textarea id="contentBrief" rows="11" placeholder="Sujet, angle, informations importantes, ton…"></textarea></label>
+            <button class="plugy-inline wide" id="contentImprove">✦ Structurer avec PLUGY</button>
+          </aside>
+
+          <section class="copy-workbench panel">
+            <div class="editor-toolbar"><input id="contentTitle" class="editor-title" placeholder="Titre du contenu"><span id="contentStatus">Brouillon</span></div>
+            <div class="copy-format-toolbar">
+              <button data-copy-action="shorten">Raccourcir</button><button data-copy-action="premium">Plus premium</button><button data-copy-action="instagram">Instagram</button><button data-copy-action="direct">Plus direct</button>
+            </div>
+            <textarea id="contentBody" class="content-editor" placeholder="Écris ici ou génère une première version avec PLUGY…"></textarea>
+            <div class="editor-actions"><button id="contentCopy">Copier</button><button id="contentToBureau">Bureau</button><button class="primary-btn" id="contentRegenerate">Régénérer</button></div>
+          </section>
+
+          <aside class="creation-ai-rail panel">
+            <div class="studio-panel-title"><small>ASSISTANT</small><strong>PLUGY Creative</strong></div>
+            <button data-creative-prompt="Trouve 3 angles créatifs pour ce contenu sans inventer de faits.">3 angles</button>
+            <button data-creative-prompt="Propose une hiérarchie de message claire : accroche, bénéfice, preuve, CTA.">Hiérarchie</button>
+            <button data-creative-prompt="Transforme ce brief en concept de campagne premium pour PLUG ART.">Concept campagne</button>
+            <button data-creative-prompt="Donne-moi une version plus visuelle et plus facile à décliner sur Instagram.">Déclinaison Insta</button>
+          </aside>
         </section>
-      </div>
+
+        <div id="carouselMount"></div>
+        <div id="visualMount"></div>
+      </section>
     </section>
 
     <section class="view" id="view-bureau">
@@ -281,7 +320,7 @@
   </div>
   <div class="plugy-stage">
     <div class="plugy-energy e1"></div><div class="plugy-energy e2"></div>
-    <model-viewer id="plugyModel" loading="lazy" src="/assets/plugy-v113-premium.glb?v=130.20260924.1" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity=".42" shadow-softness=".95" exposure=".94" camera-orbit="0deg 76deg 3.05m" field-of-view="27deg" alt="PLUGY"></model-viewer>
+    <model-viewer id="plugyModel" loading="lazy" src="/assets/plugy-v113-premium.glb?v=131.20260924.1" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity=".42" shadow-softness=".95" exposure=".94" camera-orbit="0deg 76deg 3.05m" field-of-view="27deg" alt="PLUGY"></model-viewer>
     <div class="plugy-state" id="plugyState"><i></i><span>Prêt</span></div>
   </div>
   <div class="plugy-context" id="plugyContext">Contexte : Dashboard</div>
@@ -359,6 +398,6 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<script defer src="/static/plugart_v107.js?v=130.20260924.1"></script>
+<script defer src="/static/plugart_v107.js?v=131.20260924.1"></script>
 </body>
 </html>
