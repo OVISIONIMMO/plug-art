@@ -500,11 +500,24 @@ function installSlideDashboard(){
   },{passive:true});
   rail.addEventListener('wheel',e=>{
     if(Math.abs(e.deltaY)<=Math.abs(e.deltaX)||Math.abs(e.deltaY)<8)return;
+    const scroller=e.target.closest('.slide-data-panel,.slide-today-card,.dash-slide');
+    if(scroller&&scroller.scrollHeight>scroller.clientHeight+2){
+      const down=e.deltaY>0,atTop=scroller.scrollTop<=1,atBottom=scroller.scrollTop+scroller.clientHeight>=scroller.scrollHeight-1;
+      if((down&&!atBottom)||(!down&&!atTop))return;
+    }
     e.preventDefault();
     goDashboardSlide(dashboardSlideIndex+(e.deltaY>0?1:-1));
   },{passive:false});
   syncPlugyHomeMount();renderSlideDashboard();
 }
+document.addEventListener('keydown',e=>{
+  if(state.view!=='dashboard'||$('#plugyDrawer')?.classList.contains('open'))return;
+  const tag=e.target?.tagName?.toLowerCase?.()||'';
+  if(['input','textarea','select'].includes(tag)||e.target?.isContentEditable)return;
+  if(e.key==='ArrowRight'){e.preventDefault();goDashboardSlide(dashboardSlideIndex+1)}
+  if(e.key==='ArrowLeft'){e.preventDefault();goDashboardSlide(dashboardSlideIndex-1)}
+});
+
 function setDashboardSlideState(index,animate=true){
   dashboardSlideIndex=Math.max(0,Math.min(dashboardSlideNames.length-1,index));
   const deck=$('#slideDashboard');if(!deck)return;
@@ -2044,7 +2057,10 @@ let plugyAmbientTimer=0,plugyPressTimer=0;
 function startPlugyAmbient(){
   clearInterval(plugyAmbientTimer);
   plugyAmbientTimer=setInterval(()=>{
-    if(state.voice||$('#plugyDrawer')?.classList.contains('open')===false)return;
+    if(state.voice)return;
+    const drawerOpen=$('#plugyDrawer')?.classList.contains('open');
+    const dashboardVisible=state.view==='dashboard'&&plugyDashboardStage()?.contains($('#plugyModel'));
+    if(!drawerOpen&&!dashboardVisible)return;
     const moves=['Blink','Curious','SoftTurn','Bounce'];
     playMotion(moves[Math.floor(Math.random()*moves.length)]);
   },7800);
