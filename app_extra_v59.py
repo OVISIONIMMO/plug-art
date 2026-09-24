@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='128.2'
+app.version='129.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 GLB=BASE/'static'/'PLUGY_final_animated.glb'
@@ -15,7 +15,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='128.20260924.3'
+VERSION='129.20260924.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -274,33 +274,34 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'128.2',
-      'ui':'plug-art-v128-premium-cockpit',
+      'version':'129.0',
+      'ui':'plug-art-v129-visual-editor-map',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
       'migration_backup_ready':backup_ready
     }
 
+@app.get('/api/v129/ui-manifest')
 @app.get('/api/v128/ui-manifest')
 def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v107.js'
     css_path=BASE/'static'/'plugart_v122_slide.css'
-    expected='128.20260924.2'
+    expected='129.20260924.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists()),
-      'version':'128.2',
-      'ui':'plug-art-v128-premium-cockpit',
+      'version':'129.0',
+      'ui':'plug-art-v129-visual-editor-map',
       'asset_version':expected,
       'html_has_js':f'plugart_v107.js?v={expected}' in html,
       'html_has_slide_css':f'plugart_v122_slide.css?v={expected}' in html,
-      'html_has_sidebar_version':'V128.1' in html,
+      'html_has_sidebar_version':'V129' in html,
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
-        'premium-cockpit','contextual-plugy','plugy-depth','streaming-assistant',
-        'progressive-runtime','lean-bootstrap','conditional-html-cache'
+        'premium-cockpit','manual-carousel-editor','persistent-interface-lab','leaflet-map',
+        'plugy-soft-pearl','contextual-plugy','streaming-assistant','lean-bootstrap'
       ]
     }
 
@@ -312,8 +313,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'128.2',
-      'X-Plug-Art-UI':'plug-art-v128-premium-cockpit'
+      'X-Plug-Art-Version':'129.0',
+      'X-Plug-Art-UI':'plug-art-v129-visual-editor-map'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -2094,9 +2095,9 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'128.2',
-      'ui':'plug-art-v128-premium-cockpit',
-      'reference_direction':'V120 PLUG ART: compact internal work cockpit with a three-mode Bureau for Documents, application Packages and reusable Templates, starter application packs, direct Open Call routing, CRM outreach, PLUGY operator, Instagram Studio and mobile-first workflows',
+      'version':'129.0',
+      'ui':'plug-art-v129-visual-editor-map',
+      'reference_direction':'V129 PLUG ART: premium product-style internal workspace with persistent manual visual editing, Interface Lab, interactive Europe map, PLUGY soft-pearl finish, content studio and operational workflows',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -2104,7 +2105,7 @@ def status_v90():
       'typography':'Archivo + Inter Tight + IBM Plex Mono',
       'legacy_index_served':False,
       'single_mascot':True,
-      'plugy_reference':'single V113 premium PBR animated model, mounted once in the assistant drawer',
+      'plugy_reference':'single V113 premium animated model with runtime soft-pearl material tuning and reduced reflections',
       'plugy_expected_sha256':PLUGY_REFERENCE_SHA256,
       'plugy_reference_match':hashlib.sha256(raw).hexdigest()==PLUGY_REFERENCE_SHA256 if raw else False,
       'plugy_model_path':'/assets/plugy-v113-premium.glb',
@@ -2119,15 +2120,18 @@ def status_v90():
       'layouts':['top','cover','left','right','band','collage','minimal'],
       'cuts':['none','diagonal','curve','wave'],
       'themes':['editorial','glass','impact','paper','night','color'],
-      'background':'compact PLUG ART internal workspace with lightweight dashboard-first loading, modular operational data and integrated content studio'
+      'background':'premium internal workspace with product-style hierarchy, manual visual editing, persistent design controls, interactive map and integrated content studio'
     }
 
-print(f"PLUG_ART_READY ui=internal_dashboard bureau=persistent prospection=crm open_call_workflow=on drafts=persistent realistic=on contextual_motion=on plugy=single_drawer instagram=control_center command_palette=on sidebar=adaptive graph={_ig_graph_version()} instagram_configured={_ig_configured()} studio=instagram_queue voice=streaming internal=on plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_READY ui=v129_product_workspace editor=manual design_lab=persistent map=leaflet plugy_finish=soft_pearl bureau=persistent prospection=crm open_call_workflow=on drafts=persistent instagram=control_center voice=streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
       ('GET','/api/health'),
-      ('GET','/api/v128/ui-manifest'),
+      ('GET','/api/v129/ui-manifest'),
+      ('GET','/api/v90/builder/config'),
+      ('PATCH','/api/v90/builder/config'),
+      ('GET','/api/map'),
       ('GET','/api/v124/dashboard-bootstrap'),
       ('POST','/api/v125/plugy/stream'),
       ('POST','/api/v32/plugy'),
