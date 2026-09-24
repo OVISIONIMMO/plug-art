@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='138.0'
+app.version='139.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v130.html'
@@ -16,7 +16,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='138.20260924.1'
+VERSION='139.20260924.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -252,22 +252,164 @@ def _patch_plugy_reflectionless_v138(raw:bytes):
         print(f"PLUGY_V138_MATERIAL_PATCH_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
         return raw,False
 
+def _rig_plugy_v139(raw:bytes):
+    """Procedurally split the disconnected arm shells and add 3D eyelids to the single-mesh source model."""
+    if len(raw)<20 or raw[:4]!=b'glTF':return raw,False
+    try:
+        _,version,_=struct.unpack_from('<4sII',raw,0);pos=12;doc=None;bin_blob=b'';extras_chunks=[]
+        while pos+8<=len(raw):
+            ln,kind=struct.unpack_from('<I4s',raw,pos);pos+=8;chunk=bytes(raw[pos:pos+ln]);pos+=ln
+            if kind==b'JSON':doc=json.loads(chunk.decode('utf-8').rstrip(' ').rstrip(chr(0)))
+            elif kind==bytes((66,73,78,0)):bin_blob=chunk
+            else:extras_chunks.append((kind,chunk))
+        if not isinstance(doc,dict):return raw,False
+        asset=doc.setdefault('asset',{'version':'2.0'});ax=asset.setdefault('extras',{})
+        if ax.get('plugyRig')=='eyes-arms-v139':return raw,False
+        meshes=doc.get('meshes') or [];nodes=doc.get('nodes') or [];accessors=doc.get('accessors') or [];views=doc.get('bufferViews') or []
+        if not meshes or not nodes:return raw,False
+        prim=(meshes[0].get('primitives') or [])[0]
+        if not isinstance(prim,dict) or 'POSITION' not in (prim.get('attributes') or {}) or 'indices' not in prim:return raw,False
+
+        def read_acc(ai):
+            a=accessors[ai];v=views[a['bufferView']];ct=a['componentType'];typ=a['type'];count=a['count']
+            fm={5121:'B',5123:'H',5125:'I',5126:'f',5122:'h',5120:'b'}[ct];w={'SCALAR':1,'VEC2':2,'VEC3':3,'VEC4':4}[typ]
+            size=struct.calcsize('<'+fm*w);stride=v.get('byteStride',size);base=v.get('byteOffset',0)+a.get('byteOffset',0)
+            return [struct.unpack_from('<'+fm*w,bin_blob,base+i*stride) for i in range(count)]
+        posv=[tuple(map(float,x)) for x in read_acc(prim['attributes']['POSITION'])]
+        uvv=[tuple(map(float,x)) for x in read_acc(prim['attributes']['TEXCOORD_0'])] if 'TEXCOORD_0' in prim['attributes'] else [(0.,0.)]*len(posv)
+        idx=[int(x[0]) for x in read_acc(prim['indices'])]
+
+        parent=list(range(len(posv)));size=[1]*len(posv)
+        def find(x):
+            while parent[x]!=x:parent[x]=parent[parent[x]];x=parent[x]
+            return x
+        def union(a,b):
+            a=find(a);b=find(b)
+            if a==b:return
+            if size[a]<size[b]:a,b=b,a
+            parent[b]=a;size[a]+=size[b]
+        for k in range(0,len(idx)-2,3):
+            a,b,c=idx[k:k+3];union(a,b);union(b,c)
+        groups={}
+        for vi,p in enumerate(posv):groups.setdefault(find(vi),[]).append((vi,p))
+        left_roots=set();right_roots=set()
+        for root,g in groups.items():
+            xs=[p[0] for _,p in g];ys=[p[1] for _,p in g]
+            cx=(min(xs)+max(xs))/2;miny=min(ys);maxy=max(ys)
+            if miny>-.34 and maxy<-.05 and cx<-.18:left_roots.add(root)
+            elif miny>-.34 and maxy<-.05 and cx>.18:right_roots.add(root)
+        if not left_roots or not right_roots:
+            print(f'PLUGY_V139_RIG_SKIP left={len(left_roots)} right={len(right_roots)}',flush=True);return raw,False
+
+        blob=bytearray(bin_blob)
+        while len(blob)%4:blob.append(0)
+        doc.setdefault('bufferViews',[]);doc.setdefault('accessors',[]);doc.setdefault('buffers',[{'byteLength':len(blob)}])
+        if not doc['buffers']:doc['buffers']=[{'byteLength':len(blob)}]
+        def add_acc(rows,type_name,component=5126):
+            nonlocal blob
+            fm={5126:'f',5125:'I',5123:'H'}[component];width={'SCALAR':1,'VEC2':2,'VEC3':3,'VEC4':4}[type_name]
+            flat=[x for row in rows for x in (row if isinstance(row,(tuple,list)) else (row,))]
+            off=len(blob);packed=struct.pack('<'+fm*len(flat),*flat);blob.extend(packed)
+            while len(blob)%4:blob.append(0)
+            vi=len(doc['bufferViews']);doc['bufferViews'].append({'buffer':0,'byteOffset':off,'byteLength':len(packed)})
+            ai=len(doc['accessors']);a={'bufferView':vi,'componentType':component,'count':len(rows),'type':type_name}
+            if rows and type_name in ('SCALAR','VEC2','VEC3','VEC4'):
+                vals=[row if isinstance(row,(tuple,list)) else (row,) for row in rows]
+                a['min']=[min(float(v[j]) for v in vals) for j in range(width)];a['max']=[max(float(v[j]) for v in vals) for j in range(width)]
+            doc['accessors'].append(a);return ai
+
+        body=[];left=[];right=[]
+        for k in range(0,len(idx)-2,3):
+            tri=idx[k:k+3];root=find(tri[0])
+            (left if root in left_roots else right if root in right_roots else body).extend(tri)
+        body_idx=add_acc([(x,) for x in body],'SCALAR',5125)
+        body_prim=dict(prim);body_prim['indices']=body_idx;meshes[0]['primitives']=[body_prim]
+
+        def arm_mesh(indices,pivot,name):
+            used=sorted(set(indices));remap={v:i for i,v in enumerate(used)}
+            p=[(posv[v][0]-pivot[0],posv[v][1]-pivot[1],posv[v][2]-pivot[2]) for v in used]
+            uv=[uvv[v] for v in used];ii=[remap[v] for v in indices]
+            pa=add_acc(p,'VEC3');ua=add_acc(uv,'VEC2');ia=add_acc([(x,) for x in ii],'SCALAR',5125)
+            pr={'attributes':{'POSITION':pa,'TEXCOORD_0':ua},'indices':ia,'mode':4}
+            if 'material' in prim:pr['material']=prim['material']
+            mi=len(meshes);meshes.append({'name':name,'primitives':[pr]});ni=len(nodes);nodes.append({'name':name+'Node','mesh':mi,'translation':list(pivot)})
+            return ni
+        left_p=(-.14,-.09,0.0);right_p=(.14,-.09,0.0)
+        left_node=arm_mesh(left,left_p,'PLUGY_LeftArm');right_node=arm_mesh(right,right_p,'PLUGY_RightArm')
+        world=nodes[0];world.setdefault('children',[])
+        for ni in (left_node,right_node):
+            if ni not in world['children']:world['children'].append(ni)
+
+        # Matte black eyelids sit just in front of the textured visor. They are invisible at rest,
+        # then close over the cyan eye texture during Blink/Wink.
+        used=doc.setdefault('extensionsUsed',[])
+        if 'KHR_materials_unlit' not in used:used.append('KHR_materials_unlit')
+        mats=doc.setdefault('materials',[])
+        lid_mat=len(mats);mats.append({'name':'PLUGY_Eyelid_Matte','pbrMetallicRoughness':{'baseColorFactor':[.002,.003,.004,1.0],'metallicFactor':0.0,'roughnessFactor':1.0},'extensions':{'KHR_materials_unlit':{}}})
+        import math as _math
+        seg=28;verts=[(0.,0.,0.)]+[(.052*_math.cos(2*_math.pi*i/seg),.044*_math.sin(2*_math.pi*i/seg),0.) for i in range(seg)]
+        eyeidx=[]
+        for i in range(seg):eyeidx.extend((0,1+i,1+((i+1)%seg)))
+        ep=add_acc(verts,'VEC3');ei=add_acc([(x,) for x in eyeidx],'SCALAR',5125)
+        emi=len(meshes);meshes.append({'name':'PLUGY_Eyelid','primitives':[{'attributes':{'POSITION':ep},'indices':ei,'mode':4,'material':lid_mat}]})
+        left_eye=len(nodes);nodes.append({'name':'PLUGY_LeftEyelid','mesh':emi,'translation':[-.09,.15,.294],'scale':[1,.01,1]})
+        right_eye=len(nodes);nodes.append({'name':'PLUGY_RightEyelid','mesh':emi,'translation':[.09,.15,.294],'scale':[1,.01,1]})
+        world['children'].extend([left_eye,right_eye])
+
+        doc.setdefault('animations',[])
+        def acc_anim(values,type_name):
+            return add_acc(values,type_name,5126)
+        def replace_anim(name,times,channelspec):
+            doc['animations']=[a for a in doc['animations'] if not (isinstance(a,dict) and a.get('name')==name)]
+            ti=acc_anim([(float(t),) for t in times],'SCALAR');samplers=[];channels=[]
+            for node,path,values,typ in channelspec:
+                oi=acc_anim(values,typ);si=len(samplers);samplers.append({'input':ti,'output':oi,'interpolation':'LINEAR'});channels.append({'sampler':si,'target':{'node':node,'path':path}})
+            doc['animations'].append({'name':name,'samplers':samplers,'channels':channels})
+        def append_channels(name,times,channelspec):
+            target=next((a for a in doc['animations'] if isinstance(a,dict) and a.get('name')==name),None)
+            if target is None:return replace_anim(name,times,channelspec)
+            ti=acc_anim([(float(t),) for t in times],'SCALAR')
+            for node,path,values,typ in channelspec:
+                oi=acc_anim(values,typ);si=len(target.setdefault('samplers',[]));target['samplers'].append({'input':ti,'output':oi,'interpolation':'LINEAR'});target.setdefault('channels',[]).append({'sampler':si,'target':{'node':node,'path':path}})
+        q=lambda a:_v106_quat((0,0,1),a)
+        openS=[(1,.01,1)];closed=(1,1,1)
+        replace_anim('Blink',[0,.07,.14,.23],[(left_eye,'scale',[openS[0],closed,closed,openS[0]],'VEC3'),(right_eye,'scale',[openS[0],closed,closed,openS[0]],'VEC3')])
+        replace_anim('Wink',[0,.08,.18,.30],[(left_eye,'scale',[openS[0],closed,closed,openS[0]],'VEC3'),(right_eye,'scale',[openS[0],openS[0],openS[0],openS[0]],'VEC3')])
+        replace_anim('Wave',[0,.18,.38,.58,.82,1.08],[(right_node,'rotation',[q(0),q(-.48),q(-.18),q(-.52),q(-.12),q(0)],'VEC4'),(left_node,'rotation',[q(0),q(.08),q(.02),q(.07),q(.02),q(0)],'VEC4')])
+        append_channels('Speak',[0,.14,.28,.42,.56,.70,.88],[(left_node,'rotation',[q(0),q(.12),q(.04),q(.16),q(.03),q(.10),q(0)],'VEC4'),(right_node,'rotation',[q(0),q(-.10),q(-.03),q(-.14),q(-.02),q(-.09),q(0)],'VEC4')])
+        append_channels('Think',[0,.45,1.0,1.55],[(left_node,'rotation',[q(0),q(-.10),q(-.16),q(0)],'VEC4'),(right_node,'rotation',[q(0),q(.06),q(.11),q(0)],'VEC4'),(left_eye,'scale',[openS[0],(1,.18,1),(1,.10,1),openS[0]],'VEC3'),(right_eye,'scale',[openS[0],(1,.10,1),(1,.18,1),openS[0]],'VEC3')])
+        append_channels('Happy',[0,.20,.42,.72],[(left_node,'rotation',[q(0),q(.28),q(.12),q(0)],'VEC4'),(right_node,'rotation',[q(0),q(-.28),q(-.12),q(0)],'VEC4')])
+        append_channels('Attentive',[0,.38,.82],[(left_node,'rotation',[q(0),q(.07),q(0)],'VEC4'),(right_node,'rotation',[q(0),q(-.07),q(0)],'VEC4')])
+
+        doc['buffers'][0]['byteLength']=len(blob);ax['plugyRig']='eyes-arms-v139';ax['armNodes']=[left_node,right_node];ax['eyeNodes']=[left_eye,right_eye]
+        asset['generator']=str(asset.get('generator',''))+' + PLUGY V139 EyesArms Rig'
+        j=_v106_pad4(json.dumps(doc,separators=(',',':')).encode('utf-8'),b' ');b=_v106_pad4(bytes(blob),bytes((0,)))
+        chunks=[(b'JSON',j),(bytes((66,73,78,0)),b)]+extras_chunks;total=12+sum(8+len(c) for _,c in chunks)
+        out=bytearray(struct.pack('<4sII',b'glTF',version,total))
+        for kind,chunk in chunks:out.extend(struct.pack('<I4s',len(chunk),kind));out.extend(chunk)
+        print(f'PLUGY_V139_RIG_READY left_tris={len(left)//3} right_tris={len(right)//3} body_tris={len(body)//3}',flush=True)
+        return bytes(out),True
+    except Exception as exc:
+        print(f'PLUGY_V139_RIG_ERROR {type(exc).__name__}: {str(exc)[:220]}',flush=True);return raw,False
+
 def _ensure_realistic_plugy():
     try:
         if REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>10000:
-            patched,changed=_patch_plugy_reflectionless_v138(REALISTIC_PLUGY.read_bytes())
-            if changed:
-                tmp=REALISTIC_PLUGY.with_suffix('.v138.tmp');tmp.write_bytes(patched);tmp.replace(REALISTIC_PLUGY)
-                print(f"PLUGY_V138_REFLECTIONLESS_READY bytes={REALISTIC_PLUGY.stat().st_size} persisted=true",flush=True)
+            patched,mat_changed=_patch_plugy_reflectionless_v138(REALISTIC_PLUGY.read_bytes())
+            patched,rig_changed=_rig_plugy_v139(patched)
+            if mat_changed or rig_changed:
+                tmp=REALISTIC_PLUGY.with_suffix('.v139.tmp');tmp.write_bytes(patched);tmp.replace(REALISTIC_PLUGY)
+                print(f"PLUGY_V139_PERSISTED bytes={REALISTIC_PLUGY.stat().st_size} material={mat_changed} rig={rig_changed}",flush=True)
             return True
     except Exception:
         pass
     with REALISTIC_PLUGY_LOCK:
         try:
             if REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>10000:
-                patched,changed=_patch_plugy_reflectionless_v138(REALISTIC_PLUGY.read_bytes())
-                if changed:
-                    tmp=REALISTIC_PLUGY.with_suffix('.v138.tmp');tmp.write_bytes(patched);tmp.replace(REALISTIC_PLUGY)
+                patched,mat_changed=_patch_plugy_reflectionless_v138(REALISTIC_PLUGY.read_bytes())
+                patched,rig_changed=_rig_plugy_v139(patched)
+                if mat_changed or rig_changed:
+                    tmp=REALISTIC_PLUGY.with_suffix('.v139.tmp');tmp.write_bytes(patched);tmp.replace(REALISTIC_PLUGY)
                 return True
         except Exception:
             pass
@@ -278,6 +420,7 @@ def _ensure_realistic_plugy():
                 tmp=REALISTIC_PLUGY.with_suffix('.tmp')
                 prepared=_inject_v106_motion(rr.content)
                 prepared,_=_patch_plugy_reflectionless_v138(prepared)
+                prepared,_=_rig_plugy_v139(prepared)
                 tmp.write_bytes(prepared)
                 tmp.replace(REALISTIC_PLUGY)
                 print(f"PLUGY_V138_REFLECTIONLESS_READY bytes={REALISTIC_PLUGY.stat().st_size} motion=embedded materials=baked",flush=True)
@@ -387,14 +530,15 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'138.0',
-      'ui':'plug-art-v138-baked-plugy',
+      'version':'139.0',
+      'ui':'plug-art-v139-expressive-plugy',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
       'migration_backup_ready':backup_ready
     }
 
+@app.get('/api/v139/ui-manifest')
 @app.get('/api/v138/ui-manifest')
 @app.get('/api/v137/ui-manifest')
 @app.get('/api/v136/ui-manifest')
@@ -410,20 +554,20 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v107.js'
     css_path=BASE/'static'/'plugart_v122_slide.css'
-    expected='138.20260924.1'
+    expected='139.20260924.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v130.js').exists() and (BASE/'static'/'plugy_v130.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
-      'version':'138.0',
-      'ui':'plug-art-v138-baked-plugy',
+      'version':'139.0',
+      'ui':'plug-art-v139-expressive-plugy',
       'asset_version':expected,
       'html_has_js':f'plugart_v107.js?v={expected}' in html,
       'html_has_slide_css':f'plugart_v122_slide.css?v={expected}' in html,
-      'html_has_sidebar_version':'V138' in html,
+      'html_has_sidebar_version':'V139' in html,
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
         'premium-cockpit','free-canvas-editor','layer-inspector','image-upload','marketing-template-library','manual-carousel-editor','drag-reorder','undo-redo','preview-zoom',
-        'persistent-interface-lab','glass-navigation','floating-actions','spatial-dashboard','liquid-editorial-ui','non-card-create-scene','creation-path-launcher','creation-reference-lab','simple-studio-controls','organic-plugy-gaze','persistent-plugy-mini','fast-blink-cycle','low-glare-plugy','thinking-energy-state','reflectionless-plugy','creation-control-audit','glb-baked-reflectionless-materials','leaflet-map','map-direct-access','city-map-fallback',
+        'persistent-interface-lab','glass-navigation','floating-actions','spatial-dashboard','liquid-editorial-ui','non-card-create-scene','creation-path-launcher','creation-reference-lab','simple-studio-controls','organic-plugy-gaze','persistent-plugy-mini','fast-blink-cycle','low-glare-plugy','thinking-energy-state','reflectionless-plugy','creation-control-audit','glb-baked-reflectionless-materials','procedural-eye-blink','procedural-arm-rig','expressive-wink','leaflet-map','map-direct-access','city-map-fallback',
         'hub-workspace','hub-real-project-previews','hub-pdf-export','organized-bureau',
         'standalone-plugy','watch-responsive','plugy-refined-finish','chat-style-conversation',
         'instagram-priority-access','instagram-social-studio','marketing-visual-generator','expanded-local-radar','streaming-assistant','lean-bootstrap'
@@ -438,7 +582,7 @@ def plugy_page_v130(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'138.0',
+      'X-Plug-Art-Version':'139.0',
       'X-Plug-Art-UI':'plugy-v130-standalone'
     }
     if request.headers.get('if-none-match')==etag:
@@ -453,8 +597,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'138.0',
-      'X-Plug-Art-UI':'plug-art-v138-baked-plugy'
+      'X-Plug-Art-Version':'139.0',
+      'X-Plug-Art-UI':'plug-art-v139-expressive-plugy'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -2235,8 +2379,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'138.0',
-      'ui':'plug-art-v138-baked-plugy',
+      'version':'139.0',
+      'ui':'plug-art-v139-expressive-plugy',
       'reference_direction':'V130 PLUG ART: premium product-style workspace with standalone PLUGY conversation, watch-responsive UI, manual creative studio, Instagram control center, expanded local Radar and interactive map',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -2263,13 +2407,13 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print(f"PLUG_ART_READY ui=v138_baked_plugy standalone_plugy=on watch_ui=on mobile_creation=direct mobile_instagram=direct mobile_map=direct creation=free_canvas_layers hub=on hub_pdf=on editor=marketing_manual_ai_drag_resize_undo_zoom design_lab=persistent glass_ui=on map=leaflet_city_fallback radar_local_venues=on instagram=social_studio plugy_finish=refined_soft_pearl voice=streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_READY ui=v139_expressive_plugy standalone_plugy=on watch_ui=on mobile_creation=direct mobile_instagram=direct mobile_map=direct creation=free_canvas_layers hub=on hub_pdf=on editor=marketing_manual_ai_drag_resize_undo_zoom design_lab=persistent glass_ui=on map=leaflet_city_fallback radar_local_venues=on instagram=social_studio plugy_finish=refined_soft_pearl voice=streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
       ('GET','/api/health'),
       ('GET','/plugy'),
-      ('GET','/api/v138/ui-manifest'),
+      ('GET','/api/v139/ui-manifest'),
       ('GET','/api/v90/builder/config'),
       ('PATCH','/api/v90/builder/config'),
       ('GET','/api/map'),
