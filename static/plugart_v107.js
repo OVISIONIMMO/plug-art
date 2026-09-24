@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='131.20260924.1';
+const VERSION='131.20260924.2';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -2672,20 +2672,20 @@ function installMobileShell(){
   dock.innerHTML=
     '<button data-route="dashboard"><b>⌂</b><span>Accueil</span></button>'+
     '<button data-route="radar"><b>◉</b><span>Radar</span></button>'+
+    '<button data-route="creation" class="mobile-creation-direct"><b>✦</b><span>Créer</span></button>'+
+    '<button data-route="social" class="mobile-instagram-direct"><b>◎</b><span>Insta</span></button>'+
     '<button data-route="opencalls"><b>◇</b><span>Calls</span></button>'+
-    '<button data-route="bureau"><b>▤</b><span>Bureau</span></button>'+
-    '<button data-route="prospection"><b>◎</b><span>Contacts</span></button>'+
     '<button class="mobile-more" id="mobileMoreButton"><b>•••</b><span>Plus</span></button>';
   document.body.appendChild(dock);
 
   const sheet=document.createElement('div');
   sheet.className='mobile-more-sheet';sheet.id='mobileMoreSheet';
   sheet.innerHTML='<div class="mobile-more-grid">'+
-    '<button data-mobile-route="creation"><b>✦</b><span>Création</span></button>'+
+    '<button data-mobile-route="bureau"><b>▤</b><span>Bureau</span></button>'+
+    '<button data-mobile-route="prospection"><b>◎</b><span>Contacts</span></button>'+
     '<button data-mobile-route="agenda"><b>◷</b><span>Agenda</span></button>'+
     '<button data-mobile-route="network"><b>◌</b><span>Artistes</span></button>'+
     '<button data-mobile-route="map"><b>⌖</b><span>Carte</span></button>'+
-    '<button data-mobile-route="social"><b>◎</b><span>Instagram</span></button>'+
     '<button data-mobile-action="search"><b>⌕</b><span>Recherche</span></button>'+
     '<button data-mobile-action="plugy"><b>⌁</b><span>PLUGY</span></button>'+
     '<a class="mobile-plugy-full" href="/plugy"><b>◉</b><span>PLUGY plein écran</span></a>'+
@@ -2702,13 +2702,13 @@ function installMobileShell(){
   $('#mobileMoreButton').onclick=()=>{
     const open=!sheet.classList.contains('open');
     sheet.classList.toggle('open',open);
-    $('#mobileMoreButton').classList.toggle('active',open||['creation','agenda','network','map','social'].includes(state.view));
+    $('#mobileMoreButton').classList.toggle('active',open||['bureau','prospection','agenda','network','map'].includes(state.view));
   };
   document.addEventListener('pointerdown',e=>{
     if(!sheet.classList.contains('open'))return;
     if(sheet.contains(e.target)||dock.contains(e.target))return;
     sheet.classList.remove('open');
-    $('#mobileMoreButton')?.classList.toggle('active',['creation','agenda','network','map','social'].includes(state.view));
+    $('#mobileMoreButton')?.classList.toggle('active',['bureau','prospection','agenda','network','map'].includes(state.view));
   });
 }
 
