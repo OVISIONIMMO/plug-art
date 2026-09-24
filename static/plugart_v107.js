@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='139.20260924.1';
+const VERSION='139.20260924.2';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -274,7 +274,10 @@ function openPlugy(seed=''){
   movePlugyModel(plugyDrawerStage());
   $('#plugyDrawer')?.classList.add('open');
   const mv=$('#plugyModel');if(mv&&!mv.loaded)$('#plugyState span').textContent='Chargement 3D…';
-  warmPlugy3D('open').then(()=>playMotion('Attentive')).catch(()=>{$('#plugyState span').textContent='Mode texte'});
+  warmPlugy3D('open').then(()=>{
+    if(plugyAvailable('Wave')){playMotion('Wave');setTimeout(()=>{if($('#plugyDrawer')?.classList.contains('open'))playMotion('Attentive')},1120)}
+    else playMotion('Attentive');
+  }).catch(()=>{$('#plugyState span').textContent='Mode texte'});
   if(seed)$('#plugyInput').value=seed;
   renderPlugyActions();
   setTimeout(()=>$('#plugyInput')?.focus(),160);
@@ -3055,7 +3058,11 @@ function startPlugyAmbient(){
   },{passive:true});
 }
 const pm=$('#plugyModel');
-pm?.addEventListener('click',()=>{playMotion(plugyAvailable('Happy')?'Happy':'Curious');plugySoftGaze()});
+pm?.addEventListener('click',()=>{
+  if(plugyAvailable('Wink')){playMotion('Wink');setTimeout(()=>playMotion(plugyAvailable('Happy')?'Happy':'Curious'),360)}
+  else playMotion(plugyAvailable('Happy')?'Happy':'Curious');
+  plugySoftGaze();
+});
 pm?.addEventListener('pointerdown',()=>{clearTimeout(plugyPressTimer);plugyPressTimer=setTimeout(()=>{initVoice();playMotion('Attentive',true)},650)});
 ['pointerup','pointercancel','pointerleave'].forEach(ev=>pm?.addEventListener(ev,()=>clearTimeout(plugyPressTimer)));
 startPlugyAmbient();
