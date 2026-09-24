@@ -9,9 +9,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <meta name="description" content="PLUG ART Workspace — Radar, Open Calls, création, Bureau, prospection et PLUGY.">
-<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">\n<link rel="preconnect" href="https://ajax.googleapis.com" crossorigin>\n<link rel="dns-prefetch" href="//ajax.googleapis.com">\n<link rel="preload" href="/static/plugart_v107.js?v=131.20260924.2" as="script">
-<link rel="stylesheet" href="/static/plugart_v107.css?v=131.20260924.2">
-<link rel="stylesheet" href="/static/plugart_v122_slide.css?v=131.20260924.2">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">\n<link rel="preconnect" href="https://ajax.googleapis.com" crossorigin>\n<link rel="dns-prefetch" href="//ajax.googleapis.com">\n<link rel="preload" href="/static/plugart_v107.js?v=132.20260924.1" as="script">
+<link rel="stylesheet" href="/static/plugart_v107.css?v=132.20260924.1">
+<link rel="stylesheet" href="/static/plugart_v122_slide.css?v=132.20260924.1">
 </head>
 <body data-view="dashboard" data-plugy-motion="Idle">
 <div class="app-shell">
@@ -26,6 +26,7 @@
         <small>TRAVAIL</small>
         <button class="nav-item active" data-route="dashboard"><b>⌂</b><span>Dashboard</span></button>
         <button class="nav-item" data-route="radar"><b>◉</b><span>Radar</span></button>
+        <button class="nav-item map-nav-direct" data-route="map"><b>⌖</b><span>Map</span><i>LIVE</i></button>
         <button class="nav-item" data-route="opencalls"><b>◇</b><span>Open Calls</span></button>
         <button class="nav-item" data-route="creation"><b>✦</b><span>Création</span></button>
         <button class="nav-item instagram-nav" data-route="social"><b>◎</b><span>Instagram</span><i>LIVE</i></button>
@@ -36,7 +37,6 @@
         <button class="nav-item" data-route="agenda"><b>◷</b><span>Agenda</span></button>
         <button class="nav-item" data-route="prospection"><b>◎</b><span>Contacts & Prospection</span></button>
         <button class="nav-item" data-route="network"><b>◌</b><span>Artistes</span></button>
-        <button class="nav-item" data-route="map"><b>⌖</b><span>Carte</span></button>
       </div>
       <div class="nav-group nav-assistant-group">
         <small>ASSISTANT</small>
@@ -52,18 +52,19 @@
       </button>
       <a class="plugy-full-link" href="/plugy">Plein écran ↗</a>
     </div>
-    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small>V131.1</small></div>
+    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small>V132</small></div>
   </aside>
 
   <main class="workspace">
     <header class="topbar">
       <div class="top-title">
         <small id="pageEyebrow">WORKSPACE</small>
-        <div class="top-title-line"><h1 id="pageTitle">Dashboard</h1><span class="build-pill">V131.1</span></div>
+        <div class="top-title-line"><h1 id="pageTitle">Dashboard</h1><span class="build-pill">V132</span></div>
       </div>
       <button class="global-search" id="globalSearch"><span>⌕</span><strong>Rechercher dans PLUG ART</strong><kbd>⌘ K</kbd></button>
       <div class="top-actions">
         <button class="icon-btn" id="refreshData" title="Actualiser">↻</button>
+        <button class="map-access-btn" data-route="map" title="Carte des opportunités">⌖ Map</button>
         <button class="instagram-access-btn" data-route="social" title="Instagram">◎ Instagram</button>
         <button class="secondary-btn design-lab-trigger" id="designLabButton" title="Édition visuelle">◫ Design</button>
         <button class="primary-btn" id="newAction">＋ Nouveau</button>
@@ -77,6 +78,7 @@
           <div class="panel-head"><div><small>ACCÈS RAPIDE</small><h2>Que veux-tu faire ?</h2></div><span class="live-pill"><i></i> LIVE</span></div>
           <div class="quick-grid">
             <button data-route="radar"><b>◉</b><strong>Lancer le Radar</strong><span>Trouver de nouvelles opportunités</span></button>
+            <button data-route="map"><b>⌖</b><strong>Explorer la Map</strong><span>Voir les opportunités sur la carte</span></button>
             <button data-route="creation"><b>✦</b><strong>Créer un contenu</strong><span>Studio manuel + génération IA</span></button>
             <button data-route="social"><b>◎</b><strong>Instagram</strong><span>Feed, création et publication</span></button>
             <button data-route="bureau"><b>▤</b><strong>Ouvrir le Bureau</strong><span>Écrire, réécrire, structurer</span></button>
@@ -320,7 +322,7 @@
   </div>
   <div class="plugy-stage">
     <div class="plugy-energy e1"></div><div class="plugy-energy e2"></div>
-    <model-viewer id="plugyModel" loading="lazy" src="/assets/plugy-v113-premium.glb?v=131.20260924.2" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity=".42" shadow-softness=".95" exposure=".94" camera-orbit="0deg 76deg 3.05m" field-of-view="27deg" alt="PLUGY"></model-viewer>
+    <model-viewer id="plugyModel" loading="lazy" src="/assets/plugy-v113-premium.glb?v=132.20260924.1" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity=".42" shadow-softness=".95" exposure=".94" camera-orbit="0deg 76deg 3.05m" field-of-view="27deg" alt="PLUGY"></model-viewer>
     <div class="plugy-state" id="plugyState"><i></i><span>Prêt</span></div>
   </div>
   <div class="plugy-context" id="plugyContext">Contexte : Dashboard</div>
@@ -398,6 +400,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<script defer src="/static/plugart_v107.js?v=131.20260924.2"></script>
+<script defer src="/static/plugart_v107.js?v=132.20260924.1"></script>
+<script src="/static/hub_v132_assets.js?v=132.20260924.1"></script>
 </body>
 </html>
