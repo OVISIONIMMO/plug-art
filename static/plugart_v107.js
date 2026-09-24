@@ -1423,6 +1423,65 @@ function renderArtists(){
   box.innerHTML=rows.map((a,i)=>'<article class="artist-card"><div class="artist-visual" style="background:linear-gradient(145deg,'+grad[i%4]+',#e7d8f4)">'+esc((a.name||'?').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase())+'</div><div class="artist-body"><h3>'+esc(a.name||'Artiste')+'</h3><p>'+esc(a.discipline||a.city||'Artiste émergent')+'</p><div class="card-actions"><button data-artist-plugy="'+a.id+'">Analyser avec PLUGY</button></div></div></article>').join('')||'<div class="empty">Aucun artiste.</div>';
   $$('[data-artist-plugy]').forEach(b=>b.onclick=()=>{const a=rows.find(x=>String(x.id)===b.dataset.artistPlugy);askPlugy('Analyse le profil de '+clean(a?.name)+'. Discipline : '+clean(a?.discipline)+'. Propose les prochaines actions utiles.')});
 }
+let instagramStudioLoaded=false;
+function instagramMediaCard(m){
+  const media=m.thumbnail_url||m.media_url||'',caption=clean(m.caption||''),kind=String(m.media_type||'').toLowerCase();
+  return '<article class="ig-media-card"><a href="'+esc(m.permalink||'#')+'" target="_blank" rel="noopener"><div class="ig-media-visual">'+(media?'<img src="'+esc(media)+'" loading="lazy" alt="">':'<span>◎</span>')+(kind.includes('video')||kind.includes('reel')?'<b>▶</b>':'')+'</div></a><div class="ig-media-meta"><p>'+esc(caption.slice(0,120)||'Sans légende')+'</p><span>♥ '+Number(m.like_count||0)+' · ◌ '+Number(m.comments_count||0)+'</span></div></article>';
+}
+async function renderInstagramStudio(force=false){
+  const statusBox=$('#igConnectionState');if(!statusBox)return;
+  try{
+    const status=await api('/api/v88/instagram/status',{timeout:16000});
+    const connected=!!status.connected;
+    statusBox.textContent=connected?'Connecté':'Non connecté';
+    $('#igUsername').textContent=status.username?'@'+status.username:'@plugart';
+    $('#igFollowers').textContent=connected?Number(status.followers_count||0).toLocaleString('fr-FR'):'—';
+    $('#igMediaCount').textContent=connected?Number(status.media_count||0).toLocaleString('fr-FR'):'—';
+    const avatar=$('#igAvatar');if(avatar)avatar.innerHTML=status.profile_picture_url?'<img src="'+esc(status.profile_picture_url)+'" alt="">':'<span>IG</span>';
+    const connect=$('#igConnect');if(connect){connect.textContent=connected?'Compte connecté':'Connecter Instagram';connect.disabled=connected}
+    if(!connected){
+      $('#igFeedGrid').innerHTML='<div class="ig-connect-empty"><strong>Connecte ton compte Instagram professionnel.</strong><span>Le feed et les outils de publication apparaîtront ici.</span></div>';
+      $('#igFeedStatus').textContent=status.configured?'Prêt à connecter':'Configuration Meta requise';instagramStudioLoaded=true;return;
+    }
+    if(force||!instagramStudioLoaded){
+      const media=await api('/api/v88/instagram/media?limit=24',{timeout:22000}),items=Array.isArray(media.items)?media.items:[];
+      $('#igFeedGrid').innerHTML=items.map(instagramMediaCard).join('')||'<div class="empty">Aucune publication.</div>';
+      $('#igFeedStatus').textContent=items.length+' publication'+(items.length>1?'s':'');
+    }
+    instagramStudioLoaded=true;
+  }catch(e){
+    statusBox.textContent='Indisponible';$('#igFeedStatus').textContent='Erreur de connexion';console.warn('[Instagram Studio]',e);
+  }
+}
+async function runInstagramDiagnostic(){
+  const box=$('#igDiagnosticList');if(!box)return;box.innerHTML='<div class="empty">Vérification…</div>';
+  try{
+    const d=await api('/api/v88/instagram/diagnostic',{timeout:18000});
+    box.innerHTML=(d.checks||[]).map(x=>'<div class="ig-check '+(x.ok?'ok':'bad')+'"><i></i><span>'+esc(x.label)+'</span><b>'+(x.ok?'OK':'À régler')+'</b></div>').join('');
+  }catch{box.innerHTML='<div class="empty">Diagnostic indisponible.</div>'}
+}
+async function publishInstagramSingle(){
+  const url=clean($('#igMediaUrl')?.value),caption=String($('#igCaption')?.value||'').trim(),b=$('#igPublish');
+  if(!url)return toast('Ajoute une URL média publique');
+  if(!caption)return toast('Ajoute une légende');
+  const old=b.textContent;b.disabled=true;b.textContent='Publication…';
+  try{
+    await api('/api/v88/instagram/publish',{method:'POST',timeout:120000,body:JSON.stringify({caption,media_urls:[url]})});
+    toast('Publié sur Instagram');instagramStudioLoaded=false;renderInstagramStudio(true);
+  }catch(e){toast(String(e.message||'').toLowerCase().includes('connect')?'Instagram n’est pas connecté':'Publication impossible')}
+  finally{b.disabled=false;b.textContent=old}
+}
+$('#igRefresh')?.addEventListener('click',()=>{instagramStudioLoaded=false;renderInstagramStudio(true)});
+$('#igConnect')?.addEventListener('click',()=>{location.href='/api/v88/instagram/login'});
+$('#igDiagnostics')?.addEventListener('click',runInstagramDiagnostic);
+$('#igOpenCreation')?.addEventListener('click',()=>{route('creation');setCreationMode('carousel')});
+$('#igPublish')?.addEventListener('click',publishInstagramSingle);
+$('#igCaptionPlugy')?.addEventListener('click',async()=>{
+  const current=String($('#igCaption')?.value||'').trim();
+  const prompt=current?'Améliore cette légende Instagram PLUG ART sans inventer de faits, garde un ton naturel et clair : '+current:'Propose une légende Instagram PLUG ART concise pour présenter une exposition ou opportunité artistique. Termine par le CTA PLUG habituel.';
+  const out=await askPlugy(prompt,'#igCaption');if(out)$('#igCaption').value=out;
+});
+
 let plugArtLeafletPromise=null,plugArtMap=null,plugArtMapLayer=null,plugArtMapRows=[],plugArtMapMarkers=new Map();
 
 function ensureLeaflet(){
