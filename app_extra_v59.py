@@ -8,14 +8,14 @@ import app_extra_v43 as v43
 from build_plugy_official_v84 import build_plugy_official_v84
 
 app=v43.app
-app.version='124.0'
+app.version='124.1'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 GLB=BASE/'static'/'plugy_official_v84.glb'
 RESULT=build_plugy_official_v84(GLB)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','IdleBlink')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='124.20260924.1'
+VERSION='124.20260924.2'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -260,8 +260,27 @@ def plugy_v106_realistic_status():
     return {'ok':True,'ready':ready,'bytes':REALISTIC_PLUGY.stat().st_size if ready else 0,'asset':'/assets/plugy-v113-premium.glb','profile':'premium-pbr-motion-v113'}
 
 for route in list(app.router.routes):
-    if getattr(route,'path',None)=='/' and 'GET' in (getattr(route,'methods',set()) or set()):
+    route_path=getattr(route,'path',None)
+    if route_path in {'/','/api/health'} and 'GET' in (getattr(route,'methods',set()) or set()):
         app.router.routes.remove(route)
+
+@app.get('/api/health')
+def health_v124():
+    db_path=Path(os.getenv('PLUGART_DB','/data/plugart.db'))
+    try:
+        c=core.conn();c.execute('select 1').fetchone();c.close();db_ok=True
+    except Exception:
+        db_ok=False
+    backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
+    return {
+      'ok':db_ok,
+      'version':'124.1',
+      'ui':'plug-art-v124-progressive-workspace',
+      'database':str(db_path),
+      'persistent':str(db_path).startswith('/data/'),
+      'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
+      'migration_backup_ready':backup_ready
+    }
 
 @app.get('/',response_class=HTMLResponse,include_in_schema=False)
 def root_v102(request:Request):
@@ -271,7 +290,7 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'124.0',
+      'X-Plug-Art-Version':'124.1',
       'X-Plug-Art-UI':'plug-art-v124-progressive-workspace'
     }
     if request.headers.get('if-none-match')==etag:
@@ -1812,6 +1831,23 @@ def dashboard_bootstrap_v124():
     finally:
         db.close()
 
+def _v124_bootstrap_smoke():
+    try:
+        payload=dashboard_bootstrap_v124()
+        raw=json.dumps(payload,ensure_ascii=False,separators=(',',':')).encode('utf-8')
+        print(
+          f"PLUG_ART_V124_BOOTSTRAP_READY bytes={len(raw)} "
+          f"opportunities={len(payload.get('opportunities') or [])} "
+          f"workflow={len(payload.get('workflow') or [])} "
+          f"leads={len(payload.get('leads') or [])} "
+          f"drafts={len(payload.get('drafts') or [])}",
+          flush=True
+        )
+    except Exception as exc:
+        print(f"PLUG_ART_V124_BOOTSTRAP_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
+
+threading.Thread(target=_v124_bootstrap_smoke,daemon=True).start()
+
 
 # V115 rendered carousel exports for ZIP + Instagram publishing.
 _V115_GENERATED_DIR=Path(os.getenv('PLUGART_GENERATED_DIR',str(Path(os.getenv('PLUGART_DB','/data/plugart.db')).parent/'generated-content')))
@@ -2036,7 +2072,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'124.0',
+      'version':'124.1',
       'ui':'plug-art-v124-progressive-workspace',
       'reference_direction':'V120 PLUG ART: compact internal work cockpit with a three-mode Bureau for Documents, application Packages and reusable Templates, starter application packs, direct Open Call routing, CRM outreach, PLUGY operator, Instagram Studio and mobile-first workflows',
       'marketing_blocks':False,
