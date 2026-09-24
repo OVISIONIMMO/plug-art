@@ -56,6 +56,7 @@ LEGACY_REFS = _inject_v32()
 
 # ---------------- PLUGY V32 ----------------
 OPENAI_RESPONSES = "https://api.openai.com/v1/responses"
+OPENAI_SESSION = requests.Session()
 FAST_MODEL = os.getenv("PLUGY_FAST_MODEL", "gpt-5.6-luna").strip() or "gpt-5.6-luna"
 DEEP_MODEL = os.getenv("PLUGY_DEEP_MODEL", "gpt-5.6-terra").strip() or "gpt-5.6-terra"
 
@@ -115,14 +116,15 @@ def plugy_v32(payload: dict = Body(default={})):
     mode = str((payload or {}).get("mode") or "fast").lower()
     model = DEEP_MODEL if mode == "deep" else FAST_MODEL
     history = []
-    for item in ((payload or {}).get("history") or [])[-8:]:
+    history_limit = 8 if mode == "deep" else 4
+    for item in ((payload or {}).get("history") or [])[-history_limit:]:
         if not isinstance(item, dict):
             continue
         role = "assistant" if item.get("role") == "assistant" else "user"
-        content = re.sub(r"\s+", " ", str(item.get("content") or "")).strip()[:1200]
+        content = re.sub(r"\s+", " ", str(item.get("content") or "")).strip()[:1200 if mode == "deep" else 800]
         if content:
             history.append({"role": role, "content": content})
-    ctx = _context(7)
+    ctx = _context(7 if mode == "deep" else 4)
     key = os.getenv("OPENAI_API_KEY", "").strip()
     if not key:
         result = core.plugy(core.PlugyMessage(message=message))
@@ -133,26 +135,29 @@ def plugy_v32(payload: dict = Body(default={})):
         "Tu connais la page ouverte, les chiffres du Radar et les opportunités fournies. "
         "Tu aides à décider, organiser, créer des contenus et préparer les prochaines actions. "
         "N'invente jamais une date, un prix, un lieu, un lien ou un statut. Si une donnée manque, dis qu'elle doit être vérifiée. "
-        "Réponds en français. Donne d'abord la réponse utile, puis au maximum 3 prochaines actions si cela apporte quelque chose."
+        "Réponds en français. En mode fast, réponds en 1 à 4 phrases courtes et au maximum 2 actions. "
+        "En mode deep, tu peux développer davantage pour produire un texte réellement exploitable."
     )
-    memory = "\n".join(f"{x['role'].upper()}: {x['content']}" for x in history[-6:])
+    memory = "\n".join(f"{x['role'].upper()}: {x['content']}" for x in history[-(6 if mode == "deep" else 4):])
     user_input = (
         f"PAGE ACTIVE: {page}\n"
         f"CONTEXTE PLUG ART: {json.dumps(ctx, ensure_ascii=False, separators=(',', ':'))}\n"
         f"HISTORIQUE RÉCENT:\n{memory}\n"
         f"DEMANDE ACTUELLE: {message}"
     )
-    body = {"model": model, "instructions": instructions, "input": user_input, "store": False, "max_output_tokens": 520, "text": {"verbosity": "low"}}
+    max_tokens = 520 if mode == "deep" else 220
+    body = {"model": model, "instructions": instructions, "input": user_input, "store": False, "max_output_tokens": max_tokens, "text": {"verbosity": "low"}}
     started = time.time()
     try:
-        r = requests.post(OPENAI_RESPONSES, headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"}, json=body, timeout=min(int(os.getenv("PLUGART_OPENAI_TIMEOUT", "32") or 32), 40))
+        timeout_cap = 40 if mode == "deep" else 28
+        r = OPENAI_SESSION.post(OPENAI_RESPONSES, headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"}, json=body, timeout=min(int(os.getenv("PLUGART_OPENAI_TIMEOUT", "32") or 32), timeout_cap))
         elapsed = int((time.time() - started) * 1000)
         if not r.ok:
             raise RuntimeError(f"HTTP {r.status_code}: {r.text[:240]}")
         answer = _output_text(r.json())
         if not answer:
             raise RuntimeError("réponse vide")
-        print(f"PLUGY_V32_OK model={model} elapsed_ms={elapsed} page={page} chars={len(answer)}", flush=True)
+        print(f"PLUGY_V125_OK model={model} mode={mode} elapsed_ms={elapsed} page={page} chars={len(answer)}", flush=True)
         return {"answer": answer, "ai": True, "model": model, "latency_ms": elapsed, "page": page, "items": ctx.get("top_opportunities", [])[:4], "suggestion": _page_suggestion(page, ctx)}
     except Exception as exc:
         result = core.plugy(core.PlugyMessage(message=message))
