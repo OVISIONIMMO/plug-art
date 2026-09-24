@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='138.20260924.1';
+const VERSION='139.20260924.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -171,13 +171,13 @@ function playMotion(name='Idle',loop=false){
     if(!target)return;
     try{
       mv.animationName=target;
-      mv.timeScale=name==='Blink'?1.85:(name==='Think'||name==='Charge')?.94:(name==='Speak'?1.12:1);
+      mv.timeScale=(name==='Blink'||name==='Wink')?1.65:(name==='Think'||name==='Charge')?.94:(name==='Speak'?1.12:1);
       mv.play({repetitions:loop?Infinity:1});
     }catch{}
   };
   if(mv.loaded)run();else mv.addEventListener('load',run,{once:true});
   clearTimeout(playMotion.t);
-  if(!loop&&name!=='Idle')playMotion.t=setTimeout(()=>playMotion('Idle',true),(name==='Blink'?520:(name==='Think'||name==='Charge')?1750:1200));
+  if(!loop&&name!=='Idle')playMotion.t=setTimeout(()=>playMotion('Idle',true),((name==='Blink'||name==='Wink')?430:(name==='Think'||name==='Charge')?1750:1200));
 }
 function tunePlugyMaterials(){
   const mv=$('#plugyModel');if(!mv)return;
@@ -3020,8 +3020,12 @@ function schedulePlugyBlink(){
   schedulePlugyBlink.t=setTimeout(()=>{
     const busy=['Think','Charge','Listen','Speak'].includes(document.body.dataset.plugyMotion||'');
     if(!state.voice&&!busy&&document.visibilityState==='visible'&&plugyIsVisible()&&plugyAvailable('Blink')){
-      playMotion('Blink');
-      if(Math.random()<.22)setTimeout(()=>{if(!state.voice&&plugyIsVisible())playMotion('Blink')},240+Math.random()*180);
+      const expressive=Math.random();
+      if(expressive<.14&&plugyAvailable('Wink'))playMotion('Wink');
+      else{
+        playMotion('Blink');
+        if(expressive>.78)setTimeout(()=>{if(!state.voice&&plugyIsVisible())playMotion('Blink')},210+Math.random()*150);
+      }
     }
     schedulePlugyBlink();
   },2600+Math.random()*3000);
