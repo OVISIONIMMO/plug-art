@@ -27,11 +27,17 @@ DISCOVERY_SOURCES=[
  ('ArtRabbit — Europe Exhibitions','https://www.artrabbit.com/artist-opportunities?location=Europe&type=Exhibition+Opportunity',82),
  ('Creative Flair — Opportunities','https://creativeflair.org/opportunities/',78),
  ('Artagon — Emerging Art','https://www.artagon.org/',90),
- ('Cnap — Annonces','https://www.cnap.fr/annonces',88)
+ ('Cnap — Annonces','https://www.cnap.fr/annonces',88),
+ ('Ville de Paris — Appels à projets','https://www.paris.fr/appels-a-projets',92),
+ ('Ville de Paris — Culture','https://www.paris.fr/culture',84),
+ ('Région Île-de-France — Aides & appels','https://www.iledefrance.fr/aides-et-appels-a-projets',88),
+ ('Multitude 93 — Actualités','https://multitude.seinesaintdenis.fr/actualite/',91),
+ ('Multitude 93 — Agenda','https://multitude.seinesaintdenis.fr/agenda-multitude/',80),
+ ('Sortir à Paris — Expositions','https://www.sortiraparis.com/arts-culture/exposition',70)
 ]
-LINK_HINTS=('opportun','open-call','open_call','opencall','call-for','appel','candid','exhibition','exposition','artist','artiste','collective','collectif','emerging','emergent','residen')
+LINK_HINTS=('opportun','open-call','open_call','opencall','call-for','appel','candid','exhibition','exposition','expo','artist','artiste','collective','collectif','emerging','emergent','residen','culture','programmation','agenda','lieu','galerie','gallery','pop-up','popup')
 BAD_LINK_HINTS=('login','register','privacy','terms','contact','about','newsletter','facebook','instagram','cookie','press','shop')
-POSITIVE_LINK_HINTS=('open call','appel à candid','appel a candid','exhibition','exposition','collective','collectif','emerging','émergent','emergent','painting','peinture','photography','photographie','visual art','arts visuels','artist opportunity')
+POSITIVE_LINK_HINTS=('open call','appel à candid','appel a candid','appel à projets','appel a projets','exhibition','exposition','collective','collectif','emerging','émergent','emergent','painting','peinture','photography','photographie','visual art','arts visuels','artist opportunity','art contemporain','galerie','gallery','programmation culturelle','résidence','residence','lieu culturel','tiers-lieu')
 NEGATIVE_LINK_HINTS=('competition','contest','concours','award','prize','prix','job','workshop','formation','webinar')
 EUROPE_WORDS=('france','italy','italie','spain','espagne','portugal','belgium','belgique','netherlands','pays-bas','united kingdom','royaume-uni','germany','allemagne','austria','autriche','switzerland','suisse')
 PARIS_WORDS=('paris','aubervilliers','saint-denis','pantin','montreuil','93','seine-saint-denis')
@@ -133,6 +139,7 @@ def score_opp(o):
  if any(k in text for k in ['open call','appel à candid','appel a candid']):score+=5
  if any(k in text for k in ['painting','peinture','photography','photographie','visual art','arts visuels','mixed media','sculpture']):score+=9;why.append('médium PLUG ART')
  if any(k in text for k in ['all levels','no experience','tous niveaux','international artists','all nationalities']):score+=6;why.append('accessible')
+ if any(k in text for k in ['restaurant','brasserie','café','cafe','hotel','hôtel','mairie','centre commercial','shopping centre','shopping center','médiathèque','mediatheque','tiers-lieu','concept store','boutique','centre culturel','lieu de vie']):score+=8;why.append('lieu potentiel')
  if any(k in text for k in ['competition','contest','concours','award','prize','prix artistique']):score-=28;why.append('concours/prix')
  if any(k in text for k in ['participation fee','exhibition fee','selected artists pay','fee if selected','pay to exhibit']):score-=16;why.append('pay-to-play')
  if any(k in text for k in ['online only','virtual exhibition only','exposition en ligne uniquement']):score-=8;why.append('online only')
@@ -177,13 +184,14 @@ class LinkParser(HTMLParser):
   if self.in_title:self.title_parts.append(data)
 
 def strip_html(html):return norm(re.sub(r'<[^>]+>',' ',html or ''))
-def fetch_page(url,timeout=10):return requests.get(url,timeout=timeout,headers={'User-Agent':'Mozilla/5.0 PLUGART-Radar/3.0'},allow_redirects=True)
+def fetch_page(url,timeout=10):return requests.get(url,timeout=timeout,headers={'User-Agent':'Mozilla/5.0 PLUGART-Radar/4.0'},allow_redirects=True)
 def link_signal(url,label=''):
  low=norm((url or '')+' '+(label or '')).lower();score=0
  score+=sum(7 for h in POSITIVE_LINK_HINTS if h in low);score-=sum(10 for h in NEGATIVE_LINK_HINTS if h in low)
  if any(h in low for h in ('collective','collectif','group exhibition')):score+=8
  if any(h in low for h in ('emerging','émergent','emergent','young artist')):score+=8
  if any(h in low for h in ('painting','peinture','photography','photographie')):score+=5
+ if any(h in low for h in ('restaurant','brasserie','café','cafe','hotel','hôtel','mairie','centre commercial','shopping centre','shopping center','médiathèque','mediatheque','tiers-lieu','concept store','boutique','centre culturel')):score+=5
  return score
 
 def valid_candidate_link(base,href,label):
