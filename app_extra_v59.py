@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='130.0'
+app.version='130.1'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v130.html'
@@ -16,7 +16,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='130.20260924.1'
+VERSION='130.20260924.2'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -275,7 +275,7 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'130.0',
+      'version':'130.1',
       'ui':'plug-art-v130-plugy-social-studio',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
@@ -293,7 +293,7 @@ def ui_manifest_v128():
     expected='130.20260924.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v130.js').exists() and (BASE/'static'/'plugy_v130.css').exists()),
-      'version':'130.0',
+      'version':'130.1',
       'ui':'plug-art-v130-plugy-social-studio',
       'asset_version':expected,
       'html_has_js':f'plugart_v107.js?v={expected}' in html,
@@ -302,7 +302,7 @@ def ui_manifest_v128():
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
-        'premium-cockpit','manual-carousel-editor','drag-reorder','persistent-interface-lab','leaflet-map',
+        'premium-cockpit','manual-carousel-editor','drag-reorder','undo-redo','preview-zoom','persistent-interface-lab','leaflet-map',
         'standalone-plugy','watch-responsive','plugy-soft-pearl','chat-style-conversation',
         'instagram-social-studio','expanded-local-radar','streaming-assistant','lean-bootstrap'
       ]
@@ -316,7 +316,7 @@ def plugy_page_v130(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'130.0',
+      'X-Plug-Art-Version':'130.1',
       'X-Plug-Art-UI':'plugy-v130-standalone'
     }
     if request.headers.get('if-none-match')==etag:
@@ -331,7 +331,7 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'130.0',
+      'X-Plug-Art-Version':'130.1',
       'X-Plug-Art-UI':'plug-art-v130-plugy-social-studio'
     }
     if request.headers.get('if-none-match')==etag:
@@ -2113,7 +2113,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'130.0',
+      'version':'130.1',
       'ui':'plug-art-v130-plugy-social-studio',
       'reference_direction':'V130 PLUG ART: premium product-style workspace with standalone PLUGY conversation, watch-responsive UI, manual creative studio, Instagram control center, expanded local Radar and interactive map',
       'marketing_blocks':False,
@@ -2141,7 +2141,7 @@ def status_v90():
       'background':'premium internal workspace with standalone PLUGY, social studio, expanded venue radar, product-style hierarchy and integrated creative tools'
     }
 
-print(f"PLUG_ART_READY ui=v130_product_workspace standalone_plugy=on watch_ui=on editor=manual_drag design_lab=persistent map=leaflet radar_local_venues=on instagram=social_studio plugy_finish=soft_pearl voice=streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_READY ui=v130_1_product_workspace standalone_plugy=on watch_ui=on editor=manual_drag_undo_zoom design_lab=persistent map=leaflet radar_local_venues=on instagram=social_studio plugy_finish=soft_pearl voice=streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
