@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='127.2'
+app.version='128.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 GLB=BASE/'static'/'PLUGY_final_animated.glb'
@@ -15,7 +15,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='127.20260924.3'
+VERSION='128.20260924.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -274,8 +274,8 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'127.2',
-      'ui':'plug-art-v127-lean-runtime',
+      'version':'128.0',
+      'ui':'plug-art-v128-premium-cockpit',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
@@ -290,8 +290,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'127.2',
-      'X-Plug-Art-UI':'plug-art-v127-lean-runtime'
+      'X-Plug-Art-Version':'128.0',
+      'X-Plug-Art-UI':'plug-art-v128-premium-cockpit'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -2072,8 +2072,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'127.2',
-      'ui':'plug-art-v127-lean-runtime',
+      'version':'128.0',
+      'ui':'plug-art-v128-premium-cockpit',
       'reference_direction':'V120 PLUG ART: compact internal work cockpit with a three-mode Bureau for Documents, application Packages and reusable Templates, starter application packs, direct Open Call routing, CRM outreach, PLUGY operator, Instagram Studio and mobile-first workflows',
       'marketing_blocks':False,
       'internal_workspace':True,
