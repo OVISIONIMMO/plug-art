@@ -1870,7 +1870,7 @@ def _v140_package_reconcile_row(package_id:int,persist:bool=True):
             meta=(str(d.get('title') or '')+' '+str(d.get('tags') or ''))
             if not re.search(pattern,meta,re.I):continue
             body=str(d.get('body') or '').strip()
-            if body and '[À COMPLÉTER]' not in body.upper() and '[A COMPLETER]' not in body.upper():
+            if body and '[À COMPLÉTER]' not in body.upper() and '[A COMPLETER]' not in body.upper() and not re.search(r'\[[^\]]{3,}\]',body):
                 return True
         return False
     checklist['source_checked']=bool(out.get('opportunity')) or bool(checklist.get('source_checked'))
