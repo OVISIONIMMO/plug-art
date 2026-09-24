@@ -666,3 +666,85 @@ body[data-plugy-motion="Speak"] .plugy-stage:before{animation-duration:.75s;bord
 @media(max-width:520px){
   .ig-profile{grid-template-columns:1fr}.ig-stats{grid-template-columns:1fr 1fr}.ig-feed-panel{padding:8px}.ig-feed-grid{gap:2px}
 }
+
+
+/* V131 · premium Creation Studio */
+.instagram-nav{position:relative}
+.instagram-nav>i{margin-left:auto;font-style:normal;font-size:6px;font-weight:900;letter-spacing:.6px;color:#c72b76;background:#fff0f7;border:1px solid #f2d2e1;border-radius:999px;padding:3px 5px}
+.instagram-access-btn{border:1px solid #eadbe4;background:linear-gradient(120deg,#fff7fb,#f8f1ff 48%,#f1f7ff);color:#302833;border-radius:12px;padding:9px 12px;font-size:9px;font-weight:850;box-shadow:0 8px 22px rgba(119,66,103,.05)}
+.instagram-access-btn:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(119,66,103,.09)}
+.creation-page-toolbar{padding-bottom:18px}
+.creation-page-toolbar h2{font-size:clamp(34px,4vw,58px);line-height:.94;letter-spacing:-3px;max-width:760px}
+.creation-page-toolbar p{max-width:680px;font-size:11px;line-height:1.55}
+.creation-start{display:grid;grid-template-columns:minmax(260px,.65fr) minmax(0,1.35fr);gap:20px;align-items:end;padding:20px 0 22px}
+.creation-start-copy small{font-size:7px;font-weight:900;letter-spacing:1.3px;color:#9a9da6}.creation-start-copy h3{font:700 clamp(28px,3vw,44px)/.95 "Space Grotesk",Inter,sans-serif;letter-spacing:-2px;margin:8px 0 10px;max-width:520px}.creation-start-copy p{font-size:10px;line-height:1.5;color:#838792;max-width:420px}
+.creation-start-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.creation-start-grid button{min-height:118px;border:1px solid #e2e3e7;background:linear-gradient(160deg,#fff,#f8f8f9);border-radius:19px;padding:13px;text-align:left;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.creation-start-grid button:hover{transform:translateY(-3px);border-color:#d6d8de;box-shadow:0 16px 38px rgba(24,26,34,.07)}
+.creation-start-grid button span{margin-bottom:auto;font-size:7px;font-weight:900;color:#aaaeb7}.creation-start-grid button b{font:700 13px "Space Grotesk",Inter,sans-serif}.creation-start-grid button small{font-size:7px;color:#9396a0;margin-top:3px}
+.creation-studio-shell{position:relative;padding-bottom:34px}
+.studio-switcher{position:sticky!important;top:78px!important;z-index:24!important;display:flex!important;justify-content:space-between!important;gap:10px!important;margin:0 0 12px!important;background:rgba(250,250,251,.88)!important;border:1px solid rgba(222,223,228,.86)!important;border-radius:18px!important;padding:6px!important;backdrop-filter:blur(24px) saturate(1.08)!important;box-shadow:0 10px 30px rgba(25,27,36,.045)!important}
+.studio-switcher-main,.studio-switcher-tools{display:flex;gap:5px;align-items:center}.studio-switcher-main button{min-width:102px}.studio-switcher-tools select{min-width:78px}
+.studio-switcher button,.studio-switcher select{border:0!important;background:transparent!important;border-radius:12px!important;min-height:38px!important;padding:0 11px!important;font-size:8px!important;font-weight:800!important;color:#777b85!important}
+.studio-switcher button:hover,.studio-switcher select:hover{background:#f1f2f4!important;color:#272a31!important}.studio-switcher button.active{background:#111318!important;color:#fff!important}
+.studio-switcher-tools #draftSave{background:#fff!important;border:1px solid #e3e4e8!important;color:#333640!important}
+.creation-mode-panel{display:none}.creation-mode-panel.active{display:grid}
+.studio-panel-title small,.studio-panel-title strong{display:block}.studio-panel-title small{font-size:7px;letter-spacing:1.1px;font-weight:900;color:#9b9ea8}.studio-panel-title strong{font:700 16px "Space Grotesk",Inter,sans-serif;margin-top:4px;letter-spacing:-.5px}
+.creation-layout{display:grid;grid-template-columns:260px minmax(0,1fr) 210px;gap:12px;align-items:start}
+.creation-brief,.creation-ai-rail,.copy-workbench{min-height:620px}
+.creation-brief,.creation-ai-rail{display:grid;gap:10px;align-content:start}.creation-brief label,.studio-library label,.studio-inspector label,.visual-generator label{display:grid;gap:5px;font-size:7px;font-weight:850;letter-spacing:.55px;text-transform:uppercase;color:#92959f}
+.creation-brief input,.creation-brief select,.creation-brief textarea,.studio-library select,.studio-library textarea,.studio-inspector input,.studio-inspector select,.studio-inspector textarea,.visual-generator select,.visual-generator textarea{padding:9px 10px;font-size:9px;text-transform:none;letter-spacing:0}
+.copy-workbench{display:flex;flex-direction:column;padding:12px}.copy-workbench .editor-toolbar{padding:3px 3px 10px}.copy-workbench .editor-title{font:700 26px "Space Grotesk",Inter,sans-serif}.copy-format-toolbar{display:flex;gap:5px;overflow:auto;padding:3px 3px 10px}.copy-format-toolbar button{white-space:nowrap;border:1px solid #e4e5e9;background:#fafafa;border-radius:999px;padding:7px 9px;font-size:7px;font-weight:800;color:#717580}.copy-format-toolbar button:hover{background:#f1effa;color:#5e52b5}.copy-workbench .content-editor{flex:1;min-height:460px;border:0;background:transparent;padding:14px 10px;font-size:13px;line-height:1.72;resize:none}.copy-workbench .content-editor:focus{box-shadow:none!important}.copy-workbench .editor-actions{border-top:1px solid #e9eaed;padding:10px 3px 2px}
+.creation-ai-rail button{border:1px solid #e5e6e9;background:#fafafa;border-radius:13px;padding:10px;text-align:left;font-size:8px;font-weight:800;color:#555965}.creation-ai-rail button:hover{background:#f1effa;color:#5f53b5;border-color:#e0dbf6}
+
+/* Designer */
+.studio-designer{grid-template-columns:240px minmax(420px,1fr) 260px;gap:12px;align-items:start}
+.studio-library,.studio-inspector{position:sticky;top:138px;max-height:calc(100vh - 154px);overflow:auto;display:grid;gap:10px;align-content:start}
+.marketing-template-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.marketing-template-grid button{min-height:94px;border:1px solid #e4e5e9;background:#fff;border-radius:14px;padding:7px;text-align:left;display:grid;grid-template-rows:45px auto;gap:6px}.marketing-template-grid button:hover{border-color:#d2d4da;box-shadow:0 8px 24px rgba(25,27,35,.055)}.marketing-template-grid button i{display:block;border-radius:9px;overflow:hidden}.marketing-template-grid span b,.marketing-template-grid span small{display:block}.marketing-template-grid span b{font-size:8px}.marketing-template-grid span small{font-size:6px;color:#989ba4;margin-top:2px}
+.mk-open{background:linear-gradient(145deg,#f9f9f7 55%,#111318 55%)}.mk-event{background:linear-gradient(135deg,#dce0ff,#f0d5e8 58%,#fff)}.mk-last{background:linear-gradient(145deg,#14151a 50%,#e56cae 50%,#70d8e0)}.mk-artist{background:radial-gradient(circle at 32% 38%,#e5b9ca 0 20%,transparent 21%),linear-gradient(145deg,#f7f0f3,#eee8f0)}.mk-partner{background:linear-gradient(90deg,#111318 0 45%,#fff 45% 55%,#65d5dd 55%)}
+.studio-library-divider{height:1px;background:#e9eaed;margin:3px 0}
+.studio-generate-actions{display:grid;gap:6px;padding-top:2px}
+.studio-stage{min-height:760px;padding:12px;background:#f7f7f8;overflow:hidden}.studio-stage-head,.visual-preview-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:2px 2px 10px}.studio-stage-head small,.studio-stage-head strong{display:block}.studio-stage-head small,.visual-preview-head>small{font-size:7px;letter-spacing:1px;font-weight:900;color:#a0a3ac}.studio-stage-head strong{font:700 15px "Space Grotesk",Inter,sans-serif;margin-top:3px}.stage-actions{display:flex;gap:5px}.stage-actions button,.strip-head button,.instagram-export-row button,.visual-preview-head button{border:1px solid #e0e2e6;background:#fff;border-radius:9px;padding:7px 8px;font-size:7px;font-weight:800}
+.studio-canvas-frame{min-height:590px;display:grid;place-items:center;padding:14px;border:1px solid #e5e6e9;border-radius:20px;background:radial-gradient(circle at 50% 35%,#fff,#f1f2f4 75%);overflow:auto}
+.studio-canvas-frame .carousel-canvas{width:min(460px,92%);max-height:570px;box-shadow:0 28px 70px rgba(26,28,37,.13)}
+.premium-strip{margin-top:10px;border:0!important;background:transparent!important;padding:0!important}.strip-head{display:flex;align-items:center;justify-content:space-between;padding:3px 2px 7px}.strip-head>span{font-size:8px;font-weight:800;color:#777b85}.strip-head>div{display:flex;gap:5px}#carouselSlides{display:flex!important;gap:6px!important;overflow:auto!important;padding-bottom:4px!important}.carousel-slide-thumb{min-width:140px!important;max-width:160px!important;min-height:62px!important;border-radius:12px!important}.carousel-slide-thumb b{font-size:7px!important}.carousel-slide-thumb span{font-size:7px!important}
+.instagram-export-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px}.instagram-export-row textarea{min-height:70px;padding:9px;font-size:8px}.instagram-export-row>div{display:grid;gap:5px;align-content:start}.instagram-export-row .primary-btn{background:#111318;color:#fff;border-color:#111318}
+.studio-inspector .carousel-edit{display:grid;gap:8px}.studio-inspector .carousel-edit label{display:grid;gap:5px}.studio-inspector output{float:right;color:#484b54}.inspector-section{display:grid;gap:6px;padding-top:4px;border-top:1px solid #e9eaed}.inspector-section>small{font-size:7px;font-weight:900;letter-spacing:.8px;color:#9a9da7}.design-preset-row{grid-template-columns:1fr 1fr}.design-preset-row button{font-size:7px}.design-help-row{grid-template-columns:1fr}.design-help-row button{font-size:7px}
+
+/* Visual lab */
+.visual-lab{grid-template-columns:230px 320px minmax(0,1fr);gap:12px;align-items:start}
+.visual-preset-panel,.visual-generator{position:sticky;top:138px;max-height:calc(100vh - 154px);overflow:auto}
+.visual-preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.visual-preset-grid button{min-height:112px;border:1px solid #e4e5e9;background:#fff;border-radius:15px;padding:8px;text-align:left;display:flex;flex-direction:column}.visual-preset-grid i{height:60px;border-radius:10px;margin-bottom:auto}.visual-preset-grid b{font-size:8px;margin-top:7px}.visual-preset-grid small{font-size:6px;color:#999ca5;margin-top:2px}.visual-preset-grid button.active{border-color:#9f93df;box-shadow:0 0 0 2px rgba(116,99,205,.08)}
+.vp-campaign{background:linear-gradient(145deg,#121319,#312f46 52%,#b77ca9)}.vp-event{background:radial-gradient(circle at 65% 35%,#efbad7,transparent 23%),linear-gradient(145deg,#e4e8ff,#fff)}.vp-artist{background:radial-gradient(circle at 50% 46%,#c8a5b4 0 27%,#f4e9ed 28%)}.vp-story{background:linear-gradient(180deg,#755de3,#e183b7 56%,#6ed1dc)}.vp-partner{background:linear-gradient(120deg,#101116 0 42%,#fff 42% 58%,#72d6de 58%)}.vp-launch{background:radial-gradient(circle at 50% 48%,#fff 0 8%,#e657a1 9% 16%,#7156e3 17% 32%,#111318 55%)}
+.visual-generator{display:grid;gap:11px}.visual-generator .studio-stage-head>span{font-size:6px;font-weight:900;letter-spacing:.8px;color:#8d909b;background:#f2f2f4;border-radius:999px;padding:6px 7px}.visual-settings-row{display:grid;grid-template-columns:1fr 1fr;gap:7px}.visual-prompt-tools{display:flex;gap:5px;flex-wrap:wrap}.visual-prompt-tools button{flex:1;border:1px solid #ded9f4;background:#f6f3ff;color:#6154b8;border-radius:9px;padding:8px;font-size:7px;font-weight:800}.visual-generate-main{min-height:43px}
+.visual-preview{min-height:720px;display:flex;flex-direction:column;padding:12px}.visual-preview-head>div{display:flex;gap:5px}.visual-preview #visualImage{flex:1;min-height:640px;border-radius:20px;background-color:#f1f2f4;background-size:cover;background-position:center;display:grid;place-items:center;overflow:hidden;border:1px solid #e3e4e8;box-shadow:inset 0 0 0 1px rgba(255,255,255,.55)}.visual-preview #visualImage span{font-size:9px;color:#9699a3}
+
+/* Make Instagram feel like a first-class tool */
+#view-social .page-toolbar{background:linear-gradient(115deg,rgba(255,255,255,.96),rgba(252,245,250,.92) 48%,rgba(246,244,255,.92));border:1px solid #eee4eb;border-radius:24px;padding:18px;margin-bottom:14px}
+#view-social .page-toolbar h2{font-size:clamp(34px,4vw,56px);letter-spacing:-2.6px}
+#view-social .ig-profile{border-top:3px solid transparent;border-image:linear-gradient(90deg,#feda75,#d62976,#4f5bd5) 1}
+#view-social .ig-feed-panel{box-shadow:0 18px 48px rgba(29,25,32,.045)}
+#view-social .ig-publisher .primary-btn{background:linear-gradient(120deg,#4f5bd5,#962fbf 45%,#d62976);border:0}
+
+@media(max-width:1260px){
+  .creation-layout{grid-template-columns:230px minmax(0,1fr)}.creation-ai-rail{grid-column:1/-1;min-height:auto;display:grid;grid-template-columns:repeat(4,1fr)}
+  .studio-designer{grid-template-columns:210px minmax(390px,1fr)}.studio-inspector{grid-column:1/-1;position:static;max-height:none;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .studio-inspector>.studio-panel-title,.studio-inspector>.carousel-edit,.studio-inspector>.inspector-section,.studio-inspector>.design-help-row{grid-column:1/-1}
+  .visual-lab{grid-template-columns:220px minmax(0,1fr)}.visual-generator{position:static;max-height:none}.visual-preview{grid-column:1/-1}
+}
+@media(max-width:900px){
+  .creation-start{grid-template-columns:1fr}.creation-start-grid{grid-template-columns:repeat(3,1fr)}
+  .studio-switcher{top:68px!important;overflow:auto}.studio-switcher-main,.studio-switcher-tools{flex:none}.studio-switcher-main button{min-width:auto}
+  .creation-layout,.studio-designer,.visual-lab{grid-template-columns:1fr}.creation-brief,.creation-ai-rail,.copy-workbench{min-height:auto}.creation-ai-rail{grid-template-columns:1fr 1fr}
+  .studio-library,.studio-inspector,.visual-preset-panel,.visual-generator{position:static;max-height:none}.marketing-template-grid{grid-template-columns:repeat(3,1fr)}
+  .studio-canvas-frame{min-height:500px}.studio-canvas-frame .carousel-canvas{max-height:520px}
+  .visual-preset-grid{grid-template-columns:repeat(3,1fr)}.visual-preview{min-height:540px}.visual-preview #visualImage{min-height:470px}
+}
+@media(max-width:600px){
+  .creation-page-toolbar h2{font-size:36px;letter-spacing:-2px}.creation-start-grid{grid-template-columns:1fr 1fr}.creation-start-grid button{min-height:92px}
+  .studio-switcher{margin-left:-4px!important;margin-right:-4px!important;padding:5px!important}.studio-switcher-main button{font-size:7px!important;padding:0 9px!important}.studio-switcher-tools #creationZoom,.studio-switcher-tools #draftDelete{display:none}
+  .creation-ai-rail{grid-template-columns:1fr}.marketing-template-grid{grid-template-columns:1fr 1fr}.studio-stage{padding:7px}.studio-canvas-frame{padding:7px;min-height:440px}.studio-canvas-frame .carousel-canvas{width:100%}
+  .studio-inspector{grid-template-columns:1fr}.instagram-export-row{grid-template-columns:1fr}.instagram-export-row>div{grid-template-columns:repeat(3,1fr)}
+  .visual-preset-grid{grid-template-columns:1fr 1fr}.visual-settings-row{grid-template-columns:1fr}.visual-preview #visualImage{min-height:420px}
+  .instagram-access-btn{display:none}
+}
