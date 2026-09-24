@@ -286,9 +286,38 @@ def _ensure_realistic_plugy():
             print(f"PLUGY_V113_PREMIUM_FETCH_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
         return False
 
+def _plugy_rig_summary_v139():
+    try:
+        raw=REALISTIC_PLUGY.read_bytes()
+        if raw[:4]!=b'glTF':return {'error':'not-glb'}
+        pos=12;doc=None
+        while pos+8<=len(raw):
+            ln,kind=struct.unpack_from('<I4s',raw,pos);pos+=8
+            chunk=raw[pos:pos+ln];pos+=ln
+            if kind==b'JSON':
+                doc=json.loads(chunk.decode('utf-8').rstrip(' ').rstrip(chr(0)));break
+        if not isinstance(doc,dict):return {'error':'no-json'}
+        nodes=[]
+        for i,n in enumerate(doc.get('nodes') or []):
+            if not isinstance(n,dict):continue
+            nodes.append({'i':i,'name':n.get('name'),'mesh':n.get('mesh'),'skin':n.get('skin'),'children':n.get('children'),'weights':n.get('weights')})
+        meshes=[]
+        for i,m in enumerate(doc.get('meshes') or []):
+            if not isinstance(m,dict):continue
+            mats=[]
+            for p in m.get('primitives') or []:
+                if isinstance(p,dict):mats.append(p.get('material'))
+            meshes.append({'i':i,'name':m.get('name'),'materials':mats,'weights':m.get('weights'),'targetNames':(m.get('extras') or {}).get('targetNames') if isinstance(m.get('extras'),dict) else None})
+        materials=[{'i':i,'name':m.get('name')} for i,m in enumerate(doc.get('materials') or []) if isinstance(m,dict)]
+        skins=[{'i':i,'name':x.get('name'),'joints':x.get('joints'),'skeleton':x.get('skeleton')} for i,x in enumerate(doc.get('skins') or []) if isinstance(x,dict)]
+        return {'nodes':nodes,'meshes':meshes,'materials':materials,'skins':skins,'animations':[a.get('name') for a in doc.get('animations') or [] if isinstance(a,dict)]}
+    except Exception as exc:return {'error':f'{type(exc).__name__}:{str(exc)[:120]}'}
+
 def _prefetch_realistic_plugy():
-    try:_ensure_realistic_plugy()
-    except Exception:pass
+    try:
+        _ensure_realistic_plugy()
+        print('PLUGY_RIG_V139 '+json.dumps(_plugy_rig_summary_v139(),separators=(',',':')),flush=True)
+    except Exception as exc:print(f'PLUGY_RIG_V139_ERROR {type(exc).__name__}: {str(exc)[:120]}',flush=True)
 threading.Thread(target=_prefetch_realistic_plugy,daemon=True).start()
 
 @app.get('/assets/plugy-v113-premium.glb',include_in_schema=False)
