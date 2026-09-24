@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='134.20260924.1';
+const VERSION='135.20260924.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -2188,7 +2188,43 @@ function installCreationModes(){
 
   $$('[data-studio-start]').forEach(b=>b.onclick=()=>{const mode=b.dataset.studioStart;setCreationMode(mode);if(b.dataset.marketingTemplate)applyMarketingTemplate(b.dataset.marketingTemplate);if(b.dataset.visualUsecase)applyVisualPreset(b.dataset.visualUsecase);document.querySelector('.creation-studio-shell')?.scrollIntoView({behavior:'smooth',block:'start'})});
   $$('[data-creative-prompt]').forEach(b=>b.onclick=()=>{const brief=clean($('#contentBrief')?.value),body=clean($('#contentBody')?.value);askPlugy(b.dataset.creativePrompt+' Contexte : '+(brief||body||'aucun brief encore'),'#contentBody')});
-  $$('[data-copy-action]').forEach(b=>b.onclick=()=>improveTextContent(b.dataset.copyAction));
+  $('[data-copy-action]').forEach(b=>b.onclick=()=>improveTextContent(b.dataset.copyAction));
+
+  const quickMode=$('#creationQuickMode'),quickDirection=$('#creationQuickDirection'),quickFormat=$('#creationQuickFormat'),quickScale=$('#creationQuickScale'),quickMood=$('#creationQuickMood');
+  const quickCopy={
+    'open-call':['OPEN CALL','Une opportunité.\\nUne lecture claire.','Structure les informations importantes et prépare un carrousel éditorial.'],
+    event:['ÉVÉNEMENT','Donne envie\\nd’y être.','Pose le lieu, la date et l’univers avant de passer au design.'],
+    'last-call':['DERNIER APPEL','Créer l’urgence\\nsans crier.','Une hiérarchie nette pour une deadline qui reste premium.'],
+    artist:['ARTISTE','Faire passer\\nla pratique d’abord.','Un portrait éditorial centré sur le travail, les images et le parcours.'],
+    campaign:['CAMPAGNE','Une direction.\\nPlusieurs formats.','Construis le key visual puis décline-le dans le Studio.'],
+    free:['LIBRE','Une idée claire.\\nUn studio simple.','Commence sans modèle et garde les réglages essentiels sous la main.']
+  };
+  function refreshQuickCreation(){
+    const dir=quickDirection?.value||'open-call',copy=quickCopy[dir]||quickCopy.free,mood=quickMood?.value||'editorial';
+    if($('#creationPreviewKicker'))$('#creationPreviewKicker').textContent=copy[0];
+    if($('#creationPreviewTitle'))$('#creationPreviewTitle').innerHTML=copy[1].replace('\\n','<br>');
+    if($('#creationPreviewBody'))$('#creationPreviewBody').textContent=copy[2];
+    const device=$('#creationQuickPreview');if(device)device.dataset.mood=mood;
+    const scale=Number(quickScale?.value||100);document.querySelector('#view-creation')?.style.setProperty('--studio-zoom',(scale/100).toFixed(2));
+    if($('#creationQuickScaleOut'))$('#creationQuickScaleOut').textContent=scale+'%';
+  }
+  function openQuickCreation(){
+    const mode=quickMode?.value||'carousel',dir=quickDirection?.value||'open-call',format=quickFormat?.value||'4:5',scale=Number(quickScale?.value||100);
+    setCreationMode(mode);
+    if($('#carouselFormat')){$('#carouselFormat').value=format;state.carousel.format=format}
+    if($('#visualRatio'))$('#visualRatio').value=format;
+    if(mode==='carousel'&&['open-call','event','last-call','artist','partnership'].includes(dir))applyMarketingTemplate(dir);
+    if(mode==='visual')applyVisualPreset(['campaign','event','artist','story','partnership','launch'].includes(dir)?dir:'campaign');
+    if($('#creationZoom'))$('#creationZoom').value=scale<=90?'0.8':scale>=110?'1.2':'1';
+    setCreationPreviewZoom();
+    document.querySelector('.creation-studio-shell')?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  [quickMode,quickDirection,quickFormat,quickMood].forEach(el=>el?.addEventListener('change',refreshQuickCreation));
+  quickScale?.addEventListener('input',refreshQuickCreation);
+  $('#creationQuickOpen')?.addEventListener('click',openQuickCreation);
+  $('#creationQuickReset')?.addEventListener('click',()=>{if(quickMode)quickMode.value='carousel';if(quickDirection)quickDirection.value='open-call';if(quickFormat)quickFormat.value='4:5';if(quickScale)quickScale.value='100';if(quickMood)quickMood.value='editorial';refreshQuickCreation()});
+  $('#creationQuickPreview button')?.addEventListener('click',openQuickCreation);
+  refreshQuickCreation();
 
   setCreationMode('text');fillCreationSources();bindDraftAutosave();refreshLocalDraftRecovery();
 }
