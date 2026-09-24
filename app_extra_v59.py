@@ -7,15 +7,16 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='129.0'
+app.version='130.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
+PLUGY_PAGE=BASE/'static'/'plugy_v130.html'
 GLB=BASE/'static'/'PLUGY_final_animated.glb'
 RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-premium','profile':'runtime-fallback'}
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='129.20260924.1'
+VERSION='130.20260924.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -274,36 +275,53 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'129.0',
-      'ui':'plug-art-v129-visual-editor-map',
+      'version':'130.0',
+      'ui':'plug-art-v130-plugy-social-studio',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
       'migration_backup_ready':backup_ready
     }
 
+@app.get('/api/v130/ui-manifest')
 @app.get('/api/v129/ui-manifest')
 @app.get('/api/v128/ui-manifest')
 def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v107.js'
     css_path=BASE/'static'/'plugart_v122_slide.css'
-    expected='129.20260924.1'
+    expected='130.20260924.1'
     return {
-      'ok': bool(html and js_path.exists() and css_path.exists()),
-      'version':'129.0',
-      'ui':'plug-art-v129-visual-editor-map',
+      'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v130.js').exists() and (BASE/'static'/'plugy_v130.css').exists()),
+      'version':'130.0',
+      'ui':'plug-art-v130-plugy-social-studio',
       'asset_version':expected,
       'html_has_js':f'plugart_v107.js?v={expected}' in html,
       'html_has_slide_css':f'plugart_v122_slide.css?v={expected}' in html,
-      'html_has_sidebar_version':'V129' in html,
+      'html_has_sidebar_version':'V130' in html,
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
-        'premium-cockpit','manual-carousel-editor','persistent-interface-lab','leaflet-map',
-        'plugy-soft-pearl','contextual-plugy','streaming-assistant','lean-bootstrap'
+        'premium-cockpit','manual-carousel-editor','drag-reorder','persistent-interface-lab','leaflet-map',
+        'standalone-plugy','watch-responsive','plugy-soft-pearl','chat-style-conversation',
+        'instagram-social-studio','expanded-local-radar','streaming-assistant','lean-bootstrap'
       ]
     }
+
+@app.get('/plugy',response_class=HTMLResponse,include_in_schema=False)
+def plugy_page_v130(request:Request):
+    html=PLUGY_PAGE.read_text(encoding='utf-8') if PLUGY_PAGE.exists() else '<html><body>PLUGY unavailable.</body></html>'
+    digest=hashlib.sha256(html.encode('utf-8')).hexdigest()[:20]
+    etag='"plugy-'+digest+'"'
+    headers={
+      'Cache-Control':'private, no-cache, must-revalidate',
+      'ETag':etag,
+      'X-Plug-Art-Version':'130.0',
+      'X-Plug-Art-UI':'plugy-v130-standalone'
+    }
+    if request.headers.get('if-none-match')==etag:
+        return Response(status_code=304,headers=headers)
+    return HTMLResponse(html,headers=headers)
 
 @app.get('/',response_class=HTMLResponse,include_in_schema=False)
 def root_v102(request:Request):
@@ -313,8 +331,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'129.0',
-      'X-Plug-Art-UI':'plug-art-v129-visual-editor-map'
+      'X-Plug-Art-Version':'130.0',
+      'X-Plug-Art-UI':'plug-art-v130-plugy-social-studio'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -331,7 +349,7 @@ async def v85_headers(request:Request,call_next):
     started=time.perf_counter()
     response=await call_next(request)
     p=request.url.path
-    if p=='/':
+    if p in ('/','/plugy'):
         response.headers['Cache-Control']='private, max-age=0, must-revalidate'
     elif p.startswith('/static/') and any(p.endswith(ext) for ext in ('.css','.js','.glb','.png','.jpg','.jpeg','.webp','.svg','.webmanifest')):
         response.headers['Cache-Control']='public, max-age=31536000, immutable'
@@ -2095,14 +2113,14 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'129.0',
-      'ui':'plug-art-v129-visual-editor-map',
-      'reference_direction':'V129 PLUG ART: premium product-style internal workspace with persistent manual visual editing, Interface Lab, interactive Europe map, PLUGY soft-pearl finish, content studio and operational workflows',
+      'version':'130.0',
+      'ui':'plug-art-v130-plugy-social-studio',
+      'reference_direction':'V130 PLUG ART: premium product-style workspace with standalone PLUGY conversation, watch-responsive UI, manual creative studio, Instagram control center, expanded local Radar and interactive map',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
       'navigation_fixed':True,
-      'typography':'Archivo + Inter Tight + IBM Plex Mono',
+      'typography':'Space Grotesk + Inter',
       'legacy_index_served':False,
       'single_mascot':True,
       'plugy_reference':'single V113 premium animated model with runtime soft-pearl material tuning and reduced reflections',
@@ -2116,19 +2134,20 @@ def status_v90():
       'plugy_bytes':len(raw),
       'plugy_sha256':hashlib.sha256(raw).hexdigest() if raw else '',
       'plugy_animations':['Idle','SoftTurn','Think','Curious','Present','Bounce','Happy','Attentive','Wave','Dance','Blink','Listen','Speak','Charge','Travel'],
-      'studio':'Text + carousel + visual generation + rendered PNG/ZIP export + Instagram publishing',
+      'studio':'Manual text + carousel + visual editor, draggable slides, AI assistance, PNG/ZIP export and Instagram publishing',
       'layouts':['top','cover','left','right','band','collage','minimal'],
       'cuts':['none','diagonal','curve','wave'],
       'themes':['editorial','glass','impact','paper','night','color'],
-      'background':'premium internal workspace with product-style hierarchy, manual visual editing, persistent design controls, interactive map and integrated content studio'
+      'background':'premium internal workspace with standalone PLUGY, social studio, expanded venue radar, product-style hierarchy and integrated creative tools'
     }
 
-print(f"PLUG_ART_READY ui=v129_product_workspace editor=manual design_lab=persistent map=leaflet plugy_finish=soft_pearl bureau=persistent prospection=crm open_call_workflow=on drafts=persistent instagram=control_center voice=streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_READY ui=v130_product_workspace standalone_plugy=on watch_ui=on editor=manual_drag design_lab=persistent map=leaflet radar_local_venues=on instagram=social_studio plugy_finish=soft_pearl voice=streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
       ('GET','/api/health'),
-      ('GET','/api/v129/ui-manifest'),
+      ('GET','/plugy'),
+      ('GET','/api/v130/ui-manifest'),
       ('GET','/api/v90/builder/config'),
       ('PATCH','/api/v90/builder/config'),
       ('GET','/api/map'),
@@ -2140,7 +2159,10 @@ def _v127_runtime_smoke():
       ('GET','/api/v107/bureau'),
       ('GET','/api/v107/open-calls/workflow'),
       ('GET','/api/v108/drafts'),
-      ('GET','/api/v88/instagram/status')
+      ('GET','/api/v88/instagram/status'),
+      ('GET','/api/v88/instagram/media'),
+      ('POST','/api/v88/instagram/publish'),
+      ('POST','/api/radar/run')
     }
     active=set()
     for route in app.router.routes:
