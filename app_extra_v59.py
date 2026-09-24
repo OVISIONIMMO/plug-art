@@ -16,7 +16,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='139.20260924.1'
+VERSION='139.20260924.2'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -554,7 +554,7 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v107.js'
     css_path=BASE/'static'/'plugart_v122_slide.css'
-    expected='139.20260924.1'
+    expected='139.20260924.2'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v130.js').exists() and (BASE/'static'/'plugy_v130.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
       'version':'139.0',
