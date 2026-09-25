@@ -2508,7 +2508,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'144.0',
+      'version':'146.0',
       'ui':'plug-art-v146-unified-ios-studio',
       'reference_direction':'V146 PLUG ART: slide-based internal workspace with one unified Canva-like Content Studio, single contextual tool rail, iPhone bottom-sheet editing, tactile typography controls, smaller full-body PLUGY, restrained eye motion and stable French voice replies',
       'marketing_blocks':False,
