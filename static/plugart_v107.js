@@ -1,10 +1,10 @@
 (function(){
 'use strict';
-const VERSION='151.20260925.1';
+const VERSION='152.20260925.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,recognition:null,plugyBusy:false,creationMode:'text',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''},canvasLayer:null,canvasTool:'templates',studioGuides:true,studioSafe:true,studioSnap:true};
+const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,voiceOutput:localStorage.getItem('plugart:plugy-voice')!=='0',recognition:null,plugyBusy:false,creationMode:'text',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:'',history:[]},canvasLayer:null,canvasTool:'templates',studioGuides:true,studioSafe:true,studioSnap:true};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -501,6 +501,7 @@ function createProgressiveSpeaker(){
 }
 async function askPlugy(message,injectTarget=null){
   message=clean(message);if(!message)return;
+  if(!injectTarget&&state.voiceOutput){primePlugySpeech();state.voiceReply=true}
   const local=handleLocalPlugy(message);if(local){openPlugy();addMsg(message,'user');addMsg(local,'bot');playMotion('Happy');if(state.voiceReply)speakPlugy(local);return local;}
   if(state.plugyBusy){toast('PLUGY répond déjà');return}
   openPlugy();setPlugyBusy(true);addMsg(message,'user');state.history.push({role:'user',content:message});
@@ -1963,6 +1964,21 @@ function speakPlugy(text){
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';u.rate=1.12;u.pitch=1;u.volume=1;const voice=plugySpeechVoice||resolvePlugySpeechVoice();if(voice)u.voice=voice;u.onstart=()=>{$('#plugyState span').textContent='Parle…';playMotion('Speak',true)};u.onend=()=>{$('#plugyState span').textContent='Prêt';state.voiceReply=false;playMotion('Idle',true);resumeConversationListening(420)};u.onerror=()=>{state.voiceReply=false;playMotion('Idle',true);resumeConversationListening(650)};speechSynthesis.speak(u)}catch{state.voiceReply=false}
 }
 
+function renderVisualHistory(){
+  const host=$('#visualHistory');if(!host)return;
+  const rows=state.visual.history||[];
+  host.innerHTML=rows.length?rows.slice(0,12).map((x,i)=>'<button data-visual-history="'+i+'" style="background-image:url(&quot;'+esc(x.url).replace(/"/g,'%22')+'&quot;)" title="'+esc(x.label||'Visuel')+'"><span>'+esc(x.label||('Visuel '+(i+1)))+'</span></button>').join(''):'<span class="visual-history-empty">Les variantes générées apparaîtront ici.</span>';
+  $('[data-visual-history]',host).forEach(b=>b.onclick=()=>{const x=rows[Number(b.dataset.visualHistory)];if(!x)return;state.visual.url=x.url;$('#visualImage').style.backgroundImage='url("'+x.url.replace(/"/g,'%22')+'")';$('#visualImage').innerHTML='';toast('Variante sélectionnée')});
+}
+function installPlugyVoiceOutput(){
+  const form=$('#plugyForm');if(!form||$('#plugyVoiceOutput'))return;
+  const b=document.createElement('button');b.type='button';b.id='plugyVoiceOutput';b.className='plugy-voice-output';b.setAttribute('aria-label','Réponse vocale de PLUGY');
+  const sync=()=>{b.textContent=state.voiceOutput?'🔊':'🔇';b.classList.toggle('active',state.voiceOutput);b.title=state.voiceOutput?'PLUGY répond à voix haute':'Réponse vocale désactivée'};
+  b.onclick=()=>{state.voiceOutput=!state.voiceOutput;localStorage.setItem('plugart:plugy-voice',state.voiceOutput?'1':'0');primePlugySpeech();sync();toast(state.voiceOutput?'Voix de PLUGY activée':'Voix de PLUGY coupée')};
+  form.insertBefore(b,$('#plugyConversation')||$('#plugyVoice'));sync();
+}
+installPlugyVoiceOutput();
+
 async function initVoice(){
   primePlugySpeech();
   const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){toast('Reconnaissance vocale indisponible');return}
@@ -2455,12 +2471,46 @@ function processCanvasUpload(file){
     addCanvasLayer('image',{src:c.toDataURL('image/jpeg',.82),w:55,h:Math.max(22,55*c.height/c.width)});
   };img.src=String(reader.result)};reader.readAsDataURL(file);
 }
+function applyEditorialPattern(pattern){
+  const s=state.carousel.slides[state.carousel.active];if(!s)return toast('Crée ou charge une slide');
+  pushCreationHistory();s.image='';slideDesign(s).pattern=pattern;renderCarousel();scheduleDraftAutosave();toast('Direction éditoriale appliquée');
+}
 function renderStudioImages(){
   const box=$('#studioImageLibrary');if(!box)return;
-  const urls=[];if(state.visual.url)urls.push({url:state.visual.url,label:'Dernier visuel'});
-  state.carousel.slides.forEach((s,i)=>{if(s.image)urls.push({url:s.image,label:'Slide '+(i+1)})});
-  box.innerHTML=urls.slice(0,12).map((x,i)=>'<button data-studio-image="'+i+'" style="background-image:url(&quot;'+esc(x.url).replace(/"/g,'%22')+'&quot;)"><span>'+esc(x.label)+'</span></button>').join('')||'<div class="studio-image-empty">Tes images générées apparaîtront ici.</div>';
-  $$('[data-studio-image]',box).forEach(b=>b.onclick=()=>{const x=urls[Number(b.dataset.studioImage)];if(x)addCanvasLayer('image',{src:x.url})});
+  const urls=[];
+  (state.visual.history||[]).forEach((x,i)=>x?.url&&urls.push({url:x.url,label:x.label||('Génération '+(i+1))}));
+  if(state.visual.url&&!urls.some(x=>x.url===state.visual.url))urls.unshift({url:state.visual.url,label:'Dernier visuel'});
+  state.carousel.slides.forEach((s,i)=>{if(s.image&&!urls.some(x=>x.url===s.image))urls.push({url:s.image,label:'Slide '+(i+1)})});
+  box.innerHTML=
+    '<div class="editorial-visual-choices">'+EDITORIAL_PATTERNS.map((p,i)=>'<button class="editorial-choice pattern-'+p+'" data-editorial-pattern="'+p+'"><i></i><span>'+['Orbites','Grille','Rubans','Blocs','Signal','Cadre'][i]+'</span></button>').join('')+'</div>'+
+    '<div class="studio-generated-head"><span>VISUELS GÉNÉRÉS</span><button id="studioGenerateVariants">✦ Générer 3 variantes</button></div>'+
+    '<div class="studio-generated-grid">'+(urls.slice(0,12).map((x,i)=>'<button data-studio-image="'+i+'" style="background-image:url(&quot;'+esc(x.url).replace(/"/g,'%22')+'&quot;)"><span>'+esc(x.label)+'</span></button>').join('')||'<div class="studio-image-empty">Choisis une direction ci-dessus ou génère plusieurs variantes.</div>')+'</div>';
+  $$('[data-editorial-pattern]',box).forEach(b=>b.onclick=()=>applyEditorialPattern(b.dataset.editorialPattern));
+  $$('[data-studio-image]',box).forEach(b=>b.onclick=()=>{const x=urls[Number(b.dataset.studioImage)],s=state.carousel.slides[state.carousel.active];if(!x||!s)return;pushCreationHistory();s.image=x.url;renderCarousel();scheduleDraftAutosave();toast('Visuel appliqué à la slide')});
+  $('#studioGenerateVariants')?.addEventListener('click',generateCarouselVariants);
+}
+async function generateCarouselVariants(){
+  const s=state.carousel.slides[state.carousel.active];if(!s)return toast('Crée d’abord une slide');
+  const btn=$('#studioGenerateVariants');if(btn?.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='Génération 1/3…'}
+  const source=opportunityById($('#carouselSource')?.value),ratio=state.carousel.format||'4:5';
+  const base=clean((s.image_prompt||s.title+'. '+s.body)+(source?' Contexte : '+source.title+'.':''));
+  const directions=[
+    ['Éditorial','editorial','composition magazine culturel, lignes fines, grille asymétrique, espace négatif, détail graphique fort'],
+    ['Affiche','poster','affiche d’exposition contemporaine abstraite, formes géométriques, contraste maîtrisé, matière papier ou encre'],
+    ['Graphique','graphic','système visuel abstrait, traits, blocs, rythme, architecture graphique, aucun décor de galerie nécessaire']
+  ];
+  let made=0;
+  for(let i=0;i<directions.length;i++){
+    if(btn)btn.textContent='Génération '+(i+1)+'/3…';
+    const [label,style,direction]=directions[i];
+    try{
+      const out=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt:base+'. '+direction+'. Aucun texte lisible.',style,ratio,quality:'medium'})});
+      if(out.url){state.visual.history=state.visual.history||[];state.visual.history.unshift({url:out.url,label:label+' · '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});state.visual.url=out.url;made++;if(made===1){s.image=out.url;renderCarousel()}}
+    }catch(e){console.warn('[Studio variant]',e)}
+  }
+  if(btn){btn.disabled=false;btn.textContent='✦ Générer 3 variantes'}
+  renderStudioImages();scheduleDraftAutosave();toast(made?made+' variantes prêtes à comparer':'Génération indisponible');
 }
 
 const MARKETING_TEMPLATES={
@@ -2506,9 +2556,10 @@ const VISUAL_PRESETS={
   partnership:{label:'Partenariat',style:'editorial',ratio:'1:1',prompt:'Visuel de partenariat culturel premium, deux univers qui se rencontrent, composition sobre et institutionnelle, esthétique contemporaine, espace négatif, rendu haut de gamme.'},
   launch:{label:'Lancement',style:'art',ratio:'4:5',prompt:'Key visual de lancement créatif, art contemporain, impact immédiat, composition campagne, profondeur, matière et lumière contrôlées, premium et mémorable.'}
 };
+const EDITORIAL_PATTERNS=['orbit','grid','ribbon','blocks','signal','frame'];
 function makeMarketingSlides(key){
   const t=MARKETING_TEMPLATES[key]||MARKETING_TEMPLATES['open-call'];
-  return t.slides.map(([kicker,title,body,cta])=>({kicker,title,body,cta,image:'',image_prompt:'',design:{theme:t.theme,layout:t.layout,accent:t.accent,align:'left',fontScale:100,imageOpacity:t.layout==='split'?82:60,radius:28}}));
+  return t.slides.map(([kicker,title,body,cta],i)=>({kicker,title,body,cta,image:'',image_prompt:'',design:{theme:t.theme,layout:t.layout,accent:t.accent,align:'left',fontScale:100,imageOpacity:t.layout==='split'?82:60,radius:28,pattern:EDITORIAL_PATTERNS[i%EDITORIAL_PATTERNS.length]}}));
 }
 function applyMarketingTemplate(key){
   const t=MARKETING_TEMPLATES[key];if(!t)return;
@@ -2763,6 +2814,7 @@ function installCreationModes(){
   $('#stageGuidesToggle')?.addEventListener('click',()=>{state.studioGuides=!state.studioGuides;renderStudioCanvasAids()});$('#stageSafeToggle')?.addEventListener('click',()=>{state.studioSafe=!state.studioSafe;renderStudioCanvasAids()});$('#stageSnapToggle')?.addEventListener('click',()=>{state.studioSnap=!state.studioSnap;renderStudioCanvasAids()});
   $$('[data-canvas-action]').forEach(b=>b.onclick=()=>runCanvasAction(b.dataset.canvasAction));installStudioKeyboard();renderStudioCanvasAids();
 
+  const visualPreview=$('#visualImage')?.parentElement;if(visualPreview&&!$('#visualHistory')){const vh=document.createElement('div');vh.id='visualHistory';vh.className='visual-history';visualPreview.appendChild(vh);renderVisualHistory()}
   $('#visualGenerate').onclick=generateVisual;$('#visualDownload').onclick=downloadVisual;$('#visualToBureau').onclick=visualToBureau;
   $$('[data-visual-preset]').forEach(b=>b.onclick=()=>applyVisualPreset(b.dataset.visualPreset));
   $('#visualUseCase').onchange=e=>applyVisualPreset(e.target.value);
@@ -2956,8 +3008,8 @@ async function generateCarousel(){
   state.carousel.active=0;state.carousel.format=$('#carouselFormat').value||'4:5';renderCarousel();scheduleDraftAutosave();if(source)persistWorkflow(source.id,{workflow_status:'drafting',next_action:'Finaliser le carrousel'}).catch(()=>{});playMotion('Happy');btn.disabled=false;btn.textContent=old;
 }
 function slideDesign(s){
-  if(!s)return{theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,titleScale:100,bodyScale:100,labelScale:100,ctaScale:100,spacing:100,imageOpacity:64,radius:26,backgroundColor:'#f4f3ef'};
-  s.design={theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,titleScale:100,bodyScale:100,labelScale:100,ctaScale:100,spacing:100,imageOpacity:64,radius:26,backgroundColor:'#f4f3ef',...(s.design||{})};
+  if(!s)return{theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,titleScale:100,bodyScale:100,labelScale:100,ctaScale:100,spacing:100,imageOpacity:64,radius:26,backgroundColor:'#f4f3ef',pattern:'orbit'};
+  s.design={theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,titleScale:100,bodyScale:100,labelScale:100,ctaScale:100,spacing:100,imageOpacity:64,radius:26,backgroundColor:'#f4f3ef',pattern:'orbit',...(s.design||{})};
   return s.design;
 }
 function slideAccentColor(name){return({black:'#111318',violet:'#735cff',cyan:'#45cbd7',pink:'#e96cae',blue:'#4b7cff',orange:'#f2944b',green:'#55b982'})[name]||'#111318'}
@@ -3021,7 +3073,7 @@ function renderCarousel(){
     b.ondrop=e=>{e.preventDefault();pushCreationHistory();const from=Number(e.dataTransfer.getData('text/plain')),to=Number(b.dataset.carouselSlide);if(!Number.isFinite(from)||from===to)return;const moved=state.carousel.slides.splice(from,1)[0];state.carousel.slides.splice(to,0,moved);state.carousel.active=to;renderCarousel();scheduleDraftAutosave()};
   });
   $('#carouselKicker').textContent=s.kicker||'PLUG ART';$('#carouselTitle').textContent=s.title||'Ton carrousel apparaîtra ici';$('#carouselBody').textContent=s.body||'Choisis une source ou écris un brief.';$('#carouselCta').textContent=s.cta||'Découvrir →';
-  const img=$('#carouselImage');img.style.backgroundImage=s.image?'url("'+String(s.image).replace(/"/g,'%22')+'")':'none';img.style.opacity=String(Math.max(0,Math.min(100,Number(d.imageOpacity||0)))/100);
+  const img=$('#carouselImage');img.style.backgroundImage=s.image?'url("'+String(s.image).replace(/"/g,'%22')+'")':'none';img.style.opacity=String(Math.max(0,Math.min(100,Number(d.imageOpacity||0)))/100);img.dataset.pattern=s.image?'':(d.pattern||'orbit');img.classList.toggle('procedural',!s.image);
   const canvas=$('#carouselCanvas');canvas.style.aspectRatio=state.carousel.format==='1:1'?'1/1':state.carousel.format==='9:16'?'9/16':'4/5';canvas.dataset.theme=d.theme||'ultra';canvas.dataset.layout=d.layout||'editorial';canvas.dataset.align=d.align||'left';canvas.style.setProperty('--slide-accent',slideAccentColor(d.accent));const globalScale=Number(d.fontScale||100)/100;canvas.style.setProperty('--slide-font-scale',String(globalScale));canvas.style.setProperty('--slide-title-size',(46*globalScale*Number(d.titleScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-body-size',(15*globalScale*Number(d.bodyScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-label-size',(11*globalScale*Number(d.labelScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-cta-size',(12*globalScale*Number(d.ctaScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-copy-gap',(14*Number(d.spacing||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-radius',(d.radius||26)+'px');canvas.style.background=d.backgroundColor||'#f4f3ef';
   $('#slideKicker').value=s.kicker||'';$('#slideTitle').value=s.title||'';$('#slideBody').value=s.body||'';$('#slideCta').value=s.cta||'';
   if($('#slideLayout'))$('#slideLayout').value=d.layout;if($('#slideAccent'))$('#slideAccent').value=d.accent;if($('#slideAlign'))$('#slideAlign').value=d.align;if($('#slideBackground'))$('#slideBackground').value=d.backgroundColor||'#f4f3ef';
@@ -3039,8 +3091,8 @@ function syncActiveSlideEdit(){
 async function generateCarouselImage(index){
   const s=state.carousel.slides[index];if(!s)return toast('Génère d’abord les slides');
   const source=opportunityById($('#carouselSource').value),ratio=state.carousel.format||'4:5',btn=$('#carouselGenerateImage'),old=btn.textContent;btn.disabled=true;btn.textContent='Image…';
-  const prompt=clean((s.image_prompt||'Illustration éditoriale contemporaine pour '+s.title+'. '+s.body)+' Univers PLUG ART, art contemporain émergent, galerie, matière, photographie ou peinture selon le sujet. Aucun texte lisible, aucun logo, aucun watermark.'+(source?' Contexte : '+source.title+'.':''));
-  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt,style:'gallery',ratio,quality:'medium'})});if(r.url){s.image=r.url;renderCarousel();scheduleDraftAutosave();toast('Image générée')}}catch(e){console.error('[Image Studio]',e);toast('Image : '+String(e?.message||'génération indisponible').replace(/^\{"detail":"?|"?\}$/g,'').slice(0,150))}finally{btn.disabled=false;btn.textContent=old}
+  const prompt=clean((s.image_prompt||'Key visual éditorial contemporain pour '+s.title+'. '+s.body)+' Univers PLUG ART, campagne culturelle, composition graphique, lignes, formes, matière, espace négatif. Le visuel doit fonctionner sans photographie d’exposition. Aucun texte lisible, aucun logo, aucun watermark.'+(source?' Contexte : '+source.title+'.':''));
+  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt,style:'editorial',ratio,quality:'medium'})});if(r.url){s.image=r.url;state.visual.url=r.url;state.visual.history=state.visual.history||[];state.visual.history.unshift({url:r.url,label:'Slide '+(index+1)});renderCarousel();scheduleDraftAutosave();toast('Visuel généré')}}catch(e){console.error('[Image Studio]',e);toast('Image : '+String(e?.message||'génération indisponible').replace(/^\{"detail":"?|"?\}$/g,'').slice(0,150))}finally{btn.disabled=false;btn.textContent=old}
 }
 async function generateAllCarouselImages(){
   if(!state.carousel.slides.length)return toast('Génère d’abord les slides');const b=$('#carouselGenerateAll'),old=b.textContent;b.disabled=true;
@@ -3265,7 +3317,7 @@ async function improveVisualPrompt(kind){
 async function generateVisual(){
   const prompt=clean($('#visualPrompt').value);if(!prompt)return toast('Ajoute un prompt');const b=$('#visualGenerate'),old=b.textContent,usecase=$('#visualUseCase')?.value||'campaign',preset=VISUAL_PRESETS[usecase];b.disabled=true;b.textContent='Génération…';playMotion('Think',true);
   const productionPrompt=prompt+' '+(preset?.prompt||'')+' Direction PLUG ART : image marketing contemporaine, premium, crédible, composition forte. Aucun texte lisible, aucun logo, aucun watermark.';
-  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt:productionPrompt,style:$('#visualStyle').value||preset?.style||'editorial',ratio:$('#visualRatio').value||preset?.ratio||'4:5',quality:'medium'})});if(r.url){state.visual={url:r.url,prompt};scheduleDraftAutosave();$('#visualImage').style.backgroundImage='url("'+r.url.replace(/"/g,'%22')+'")';$('#visualImage').innerHTML='';playMotion('Happy')}}catch(e){console.error('[Visual Studio]',e);toast('Visuel : '+String(e?.message||'génération indisponible').replace(/^\{"detail":"?|"?\}$/g,'').slice(0,150))}finally{b.disabled=false;b.textContent=old}
+  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt:productionPrompt,style:$('#visualStyle').value||preset?.style||'editorial',ratio:$('#visualRatio').value||preset?.ratio||'4:5',quality:'medium'})});if(r.url){const history=state.visual.history||[];history.unshift({url:r.url,label:(preset?.label||'Visuel')+' · '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});state.visual={url:r.url,prompt,history:history.slice(0,18)};scheduleDraftAutosave();$('#visualImage').style.backgroundImage='url("'+r.url.replace(/"/g,'%22')+'")';$('#visualImage').innerHTML='';renderStudioImages();renderVisualHistory();playMotion('Happy')}}catch(e){console.error('[Visual Studio]',e);toast('Visuel : '+String(e?.message||'génération indisponible').replace(/^\{"detail":"?|"?\}$/g,'').slice(0,150))}finally{b.disabled=false;b.textContent=old}
 }
 async function visualToBureau(){
   if(!state.visual.url)return toast('Génère d’abord un visuel');try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:'Visuel PLUG ART',body:'Prompt : '+state.visual.prompt+'\n\nVisuel : '+state.visual.url,folder:'Contenus',tags:'visuel, image, PLUG ART'})});state.bureau.unshift(n);toast('Visuel envoyé au Bureau')}catch{toast('Enregistrement impossible')}
