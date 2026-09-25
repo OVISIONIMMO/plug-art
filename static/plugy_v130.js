@@ -15,6 +15,7 @@ function resetStandaloneFraming(){
   try{mv.setAttribute('camera-orbit','0deg 76deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'33deg':'30deg')}catch{}
 }
 function setState(name,label){
+  if(['blink','doubleblink','wink','softeyes','eyethink'].includes(String(name||'').toLowerCase()))name='idle';
   if(innerWidth<=820&&['blink','doubleblink','wink','softeyes'].includes(name))name='idle';
   document.body.dataset.plugyState=name;
   $('#plugyLiveState span').textContent=label;$('#topState').textContent=label;
@@ -169,7 +170,7 @@ function modelInteract(){
 }
 mv?.addEventListener('load',()=>{tuneMaterials();resetStandaloneFraming();setState('idle','Prêt')},{once:true});
 mv?.addEventListener('click',modelInteract);
-mv?.addEventListener('pointerenter',()=>{if(!state.busy&&!state.listening){setState(Math.random()<.62?'wave':'curious','Présent');setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},980)}});
+mv?.addEventListener('pointerenter',()=>{if(!state.busy&&!state.listening)mv?.classList.add('plugy-hovering')});
 mv?.addEventListener('pointerdown',()=>{clearTimeout(state.pressTimer);state.pressTimer=setTimeout(startVoice,650)});
 ['pointerup','pointercancel','pointerleave'].forEach(ev=>mv?.addEventListener(ev,()=>clearTimeout(state.pressTimer)));
 function hasAnim(name){return !!(mv?.availableAnimations||[]).includes(name)}
@@ -195,25 +196,20 @@ function pickAmbient(){
 }
 function scheduleEye(){
   clearTimeout(scheduleEye.t);
-  if(innerWidth<=820)return;
-  scheduleEye.t=setTimeout(()=>{
-    const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if(!reduced&&!state.busy&&!state.listening&&document.visibilityState==='visible'&&hasAnim('Blink')){
-      setState('blink','Présent');setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},330);
-    }
-    scheduleEye();
-  },95000+Math.random()*65000);
+  // V156: eyes remain open and stable. No autonomous blink.
 }
+
 function scheduleAmbient(){
   clearTimeout(ambientTimer);
   ambientTimer=setTimeout(()=>{
-    if(!state.busy&&!state.listening){
-      const motion=pickAmbient();setState(motion,'Présent');softGaze();
-      setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},1050+Math.random()*350);
+    if(!state.busy&&!state.listening&&document.visibilityState==='visible'){
+      if(hasAnim('SoftTurn'))setState('softturn','Présent');
+      setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},900);
     }
     scheduleAmbient();
-  },8500+Math.random()*7500);
+  },15000+Math.random()*9000);
 }
+
 scheduleAmbient();scheduleEye();
 addEventListener('resize',()=>resetStandaloneFraming(),{passive:true});
 addEventListener('orientationchange',()=>setTimeout(resetStandaloneFraming,180),{passive:true});

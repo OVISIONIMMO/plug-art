@@ -16,7 +16,8 @@ const viewMeta={
  agenda:['AGENDA','Deadlines & relances','Attentive'],
  network:['RÉSEAU','Artistes','Happy'],
  social:['INSTAGRAM','Social Studio','Present'],
- map:['CARTE','Opportunités & expositions','Travel']
+ map:['CARTE','Opportunités & expositions','Travel'],
+ ideas:['IDÉES','Nuage à idées','Idle']
 };
 const contexts={
  dashboard:{label:'Dashboard',suggestions:['Mes priorités','Que dois-je traiter aujourd’hui ?','Résume mon workspace']},
@@ -28,7 +29,8 @@ const contexts={
  agenda:{label:'Agenda',suggestions:['Montre les urgences','Quelles deadlines arrivent ?','Quelles relances sont dues ?']},
  network:{label:'Artistes',suggestions:['Analyse ce profil','Propose des opportunités','Prépare une bio']},
  social:{label:'Instagram',suggestions:['Prépare une légende','Analyse mon feed','Propose le prochain post']},
- map:{label:'Carte',suggestions:['Trouve autour de Paris','Compare les villes','Montre les opportunités proches']}
+ map:{label:'Carte',suggestions:['Trouve autour de Paris','Compare les villes','Montre les opportunités proches']},
+ ideas:{label:'Nuage à idées',suggestions:['Développe cette idée','Propose trois directions','Imagine un visuel pour ce projet']}
 };
 
 async function api(url,opt={}){
@@ -61,7 +63,8 @@ const viewDataFamilies={
   prospection:['leads'],
   network:['artists'],
   social:[],
-  map:['map','opportunities']
+  map:['map','opportunities'],
+  ideas:[]
 };
 function requiredFamilies(id){return viewDataFamilies[id]||[]}
 const routeRuntimeReady=new Set();
@@ -120,6 +123,7 @@ function renderRouteView(id=state.view){
   if(id==='network')return renderArtists();
   if(id==='social')return renderInstagramStudio();
   if(id==='map')return renderMap();
+  if(id==='ideas')return window.PLUGV156?.renderIdeas?.();
 }
 
 function route(id,push=true){
@@ -134,7 +138,7 @@ function route(id,push=true){
   renderSuggestions();playMotion(viewMeta[id][2],id==='dashboard');
   if(push&&location.hash!=='#'+id)history.pushState({view:id},'','#'+id);
   const mobileMore=$('#mobileMoreButton'),mobileSheet=$('#mobileMoreSheet');
-  if(mobileMore)mobileMore.classList.toggle('active',['creation','agenda','network','map','social'].includes(id));
+  if(mobileMore)mobileMore.classList.toggle('active',['creation','agenda','network','map','social','ideas'].includes(id));
   mobileSheet?.classList.remove('open');
   $('.workspace')?.scrollTo({top:0,behavior:'auto'});
   if(id!=='bureau')document.body.classList.remove('mobile-bureau-editing');
@@ -166,7 +170,7 @@ function ensureModelViewer(){
 function playMotion(name='Idle',loop=false){
   const mv=$('#plugyModel');if(!mv)return;
   const mini=$('#plugyFollower')?.contains(mv)&&$('#plugyFollower')?.classList.contains('visible');
-  if(mini&&['Blink','DoubleBlink','Wink','SoftEyes','EyeThink'].includes(name))name='Idle';
+  if(['Blink','DoubleBlink','Wink','SoftEyes','EyeThink'].includes(name))name='Idle';
   document.body.dataset.plugyMotion=name;
   const run=()=>{
     const a=mv.availableAnimations||[];
@@ -210,22 +214,11 @@ function tunePlugyMaterials(){
 }
 $('#plugyModel')?.addEventListener('load',()=>{tunePlugyMaterials();if($('#plugyState span'))$('#plugyState span').textContent='Prêt';playMotion('Idle',true)},{once:true});
 $('#plugyModel')?.addEventListener('pointerenter',()=>{
-  const mini=$('#plugyFollower')?.classList.contains('visible')&&$('#plugyFollower')?.contains($('#plugyModel'));
-  if(mini)return;
-  const hello=choosePlugyMotion(['ArmHello','Curious','Happy']);
-  if(hello)playMotion(hello);
-  plugySoftGaze();
+  const mv=$('#plugyModel');if(!mv)return;
+  mv.classList.add('plugy-hovering');
 });
-$('#plugyModel')?.addEventListener('pointermove',e=>{
-  const mv=$('#plugyModel'),r=mv?.getBoundingClientRect();if(!mv||!r||state.voice)return;
-  const nx=((e.clientX-r.left)/Math.max(1,r.width)-.5),ny=((e.clientY-r.top)/Math.max(1,r.height)-.5);
-  mv.style.setProperty('--plugy-gaze-x',(nx*5).toFixed(1)+'px');mv.style.setProperty('--plugy-gaze-y',(ny*3).toFixed(1)+'px');
-});
-$('#plugyModel')?.addEventListener('dblclick',()=>{
-  openPlugy();
-  const react=choosePlugyMotion(['ArmExplain','Attentive','Happy']);
-  if(react)playMotion(react);
-});
+$('#plugyModel')?.addEventListener('pointermove',()=>{});
+$('#plugyModel')?.addEventListener('dblclick',()=>openPlugy());
 
 
 let plugyWarmPromise=null,plugy3DRequested=false;
@@ -1056,6 +1049,7 @@ function installBureauWorkspace(){
     '<div class="hub-project-grid">'+
       '<article class="hub-project-card millenaire"><div class="hub-project-visual" id="hubMillenaireVisual"><span>LE MILLÉNAIRE</span></div><div class="hub-project-copy"><small>AUBERVILLIERS · CANAL</small><h3>Le Millénaire</h3><p>Galerie des Docks + HUB créatif dans les cellules vacantes. Galerie côté canal, ateliers, coworking, studio contenu et programmation.</p><div class="hub-tags"><span>Galerie</span><span>Ateliers</span><span>Studio</span><span>Canal</span></div><div class="hub-card-actions"><button data-hub-project="millenaire">Ouvrir le projet</button><button data-hub-create="millenaire">＋ Note projet</button></div></div></article>'+
       '<article class="hub-project-card aubervilliers"><div class="hub-project-visual hub-industrial"><span>AUBERVILLIERS</span></div><div class="hub-project-copy"><small>PIERRE CURIE · BÂTIMENT INDUSTRIEL</small><h3>HUB Aubervilliers</h3><p>Réhabilitation légère et réversible : galerie, ateliers individuels, espace expérimental, studio contenu et organisation par niveaux.</p><div class="hub-tags"><span>Industriel</span><span>Galerie</span><span>Ateliers</span><span>3D</span></div><div class="hub-card-actions"><button data-hub-project="aubervilliers">Ouvrir le projet</button><button data-hub-create="aubervilliers">＋ Note projet</button></div></div></article>'+
+      '<article class="hub-project-card gennevilliers"><div class="hub-project-visual hub-gennevilliers" id="hubGennevilliersVisual"><span>GENNEVILLIERS</span></div><div class="hub-project-copy"><small>SUD CHANTERAINES · TRANSITION</small><h3>HUB Gennevilliers</h3><p>Fabrique culturelle de transition au 110 avenue du Général-de-Gaulle : production, exposition, ateliers, transmission et préfiguration du futur quartier.</p><div class="hub-tags"><span>Transition</span><span>Production</span><span>Réemploi</span><span>Chanteraines</span></div><div class="hub-card-actions"><button data-hub-project="gennevilliers">Ouvrir le projet</button><button data-hub-create="gennevilliers">＋ Note projet</button></div></div></article>'+
     '</div>'+
     '<section class="hub-project-detail panel" id="hubProjectDetail"></section>';
   view.appendChild(hub);
@@ -1100,8 +1094,9 @@ function setBureauMode(mode){
   renderPlugyActions();
 }
 const HUB_PROJECTS={
-  millenaire:{title:'PLUG ART HUB · Le Millénaire',eyebrow:'CENTRE COMMERCIAL · AUBERVILLIERS',summary:'Transformer des cellules vacantes en destination culturelle active, avec une galerie publique côté canal et un HUB de production dans une seconde cellule.',areas:['Galerie des Docks','Terrasse canal','Ateliers individuels','Coworking','Studio image & contenu','Plug Talk','Atelier collectif'],documents:[['Dossier Projet Le Millénaire','33 pages'],['Dossier final écosystème 2026','11 pages']]},
-  aubervilliers:{title:'PLUG ART HUB · Aubervilliers',eyebrow:'BÂTIMENT INDUSTRIEL · PIERRE CURIE',summary:'Un HUB artistique dans une enveloppe industrielle, organisé entre galerie, expérimentation, ateliers, bureau et production de contenus.',areas:['Galerie industrielle','Salle expérimentation','Ateliers artistes','Bureau / coordination','Studio contenu','Circulation / accueil'],documents:[['Dossier complet Aubervilliers 2026','38 pages']]}
+  millenaire:{title:'PLUG ART HUB · Le Millénaire',eyebrow:'CENTRE COMMERCIAL · AUBERVILLIERS',summary:'Transformer des cellules vacantes en destination culturelle active, avec une galerie publique côté canal et un HUB de production dans une seconde cellule.',areas:['Galerie des Docks','Terrasse canal','Ateliers individuels','Atelier grandes pièces','Coworking','Studio image & contenu','Petit espace talks','Ateliers enfants'],documents:[['Dossier Projet Le Millénaire','source projet'],['Recherche cellules Boulanger + New Yorker','architecture / archives']]},
+  aubervilliers:{title:'PLUG ART HUB · Aubervilliers',eyebrow:'BÂTIMENT INDUSTRIEL · 4 RUE PIERRE CURIE',summary:'Réhabilitation légère et réversible d’un ancien atelier en hub de production, expérimentation, exposition et connexion artistique.',areas:['Galerie industrielle','Salle expérimentation','Ateliers artistes séparés','Atelier grandes œuvres / sculpture','Bureau / coordination','Studio photo & contenu','Circulation / accueil'],documents:[['Dossier complet Aubervilliers 2026','source projet']]},
+  gennevilliers:{title:'PLUG ART HUB · Gennevilliers',eyebrow:'SUD CHANTERAINES · 110 AV. DU GÉNÉRAL-DE-GAULLE',summary:'Une fabrique culturelle de transition : production, ateliers, exposition et transmission pour activer le site aujourd’hui et participer à l’identité du futur quartier.',areas:['Galerie / exposition collective','Ateliers artistes','Atelier grande production','Réemploi & pratiques expérimentales','Studio photo / portfolio','Bureau / coordination','Transmission / enfants','Petit espace talk'],documents:[['Schéma Directeur Chanteraines 2026','note stratégique'],['Visuels de réemploi artistique','étude'],['Galerie et ateliers du HUB','étude']]}
 };
 function hubImage(key='millenaire_gallery'){
   return window.PLUG_HUB_ASSETS?.[key]||'';
@@ -1109,16 +1104,23 @@ function hubImage(key='millenaire_gallery'){
 function renderHubWorkspace(project='millenaire'){
   const img=hubImage('millenaire_gallery'),visual=$('#hubMillenaireVisual');if(visual&&img){visual.style.backgroundImage='url("'+img+'")';visual.classList.add('has-image')}
   const aub=$('.hub-project-card.aubervilliers .hub-project-visual'),aubImg=hubImage('aubervilliers_workshop');if(aub&&aubImg){aub.style.backgroundImage='url("'+aubImg+'")';aub.classList.add('has-image')}
+  const gen=$('#hubGennevilliersVisual'),genImg=hubImage('gennevilliers_reemploi');if(gen&&genImg){gen.style.backgroundImage='url("'+genImg+'")';gen.classList.add('has-image')}
   $$('[data-hub-project]').forEach(b=>b.onclick=()=>renderHubProjectDetail(b.dataset.hubProject));
   $$('[data-hub-create]').forEach(b=>b.onclick=()=>createHubNote(b.dataset.hubCreate));
   $('#hubExportPdf')?.addEventListener('click',exportHubPdf,{once:true});
-  $('#hubPlugy')?.addEventListener('click',()=>openPlugy('Travaille avec moi sur le projet PLUG ART HUB. Compare Le Millénaire et Aubervilliers, puis propose les prochaines actions concrètes.'),{once:true});
+  $('#hubPlugy')?.addEventListener('click',()=>openPlugy('Travaille avec moi sur le projet PLUG ART HUB. Compare Le Millénaire, Aubervilliers et Gennevilliers, puis propose les prochaines actions concrètes.'),{once:true});
   renderHubProjectDetail(project);
 }
 function renderHubProjectDetail(key){
   const p=HUB_PROJECTS[key],box=$('#hubProjectDetail');if(!p||!box)return;
   box.innerHTML='<div class="hub-detail-head"><div><small>'+esc(p.eyebrow)+'</small><h3>'+esc(p.title)+'</h3><p>'+esc(p.summary)+'</p></div><button data-hub-create="'+esc(key)+'">＋ Ajouter une note</button></div>'+
-    '<div class="hub-detail-grid"><div><small>ESPACES / PROGRAMME</small><div class="hub-area-list">'+p.areas.map(a=>'<span>'+esc(a)+'</span>').join('')+'</div></div><div><small>DOSSIERS SOURCE</small><div class="hub-doc-list">'+p.documents.map(d=>'<div><b>PDF</b><span><strong>'+esc(d[0])+'</strong><small>'+esc(d[1])+' · source projet</small></span></div>').join('')+'</div></div><div><small>PROCHAINE ÉTAPE</small><p>Centraliser les visuels, décisions, interlocuteurs et versions du dossier avant présentation aux structures.</p><button class="plugy-inline" id="hubDetailPlugy">✦ Préparer la prochaine étape</button></div></div>';
+    '<div class="hub-strategy-note">'+
+      (key==='gennevilliers'
+        ?'<small>POSITIONNEMENT À RETENIR</small><strong>Une fabrique culturelle qui active un foncier de transition.</strong><p>Le projet doit être présenté comme un lieu de production et de programmation régulier qui préfigure l’identité culturelle du futur quartier, et non comme une simple galerie à loger.</p>'
+        :key==='millenaire'
+        ?'<small>POSITIONNEMENT À RETENIR</small><strong>Deux cellules, deux fonctions très lisibles.</strong><p>La Galerie des Docks doit rester un vrai espace d’exposition côté canal. Le HUB concentre production, ateliers, studio, transmission et coordination.</p>'
+        :'<small>POSITIONNEMENT À RETENIR</small><strong>Le bâtiment industriel doit rester visible.</strong><p>Priorité aux usages, à la réversibilité et aux séparations simples. Le lieu doit d’abord fonctionner pour produire, expérimenter, exposer et accueillir.</p>')+
+    '</div><div class="hub-detail-grid"><div><small>ESPACES / PROGRAMME</small><div class="hub-area-list">'+p.areas.map(a=>'<span>'+esc(a)+'</span>').join('')+'</div></div><div><small>DOSSIERS SOURCE</small><div class="hub-doc-list">'+p.documents.map(d=>'<div><b>PDF</b><span><strong>'+esc(d[0])+'</strong><small>'+esc(d[1])+' · source projet</small></span></div>').join('')+'</div></div><div><small>PROCHAINE ÉTAPE</small><p>Centraliser les visuels, décisions, interlocuteurs et versions du dossier avant présentation aux structures.</p><button class="plugy-inline" id="hubDetailPlugy">✦ Préparer la prochaine étape</button></div></div>';
   $$('[data-hub-create]',box).forEach(b=>b.onclick=()=>createHubNote(b.dataset.hubCreate));
   $('#hubDetailPlugy')?.addEventListener('click',()=>openPlugy('Projet HUB : '+p.title+'. '+p.summary+' Prépare une liste courte des prochaines actions et documents à finaliser.'));
 }
@@ -1135,7 +1137,7 @@ async function exportHubPdf(){
   const b=$('#hubExportPdf'),old=b?.textContent;if(b){b.disabled=true;b.textContent='Préparation PDF…'}
   try{
     const PDF=await loadJsPdf();if(!PDF)throw new Error('pdf');const doc=new PDF({unit:'mm',format:'a4'}),margin=18;
-    doc.setFont('helvetica','bold');doc.setFontSize(22);doc.text('PLUG ART HUB',margin,25);doc.setFontSize(10);doc.setFont('helvetica','normal');doc.text('Synthèse projets · Le Millénaire & Aubervilliers',margin,33);
+    doc.setFont('helvetica','bold');doc.setFontSize(22);doc.text('PLUG ART HUB',margin,25);doc.setFontSize(10);doc.setFont('helvetica','normal');doc.text('Synthèse projets · Le Millénaire · Aubervilliers · Gennevilliers',margin,33);
     let y=48;for(const p of Object.values(HUB_PROJECTS)){doc.setFont('helvetica','bold');doc.setFontSize(15);doc.text(p.title,margin,y);y+=8;doc.setFont('helvetica','normal');doc.setFontSize(9);const lines=doc.splitTextToSize(p.summary,170);doc.text(lines,margin,y);y+=lines.length*4.5+4;doc.setFont('helvetica','bold');doc.text('Espaces',margin,y);y+=6;doc.setFont('helvetica','normal');for(const a of p.areas){doc.text('• '+a,margin+2,y);y+=5}y+=5;if(y>245){doc.addPage();y=25}}
     doc.save('plug-art-hub-synthese.pdf');toast('PDF HUB exporté');
   }catch{toast('Export PDF indisponible')}finally{if(b){b.disabled=false;b.textContent=old}}
@@ -3624,6 +3626,7 @@ function installMobileShell(){
     '<button data-mobile-route="prospection"><b>◎</b><span>Contacts</span></button>'+
     '<button data-mobile-route="agenda"><b>◷</b><span>Agenda</span></button>'+
     '<button data-mobile-route="network"><b>◌</b><span>Artistes</span></button>'+
+    '<button data-mobile-route="ideas"><b>☁</b><span>Idées</span></button>'+
     '<button data-mobile-route="map"><b>⌖</b><span>Carte</span></button>'+
     '<button data-mobile-action="search"><b>⌕</b><span>Recherche</span></button>'+
     '<button data-mobile-action="plugy"><b>⌁</b><span>PLUGY</span></button>'+
@@ -3692,20 +3695,15 @@ function schedulePlugyBlink(){
 function schedulePlugyAmbient(){
   clearTimeout(plugyAmbientTimer);
   plugyAmbientTimer=setTimeout(()=>{
-    if(!state.voice&&document.visibilityState==='visible'&&plugyIsVisible()){
-      const busy=['Think','Charge','Listen','Speak','ArmThink'].includes(document.body.dataset.plugyMotion||'');
-      const miniVisible=$('#plugyFollower')?.classList.contains('visible')&&!$('#plugyDrawer')?.classList.contains('open');
-      if(!busy&&!miniVisible){
-        const motion=choosePlugyMotion(['ArmExplain','ArmShrug','ArmStretch','ArmHello','SoftTurn','Curious','Attentive','Present','Happy']);
-        if(motion)playMotion(motion);
-        if(Math.random()<.72)plugySoftGaze();
-      }else if(miniVisible&&document.body.dataset.plugyMotion!=='Idle'){
-        playMotion('Idle',true);
-      }
+    const f=$('#plugyFollower');
+    if(f?.classList.contains('visible')&&!state.voice){
+      f.classList.toggle('drift-alt');
+      if(document.body.dataset.plugyMotion!=='Idle')playMotion('Idle',true);
     }
     schedulePlugyAmbient();
-  },9200+Math.random()*8600);
+  },11000+Math.random()*6000);
 }
+
 function startPlugyAmbient(){
   schedulePlugyAmbient();schedulePlugyBlink();
   const scroller=$('.workspace');let raf=0,release=0;
@@ -3714,11 +3712,7 @@ function startPlugyAmbient(){
   },{passive:true});
 }
 const pm=$('#plugyModel');
-pm?.addEventListener('click',()=>{
-  const react=choosePlugyMotion(['ArmHello','Happy','ArmExplain','Curious']);
-  if(react)playMotion(react);
-  plugySoftGaze();
-});
+pm?.addEventListener('click',()=>{if($('#plugyFollower')?.contains(pm))openPlugy()});
 pm?.addEventListener('pointerdown',()=>{clearTimeout(plugyPressTimer);plugyPressTimer=setTimeout(()=>{initVoice();playMotion('Attentive',true)},650)});
 ['pointerup','pointercancel','pointerleave'].forEach(ev=>pm?.addEventListener(ev,()=>clearTimeout(plugyPressTimer)));
 startPlugyAmbient();

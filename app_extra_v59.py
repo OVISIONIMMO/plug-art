@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='154.0'
+app.version='156.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v130.html'
@@ -16,7 +16,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='154.20260925.1'
+VERSION='156.20260926.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -596,8 +596,8 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'154.0',
-      'ui':'plug-art-v154-studio-runtime-fix',
+      'version':'156.0',
+      'ui':'plug-art-v156-creative-workspace',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
@@ -635,11 +635,11 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v107.js'
     css_path=BASE/'static'/'plugart_v122_slide.css'
-    expected='154.20260925.1'
+    expected='156.20260926.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v130.js').exists() and (BASE/'static'/'plugy_v130.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
-      'version':'154.0',
-      'ui':'plug-art-v154-studio-runtime-fix',
+      'version':'156.0',
+      'ui':'plug-art-v156-creative-workspace',
       'asset_version':expected,
       'html_has_js':f'plugart_v107.js?v={expected}' in html,
       'html_has_slide_css':f'plugart_v122_slide.css?v={expected}' in html,
@@ -663,7 +663,7 @@ def plugy_page_v130(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'149.0',
+      'X-Plug-Art-Version':'156.0',
       'X-Plug-Art-UI':'plugy-v130-standalone'
     }
     if request.headers.get('if-none-match')==etag:
@@ -678,8 +678,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'149.0',
-      'X-Plug-Art-UI':'plug-art-v150-ios-content-studio'
+      'X-Plug-Art-Version':'156.0',
+      'X-Plug-Art-UI':'plug-art-v156-creative-workspace'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -2485,6 +2485,293 @@ def builder_restore_v90(version_id:int):
 @app.get('/api/v87/status')
 @app.get('/api/v88/status')
 @app.get('/api/v89/status')
+
+# V156 — Bureau PDF library, Idea Cloud and HUB knowledge base.
+BUREAU_FILE_DIR=Path(os.getenv('PLUGART_BUREAU_FILE_DIR','/data/bureau-files' if Path('/data').exists() else str(BASE/'data'/'bureau-files')))
+BUREAU_FILE_DIR.mkdir(parents=True,exist_ok=True)
+_v156c=core.conn()
+_v156c.executescript("""
+CREATE TABLE IF NOT EXISTS bureau_files(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT DEFAULT '',
+  original_name TEXT DEFAULT '',
+  mime_type TEXT DEFAULT 'application/pdf',
+  size_bytes INTEGER DEFAULT 0,
+  folder TEXT DEFAULT 'PDF',
+  project TEXT DEFAULT '',
+  notes TEXT DEFAULT '',
+  storage_path TEXT DEFAULT '',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_bureau_files_project ON bureau_files(project,updated_at DESC,id DESC);
+
+CREATE TABLE IF NOT EXISTS idea_cloud(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT DEFAULT '',
+  body TEXT DEFAULT '',
+  stage TEXT DEFAULT 'explore',
+  tags TEXT DEFAULT '',
+  color TEXT DEFAULT 'violet',
+  image_url TEXT DEFAULT '',
+  project TEXT DEFAULT '',
+  pos_x REAL DEFAULT 50,
+  pos_y REAL DEFAULT 50,
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_idea_cloud_updated ON idea_cloud(updated_at DESC,id DESC);
+""")
+_v156c.commit()
+_v156c.close()
+
+def _seed_hub_transcripts_v156():
+    rows=[
+      (
+        'HUB Aubervilliers · Synthèse de travail',
+        """PLUG ART HUB — AUBERVILLIERS
+4 rue Pierre Curie, 93300 Aubervilliers
+
+INTENTION
+Réhabiliter légèrement et de manière réversible un ancien atelier afin d'en faire un hub de production, d'expérimentation, d'exposition et de connexion artistique. L'enjeu n'est pas de sur-aménager le bâtiment, mais de tirer parti de son caractère industriel et de ses volumes.
+
+ORGANISATION À RETENIR
+• Rez-de-chaussée : galerie industrielle, espace d'expérimentation, accueil et production de contenus.
+• Étage : ateliers artistes séparés et bureau / coordination.
+• Prévoir un atelier plus généreux pour grandes œuvres, sculptures et pratiques expérimentales.
+• Studio photo / portfolio intégré au programme.
+• Séparations simples, réversibles et peu coûteuses plutôt que des cloisons vitrées complexes.
+• Circulation lisible, lumière claire, plantes en quantité raisonnable, LED très ponctuelles.
+
+POSITIONNEMENT
+Un lieu de travail avant d'être un décor : artistes émergents, ateliers, expositions, expérimentation, accompagnement et programmation locale. La structure existante doit rester lisible et l'investissement initial doit privilégier les usages, la sécurité et la réversibilité.
+
+POINTS À FINALISER
+Visite technique, état du bâti, contraintes ERP, durée d'occupation, budget pilote, plan d'implantation précis et interlocuteurs fonciers / ville.""",
+        'aubervilliers'
+      ),
+      (
+        'HUB Le Millénaire · Synthèse de travail',
+        """PLUG ART HUB — LE MILLÉNAIRE, AUBERVILLIERS
+
+INTENTION
+Transformer des cellules vacantes du centre commercial en destination culturelle contemporaine capable de réactiver le site, de créer du passage et de donner une image plus jeune au secteur.
+
+MODÈLE À DEUX CELLULES
+1. GALERIE DES DOCKS, côté canal
+• Espace d'exposition dédié aux artistes émergents.
+• Relation forte avec la terrasse et le canal.
+• Scénographie épurée, lumineuse et réellement consacrée à l'exposition.
+• Pas de coin détente qui parasite la galerie.
+• Structure existante conservée autant que possible.
+• Aquarium discret, plantes, quelques LED seulement si elles servent l'ambiance.
+
+2. HUB, ancienne cellule New Yorker
+• Ateliers individuels séparés pour préserver l'intimité de travail.
+• Atelier collectif et atelier grandes pièces / sculptures.
+• Coworking et coordination.
+• Studio photo, portfolio et création de contenus.
+• Petit espace talks pour groupes réduits.
+• Ateliers enfants / scolaires.
+• Coin restauration / boisson fonctionnel.
+
+LOGIQUE ÉCONOMIQUE ET OPÉRATIONNELLE
+Privilégier des modules légers, réversibles et simples à installer. Le projet doit résoudre une partie du problème des cellules vacantes tout en apportant programmation, fréquentation et activité régulière. Le discours à la direction doit porter sur la valeur d'usage, l'activation du centre et la capacité de PLUG ART à programmer, produire et exposer.
+
+POINTS À FINALISER
+Accès aux plans des cellules, contraintes techniques et ERP, modèle d'occupation, interlocuteurs direction / bailleur, phasage galerie + HUB et budget pilote.""",
+        'millenaire'
+      ),
+      (
+        'HUB Gennevilliers · Synthèse stratégique',
+        """PLUG ART HUB — GENNEVILLIERS / SUD CHANTERAINES
+Cible étudiée : 110 avenue du Général-de-Gaulle, Gennevilliers
+
+POSITIONNEMENT CENTRAL
+Ne pas présenter PLUG ART comme « une galerie qui cherche un local ». Le projet doit être formulé comme une fabrique culturelle capable d'activer un foncier de transition, de produire une activité régulière et de préfigurer un équipement créatif plus durable dans le futur quartier Sud Chanteraines.
+
+FORMULATION À RETENIR
+« Créer aujourd'hui le lieu culturel qui participera demain à l'identité du nouveau quartier. »
+
+RÉFÉRENCE LOCALE
+L'édition 2025 de Trésors de Banlieues, accueillie à l'Usine Chanteraines au 92 avenue du Général-de-Gaulle, constitue un benchmark utile pour comprendre comment un site en transition peut être activé culturellement. PLUG ART ne doit pas copier l'exposition : il faut reprendre le mécanisme d'activation et y ajouter production, ateliers, accompagnement, contenus et activité toute l'année.
+
+PROGRAMME PLUG ART
+• Galerie / exposition collective.
+• Ateliers individuels et atelier grande production.
+• Pratiques expérimentales, réemploi, sculpture et fabrication légère.
+• Studio photo / portfolio / contenu.
+• Bureau / coordination.
+• Ateliers enfants et transmission.
+• Petit espace de rencontre / talk.
+• Modules légers, réversibles et évolutifs.
+
+STRATÉGIE
+Le dossier doit articuler mission culturelle + modèle d'exploitation + revenus propres. Une association peut porter la mission et les partenariats, avec une organisation claire des activités commerciales éventuelles. Un pilote de 12 mois permet de démontrer l'utilité du lieu avant un engagement plus long.
+
+POINTS DE VIGILANCE AVANT SIGNATURE
+Durée réelle de l'occupation, travaux ERP, pollution ou héritage industriel, bruit, transformation future de la ZAC, dépendance aux subventions, séparation mission / activité commerciale et dépenses esthétiques trop précoces.
+
+PROCHAINE ÉTAPE
+Préparer une note institutionnelle courte, un plan d'occupation après visite technique et un budget pilote 12 mois. Ces trois pièces doivent démontrer la vision, la compatibilité avec le bâtiment et la capacité d'exploitation.""",
+        'gennevilliers'
+      )
+    ]
+    c=core.conn()
+    now=_now_v85()
+    try:
+        for title,body,source_id in rows:
+            exists=c.execute("select id from bureau_documents where source_type='hub_synthesis' and source_id=?",(source_id,)).fetchone()
+            if not exists:
+                c.execute("""insert into bureau_documents
+                  (title,body,folder,tags,pinned,source_type,source_id,created_at,updated_at)
+                  values(?,?,?,?,1,'hub_synthesis',?,?,?)""",
+                  (title,body,'HUB','HUB, projet, synthèse, '+source_id,source_id,now,now))
+        c.commit()
+    finally:
+        c.close()
+
+_seed_hub_transcripts_v156()
+
+def _bureau_file_out_v156(row):
+    if not row:return None
+    out=dict(row)
+    out['content_url']=f"/api/v156/bureau/files/{out['id']}/content"
+    return out
+
+@app.get('/api/v156/bureau/files')
+def bureau_files_list_v156(project:str='',folder:str=''):
+    where=[];params=[]
+    if project:
+        where.append('project=?');params.append(project[:100])
+    if folder:
+        where.append('folder=?');params.append(folder[:100])
+    sql='select * from bureau_files'
+    if where:sql+=' where '+' and '.join(where)
+    sql+=' order by updated_at desc,id desc'
+    return [_bureau_file_out_v156(x) for x in core.rows(sql,tuple(params))]
+
+@app.post('/api/v156/bureau/files')
+def bureau_files_upload_v156(body:dict):
+    body=body or {}
+    data_url=str(body.get('data_url') or '')
+    if ',' not in data_url or not data_url.lower().startswith('data:application/pdf;base64,'):
+        raise HTTPException(400,'Seuls les PDF sont acceptés.')
+    encoded=data_url.split(',',1)[1]
+    if len(encoded)>45_000_000:
+        raise HTTPException(413,'PDF trop volumineux.')
+    try:
+        raw=base64.b64decode(encoded,validate=True)
+    except Exception:
+        raise HTTPException(400,'PDF illisible.')
+    if not raw.startswith(b'%PDF-'):
+        raise HTTPException(400,'Le fichier ne ressemble pas à un PDF valide.')
+    if len(raw)>30*1024*1024:
+        raise HTTPException(413,'PDF limité à 30 Mo.')
+    original=re.sub(r'[^A-Za-z0-9À-ÿ._ -]+','_',str(body.get('original_name') or body.get('name') or 'document.pdf')).strip()[:220] or 'document.pdf'
+    title=str(body.get('name') or original.rsplit('.',1)[0]).strip()[:220] or 'Document PDF'
+    folder=str(body.get('folder') or 'PDF').strip()[:100] or 'PDF'
+    project=str(body.get('project') or '').strip()[:100]
+    notes=str(body.get('notes') or '').strip()[:2000]
+    token=hashlib.sha256(raw+str(time.time_ns()).encode()).hexdigest()[:28]
+    filename=f"{token}.pdf"
+    path=BUREAU_FILE_DIR/filename
+    path.write_bytes(raw)
+    now=_now_v85()
+    c=core.conn()
+    cur=c.execute("""insert into bureau_files
+      (name,original_name,mime_type,size_bytes,folder,project,notes,storage_path,created_at,updated_at)
+      values(?,?,?,?,?,?,?,?,?,?)""",
+      (title,original,'application/pdf',len(raw),folder,project,notes,str(path),now,now))
+    c.commit();fid=cur.lastrowid;c.close()
+    return _bureau_file_out_v156(core.one('select * from bureau_files where id=?',(fid,)))
+
+@app.get('/api/v156/bureau/files/{file_id}/content')
+def bureau_file_content_v156(file_id:int):
+    row=core.one('select * from bureau_files where id=?',(file_id,))
+    if not row:raise HTTPException(404,'PDF introuvable')
+    path=Path(str(row.get('storage_path') or ''))
+    if not path.exists() or not path.is_file():raise HTTPException(404,'Fichier PDF absent du stockage')
+    safe=re.sub(r'[^A-Za-z0-9À-ÿ._ -]+','_',str(row.get('original_name') or row.get('name') or 'document.pdf'))
+    return FileResponse(path,media_type='application/pdf',filename=safe,content_disposition_type='inline')
+
+@app.patch('/api/v156/bureau/files/{file_id}')
+def bureau_file_update_v156(file_id:int,body:dict):
+    if not core.one('select id from bureau_files where id=?',(file_id,)):raise HTTPException(404,'PDF introuvable')
+    body=body or {};data={}
+    for key,limit in (('name',220),('folder',100),('project',100),('notes',2000)):
+        if key in body:data[key]=str(body.get(key) or '').strip()[:limit]
+    if not data:return _bureau_file_out_v156(core.one('select * from bureau_files where id=?',(file_id,)))
+    data['updated_at']=_now_v85();sets=','.join(f"{k}=?" for k in data)
+    c=core.conn();c.execute(f"update bureau_files set {sets} where id=?",(*data.values(),file_id));c.commit();c.close()
+    return _bureau_file_out_v156(core.one('select * from bureau_files where id=?',(file_id,)))
+
+@app.delete('/api/v156/bureau/files/{file_id}')
+def bureau_file_delete_v156(file_id:int):
+    row=core.one('select * from bureau_files where id=?',(file_id,))
+    if not row:raise HTTPException(404,'PDF introuvable')
+    try:
+        path=Path(str(row.get('storage_path') or ''))
+        if path.exists():path.unlink()
+    except Exception:pass
+    c=core.conn();c.execute('delete from bureau_files where id=?',(file_id,));c.commit();c.close()
+    return {'ok':True}
+
+def _idea_out_v156(row):
+    return dict(row) if row else None
+
+@app.get('/api/v156/ideas')
+def ideas_list_v156():
+    return [_idea_out_v156(x) for x in core.rows('select * from idea_cloud order by updated_at desc,id desc')]
+
+@app.post('/api/v156/ideas')
+def ideas_create_v156(body:dict):
+    body=body or {};now=_now_v85()
+    title=str(body.get('title') or 'Nouvelle idée').strip()[:220] or 'Nouvelle idée'
+    vals=(
+      title,str(body.get('body') or '')[:20000],str(body.get('stage') or 'explore')[:40],
+      str(body.get('tags') or '')[:800],str(body.get('color') or 'violet')[:40],
+      str(body.get('image_url') or '')[:2000],str(body.get('project') or '')[:160],
+      float(body.get('pos_x') or 50),float(body.get('pos_y') or 50),now,now
+    )
+    c=core.conn();cur=c.execute("""insert into idea_cloud
+      (title,body,stage,tags,color,image_url,project,pos_x,pos_y,created_at,updated_at)
+      values(?,?,?,?,?,?,?,?,?,?,?)""",vals);c.commit();iid=cur.lastrowid;c.close()
+    return _idea_out_v156(core.one('select * from idea_cloud where id=?',(iid,)))
+
+@app.patch('/api/v156/ideas/{idea_id}')
+def ideas_update_v156(idea_id:int,body:dict):
+    if not core.one('select id from idea_cloud where id=?',(idea_id,)):raise HTTPException(404,'Idée introuvable')
+    body=body or {};data={}
+    limits={'title':220,'body':20000,'stage':40,'tags':800,'color':40,'image_url':2000,'project':160}
+    for key,limit in limits.items():
+        if key in body:data[key]=str(body.get(key) or '').strip()[:limit]
+    for key in ('pos_x','pos_y'):
+        if key in body:
+            try:data[key]=max(0,min(100,float(body.get(key))))
+            except Exception:pass
+    if not data:return _idea_out_v156(core.one('select * from idea_cloud where id=?',(idea_id,)))
+    data['updated_at']=_now_v85();sets=','.join(f"{k}=?" for k in data)
+    c=core.conn();c.execute(f"update idea_cloud set {sets} where id=?",(*data.values(),idea_id));c.commit();c.close()
+    return _idea_out_v156(core.one('select * from idea_cloud where id=?',(idea_id,)))
+
+@app.delete('/api/v156/ideas/{idea_id}')
+def ideas_delete_v156(idea_id:int):
+    c=core.conn();cur=c.execute('delete from idea_cloud where id=?',(idea_id,));c.commit();c.close()
+    if not cur.rowcount:raise HTTPException(404,'Idée introuvable')
+    return {'ok':True}
+
+@app.get('/api/v156/status')
+def status_v156():
+    return {
+      'ok':True,'version':'156.0','ui':'plug-art-v156-creative-workspace',
+      'plugy':'frameless-static-round-gaze-no-blink',
+      'creation':'open-call-production-workflow',
+      'bureau':'documents-packages-templates-pdf-hub',
+      'ideas':'cloud-workspace',
+      'hub_projects':['aubervilliers','millenaire','gennevilliers']
+    }
+
 @app.get('/api/v90/status')
 @app.get('/api/v100/status')
 @app.get('/api/v101/status')
@@ -2520,8 +2807,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'154.0',
-      'ui':'plug-art-v154-studio-runtime-fix',
+      'version':'156.0',
+      'ui':'plug-art-v156-creative-workspace',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -2548,7 +2835,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print(f"PLUG_ART_V154_READY ui=studio_runtime_fix standalone_plugy=on watch_ui=on mobile_creation=ios_canvas mobile_instagram=direct mobile_map=direct creation=unified_canva_studio hub=on hub_pdf=on editor=layers_toolbar_position_guides_snap_typography_palette_shadow map=leaflet_city_fallback radar_local_venues=on instagram=social_studio plugy_finish=refined_soft_pearl voice=french_tts_streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V156_READY ui=creative_workspace plugy=frameless_round_eyes_no_blink creation=open_call_pro bureau=pdf_navigation hub=gennevilliers ideas=cloud instagram=social_studio map=live
 
 def _v127_runtime_smoke():
     required_routes={
@@ -2569,7 +2856,12 @@ def _v127_runtime_smoke():
       ('GET','/api/v88/instagram/status'),
       ('GET','/api/v88/instagram/media'),
       ('POST','/api/v88/instagram/publish'),
-      ('POST','/api/radar/run')
+      ('POST','/api/radar/run'),
+      ('GET','/api/v156/status'),
+      ('GET','/api/v156/bureau/files'),
+      ('POST','/api/v156/bureau/files'),
+      ('GET','/api/v156/ideas'),
+      ('POST','/api/v156/ideas')
     }
     active=set()
     for route in app.router.routes:
@@ -2581,7 +2873,8 @@ def _v127_runtime_smoke():
     missing=sorted(required_routes-active)
     required_tables=[
       'opportunities','artists','crm_leads','crm_history','bureau_documents',
-      'bureau_templates','application_packages','opportunity_workspace','content_drafts'
+      'bureau_templates','application_packages','opportunity_workspace','content_drafts',
+      'bureau_files','idea_cloud'
     ]
     table_missing=[]
     db_ok=False
