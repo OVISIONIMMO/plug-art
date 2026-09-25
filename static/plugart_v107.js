@@ -163,8 +163,10 @@ function ensureModelViewer(){
 }
 
 function playMotion(name='Idle',loop=false){
-  document.body.dataset.plugyMotion=name;
   const mv=$('#plugyModel');if(!mv)return;
+  const mini=$('#plugyFollower')?.contains(mv)&&$('#plugyFollower')?.classList.contains('visible');
+  if(mini&&['Blink','DoubleBlink','Wink','SoftEyes'].includes(name))name='Idle';
+  document.body.dataset.plugyMotion=name;
   const run=()=>{
     const a=mv.availableAnimations||[];
     const target=a.includes(name)?name:(a.includes('Idle')?'Idle':a[0]);
