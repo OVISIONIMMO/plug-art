@@ -2199,6 +2199,7 @@ function installStudioKeyboard(){
     if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();deleteCanvasLayer();return}
     if(e.key==='Escape'){state.canvasLayer=null;renderCanvasLayers();return}
     const step=e.shiftKey?2:.5;
+    if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))pushCreationHistory();
     if(e.key==='ArrowLeft'){e.preventDefault();l.x=Math.max(0,Number(l.x||0)-step)}
     else if(e.key==='ArrowRight'){e.preventDefault();l.x=Math.min(100-Number(l.w||20),Number(l.x||0)+step)}
     else if(e.key==='ArrowUp'){e.preventDefault();l.y=Math.max(0,Number(l.y||0)-step)}
