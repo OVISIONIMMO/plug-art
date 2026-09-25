@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='148.2'
+app.version='149.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v130.html'
@@ -16,7 +16,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='148.20260925.2'
+VERSION='149.20260925.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -596,14 +596,15 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'148.2',
-      'ui':'plug-art-v148-pro-content-studio',
+      'version':'149.0',
+      'ui':'plug-art-v149-contextual-content-studio',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
       'migration_backup_ready':backup_ready
     }
 
+@app.get('/api/v149/ui-manifest')
 @app.get('/api/v148/ui-manifest')
 @app.get('/api/v147/ui-manifest')
 @app.get('/api/v146/ui-manifest')
@@ -629,11 +630,11 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v107.js'
     css_path=BASE/'static'/'plugart_v122_slide.css'
-    expected='148.20260925.2'
+    expected='149.20260925.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v130.js').exists() and (BASE/'static'/'plugy_v130.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
-      'version':'148.2',
-      'ui':'plug-art-v148-pro-content-studio',
+      'version':'149.0',
+      'ui':'plug-art-v149-contextual-content-studio',
       'asset_version':expected,
       'html_has_js':f'plugart_v107.js?v={expected}' in html,
       'html_has_slide_css':f'plugart_v122_slide.css?v={expected}' in html,
@@ -657,7 +658,7 @@ def plugy_page_v130(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'148.2',
+      'X-Plug-Art-Version':'149.0',
       'X-Plug-Art-UI':'plugy-v130-standalone'
     }
     if request.headers.get('if-none-match')==etag:
@@ -672,8 +673,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'148.2',
-      'X-Plug-Art-UI':'plug-art-v148-pro-content-studio'
+      'X-Plug-Art-Version':'149.0',
+      'X-Plug-Art-UI':'plug-art-v149-contextual-content-studio'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -2501,6 +2502,7 @@ def builder_restore_v90(version_id:int):
 @app.get('/api/v122/status')
 @app.get('/api/v140/status')
 @app.get('/api/v141/status')
+@app.get('/api/v149/status')
 @app.get('/api/v148/status')
 @app.get('/api/v147/status')
 @app.get('/api/v146/status')
@@ -2512,9 +2514,9 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'148.2',
-      'ui':'plug-art-v148-pro-content-studio',
-      'reference_direction':'V148 PLUG ART: slide-based internal workspace with one unified Canva-like Content Studio, pro canvas toolbar, layer-based editing, page palettes, fast typography scales, shadows, spacing, snapping, full-body miniature PLUGY with static calm eyes and rare large-view blinking',
+      'version':'149.0',
+      'ui':'plug-art-v149-contextual-content-studio',
+      'reference_direction':'V149 PLUG ART: slide-based internal workspace with one unified Canva-like Content Studio, contextual Page/Element inspector, pro canvas toolbar, layer editing, palettes, typography scales, shadows, spacing, snapping and calm full-body PLUGY',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -2533,14 +2535,14 @@ def status_v90():
       'plugy_bytes':len(raw),
       'plugy_sha256':hashlib.sha256(raw).hexdigest() if raw else '',
       'plugy_animations':['Idle','SoftTurn','Think','Curious','Present','Bounce','Happy','Attentive','Wave','Dance','Blink','Listen','Speak','Charge','Travel'],
-      'studio':'Unified iOS-first Content Studio with writing, templates, free canvas, pro top toolbar, draggable/resizable/lockable/reorderable layers, page palettes, quick text scales, font controls, line-height, tracking, text case, shadows, alignment, guides, safe zone, snapping, AI assistance, PNG/ZIP export and Instagram publishing',
+      'studio':'Unified iOS-first Content Studio with writing, templates, free canvas, pro top toolbar, contextual Page/Element inspector, draggable/resizable/lockable/reorderable layers, page palettes, quick text scales, font controls, line-height, tracking, text case, shadows, alignment, guides, safe zone, snapping, AI assistance, PNG/ZIP export and Instagram publishing',
       'layouts':['top','cover','left','right','band','collage','minimal'],
       'cuts':['none','diagonal','curve','wave'],
       'themes':['editorial','glass','impact','paper','night','color'],
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print(f"PLUG_ART_V148_2_READY ui=pro_content_studio standalone_plugy=on watch_ui=on mobile_creation=ios_canvas mobile_instagram=direct mobile_map=direct creation=unified_canva_studio hub=on hub_pdf=on editor=layers_toolbar_position_guides_snap_typography_palette_shadow map=leaflet_city_fallback radar_local_venues=on instagram=social_studio plugy_finish=refined_soft_pearl voice=french_tts_streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V149_READY ui=pro_content_studio standalone_plugy=on watch_ui=on mobile_creation=ios_canvas mobile_instagram=direct mobile_map=direct creation=unified_canva_studio hub=on hub_pdf=on editor=layers_toolbar_position_guides_snap_typography_palette_shadow map=leaflet_city_fallback radar_local_venues=on instagram=social_studio plugy_finish=refined_soft_pearl voice=french_tts_streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
