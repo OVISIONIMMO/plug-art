@@ -5,6 +5,15 @@ const state={mode:'fast',history:[],busy:false,listening:false,voiceReply:true,r
 const mv=$('#plugyStandaloneModel'),chat=$('#chatScroll'),input=$('#plugyStandaloneInput'),form=$('#plugyStandaloneForm');
 
 function clean(v){return String(v??'').replace(/\s+/g,' ').trim()}
+function standaloneDistance(){
+  if(innerWidth<=390)return '3.92';
+  if(innerWidth<=780)return '3.70';
+  return '3.38';
+}
+function resetStandaloneFraming(){
+  if(!mv)return;
+  try{mv.setAttribute('camera-orbit','0deg 76deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'31deg':'30deg')}catch{}
+}
 function setState(name,label){
   document.body.dataset.plugyState=name;
   $('#plugyLiveState span').textContent=label;$('#topState').textContent=label;
@@ -111,15 +120,15 @@ function startVoice(){
   const R=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!R){input.focus();$('#composerHint').textContent='Le micro vocal direct n’est pas disponible ici. Tu peux écrire à PLUGY.';setState('idle','Mode texte');return}
   if(state.listening){try{state.recognition?.stop()}catch{};return}
-  const rec=new R();state.recognition=rec;rec.lang='fr-FR';rec.interimResults=false;rec.continuous=false;rec.maxAlternatives=3;state.listening=true;
+  let accepted=false;try{speechSynthesis?.cancel?.()}catch{}const rec=new R();state.recognition=rec;rec.lang='fr-FR';rec.interimResults=false;rec.continuous=false;rec.maxAlternatives=3;state.listening=true;
   $('#voiceButton').classList.add('listening');setState('listen','Je t’écoute…');
   rec.onresult=e=>{
     const last=e.results?.[e.results.length-1];if(!last)return;
     const alt=Array.from(last).sort((a,b)=>(b.confidence||0)-(a.confidence||0))[0]||last[0],txt=clean(alt?.transcript||'');
     if(txt){input.value=txt;autoGrow()}
-    if(last.isFinal&&txt.length>1){state.listening=false;$('#voiceButton').classList.remove('listening');ask(txt)}
+    if(last.isFinal&&txt.length>1){accepted=true;state.listening=false;$('#voiceButton').classList.remove('listening');ask(txt)}
   };
-  rec.onend=()=>{state.listening=false;$('#voiceButton').classList.remove('listening');if(!state.busy)setState('idle','Prêt')};
+  rec.onend=()=>{state.listening=false;$('#voiceButton').classList.remove('listening');if(!accepted&&!state.busy)setState('idle','Prêt')};
   rec.onerror=e=>{state.listening=false;$('#voiceButton').classList.remove('listening');const fatal=['not-allowed','service-not-allowed','audio-capture'].includes(e?.error);setState('idle',fatal?'Micro indisponible':'Je réécoute…');$('#composerHint').textContent=fatal?'Autorise le micro dans Safari pour parler à PLUGY.':'La phrase n’a pas été comprise. Réessaie ou écris ton message.'};
   try{rec.start()}catch{}
 }
@@ -130,7 +139,7 @@ function modelInteract(){
   const react=Math.random()<.45?'wave':(Math.random()<.55?'explain':'curious');setState(react,react==='wave'?'Salut.':'Je t’écoute');
   setTimeout(()=>setState('idle','Prêt'),1100);
 }
-mv?.addEventListener('load',()=>{tuneMaterials();setState('idle','Prêt')},{once:true});
+mv?.addEventListener('load',()=>{tuneMaterials();resetStandaloneFraming();setState('idle','Prêt')},{once:true});
 mv?.addEventListener('click',modelInteract);
 mv?.addEventListener('pointerenter',()=>{if(!state.busy&&!state.listening){setState(Math.random()<.62?'wave':'curious','Présent');setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},980)}});
 mv?.addEventListener('pointerdown',()=>{clearTimeout(state.pressTimer);state.pressTimer=setTimeout(startVoice,650)});
@@ -141,8 +150,8 @@ function softGaze(x=null,y=null){
   if(!mv||state.busy||state.listening)return;
   const gx=x==null?(Math.random()*6-3):x,gy=y==null?(Math.random()*3.6-1.8):y;
   mv.style.setProperty('--standalone-gaze-x',gx.toFixed(1)+'px');mv.style.setProperty('--standalone-gaze-y',gy.toFixed(1)+'px');
-  try{mv.setAttribute('camera-orbit',(gx*.72).toFixed(1)+'deg '+(76+gy*.35).toFixed(1)+'deg 3.05m')}catch{}
-  clearTimeout(gazeReset);gazeReset=setTimeout(()=>{mv.style.setProperty('--standalone-gaze-x','0px');mv.style.setProperty('--standalone-gaze-y','0px');try{mv.setAttribute('camera-orbit','0deg 76deg 3.05m')}catch{}},2100+Math.random()*1700);
+  const distance=standaloneDistance();try{mv.setAttribute('camera-orbit',(gx*.55).toFixed(1)+'deg '+(76+gy*.28).toFixed(1)+'deg '+distance+'m')}catch{}
+  clearTimeout(gazeReset);gazeReset=setTimeout(()=>{mv.style.setProperty('--standalone-gaze-x','0px');mv.style.setProperty('--standalone-gaze-y','0px');resetStandaloneFraming()},2600+Math.random()*1800);
 }
 mv?.addEventListener('pointermove',e=>{
   const r=mv.getBoundingClientRect(),x=((e.clientX-r.left)/Math.max(r.width,1)-.5)*5,y=((e.clientY-r.top)/Math.max(r.height,1)-.5)*3;
@@ -158,12 +167,12 @@ function pickAmbient(){
 }
 function scheduleEye(){
   clearTimeout(scheduleEye.t);scheduleEye.t=setTimeout(()=>{
-    if(!state.busy&&!state.listening){
-      const eye=Math.random()<.10?'doubleblink':'blink';
-      setState(eye,'Présent');setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},eye==='doubleblink'?500:330);
+    const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(!reduced&&!state.busy&&!state.listening&&document.visibilityState==='visible'&&hasAnim('Blink')){
+      setState('blink','Présent');setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},330);
     }
     scheduleEye();
-  },8200+Math.random()*6200);
+  },30000+Math.random()*20000);
 }
 function scheduleAmbient(){
   clearTimeout(ambientTimer);
@@ -173,9 +182,11 @@ function scheduleAmbient(){
       setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},1050+Math.random()*350);
     }
     scheduleAmbient();
-  },4300+Math.random()*6800);
+  },8500+Math.random()*7500);
 }
 scheduleAmbient();scheduleEye();
+addEventListener('resize',()=>resetStandaloneFraming(),{passive:true});
+addEventListener('orientationchange',()=>setTimeout(resetStandaloneFraming,180),{passive:true});
 
 form?.addEventListener('submit',e=>{e.preventDefault();ask(input.value)});
 input?.addEventListener('input',autoGrow);
