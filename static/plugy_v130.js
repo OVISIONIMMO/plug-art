@@ -172,7 +172,7 @@ function scheduleEye(){
       setState('blink','Présent');setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},330);
     }
     scheduleEye();
-  },42000+Math.random()*24000);
+  },82000+Math.random()*52000);
 }
 function scheduleAmbient(){
   clearTimeout(ambientTimer);
