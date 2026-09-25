@@ -269,7 +269,7 @@ function ensurePlugyFollower(){
 function plugyFollowerStage(){return ensurePlugyFollower()}
 function plugyFramingFor(target){
   const follower=$('#plugyFollower');
-  if(target&&follower&&target===follower)return{orbit:'0deg 76deg 6.35m',fov:'35deg'};
+  if(target&&follower&&target===follower)return{orbit:'0deg 76deg 7.10m',fov:'36deg'};
   if(target&&target===plugyDashboardStage())return{orbit:'0deg 76deg 3.42m',fov:'28deg'};
   return{orbit:'0deg 76deg 3.08m',fov:'27deg'};
 }
