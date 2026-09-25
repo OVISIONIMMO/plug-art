@@ -3235,8 +3235,6 @@ function installMobileShell(){
 
 installMobileShell();
 installMobileViewportBehavior();
-installInterfaceLab();
-loadInterfaceDesign(true);
 ensureSaveStatus();syncNetworkState();
 adaptDashboardForDrafts();
 injectOperationalUI();
