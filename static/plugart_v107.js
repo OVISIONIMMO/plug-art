@@ -437,7 +437,7 @@ function setPlugyBusy(on){
   if(form)form.setAttribute('aria-busy',on?'true':'false');
   if(submit)submit.disabled=!!on;
 }
-async async function streamPlugyRequest(payload,onDelta){
+async function streamPlugyRequest(payload,onDelta){
   const controller=new AbortController();let timer=null;
   const arm=()=>{clearTimeout(timer);timer=setTimeout(()=>controller.abort(),payload.mode==='deep'?30000:22000)};
   arm();
@@ -1981,7 +1981,7 @@ function renderVisualHistory(){
   const host=$('#visualHistory');if(!host)return;
   const rows=state.visual.history||[];
   host.innerHTML=rows.length?rows.slice(0,12).map((x,i)=>'<button data-visual-history="'+i+'" style="background-image:url(&quot;'+esc(x.url).replace(/"/g,'%22')+'&quot;)" title="'+esc(x.label||'Visuel')+'"><span>'+esc(x.label||('Visuel '+(i+1)))+'</span></button>').join(''):'<span class="visual-history-empty">Les variantes générées apparaîtront ici.</span>';
-  $('[data-visual-history]',host).forEach(b=>b.onclick=()=>{const x=rows[Number(b.dataset.visualHistory)];if(!x)return;state.visual.url=x.url;$('#visualImage').style.backgroundImage='url("'+x.url.replace(/"/g,'%22')+'")';$('#visualImage').innerHTML='';toast('Variante sélectionnée')});
+  $$('[data-visual-history]',host).forEach(b=>b.onclick=()=>{const x=rows[Number(b.dataset.visualHistory)];if(!x)return;state.visual.url=x.url;$('#visualImage').style.backgroundImage='url("'+x.url.replace(/"/g,'%22')+'")';$('#visualImage').innerHTML='';toast('Variante sélectionnée')});
 }
 function installPlugyVoiceOutput(){
   const form=$('#plugyForm');if(!form||$('#plugyVoiceOutput'))return;
@@ -2504,7 +2504,7 @@ function renderStudioImages(){
     '<div class="studio-generated-head"><span>VISUELS GÉNÉRÉS</span><button id="studioGenerateVariants">✦ Générer 3 variantes</button></div>'+
     '<div class="studio-generated-grid">'+(urls.slice(0,12).map((x,i)=>'<button class="'+(x.url===state.visual.url?'active':'')+'" data-studio-image="'+i+'" style="background-image:url(&quot;'+esc(x.url).replace(/"/g,'%22')+'&quot;)"><span>'+esc(x.label)+'</span></button>').join('')||'<div class="studio-image-empty">Choisis une direction ci-dessus ou génère plusieurs variantes.</div>')+'</div>';
   $$('[data-editorial-pattern]',box).forEach(b=>b.onclick=()=>applyEditorialPattern(b.dataset.editorialPattern));
-  $('[data-studio-image]',box).forEach(b=>b.onclick=()=>{const x=urls[Number(b.dataset.studioImage)];if(x)applySlideVisual(x.url,x.label||'Visuel')});
+  $$('[data-studio-image]',box).forEach(b=>b.onclick=()=>{const x=urls[Number(b.dataset.studioImage)];if(x)applySlideVisual(x.url,x.label||'Visuel')});
   $('#studioGenerateVariants')?.addEventListener('click',generateCarouselVariants);
 }
 async function generateCarouselVariants(){
@@ -2817,7 +2817,7 @@ function installCreationModes(){
 
   $('#carouselSource').onchange=syncCarouselBrief;$('#carouselGenerate').onclick=generateCarousel;
   $('#carouselGenerateImage').onclick=()=>generateCarouselImage(state.carousel.active);$('#carouselGenerateAll').onclick=generateAllCarouselImages;
-  $('[data-stage-pattern]').forEach(b=>b.onclick=()=>applyEditorialPattern(b.dataset.stagePattern));
+  $$('[data-stage-pattern]').forEach(b=>b.onclick=()=>applyEditorialPattern(b.dataset.stagePattern));
   $('#stageGenerateVariants')?.addEventListener('click',generateCarouselVariants);
   $('#stageOpenMedia')?.addEventListener('click',()=>openStudioRailPane('images'));
   $('#carouselExport').onclick=()=>exportCarouselSlide(state.carousel.active);$('#carouselExportAll').onclick=exportAllCarouselSlides;
@@ -2826,7 +2826,7 @@ function installCreationModes(){
   ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
   ['slideLayout','slideAccent','slideAlign','slideBackground'].forEach(id=>$('#'+id)?.addEventListener('change',updateSlideDesignFromControls));
   ['slideFontScale','slideTitleScale','slideBodyScale','slideLabelScale','slideCtaScale','slideSpacing','slideImageOpacity','slideImageUrl'].forEach(id=>$('#'+id)?.addEventListener('input',updateSlideDesignFromControls));
-  $$('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));$$('[data-accent-swatch]').forEach(b=>b.onclick=()=>{if($('#slideAccent'))$('#slideAccent').value=b.dataset.accentSwatch;updateSlideDesignFromControls()});$$('[data-bg-swatch]').forEach(b=>b.onclick=()=>{if($('#slideBackground'))$('#slideBackground').value=b.dataset.bgSwatch;updateSlideDesignFromControls()});
+  $$$('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));$$('[data-accent-swatch]').forEach(b=>b.onclick=()=>{if($('#slideAccent'))$('#slideAccent').value=b.dataset.accentSwatch;updateSlideDesignFromControls()});$$('[data-bg-swatch]').forEach(b=>b.onclick=()=>{if($('#slideBackground'))$('#slideBackground').value=b.dataset.bgSwatch;updateSlideDesignFromControls()});
   $$('[data-slide-help]').forEach(b=>b.onclick=()=>assistSlideDesign(b.dataset.slideHelp));
   $$('[data-marketing-template]').forEach(b=>b.onclick=()=>applyMarketingTemplate(b.dataset.marketingTemplate));
   $$('[data-studio-tool]').forEach(b=>b.onclick=()=>setStudioTool(b.dataset.studioTool));
@@ -3108,8 +3108,8 @@ function renderCarousel(){
   if($('#slideFontScale'))$('#slideFontScale').value=d.fontScale;if($('#slideFontScaleOut'))$('#slideFontScaleOut').textContent=d.fontScale+'%';[['Title',d.titleScale],['Body',d.bodyScale],['Label',d.labelScale],['Cta',d.ctaScale],['Spacing',d.spacing]].forEach(([k,v])=>{const el=$('#slide'+k+'Scale'),out=$('#slide'+k+'ScaleOut');if(el)el.value=v;if(out)out.textContent=v+'%'});if($('#slideSpacing'))$('#slideSpacing').value=d.spacing;if($('#slideSpacingOut'))$('#slideSpacingOut').textContent=d.spacing+'%';
   if($('#slideImageOpacity'))$('#slideImageOpacity').value=d.imageOpacity;if($('#slideImageOpacityOut'))$('#slideImageOpacityOut').textContent=d.imageOpacity+'%';
   if($('#slideImageUrl'))$('#slideImageUrl').value=s.image||'';
-  $('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
-  $('[data-stage-pattern]').forEach(b=>b.classList.toggle('active',!s.image&&b.dataset.stagePattern===d.pattern));
+  $$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
+  $$('[data-stage-pattern]').forEach(b=>b.classList.toggle('active',!s.image&&b.dataset.stagePattern===d.pattern));
   renderCanvasLayers();renderStudioImages();
 }
 
