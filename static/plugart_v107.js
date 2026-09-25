@@ -2321,8 +2321,8 @@ function syncLayerInspector(){
   if($('#layerAlign')){$('#layerAlign').value=l.align||'left';$('#layerAlign').onchange=e=>{l.align=e.target.value;updateCanvasLayerVisual(l);scheduleDraftAutosave()}}
   if($('#layerTextTransform')){$('#layerTextTransform').value=l.textTransform||'none';$('#layerTextTransform').onchange=e=>{l.textTransform=e.target.value;updateCanvasLayerVisual(l);scheduleDraftAutosave()}}
   $('#layerColor')?.addEventListener('input',e=>{l.color=e.target.value;updateCanvasLayerVisual(l);scheduleDraftAutosave()});
-  $('[data-layer-size]',box).forEach(b=>b.onclick=()=>{pushCreationHistory();l.size=Number(b.dataset.layerSize);updateCanvasLayerVisual(l);syncLayerInspector();scheduleDraftAutosave()});
-  $('[data-layer-color]',box).forEach(b=>b.onclick=()=>{pushCreationHistory();l.color=b.dataset.layerColor;updateCanvasLayerVisual(l);syncLayerInspector();scheduleDraftAutosave()});
+  $$('[data-layer-size]',box).forEach(b=>b.onclick=()=>{pushCreationHistory();l.size=Number(b.dataset.layerSize);updateCanvasLayerVisual(l);syncLayerInspector();scheduleDraftAutosave()});
+  $$('[data-layer-color]',box).forEach(b=>b.onclick=()=>{pushCreationHistory();l.color=b.dataset.layerColor;updateCanvasLayerVisual(l);syncLayerInspector();scheduleDraftAutosave()});
   $('#layerLock')?.addEventListener('click',()=>{l.locked=!l.locked;renderCanvasLayers();scheduleDraftAutosave()});
   $$('[data-layer-align]',box).forEach(b=>b.onclick=()=>alignLayerToPage(b.dataset.layerAlign));
   $('#layerDelete')?.addEventListener('click',deleteCanvasLayer);$('#layerDuplicate')?.addEventListener('click',duplicateCanvasLayer);$('#layerBack')?.addEventListener('click',()=>moveCanvasLayer('back'));$('#layerFront')?.addEventListener('click',()=>moveCanvasLayer('front'));
@@ -2491,7 +2491,7 @@ function installStudioProToolbar(){
   $$('[data-pro-zoom]',bar).forEach(b=>b.onclick=()=>{
     const action=b.dataset.proZoom,current=Number($('#creationZoom')?.value||1);
     if(action==='fit')return fitStudioCanvas();
-    setStudioZoom(current+(action==='plus'?.1:-.1));
+    setStudioZoom(current+(action==='plus'?0.1:-0.1));
   });
   setStudioZoom(Number($('#creationZoom')?.value||1));
 }
