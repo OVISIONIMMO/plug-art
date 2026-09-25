@@ -105,11 +105,15 @@ function startVoice(){
   try{rec.start()}catch{}
 }
 function modelInteract(){
-  const now=Date.now();if(now-state.lastTap<330){state.lastTap=0;setState('wave','Salut.');setTimeout(()=>setState('idle','Prêt'),1200);return}
-  state.lastTap=now;setState('curious','Je t’écoute');setTimeout(()=>setState('idle','Prêt'),900);
+  const now=Date.now();
+  if(now-state.lastTap<330){state.lastTap=0;setState('wave','Salut.');setTimeout(()=>setState('idle','Prêt'),1200);return}
+  state.lastTap=now;
+  const react=Math.random()<.52?'wink':'explain';setState(react,react==='wink'?'Présent':'Je t’écoute');
+  setTimeout(()=>setState('idle','Prêt'),react==='wink'?520:1150);
 }
 mv?.addEventListener('load',()=>{tuneMaterials();setState('idle','Prêt')},{once:true});
 mv?.addEventListener('click',modelInteract);
+mv?.addEventListener('pointerenter',()=>{if(!state.busy&&!state.listening){setState(Math.random()<.55?'wave':'wink','Présent');setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},900)}});
 mv?.addEventListener('pointerdown',()=>{clearTimeout(state.pressTimer);state.pressTimer=setTimeout(startVoice,650)});
 ['pointerup','pointercancel','pointerleave'].forEach(ev=>mv?.addEventListener(ev,()=>clearTimeout(state.pressTimer)));
 function hasAnim(name){return !!(mv?.availableAnimations||[]).includes(name)}
@@ -140,7 +144,7 @@ function scheduleEye(){
       setState(eye,'Présent');setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},eye==='doubleblink'?520:360);
     }
     scheduleEye();
-  },3600+Math.random()*5200);
+  },2800+Math.random()*3900);
 }
 function scheduleAmbient(){
   clearTimeout(ambientTimer);
@@ -150,11 +154,11 @@ function scheduleAmbient(){
       setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},1050+Math.random()*350);
     }
     scheduleAmbient();
-  },5600+Math.random()*9800);
+  },4300+Math.random()*6800);
 }
 scheduleAmbient();scheduleEye();
 
-form?.addEventListenerform?.addEventListener('submit',e=>{e.preventDefault();ask(input.value)});
+form?.addEventListener('submit',e=>{e.preventDefault();ask(input.value)});
 input?.addEventListener('input',autoGrow);
 input?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});
 $('#voiceButton')?.addEventListener('click',startVoice);$('#heroVoice')?.addEventListener('click',()=>{$('#chatSection').scrollIntoView({behavior:'smooth'});setTimeout(startVoice,420)});
