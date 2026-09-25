@@ -47,10 +47,28 @@ function renderHistory(){
 }
 function scrollChat(){requestAnimationFrame(()=>{chat.scrollTop=chat.scrollHeight;window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'})})}
 function autoGrow(){input.style.height='auto';input.style.height=Math.min(input.scrollHeight,150)+'px'}
+
+let preferredVoice=null;
+function resolvePreferredVoice(){
+  if(!('speechSynthesis' in window))return null;
+  const voices=speechSynthesis.getVoices?.()||[];
+  const fr=voices.filter(v=>/^fr([-_]|$)/i.test(v.lang||''));
+  preferredVoice=fr.find(v=>v.localService)||fr[0]||voices.find(v=>/^fr/i.test(v.lang||''))||null;
+  return preferredVoice;
+}
+function primeVoiceOutput(){
+  if(!('speechSynthesis' in window))return;
+  try{speechSynthesis.resume();resolvePreferredVoice()}catch{}
+}
+if('speechSynthesis' in window){
+  resolvePreferredVoice();
+  try{speechSynthesis.addEventListener?.('voiceschanged',resolvePreferredVoice)}catch{}
+}
+
 function speak(text){
   if(!state.voiceReply||!('speechSynthesis'in window)||!clean(text)){setState('idle','Prêt');return}
   try{
-    speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(clean(text));u.lang='fr-FR';u.rate=1.13;u.pitch=1;
+    speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(clean(text));u.lang='fr-FR';u.rate=1.12;u.pitch=1;u.volume=1;const voice=preferredVoice||resolvePreferredVoice();if(voice)u.voice=voice;
     u.onstart=()=>setState('speak','Je parle…');u.onend=()=>{setState('idle','Prêt');if(state.listening===false&&$('#voiceButton')?.classList.contains('conversation'))setTimeout(startVoice,380)};
     u.onerror=()=>setState('idle','Prêt');speechSynthesis.speak(u);
   }catch{setState('idle','Prêt')}
@@ -89,10 +107,11 @@ async function ask(text){
   state.busy=false;setState('happy','Réponse prête');setTimeout(()=>speak(answer),120);
 }
 function startVoice(){
+  primeVoiceOutput();
   const R=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!R){input.focus();$('#composerHint').textContent='La reconnaissance vocale web n’est pas disponible sur ce navigateur.';return}
+  if(!R){input.focus();$('#composerHint').textContent='Le micro vocal direct n’est pas disponible ici. Tu peux écrire à PLUGY.';setState('idle','Mode texte');return}
   if(state.listening){try{state.recognition?.stop()}catch{};return}
-  const rec=new R();state.recognition=rec;rec.lang='fr-FR';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=3;state.listening=true;
+  const rec=new R();state.recognition=rec;rec.lang='fr-FR';rec.interimResults=false;rec.continuous=false;rec.maxAlternatives=3;state.listening=true;
   $('#voiceButton').classList.add('listening');setState('listen','Je t’écoute…');
   rec.onresult=e=>{
     const last=e.results?.[e.results.length-1];if(!last)return;
@@ -101,19 +120,19 @@ function startVoice(){
     if(last.isFinal&&txt.length>1){state.listening=false;$('#voiceButton').classList.remove('listening');ask(txt)}
   };
   rec.onend=()=>{state.listening=false;$('#voiceButton').classList.remove('listening');if(!state.busy)setState('idle','Prêt')};
-  rec.onerror=()=>{state.listening=false;$('#voiceButton').classList.remove('listening');setState('idle','Prêt')};
+  rec.onerror=e=>{state.listening=false;$('#voiceButton').classList.remove('listening');const fatal=['not-allowed','service-not-allowed','audio-capture'].includes(e?.error);setState('idle',fatal?'Micro indisponible':'Je réécoute…');$('#composerHint').textContent=fatal?'Autorise le micro dans Safari pour parler à PLUGY.':'La phrase n’a pas été comprise. Réessaie ou écris ton message.'};
   try{rec.start()}catch{}
 }
 function modelInteract(){
   const now=Date.now();
   if(now-state.lastTap<330){state.lastTap=0;setState('wave','Salut.');setTimeout(()=>setState('idle','Prêt'),1200);return}
   state.lastTap=now;
-  const react=Math.random()<.52?'wink':'explain';setState(react,react==='wink'?'Présent':'Je t’écoute');
-  setTimeout(()=>setState('idle','Prêt'),react==='wink'?520:1150);
+  const react=Math.random()<.45?'wave':(Math.random()<.55?'explain':'curious');setState(react,react==='wave'?'Salut.':'Je t’écoute');
+  setTimeout(()=>setState('idle','Prêt'),1100);
 }
 mv?.addEventListener('load',()=>{tuneMaterials();setState('idle','Prêt')},{once:true});
 mv?.addEventListener('click',modelInteract);
-mv?.addEventListener('pointerenter',()=>{if(!state.busy&&!state.listening){setState(Math.random()<.55?'wave':'wink','Présent');setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},900)}});
+mv?.addEventListener('pointerenter',()=>{if(!state.busy&&!state.listening){setState(Math.random()<.62?'wave':'curious','Présent');setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},980)}});
 mv?.addEventListener('pointerdown',()=>{clearTimeout(state.pressTimer);state.pressTimer=setTimeout(startVoice,650)});
 ['pointerup','pointercancel','pointerleave'].forEach(ev=>mv?.addEventListener(ev,()=>clearTimeout(state.pressTimer)));
 function hasAnim(name){return !!(mv?.availableAnimations||[]).includes(name)}
@@ -140,11 +159,11 @@ function pickAmbient(){
 function scheduleEye(){
   clearTimeout(scheduleEye.t);scheduleEye.t=setTimeout(()=>{
     if(!state.busy&&!state.listening){
-      const r=Math.random(),eye=r<.12?'doubleblink':r<.24?'wink':r<.38?'softeyes':'blink';
-      setState(eye,'Présent');setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},eye==='doubleblink'?520:360);
+      const eye=Math.random()<.10?'doubleblink':'blink';
+      setState(eye,'Présent');setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},eye==='doubleblink'?500:330);
     }
     scheduleEye();
-  },2800+Math.random()*3900);
+  },8200+Math.random()*6200);
 }
 function scheduleAmbient(){
   clearTimeout(ambientTimer);
@@ -161,7 +180,7 @@ scheduleAmbient();scheduleEye();
 form?.addEventListener('submit',e=>{e.preventDefault();ask(input.value)});
 input?.addEventListener('input',autoGrow);
 input?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});
-$('#voiceButton')?.addEventListener('click',startVoice);$('#heroVoice')?.addEventListener('click',()=>{$('#chatSection').scrollIntoView({behavior:'smooth'});setTimeout(startVoice,420)});
+$('#voiceButton')?.addEventListener('click',()=>{primeVoiceOutput();startVoice()});$('#heroVoice')?.addEventListener('click',()=>{primeVoiceOutput();$('#chatSection').scrollIntoView({behavior:'smooth'});setTimeout(startVoice,420)});
 $('#goChat')?.addEventListener('click',()=>$('#chatSection').scrollIntoView({behavior:'smooth'}));
 $('#voiceReplyToggle')?.addEventListener('click',e=>{state.voiceReply=!state.voiceReply;e.currentTarget.classList.toggle('active',state.voiceReply);e.currentTarget.textContent=state.voiceReply?'Voix activée':'Voix coupée';if(!state.voiceReply&&'speechSynthesis'in window)speechSynthesis.cancel()});
 $$('[data-mode]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;$$('[data-mode]').forEach(x=>x.classList.toggle('active',x===b))});
