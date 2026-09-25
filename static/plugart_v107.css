@@ -3038,3 +3038,19 @@ body[data-plugy-motion="EyeThink"] .plugy-follower #plugyModel{
   #view-creation .studio-visual-rail{padding:6px 0 8px}
   #view-creation .studio-visual-rail button{padding:7px 9px!important}
 }
+
+
+/* V154 · reliable visual picker feedback */
+#view-creation .editorial-choice.active{
+  outline:2px solid rgba(115,92,255,.62)!important;outline-offset:2px;
+  box-shadow:0 8px 22px rgba(90,72,190,.10)!important
+}
+#view-creation .studio-generated-grid>[data-studio-image].active{
+  outline:2px solid #735cff;outline-offset:2px
+}
+#view-creation .studio-visual-rail [data-stage-pattern].active{
+  background:#17181d!important;color:#fff!important;border-color:#17181d!important
+}
+#view-creation .studio-generated-grid>[data-studio-image]:hover{
+  transform:translateY(-2px);box-shadow:0 10px 24px rgba(31,33,43,.10)
+}
