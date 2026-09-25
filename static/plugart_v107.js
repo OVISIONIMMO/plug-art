@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='143.20260925.1';
+const VERSION='144.20260925.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -206,13 +206,21 @@ function tunePlugyMaterials(){
   }catch(e){console.warn('[PLUGY finish]',e)}
 }
 $('#plugyModel')?.addEventListener('load',()=>{tunePlugyMaterials();if($('#plugyState span'))$('#plugyState span').textContent='Prêt';playMotion('Idle',true)},{once:true});
-$('#plugyModel')?.addEventListener('pointerenter',()=>{playMotion('Curious');plugySoftGaze()});
+$('#plugyModel')?.addEventListener('pointerenter',()=>{
+  const hello=choosePlugyMotion(['ArmHello','Wink','Curious']);
+  if(hello)playMotion(hello);
+  plugySoftGaze();
+});
 $('#plugyModel')?.addEventListener('pointermove',e=>{
   const mv=$('#plugyModel'),r=mv?.getBoundingClientRect();if(!mv||!r||state.voice)return;
   const nx=((e.clientX-r.left)/Math.max(1,r.width)-.5),ny=((e.clientY-r.top)/Math.max(1,r.height)-.5);
   mv.style.setProperty('--plugy-gaze-x',(nx*5).toFixed(1)+'px');mv.style.setProperty('--plugy-gaze-y',(ny*3).toFixed(1)+'px');
 });
-$('#plugyModel')?.addEventListener('dblclick',()=>{openPlugy();playMotion('Attentive')});
+$('#plugyModel')?.addEventListener('dblclick',()=>{
+  openPlugy();
+  const react=choosePlugyMotion(['ArmExplain','Wink','Attentive']);
+  if(react)playMotion(react);
+});
 
 
 let plugyWarmPromise=null,plugy3DRequested=false;
@@ -3217,13 +3225,13 @@ function choosePlugyMotion(pool){
 function schedulePlugyBlink(){
   clearTimeout(schedulePlugyBlink.t);
   schedulePlugyBlink.t=setTimeout(()=>{
-    const busy=['Think','Charge','Listen','Speak','ArmThink'].includes(document.body.dataset.plugyMotion||'');
+    const busy=['Think','Charge','Listen','Speak','ArmThink','ArmHello','ArmExplain','ArmShrug','ArmStretch'].includes(document.body.dataset.plugyMotion||'');
     if(!state.voice&&!busy&&document.visibilityState==='visible'&&plugyIsVisible()){
-      const r=Math.random(),eye=r<.12?'DoubleBlink':r<.22?'Wink':r<.34?'SoftEyes':'Blink';
+      const r=Math.random(),eye=r<.10?'DoubleBlink':r<.17?'Wink':r<.28?'SoftEyes':'Blink';
       if(plugyAvailable(eye))playMotion(eye);
     }
     schedulePlugyBlink();
-  },3600+Math.random()*5200);
+  },2800+Math.random()*3900);
 }
 function schedulePlugyAmbient(){
   clearTimeout(plugyAmbientTimer);
@@ -3231,13 +3239,13 @@ function schedulePlugyAmbient(){
     if(!state.voice&&document.visibilityState==='visible'&&plugyIsVisible()){
       const busy=['Think','Charge','Listen','Speak','ArmThink'].includes(document.body.dataset.plugyMotion||'');
       if(!busy){
-        const motion=choosePlugyMotion(['SoftTurn','Curious','Attentive','ArmExplain','ArmShrug','ArmStretch','ArmHello','Present','Happy','EyeThink']);
+        const motion=choosePlugyMotion(['ArmExplain','ArmShrug','ArmStretch','ArmHello','EyeThink','SoftEyes','SoftTurn','Curious','Attentive','Present','Happy']);
         if(motion)playMotion(motion);
         if(Math.random()<.72)plugySoftGaze();
       }
     }
     schedulePlugyAmbient();
-  },5200+Math.random()*9500);
+  },4200+Math.random()*6800);
 }
 function startPlugyAmbient(){
   schedulePlugyAmbient();schedulePlugyBlink();
@@ -3248,7 +3256,8 @@ function startPlugyAmbient(){
 }
 const pm=$('#plugyModel');
 pm?.addEventListener('click',()=>{
-  playMotion(plugyAvailable('Happy')?'Happy':'Curious');
+  const react=choosePlugyMotion(['Wink','ArmHello','Happy','ArmExplain']);
+  if(react)playMotion(react);
   plugySoftGaze();
 });
 pm?.addEventListener('pointerdown',()=>{clearTimeout(plugyPressTimer);plugyPressTimer=setTimeout(()=>{initVoice();playMotion('Attentive',true)},650)});
