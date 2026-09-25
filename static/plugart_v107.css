@@ -2811,7 +2811,7 @@ body[data-plugy-motion="SoftEyes"] .plugy-follower #plugyModel{
 }
 
 
-/* V151 · Unified content studio. Creative Lab is absorbed into one Canva-like editor. */
+/* V151 · Unified content studio. One Canva-like editor for all content tools. */
 #view-creation .creation-layout{
   grid-template-columns:minmax(235px,285px) minmax(0,1fr)!important;
   gap:12px!important;
