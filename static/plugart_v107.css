@@ -973,7 +973,7 @@ body[data-plugy-motion="Blink"] #plugyModel{filter:drop-shadow(0 27px 35px rgba(
 @media(prefers-reduced-motion:reduce){#plugyModel{translate:0 0!important;transition:none!important}}
 
 
-/* V135 · Creation / Content Studio inspired by Interface Lab */
+/* V135 · Content Studio foundation */
 #view-creation{--studio-zoom:1}
 #view-creation .creation-page-toolbar{padding:18px 4px 14px}
 #view-creation .creation-page-toolbar>div:first-child{max-width:680px}
@@ -1279,7 +1279,7 @@ body[data-plugy-motion="Charge"] #plugyModel{
 
 
 /* V142 · Unified Content Studio
-   Creative Lab is removed. One workspace owns structure, design and output. */
+   One Content Studio owns structure, design and output. */
 #view-creation{
   --studio-violet:#735cff;
   --studio-cyan:#45cbd7;
