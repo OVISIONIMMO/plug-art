@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='145.0'
+app.version='146.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v130.html'
@@ -16,7 +16,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='145.20260925.1'
+VERSION='146.20260925.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -596,14 +596,15 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'145.0',
-      'ui':'plug-art-v145-ios-content-studio',
+      'version':'146.0',
+      'ui':'plug-art-v146-unified-ios-studio',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
       'migration_backup_ready':backup_ready
     }
 
+@app.get('/api/v146/ui-manifest')
 @app.get('/api/v145/ui-manifest')
 @app.get('/api/v144/ui-manifest')
 @app.get('/api/v143/ui-manifest')
@@ -626,15 +627,15 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v107.js'
     css_path=BASE/'static'/'plugart_v122_slide.css'
-    expected='145.20260925.1'
+    expected='146.20260925.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v130.js').exists() and (BASE/'static'/'plugy_v130.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
-      'version':'144.0',
-      'ui':'plug-art-v145-ios-content-studio',
+      'version':'146.0',
+      'ui':'plug-art-v146-unified-ios-studio',
       'asset_version':expected,
       'html_has_js':f'plugart_v107.js?v={expected}' in html,
       'html_has_slide_css':f'plugart_v122_slide.css?v={expected}' in html,
-      'html_has_sidebar_version':'V145' in html,
+      'html_has_sidebar_version':'V146' in html,
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
@@ -654,7 +655,7 @@ def plugy_page_v130(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'145.0',
+      'X-Plug-Art-Version':'146.0',
       'X-Plug-Art-UI':'plugy-v130-standalone'
     }
     if request.headers.get('if-none-match')==etag:
@@ -669,8 +670,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'145.0',
-      'X-Plug-Art-UI':'plug-art-v145-ios-content-studio'
+      'X-Plug-Art-Version':'146.0',
+      'X-Plug-Art-UI':'plug-art-v146-unified-ios-studio'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -2498,6 +2499,7 @@ def builder_restore_v90(version_id:int):
 @app.get('/api/v122/status')
 @app.get('/api/v140/status')
 @app.get('/api/v141/status')
+@app.get('/api/v146/status')
 @app.get('/api/v145/status')
 @app.get('/api/v144/status')
 @app.get('/api/v143/status')
@@ -2507,8 +2509,8 @@ def status_v90():
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
       'version':'144.0',
-      'ui':'plug-art-v145-ios-content-studio',
-      'reference_direction':'V145 PLUG ART: slide-based internal workspace with one unified Canva-like Content Studio, iOS-first canvas editing, granular typography and color controls, compact full-body PLUGY, calmer natural eye motion and French voice replies',
+      'ui':'plug-art-v146-unified-ios-studio',
+      'reference_direction':'V146 PLUG ART: slide-based internal workspace with one unified Canva-like Content Studio, single contextual tool rail, iPhone bottom-sheet editing, tactile typography controls, smaller full-body PLUGY, restrained eye motion and stable French voice replies',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -2534,13 +2536,13 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print(f"PLUG_ART_V145_READY ui=ios_content_studio standalone_plugy=on watch_ui=on mobile_creation=ios_canvas mobile_instagram=direct mobile_map=direct creation=unified_canva_studio hub=on hub_pdf=on editor=layers_typography_color_bottom_sheets map=leaflet_city_fallback radar_local_venues=on instagram=social_studio plugy_finish=refined_soft_pearl voice=french_tts_streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V146_READY ui=unified_ios_content_studio standalone_plugy=on watch_ui=on mobile_creation=ios_canvas mobile_instagram=direct mobile_map=direct creation=unified_canva_studio hub=on hub_pdf=on editor=layers_typography_color_bottom_sheets map=leaflet_city_fallback radar_local_venues=on instagram=social_studio plugy_finish=refined_soft_pearl voice=french_tts_streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
       ('GET','/api/health'),
       ('GET','/plugy'),
-      ('GET','/api/v145/ui-manifest'),
+      ('GET','/api/v146/ui-manifest'),
       ('GET','/api/v90/builder/config'),
       ('PATCH','/api/v90/builder/config'),
       ('GET','/api/map'),
