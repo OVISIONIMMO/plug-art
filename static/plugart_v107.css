@@ -1919,3 +1919,17 @@ body[data-plugy-motion] #plugyModel{filter:none!important}
   #view-creation .studio-mobile-dock{left:5px;right:5px}
   #view-creation .studio-canvas-frame .carousel-canvas{max-height:56svh!important}
 }
+
+@media(max-width:820px){
+  #view-creation.quick-generated:not(.advanced-studio) #carouselCreationPanel .studio-library.mobile-open,
+  #view-creation.quick-generated:not(.advanced-studio) #carouselCreationPanel .studio-inspector.mobile-open{
+    display:grid!important;
+    grid-column:auto!important;
+    grid-row:auto!important;
+    max-height:min(58svh,560px)!important;
+  }
+  #view-creation.quick-generated:not(.advanced-studio) #carouselCreationPanel .studio-stage{
+    grid-column:auto!important;
+    min-height:auto!important;
+  }
+}
