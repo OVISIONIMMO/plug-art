@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='154.20260925.1';
+const VERSION='158.20260926.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -235,8 +235,8 @@ function scheduleSmartPlugyWarm(){
   const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
   if(conn?.saveData||['slow-2g','2g'].includes(String(conn?.effectiveType||'')))return;
   const warm=()=>{if(document.visibilityState==='visible')warmPlugy3D('idle').catch(()=>{})};
-  if('requestIdleCallback' in window)requestIdleCallback(warm,{timeout:2800});
-  else setTimeout(warm,1600);
+  if('requestIdleCallback' in window)requestIdleCallback(warm,{timeout:4200});
+  else setTimeout(warm,2600);
 }
 function bindPlugyWarmIntent(){
   const targets=[$('#sidebarPlugy'),$('#topPlugy'),...$$('[data-open-plugy]')].filter(Boolean);
@@ -3718,5 +3718,11 @@ pm?.addEventListener('pointerdown',()=>{clearTimeout(plugyPressTimer);plugyPress
 startPlugyAmbient();
 
 addEventListener('beforeunload',()=>{if(state.view==='creation'&&state.creationDirty)saveLocalCreationBackup()});
-const initial=location.hash.slice(1)||'dashboard';history.replaceState({view:initial},'','#'+initial);route(initial,false);renderSuggestions();loadAll().finally(scheduleSmartPlugyWarm);
+const initial=location.hash.slice(1)||'dashboard';
+history.replaceState({view:initial},'','#'+initial);
+route(initial,false);
+renderSuggestions();
+document.documentElement.dataset.plugartReady='1';
+requestAnimationFrame(()=>document.body.classList.add('plugart-ready'));
+loadAll().finally(scheduleSmartPlugyWarm);
 })();

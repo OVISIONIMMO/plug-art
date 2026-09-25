@@ -18,6 +18,8 @@ function toast(msg){
 /* ---------------- PLUGY V156 ---------------- */
 function stabilizePlugy(){
   const mv=$('#plugyModel');if(!mv)return;
+  if(mv.dataset.v158Stable==='1')return;
+  mv.dataset.v158Stable='1';
   const forbidden=new Set(['Blink','DoubleBlink','Wink','SoftEyes','EyeThink']);
   const fix=()=>{
     try{

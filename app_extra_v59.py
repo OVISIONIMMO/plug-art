@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='157.0'
+app.version='158.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v130.html'
@@ -16,7 +16,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='157.20260926.1'
+VERSION='158.20260926.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -596,14 +596,15 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'157.0',
-      'ui':'plug-art-v157-context-workspace',
+      'version':'158.0',
+      'ui':'plug-art-v158-stable-boot',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
       'migration_backup_ready':backup_ready
     }
 
+@app.get('/api/v158/ui-manifest')
 @app.get('/api/v157/ui-manifest')
 @app.get('/api/v154/ui-manifest')
 @app.get('/api/v153/ui-manifest')
@@ -636,15 +637,15 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v107.js'
     css_path=BASE/'static'/'plugart_v122_slide.css'
-    expected='157.20260926.1'
+    expected='158.20260926.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v130.js').exists() and (BASE/'static'/'plugy_v130.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
-      'version':'157.0',
-      'ui':'plug-art-v157-context-workspace',
+      'version':'158.0',
+      'ui':'plug-art-v158-stable-boot',
       'asset_version':expected,
       'html_has_js':f'plugart_v107.js?v={expected}' in html,
       'html_has_slide_css':f'plugart_v122_slide.css?v={expected}' in html,
-      'html_has_sidebar_version':'V157' in html,
+      'html_has_sidebar_version':'V158' in html,
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
@@ -664,7 +665,7 @@ def plugy_page_v130(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'157.0',
+      'X-Plug-Art-Version':'158.0',
       'X-Plug-Art-UI':'plugy-v130-standalone'
     }
     if request.headers.get('if-none-match')==etag:
@@ -679,8 +680,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'private, no-cache, must-revalidate',
       'ETag':etag,
-      'X-Plug-Art-Version':'157.0',
-      'X-Plug-Art-UI':'plug-art-v157-context-workspace'
+      'X-Plug-Art-Version':'158.0',
+      'X-Plug-Art-UI':'plug-art-v158-stable-boot'
     }
     if request.headers.get('if-none-match')==etag:
         return Response(status_code=304,headers=headers)
@@ -2737,11 +2738,12 @@ def ideas_delete_v156(idea_id:int):
     if not cur.rowcount:raise HTTPException(404,'Idée introuvable')
     return {'ok':True}
 
+@app.get('/api/v158/status')
 @app.get('/api/v157/status')
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'157.0','ui':'plug-art-v157-context-workspace',
+      'ok':True,'version':'158.0','ui':'plug-art-v158-stable-boot',
       'plugy':'frameless-static-round-gaze-no-blink',
       'creation':'open-call-production-workflow',
       'bureau':'documents-packages-templates-pdf-hub',
@@ -2810,8 +2812,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'157.0',
-      'ui':'plug-art-v157-context-workspace',
+      'version':'158.0',
+      'ui':'plug-art-v158-stable-boot',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -2838,7 +2840,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V157_READY ui=context_workspace plugy=3d_action_ring creation=open_call_pro bureau=pdf_navigation hub=gennevilliers ideas=drag_bridge studio=connected instagram=social_studio map=live",flush=True)
+print("PLUG_ART_V158_READY ui=stable_boot plugy=single_observer shortcut=standalone creation=open_call_pro bureau=pdf_navigation hub=gennevilliers ideas=drag_bridge studio=connected",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={

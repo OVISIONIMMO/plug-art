@@ -296,3 +296,26 @@ body[data-view="map"] .plugy-action-ring{right:98px;bottom:82px}
 .idea-detail-actions .bridge{background:#f4f1fb;border-color:#ded7f0;color:#61568d}.idea-detail-actions .bridge:not(:disabled):hover{background:#ece6f8}.idea-detail-actions button:disabled{opacity:.42;cursor:not-allowed}
 @media(max-width:820px){.plugy-action-ring{right:72px!important;bottom:176px!important;width:min(288px,calc(100vw - 92px));border-radius:20px}}
 @media(max-width:540px){.plugy-action-ring{right:14px!important;bottom:196px!important;width:calc(100vw - 28px)}.plugy-action-ring-action{min-height:58px}}
+
+
+/* PLUG ART V158 — boot stability + standalone PLUGY shortcut */
+.plugy-solo-shortcut{
+  min-height:38px;padding:0 12px;border:1px solid rgba(118,87,255,.18);border-radius:12px;
+  display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:#37344b;
+  background:linear-gradient(135deg,#f9f8ff,#fff);font-size:9px;font-weight:850;
+  box-shadow:0 10px 24px rgba(88,69,154,.06);white-space:nowrap
+}
+.plugy-solo-shortcut span{font-size:15px;color:#7657ff}.plugy-solo-shortcut b{font-size:9px;color:#9088aa}
+.plugy-solo-shortcut:hover{transform:translateY(-2px);box-shadow:0 15px 34px rgba(88,69,154,.12)}
+.quick-grid .quick-plugy-solo{
+  min-height:102px;padding:14px;border:1px solid rgba(118,87,255,.16);border-radius:18px;
+  background:linear-gradient(145deg,#faf9ff,#f4efff);text-align:left;text-decoration:none;color:inherit;
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;transition:.18s ease
+}
+.quick-grid .quick-plugy-solo:hover{transform:translateY(-5px);box-shadow:0 20px 46px rgba(76,57,143,.08)}
+.quick-grid .quick-plugy-solo b{font-size:18px;color:#7657ff}.quick-grid .quick-plugy-solo strong{font-size:11px;margin-top:22px}.quick-grid .quick-plugy-solo span{font-size:9px;color:#9295a0;margin-top:4px}
+html:not([data-plugart-ready="1"]) #view-dashboard{display:block}
+@media(max-width:820px){
+  .plugy-solo-shortcut{width:42px;height:42px;padding:0;display:grid;place-items:center;border-radius:14px}
+  .plugy-solo-shortcut strong,.plugy-solo-shortcut b{display:none}.plugy-solo-shortcut span{font-size:20px}
+}
