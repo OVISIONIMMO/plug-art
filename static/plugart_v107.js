@@ -3451,7 +3451,7 @@ function schedulePlugyBlink(){
     const miniVisible=$('#plugyFollower')?.classList.contains('visible')&&!$('#plugyDrawer')?.classList.contains('open');
     if(!reduced&&!miniVisible&&!state.voice&&!busy&&document.visibilityState==='visible'&&plugyIsVisible()&&plugyAvailable('Blink'))playMotion('Blink');
     schedulePlugyBlink();
-  },38000+Math.random()*26000);
+  },76000+Math.random()*52000);
 }
 function schedulePlugyAmbient(){
   clearTimeout(plugyAmbientTimer);
