@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='150.0'
+app.version='151.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v107.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v130.html'
@@ -16,7 +16,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='150.20260925.1'
+VERSION='151.20260925.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -596,7 +596,7 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'150.0',
+      'version':'151.0',
       'ui':'plug-art-v150-ios-content-studio',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
@@ -2518,7 +2518,7 @@ def status_v90():
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
       'version':'150.0',
       'ui':'plug-art-v150-ios-content-studio',
-      'reference_direction':'V150 PLUG ART: iPhone-first internal workspace with central canvas, floating mobile tool dock, bottom-sheet Studio controls, compact full-body PLUGY, static mobile eyes and more reliable French voice output',
+      'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
       'runtime_split':True,
@@ -2544,7 +2544,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print(f"PLUG_ART_V150_READY ui=pro_content_studio standalone_plugy=on watch_ui=on mobile_creation=ios_canvas mobile_instagram=direct mobile_map=direct creation=unified_canva_studio hub=on hub_pdf=on editor=layers_toolbar_position_guides_snap_typography_palette_shadow map=leaflet_city_fallback radar_local_venues=on instagram=social_studio plugy_finish=refined_soft_pearl voice=french_tts_streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
+print(f"PLUG_ART_V151_READY ui=pro_content_studio standalone_plugy=on watch_ui=on mobile_creation=ios_canvas mobile_instagram=direct mobile_map=direct creation=unified_canva_studio hub=on hub_pdf=on editor=layers_toolbar_position_guides_snap_typography_palette_shadow map=leaflet_city_fallback radar_local_venues=on instagram=social_studio plugy_finish=refined_soft_pearl voice=french_tts_streaming graph={_ig_graph_version()} instagram_configured={_ig_configured()} plugy_bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
