@@ -4,7 +4,7 @@ const VERSION='146.20260925.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,recognition:null,plugyBusy:false,creationMode:'text',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''},canvasLayer:null,canvasTool:'templates'};
+const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,recognition:null,plugyBusy:false,creationMode:'text',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:''},canvasLayer:null,canvasTool:'templates',studioGuides:true,studioSafe:true,studioSnap:true};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -2114,6 +2114,100 @@ function activeCanvasLayer(){
   return slideLayers(s).find(l=>String(l.id)===String(state.canvasLayer))||null;
 }
 function newLayerId(){return 'ly-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6)}
+
+function renderStudioCanvasAids(){
+  const canvas=$('#carouselCanvas');if(!canvas)return;
+  canvas.classList.toggle('show-guides',!!state.studioGuides);
+  canvas.classList.toggle('show-safe',!!state.studioSafe);
+  canvas.classList.toggle('snap-enabled',!!state.studioSnap);
+  const g=$('#stageGuidesToggle'),s=$('#stageSafeToggle'),n=$('#stageSnapToggle');
+  if(g)g.classList.toggle('active',!!state.studioGuides);
+  if(s)s.classList.toggle('active',!!state.studioSafe);
+  if(n)n.classList.toggle('active',!!state.studioSnap);
+}
+function snapLayerPosition(l,x,y){
+  if(!state.studioSnap)return{x,y,snapX:false,snapY:false};
+  const w=Number(l.w||20),h=Number(l.h||12);let sx=false,sy=false;
+  const safe=5,threshold=1.6;
+  const cx=x+w/2,cy=y+h/2;
+  if(Math.abs(cx-50)<threshold){x=50-w/2;sx=true}
+  else if(Math.abs(x-safe)<threshold){x=safe;sx=true}
+  else if(Math.abs((x+w)-(100-safe))<threshold){x=100-safe-w;sx=true}
+  if(Math.abs(cy-50)<threshold){y=50-h/2;sy=true}
+  else if(Math.abs(y-safe)<threshold){y=safe;sy=true}
+  else if(Math.abs((y+h)-(100-safe))<threshold){y=100-safe-h;sy=true}
+  return{x:Math.max(0,Math.min(100-w,x)),y:Math.max(0,Math.min(100-h,y)),snapX:sx,snapY:sy};
+}
+function setCanvasSnapIndicators(x=false,y=false){
+  const canvas=$('#carouselCanvas');if(!canvas)return;
+  canvas.classList.toggle('snap-x',!!x);canvas.classList.toggle('snap-y',!!y);
+}
+function layerLabel(l){
+  if(!l)return'Élément';
+  if(l.type==='text')return clean(l.text||'Texte').slice(0,28)||'Texte';
+  if(l.type==='image')return'Image';
+  return l.shape==='circle'?'Cercle':l.shape==='pill'?'Pill':l.shape==='line'?'Ligne':'Forme';
+}
+function renderLayerList(){
+  const box=$('#studioLayerList');if(!box)return;
+  const s=state.carousel.slides[state.carousel.active],layers=slideLayers(s);
+  const ordered=layers.map((l,i)=>({l,i})).reverse();
+  box.innerHTML=ordered.map(({l,i})=>'<div class="studio-layer-row '+(String(l.id)===String(state.canvasLayer)?'active':'')+'" draggable="true" data-layer-row="'+esc(l.id)+'" data-layer-index="'+i+'"><button class="layer-row-main" data-layer-select="'+esc(l.id)+'"><i>'+(l.type==='text'?'T':l.type==='image'?'▧':'◯')+'</i><span><strong>'+esc(layerLabel(l))+'</strong><small>'+esc(l.type)+'</small></span></button><button data-layer-visible="'+esc(l.id)+'" title="Afficher/masquer">'+(l.hidden?'○':'●')+'</button><button data-layer-lock="'+esc(l.id)+'" title="Verrouiller">'+(l.locked?'🔒':'🔓')+'</button></div>').join('')||'<div class="studio-layer-empty">Ajoute du texte, une image ou une forme.</div>';
+  $$('[data-layer-select]',box).forEach(b=>b.onclick=()=>{state.canvasLayer=b.dataset.layerSelect;renderCanvasLayers();openStudioRailPane('style')});
+  $$('[data-layer-visible]',box).forEach(b=>b.onclick=e=>{e.stopPropagation();const l=layers.find(x=>String(x.id)===String(b.dataset.layerVisible));if(!l)return;pushCreationHistory();l.hidden=!l.hidden;renderCanvasLayers();scheduleDraftAutosave()});
+  $$('[data-layer-lock]',box).forEach(b=>b.onclick=e=>{e.stopPropagation();const l=layers.find(x=>String(x.id)===String(b.dataset.layerLock));if(!l)return;pushCreationHistory();l.locked=!l.locked;renderCanvasLayers();scheduleDraftAutosave()});
+  $$('[data-layer-row]',box).forEach(row=>{
+    row.ondragstart=e=>{e.dataTransfer.setData('text/plain',row.dataset.layerRow);e.dataTransfer.effectAllowed='move'};
+    row.ondragover=e=>{e.preventDefault();e.dataTransfer.dropEffect='move'};
+    row.ondrop=e=>{e.preventDefault();const fromId=e.dataTransfer.getData('text/plain'),toId=row.dataset.layerRow;if(!fromId||fromId===toId)return;const from=layers.findIndex(x=>String(x.id)===String(fromId)),to=layers.findIndex(x=>String(x.id)===String(toId));if(from<0||to<0)return;pushCreationHistory();const moved=layers.splice(from,1)[0];layers.splice(to,0,moved);state.canvasLayer=moved.id;renderCanvasLayers();scheduleDraftAutosave()};
+  });
+}
+function alignLayerToPage(mode){
+  const l=activeCanvasLayer();if(!l||l.locked)return;
+  pushCreationHistory();
+  const w=Number(l.w||20),h=Number(l.h||12);
+  if(mode==='left')l.x=5;if(mode==='center')l.x=(100-w)/2;if(mode==='right')l.x=95-w;
+  if(mode==='top')l.y=5;if(mode==='middle')l.y=(100-h)/2;if(mode==='bottom')l.y=95-h;
+  renderCanvasLayers();scheduleDraftAutosave();
+}
+function syncCanvasContextToolbar(){
+  const bar=$('#canvasContextToolbar'),l=activeCanvasLayer();if(!bar)return;
+  bar.hidden=!l;
+  bar.classList.toggle('locked',!!l?.locked);
+  const lock=bar.querySelector('[data-canvas-action="lock"]');if(lock)lock.textContent=l?.locked?'Déverrouiller':'Verrou';
+}
+function runCanvasAction(action){
+  const l=activeCanvasLayer();if(!l&&action!=='none')return;
+  if(['left','center','middle','right','top','bottom'].includes(action))return alignLayerToPage(action);
+  if(action==='duplicate')return duplicateCanvasLayer();
+  if(action==='back')return moveCanvasLayer('back');
+  if(action==='front')return moveCanvasLayer('front');
+  if(action==='lock'){pushCreationHistory();l.locked=!l.locked;renderCanvasLayers();scheduleDraftAutosave();return}
+  if(action==='delete')return deleteCanvasLayer();
+}
+function installStudioKeyboard(){
+  if(installStudioKeyboard.done)return;installStudioKeyboard.done=true;
+  addEventListener('keydown',e=>{
+    if(state.view!=='creation'||state.creationMode!=='carousel')return;
+    const tag=String(e.target?.tagName||'').toLowerCase(),editing=['input','textarea','select'].includes(tag)||e.target?.isContentEditable;
+    const l=activeCanvasLayer(),meta=e.metaKey||e.ctrlKey;
+    if(meta&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redoCreation():undoCreation();return}
+    if(meta&&e.key.toLowerCase()==='d'&&l&&!editing){e.preventDefault();duplicateCanvasLayer();return}
+    if(meta&&e.key===']'&&l&&!editing){e.preventDefault();moveCanvasLayer('front');return}
+    if(meta&&e.key==='['&&l&&!editing){e.preventDefault();moveCanvasLayer('back');return}
+    if(editing||!l)return;
+    if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();deleteCanvasLayer();return}
+    if(e.key==='Escape'){state.canvasLayer=null;renderCanvasLayers();return}
+    const step=e.shiftKey?2:.5;
+    if(e.key==='ArrowLeft'){e.preventDefault();l.x=Math.max(0,Number(l.x||0)-step)}
+    else if(e.key==='ArrowRight'){e.preventDefault();l.x=Math.min(100-Number(l.w||20),Number(l.x||0)+step)}
+    else if(e.key==='ArrowUp'){e.preventDefault();l.y=Math.max(0,Number(l.y||0)-step)}
+    else if(e.key==='ArrowDown'){e.preventDefault();l.y=Math.min(100-Number(l.h||12),Number(l.y||0)+step)}
+    else return;
+    updateCanvasLayerVisual(l);syncLayerInspector();renderLayerList();scheduleDraftAutosave();
+  });
+}
+
 function addCanvasLayer(type,payload={}){
   const s=state.carousel.slides[state.carousel.active];if(!s)return toast('Crée ou charge une slide');
   pushCreationHistory();
@@ -2139,7 +2233,7 @@ function moveCanvasLayer(dir){
 }
 function layerStyle(l){
   const families={Inter:'Inter, sans-serif',Space:'"Space Grotesk", sans-serif',Serif:'Georgia, serif',Mono:'ui-monospace, SFMono-Regular, Menlo, monospace'};
-  return 'left:'+Number(l.x||0)+'%;top:'+Number(l.y||0)+'%;width:'+Number(l.w||20)+'%;height:'+Number(l.h||12)+'%;opacity:'+Number(l.opacity??1)+';transform:rotate('+Number(l.rotate||0)+'deg);'+
+  return (l.hidden?'display:none;':'')+'left:'+Number(l.x||0)+'%;top:'+Number(l.y||0)+'%;width:'+Number(l.w||20)+'%;height:'+Number(l.h||12)+'%;opacity:'+Number(l.opacity??1)+';transform:rotate('+Number(l.rotate||0)+'deg);'+
     (l.type==='text'?'color:'+esc(l.color||'#111318')+';font-size:'+Number(l.size||24)+'px;font-weight:'+Number(l.weight||700)+';text-align:'+(l.align||'left')+';font-family:'+(families[l.fontFamily]||families.Inter)+';line-height:'+Number(l.lineHeight||1.05)+';letter-spacing:'+Number(l.letterSpacing||0)+'px;':'')+
     (l.type==='shape'?'background:'+esc(l.color||'#7657ff')+';border-radius:'+Number(l.radius||18)+'px;':'')+
     (l.type==='image'?'border-radius:'+Number(l.radius||18)+'px;':'');
@@ -2158,13 +2252,13 @@ function renderCanvasLayers(){
       if(e.target.classList.contains('layer-resize'))return;
       if(l.locked){state.canvasLayer=id;syncLayerInspector();if(!matchMedia('(max-width:820px)').matches)openStudioRailPane('style');return;}
       state.canvasLayer=id;$('[data-layer-id]',box).forEach(x=>x.classList.toggle('selected',x===el));syncLayerInspector();if(!matchMedia('(max-width:820px)').matches)openStudioRailPane('style');
-      const canvas=$('#carouselCanvas'),r=canvas.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ox=Number(l.x||0),oy=Number(l.y||0);el.setPointerCapture?.(e.pointerId);
-      const move=ev=>{l.x=Math.max(0,Math.min(94,ox+(ev.clientX-sx)/r.width*100));l.y=Math.max(0,Math.min(94,oy+(ev.clientY-sy)/r.height*100));el.style.left=l.x+'%';el.style.top=l.y+'%'};
-      const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);scheduleDraftAutosave()};
+      pushCreationHistory();const canvas=$('#carouselCanvas'),r=canvas.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ox=Number(l.x||0),oy=Number(l.y||0);el.setPointerCapture?.(e.pointerId);
+      const move=ev=>{const rawX=ox+(ev.clientX-sx)/r.width*100,rawY=oy+(ev.clientY-sy)/r.height*100,snap=snapLayerPosition(l,rawX,rawY);l.x=snap.x;l.y=snap.y;el.style.left=l.x+'%';el.style.top=l.y+'%';setCanvasSnapIndicators(snap.snapX,snap.snapY)};
+      const up=()=>{setCanvasSnapIndicators(false,false);el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);renderLayerList();scheduleDraftAutosave()};
       el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);
     });
     el.querySelector('.layer-resize')?.addEventListener('pointerdown',e=>{
-      e.stopPropagation();state.canvasLayer=id;syncLayerInspector();if(!matchMedia('(max-width:820px)').matches)openStudioRailPane('style');if(l.locked)return;const canvas=$('#carouselCanvas'),r=canvas.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ow=Number(l.w||20),oh=Number(l.h||12);el.setPointerCapture?.(e.pointerId);
+      e.stopPropagation();state.canvasLayer=id;syncLayerInspector();if(!matchMedia('(max-width:820px)').matches)openStudioRailPane('style');if(l.locked)return;pushCreationHistory();const canvas=$('#carouselCanvas'),r=canvas.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ow=Number(l.w||20),oh=Number(l.h||12);el.setPointerCapture?.(e.pointerId);
       const move=ev=>{l.w=Math.max(8,Math.min(94,ow+(ev.clientX-sx)/r.width*100));l.h=Math.max(5,Math.min(94,oh+(ev.clientY-sy)/r.height*100));el.style.width=l.w+'%';el.style.height=l.h+'%'};
       const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);scheduleDraftAutosave()};
       el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);
@@ -2173,7 +2267,7 @@ function renderCanvasLayers(){
     editable?.addEventListener('input',()=>{l.text=editable.innerText;scheduleDraftAutosave()});
     editable?.addEventListener('pointerdown',e=>e.stopPropagation());
   });
-  syncLayerInspector();
+  syncLayerInspector();renderLayerList();syncCanvasContextToolbar();renderStudioCanvasAids();
 }
 function updateCanvasLayerVisual(l){
   if(!l)return;
@@ -2209,6 +2303,7 @@ function syncLayerInspector(){
       :l.type==='shape'
         ?'<label>Couleur<input id="layerColor" type="color" value="'+esc(l.color||'#7657ff')+'"></label>'+range('layerRadius','Arrondis',0,80,Number(l.radius||18),1,' px')
         :range('layerRadius','Arrondis',0,80,Number(l.radius||18),1,' px'))+
+    '<div class="layer-position-actions"><small>POSITION SUR LA PAGE</small><div><button data-layer-align="left">Gauche</button><button data-layer-align="center">Centre</button><button data-layer-align="right">Droite</button><button data-layer-align="top">Haut</button><button data-layer-align="middle">Milieu</button><button data-layer-align="bottom">Bas</button></div></div>'+
     '<div class="layer-order-actions"><button id="layerBack">Arrière</button><button id="layerDuplicate">Dupliquer</button><button id="layerFront">Avant</button></div>';
   const bind=(id,key,transform=v=>Number(v),unit='')=>$('#'+id)?.addEventListener('input',e=>{
     l[key]=transform(e.target.value);const o=$('#'+id+'Out');if(o)o.textContent=String(e.target.value)+unit;updateCanvasLayerVisual(l);scheduleDraftAutosave()
@@ -2221,6 +2316,7 @@ function syncLayerInspector(){
   if($('#layerAlign')){$('#layerAlign').value=l.align||'left';$('#layerAlign').onchange=e=>{l.align=e.target.value;updateCanvasLayerVisual(l);scheduleDraftAutosave()}}
   $('#layerColor')?.addEventListener('input',e=>{l.color=e.target.value;updateCanvasLayerVisual(l);scheduleDraftAutosave()});
   $('#layerLock')?.addEventListener('click',()=>{l.locked=!l.locked;renderCanvasLayers();scheduleDraftAutosave()});
+  $('[data-layer-align]',box).forEach(b=>b.onclick=()=>alignLayerToPage(b.dataset.layerAlign));
   $('#layerDelete')?.addEventListener('click',deleteCanvasLayer);$('#layerDuplicate')?.addEventListener('click',duplicateCanvasLayer);$('#layerBack')?.addEventListener('click',()=>moveCanvasLayer('back'));$('#layerFront')?.addEventListener('click',()=>moveCanvasLayer('front'));
 }
 function setStudioTool(tool){
@@ -2231,7 +2327,7 @@ function ensureUnifiedStudioRail(){
   const panel=$('#carouselCreationPanel'),library=panel?.querySelector('.studio-library'),inspector=panel?.querySelector('.studio-inspector'),stage=panel?.querySelector('.studio-stage');
   if(!panel||!library||!inspector||!stage||$('#studioUnifiedTabs'))return;
   const nav=document.createElement('div');nav.id='studioUnifiedTabs';nav.className='studio-unified-tabs';
-  nav.innerHTML='<button class="active" data-studio-pane="templates"><b>▦</b><span>Modèles</span></button><button data-studio-pane="images"><b>▧</b><span>Médias</span></button><button data-studio-pane="text"><b>Aa</b><span>Texte</span></button><button data-studio-pane="elements"><b>◯</b><span>Éléments</span></button><button data-studio-pane="style"><b>⌁</b><span>Style</span></button>';
+  nav.innerHTML='<button class="active" data-studio-pane="templates"><b>▦</b><span>Modèles</span></button><button data-studio-pane="images"><b>▧</b><span>Médias</span></button><button data-studio-pane="text"><b>Aa</b><span>Texte</span></button><button data-studio-pane="elements"><b>◯</b><span>Éléments</span></button><button data-studio-pane="layers"><b>≡</b><span>Calques</span></button><button data-studio-pane="style"><b>⌁</b><span>Style</span></button>';
   panel.insertBefore(nav,library);
   library.classList.add('rail-active');inspector.classList.remove('rail-active');
   $$('[data-studio-pane]',nav).forEach(b=>b.onclick=()=>openStudioRailPane(b.dataset.studioPane));
@@ -2338,7 +2434,7 @@ function installMobileStudioDock(){
   const panel=$('#carouselCreationPanel'),library=panel?.querySelector('.studio-library'),inspector=panel?.querySelector('.studio-inspector'),stage=panel?.querySelector('.studio-stage');
   if(!panel||!library||!inspector||!stage)return;
   const dock=document.createElement('div');dock.id='mobileStudioDock';dock.className='studio-mobile-dock';
-  dock.innerHTML='<button data-mobile-studio="templates"><b>▦</b><span>Modèles</span></button><button data-mobile-studio="images"><b>▧</b><span>Médias</span></button><button data-mobile-studio="text"><b>Aa</b><span>Texte</span></button><button data-mobile-studio="elements"><b>◯</b><span>Éléments</span></button><button data-mobile-studio="style"><b>⌁</b><span>Style</span></button>';
+  dock.innerHTML='<button data-mobile-studio="templates"><b>▦</b><span>Modèles</span></button><button data-mobile-studio="images"><b>▧</b><span>Médias</span></button><button data-mobile-studio="text"><b>Aa</b><span>Texte</span></button><button data-mobile-studio="elements"><b>◯</b><span>Éléments</span></button><button data-mobile-studio="layers"><b>≡</b><span>Calques</span></button><button data-mobile-studio="style"><b>⌁</b><span>Style</span></button>';
   panel.appendChild(dock);
   [library,inspector].forEach(box=>{if(!box.querySelector('.studio-sheet-close')){const b=document.createElement('button');b.className='studio-sheet-close';b.type='button';b.textContent='×';b.setAttribute('aria-label','Fermer');b.onclick=()=>{library.classList.remove('mobile-open');inspector.classList.remove('mobile-open');dock.classList.remove('sheet-open')};box.prepend(b)}});
   $$('[data-mobile-studio]',dock).forEach(b=>b.onclick=()=>openStudioRailPane(b.dataset.mobileStudio,true));
@@ -2367,7 +2463,7 @@ function installCreationModes(){
   const carousel=document.createElement('section');carousel.id='carouselCreationPanel';carousel.className='creation-mode-panel studio-designer';
   carousel.innerHTML=
     '<aside class="studio-library panel">'+
-      '<div class="studio-tool-tabs"><button class="active" data-studio-tool="templates">Templates</button><button data-studio-tool="images">Images</button><button data-studio-tool="text">Texte</button><button data-studio-tool="elements">Éléments</button></div>'+
+      '<div class="studio-tool-tabs"><button class="active" data-studio-tool="templates">Templates</button><button data-studio-tool="images">Images</button><button data-studio-tool="text">Texte</button><button data-studio-tool="elements">Éléments</button><button data-studio-tool="layers">Calques</button></div>'+
       '<div class="studio-tool-panel active" data-tool-panel="templates"><div class="studio-panel-title"><small>TEMPLATES</small><strong>Design marketing</strong></div>'+
       '<div class="marketing-template-grid">'+
         '<button data-marketing-template="open-call"><i class="mk-open"></i><span><b>Open Call</b><small>Éditorial clair</small></span></button>'+
@@ -2379,6 +2475,7 @@ function installCreationModes(){
       '<div class="studio-tool-panel" data-tool-panel="images"><div class="studio-panel-title"><small>IMAGES</small><strong>Médias</strong></div><label class="studio-upload">Importer une image<input id="canvasImageUpload" type="file" accept="image/*"></label><button class="secondary-btn wide" id="canvasUseGenerated">Utiliser le dernier visuel généré</button><div class="studio-image-library" id="studioImageLibrary"></div></div>'+
       '<div class="studio-tool-panel" data-tool-panel="text"><div class="studio-panel-title"><small>TEXTE</small><strong>Ajouter</strong></div><button class="studio-add-item" data-add-text="heading"><b>Aa</b><span>Titre</span></button><button class="studio-add-item" data-add-text="body"><b>Ag</b><span>Paragraphe</span></button><button class="studio-add-item" data-add-text="label"><b>TAG</b><span>Label</span></button></div>'+
       '<div class="studio-tool-panel" data-tool-panel="elements"><div class="studio-panel-title"><small>ÉLÉMENTS</small><strong>Formes</strong></div><div class="studio-element-grid"><button data-add-shape="rect"><i></i><span>Bloc</span></button><button data-add-shape="pill"><i class="pill"></i><span>Pill</span></button><button data-add-shape="circle"><i class="circle"></i><span>Cercle</span></button><button data-add-shape="line"><i class="line"></i><span>Ligne</span></button></div></div>'+
+      '<div class="studio-tool-panel" data-tool-panel="layers"><div class="studio-panel-title"><small>CALQUES</small><strong>Ordre & visibilité</strong></div><div class="studio-layer-list" id="studioLayerList"></div></div>'+
       '<div class="studio-library-divider"></div>'+
       '<label>Source<select id="carouselSource"><option value="">Brief libre</option></select></label>'+
       '<label>Slides<select id="carouselCount"><option>4</option><option selected>5</option><option>6</option><option>7</option></select></label>'+
@@ -2387,8 +2484,9 @@ function installCreationModes(){
       '<div class="studio-generate-actions"><button class="primary-btn wide" id="carouselGenerate">✦ Générer avec PLUGY</button><button class="secondary-btn wide" id="carouselGenerateAll">Générer toutes les images</button></div>'+
     '</aside>'+
     '<section class="studio-stage panel">'+
-      '<div class="studio-stage-head"><div><small>CANVAS</small><strong>Aperçu temps réel</strong></div><div class="stage-actions"><button id="carouselGenerateImage">✦ Image</button><button id="carouselExport">PNG</button><button id="carouselExportAll">Tout exporter</button></div></div>'+
-      '<div class="studio-canvas-frame"><div class="carousel-canvas free-canvas" id="carouselCanvas"><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Choisis un template ou génère un carrousel</h3><p id="carouselBody">Le canvas reste entièrement modifiable.</p><b id="carouselCta">Découvrir →</b></div><div class="canvas-layers" id="canvasLayers"></div></div></div>'+
+      '<div class="studio-stage-head"><div><small>CANVAS</small><strong>Aperçu temps réel</strong></div><div class="stage-actions"><button id="stageGuidesToggle" class="active" title="Afficher les guides">Guides</button><button id="stageSafeToggle" class="active" title="Afficher la zone sûre">Safe</button><button id="stageSnapToggle" class="active" title="Activer le snapping">Aimant</button><button id="carouselGenerateImage">✦ Image</button><button id="carouselExport">PNG</button><button id="carouselExportAll">Tout exporter</button></div></div>'+
+      '<div class="canvas-context-toolbar" id="canvasContextToolbar" hidden><button data-canvas-action="left">←</button><button data-canvas-action="center">↔</button><button data-canvas-action="middle">↕</button><button data-canvas-action="back">Arrière</button><button data-canvas-action="front">Avant</button><button data-canvas-action="duplicate">Dupliquer</button><button data-canvas-action="lock">Verrou</button><button data-canvas-action="delete">×</button></div>'+
+      '<div class="studio-canvas-frame"><div class="carousel-canvas free-canvas show-guides show-safe" id="carouselCanvas"><div class="canvas-safe-zone" aria-hidden="true"></div><div class="canvas-guide guide-x" aria-hidden="true"></div><div class="canvas-guide guide-y" aria-hidden="true"></div><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Choisis un template ou génère un carrousel</h3><p id="carouselBody">Le canvas reste entièrement modifiable.</p><b id="carouselCta">Découvrir →</b></div><div class="canvas-layers" id="canvasLayers"></div></div></div>'+
       '<div class="carousel-strip premium-strip"><div class="strip-head"><span id="carouselCounter">0 slide</span><div><button id="slideAdd">＋</button><button id="slideDuplicate">Dupliquer</button><button id="slideDeleteManual">Supprimer</button></div></div><div id="carouselSlides"></div></div>'+
       '<div class="instagram-export-row"><textarea id="carouselCaption" rows="3" placeholder="Légende Instagram…"></textarea><div><button id="carouselCaptionGenerate">✦ Légende</button><button class="primary-btn" id="carouselPublishInstagram">Publier Instagram</button><button id="carouselToBureau">Bureau</button></div></div>'+
     '</section>'+
@@ -2398,6 +2496,8 @@ function installCreationModes(){
       '<div class="inspector-section"><small>STYLE</small><div class="design-preset-row"><button data-slide-preset="ultra">Ultra</button><button data-slide-preset="editorial">Éditorial</button><button data-slide-preset="soft">Soft</button><button data-slide-preset="night">Sombre</button></div></div>'+
       '<label>Mise en page<select id="slideLayout"><option value="editorial">Éditorial</option><option value="split">Split</option><option value="poster">Poster</option><option value="minimal">Minimal</option></select></label>'+
       '<label>Accent<select id="slideAccent"><option value="black">Noir</option><option value="violet">Violet</option><option value="cyan">Cyan</option><option value="pink">Rose</option><option value="blue">Bleu</option><option value="orange">Orange</option><option value="green">Vert</option></select></label>'+
+      '<label>Fond de slide<input id="slideBackground" type="color" value="#f4f3ef"></label>'+
+      '<div class="studio-bg-swatches"><button data-bg-swatch="#f4f3ef" style="--sw:#f4f3ef"></button><button data-bg-swatch="#efeaff" style="--sw:#efeaff"></button><button data-bg-swatch="#e8f8fa" style="--sw:#e8f8fa"></button><button data-bg-swatch="#fff0f6" style="--sw:#fff0f6"></button><button data-bg-swatch="#171820" style="--sw:#171820"></button></div>'+
       '<label>Alignement<select id="slideAlign"><option value="left">Gauche</option><option value="center">Centre</option></select></label>'+
       '<div class="studio-color-swatches" aria-label="Couleur accent"><button data-accent-swatch="black" style="--sw:#111318"></button><button data-accent-swatch="violet" style="--sw:#735cff"></button><button data-accent-swatch="cyan" style="--sw:#45cbd7"></button><button data-accent-swatch="pink" style="--sw:#e96cae"></button><button data-accent-swatch="orange" style="--sw:#f2944b"></button><button data-accent-swatch="green" style="--sw:#55b982"></button></div>'+
       '<div class="studio-scale-section"><small>TYPOGRAPHIE</small>'+
@@ -2451,18 +2551,20 @@ function installCreationModes(){
   $('#carouselCaptionGenerate').onclick=prepareInstagramCaption;$('#carouselPublishInstagram').onclick=publishCarouselInstagram;$('#carouselToBureau').onclick=carouselToBureau;
   $('#carouselFormat').onchange=e=>{state.carousel.format=e.target.value;renderCarousel()};
   ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
-  ['slideLayout','slideAccent','slideAlign'].forEach(id=>$('#'+id)?.addEventListener('change',updateSlideDesignFromControls));
+  ['slideLayout','slideAccent','slideAlign','slideBackground'].forEach(id=>$('#'+id)?.addEventListener('change',updateSlideDesignFromControls));
   ['slideFontScale','slideTitleScale','slideBodyScale','slideLabelScale','slideCtaScale','slideSpacing','slideImageOpacity','slideImageUrl'].forEach(id=>$('#'+id)?.addEventListener('input',updateSlideDesignFromControls));
-  $$('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));$$('[data-accent-swatch]').forEach(b=>b.onclick=()=>{if($('#slideAccent'))$('#slideAccent').value=b.dataset.accentSwatch;updateSlideDesignFromControls()});
+  $('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));$('[data-accent-swatch]').forEach(b=>b.onclick=()=>{if($('#slideAccent'))$('#slideAccent').value=b.dataset.accentSwatch;updateSlideDesignFromControls()});$('[data-bg-swatch]').forEach(b=>b.onclick=()=>{if($('#slideBackground'))$('#slideBackground').value=b.dataset.bgSwatch;updateSlideDesignFromControls()});
   $$('[data-slide-help]').forEach(b=>b.onclick=()=>assistSlideDesign(b.dataset.slideHelp));
   $$('[data-marketing-template]').forEach(b=>b.onclick=()=>applyMarketingTemplate(b.dataset.marketingTemplate));
-  $$$('[data-studio-tool]').forEach(b=>b.onclick=()=>setStudioTool(b.dataset.studioTool));
+  $$('[data-studio-tool]').forEach(b=>b.onclick=()=>setStudioTool(b.dataset.studioTool));
   $$('[data-add-text]').forEach(b=>b.onclick=()=>{const kind=b.dataset.addText;addCanvasLayer('text',kind==='heading'?{text:'Nouveau titre',size:38,w:70,h:16}:kind==='label'?{text:'PLUG ART',size:15,weight:800,w:30,h:8,color:'#7657ff'}:{text:'Ajoute ton texte ici.',size:22,weight:500,w:68,h:18})});
   $$('[data-add-shape]').forEach(b=>b.onclick=()=>{const shape=b.dataset.addShape;addCanvasLayer('shape',shape==='circle'?{shape,color:'#7657ff',w:18,h:18,radius:60}:shape==='pill'?{shape,color:'#111318',w:34,h:10,radius:60}:shape==='line'?{shape,color:'#111318',w:46,h:1.2,radius:0}:{shape,color:'#7657ff'})});
   $('#canvasImageUpload')?.addEventListener('change',e=>{processCanvasUpload(e.target.files?.[0]);e.target.value=''});
   $('#canvasUseGenerated')?.addEventListener('click',()=>state.visual.url?addCanvasLayer('image',{src:state.visual.url}):toast('Génère d’abord un visuel'));
   $('#slideUseVisual')?.addEventListener('click',()=>{const s=state.carousel.slides[state.carousel.active];if(!s)return;if(!state.visual.url)return toast('Aucun visuel généré à utiliser');pushCreationHistory();s.image=state.visual.url;renderCarousel();scheduleDraftAutosave()});
   $('#slideAdd')?.addEventListener('click',addCarouselSlide);$('#slideDuplicate')?.addEventListener('click',duplicateCarouselSlide);$('#slideDeleteManual')?.addEventListener('click',deleteCarouselSlideManual);
+  $('#stageGuidesToggle')?.addEventListener('click',()=>{state.studioGuides=!state.studioGuides;renderStudioCanvasAids()});$('#stageSafeToggle')?.addEventListener('click',()=>{state.studioSafe=!state.studioSafe;renderStudioCanvasAids()});$('#stageSnapToggle')?.addEventListener('click',()=>{state.studioSnap=!state.studioSnap;renderStudioCanvasAids()});
+  $('[data-canvas-action]').forEach(b=>b.onclick=()=>runCanvasAction(b.dataset.canvasAction));installStudioKeyboard();renderStudioCanvasAids();
 
   $('#visualGenerate').onclick=generateVisual;$('#visualDownload').onclick=downloadVisual;$('#visualToBureau').onclick=visualToBureau;
   $$('[data-visual-preset]').forEach(b=>b.onclick=()=>applyVisualPreset(b.dataset.visualPreset));
@@ -2658,8 +2760,8 @@ async function generateCarousel(){
   state.carousel.active=0;state.carousel.format=$('#carouselFormat').value||'4:5';renderCarousel();scheduleDraftAutosave();if(source)persistWorkflow(source.id,{workflow_status:'drafting',next_action:'Finaliser le carrousel'}).catch(()=>{});playMotion('Happy');btn.disabled=false;btn.textContent=old;
 }
 function slideDesign(s){
-  if(!s)return{theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,titleScale:100,bodyScale:100,labelScale:100,ctaScale:100,spacing:100,imageOpacity:64,radius:26};
-  s.design={theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,titleScale:100,bodyScale:100,labelScale:100,ctaScale:100,spacing:100,imageOpacity:64,radius:26,...(s.design||{})};
+  if(!s)return{theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,titleScale:100,bodyScale:100,labelScale:100,ctaScale:100,spacing:100,imageOpacity:64,radius:26,backgroundColor:'#f4f3ef'};
+  s.design={theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,titleScale:100,bodyScale:100,labelScale:100,ctaScale:100,spacing:100,imageOpacity:64,radius:26,backgroundColor:'#f4f3ef',...(s.design||{})};
   return s.design;
 }
 function slideAccentColor(name){return({black:'#111318',violet:'#735cff',cyan:'#45cbd7',pink:'#e96cae',blue:'#4b7cff',orange:'#f2944b',green:'#55b982'})[name]||'#111318'}
@@ -2667,10 +2769,10 @@ function setSlideDesignPreset(name){
   pushCreationHistory();
   const s=state.carousel.slides[state.carousel.active];if(!s)return toast('Génère d’abord une slide');
   const presets={
-    ultra:{theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:105,titleScale:112,bodyScale:94,labelScale:92,ctaScale:96,spacing:102,imageOpacity:58,radius:28},
-    editorial:{theme:'editorial',layout:'split',accent:'violet',align:'left',fontScale:98,titleScale:104,bodyScale:98,labelScale:90,ctaScale:94,spacing:108,imageOpacity:84,radius:24},
-    soft:{theme:'soft',layout:'editorial',accent:'pink',align:'left',fontScale:100,titleScale:102,bodyScale:96,labelScale:96,ctaScale:96,spacing:112,imageOpacity:67,radius:30},
-    night:{theme:'night',layout:'poster',accent:'cyan',align:'left',fontScale:108,titleScale:118,bodyScale:92,labelScale:90,ctaScale:98,spacing:96,imageOpacity:72,radius:24}
+    ultra:{theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:105,titleScale:112,bodyScale:94,labelScale:92,ctaScale:96,spacing:102,imageOpacity:58,radius:28,backgroundColor:'#f4f3ef'},
+    editorial:{theme:'editorial',layout:'split',accent:'violet',align:'left',fontScale:98,titleScale:104,bodyScale:98,labelScale:90,ctaScale:94,spacing:108,imageOpacity:84,radius:24,backgroundColor:'#efeaff'},
+    soft:{theme:'soft',layout:'editorial',accent:'pink',align:'left',fontScale:100,titleScale:102,bodyScale:96,labelScale:96,ctaScale:96,spacing:112,imageOpacity:67,radius:30,backgroundColor:'#fff0f6'},
+    night:{theme:'night',layout:'poster',accent:'cyan',align:'left',fontScale:108,titleScale:118,bodyScale:92,labelScale:90,ctaScale:98,spacing:96,imageOpacity:72,radius:24,backgroundColor:'#171820'}
   };
   s.design={...slideDesign(s),...(presets[name]||presets.ultra)};renderCarousel();scheduleDraftAutosave();
 }
@@ -2678,7 +2780,7 @@ function updateSlideDesignFromControls(){
   pushCreationHistory();
   const s=state.carousel.slides[state.carousel.active];if(!s)return;
   const d=slideDesign(s);d.layout=$('#slideLayout')?.value||d.layout;d.accent=$('#slideAccent')?.value||d.accent;d.align=$('#slideAlign')?.value||d.align;
-  d.fontScale=Number($('#slideFontScale')?.value||d.fontScale);d.titleScale=Number($('#slideTitleScale')?.value||d.titleScale);d.bodyScale=Number($('#slideBodyScale')?.value||d.bodyScale);d.labelScale=Number($('#slideLabelScale')?.value||d.labelScale);d.ctaScale=Number($('#slideCtaScale')?.value||d.ctaScale);d.spacing=Number($('#slideSpacing')?.value||d.spacing);d.imageOpacity=Number($('#slideImageOpacity')?.value||d.imageOpacity);
+  d.backgroundColor=$('#slideBackground')?.value||d.backgroundColor;d.fontScale=Number($('#slideFontScale')?.value||d.fontScale);d.titleScale=Number($('#slideTitleScale')?.value||d.titleScale);d.bodyScale=Number($('#slideBodyScale')?.value||d.bodyScale);d.labelScale=Number($('#slideLabelScale')?.value||d.labelScale);d.ctaScale=Number($('#slideCtaScale')?.value||d.ctaScale);d.spacing=Number($('#slideSpacing')?.value||d.spacing);d.imageOpacity=Number($('#slideImageOpacity')?.value||d.imageOpacity);
   const url=String($('#slideImageUrl')?.value||'').trim();if(url!==String(s.image||''))s.image=url;
   renderCarousel();scheduleDraftAutosave();
 }
@@ -2724,13 +2826,13 @@ function renderCarousel(){
   });
   $('#carouselKicker').textContent=s.kicker||'PLUG ART';$('#carouselTitle').textContent=s.title||'Ton carrousel apparaîtra ici';$('#carouselBody').textContent=s.body||'Choisis une source ou écris un brief.';$('#carouselCta').textContent=s.cta||'Découvrir →';
   const img=$('#carouselImage');img.style.backgroundImage=s.image?'url("'+String(s.image).replace(/"/g,'%22')+'")':'none';img.style.opacity=String(Math.max(0,Math.min(100,Number(d.imageOpacity||0)))/100);
-  const canvas=$('#carouselCanvas');canvas.style.aspectRatio=state.carousel.format==='1:1'?'1/1':state.carousel.format==='9:16'?'9/16':'4/5';canvas.dataset.theme=d.theme||'ultra';canvas.dataset.layout=d.layout||'editorial';canvas.dataset.align=d.align||'left';canvas.style.setProperty('--slide-accent',slideAccentColor(d.accent));const globalScale=Number(d.fontScale||100)/100;canvas.style.setProperty('--slide-font-scale',String(globalScale));canvas.style.setProperty('--slide-title-size',(46*globalScale*Number(d.titleScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-body-size',(15*globalScale*Number(d.bodyScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-label-size',(11*globalScale*Number(d.labelScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-cta-size',(12*globalScale*Number(d.ctaScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-copy-gap',(14*Number(d.spacing||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-radius',(d.radius||26)+'px');
+  const canvas=$('#carouselCanvas');canvas.style.aspectRatio=state.carousel.format==='1:1'?'1/1':state.carousel.format==='9:16'?'9/16':'4/5';canvas.dataset.theme=d.theme||'ultra';canvas.dataset.layout=d.layout||'editorial';canvas.dataset.align=d.align||'left';canvas.style.setProperty('--slide-accent',slideAccentColor(d.accent));const globalScale=Number(d.fontScale||100)/100;canvas.style.setProperty('--slide-font-scale',String(globalScale));canvas.style.setProperty('--slide-title-size',(46*globalScale*Number(d.titleScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-body-size',(15*globalScale*Number(d.bodyScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-label-size',(11*globalScale*Number(d.labelScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-cta-size',(12*globalScale*Number(d.ctaScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-copy-gap',(14*Number(d.spacing||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-radius',(d.radius||26)+'px');canvas.style.background=d.backgroundColor||'#f4f3ef';
   $('#slideKicker').value=s.kicker||'';$('#slideTitle').value=s.title||'';$('#slideBody').value=s.body||'';$('#slideCta').value=s.cta||'';
-  if($('#slideLayout'))$('#slideLayout').value=d.layout;if($('#slideAccent'))$('#slideAccent').value=d.accent;if($('#slideAlign'))$('#slideAlign').value=d.align;
+  if($('#slideLayout'))$('#slideLayout').value=d.layout;if($('#slideAccent'))$('#slideAccent').value=d.accent;if($('#slideAlign'))$('#slideAlign').value=d.align;if($('#slideBackground'))$('#slideBackground').value=d.backgroundColor||'#f4f3ef';
   if($('#slideFontScale'))$('#slideFontScale').value=d.fontScale;if($('#slideFontScaleOut'))$('#slideFontScaleOut').textContent=d.fontScale+'%';[['Title',d.titleScale],['Body',d.bodyScale],['Label',d.labelScale],['Cta',d.ctaScale],['Spacing',d.spacing]].forEach(([k,v])=>{const el=$('#slide'+k+'Scale'),out=$('#slide'+k+'ScaleOut');if(el)el.value=v;if(out)out.textContent=v+'%'});if($('#slideSpacing'))$('#slideSpacing').value=d.spacing;if($('#slideSpacingOut'))$('#slideSpacingOut').textContent=d.spacing+'%';
   if($('#slideImageOpacity'))$('#slideImageOpacity').value=d.imageOpacity;if($('#slideImageOpacityOut'))$('#slideImageOpacityOut').textContent=d.imageOpacity+'%';
   if($('#slideImageUrl'))$('#slideImageUrl').value=s.image||'';
-  $$$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
+  $$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
   renderCanvasLayers();renderStudioImages();
 }
 
