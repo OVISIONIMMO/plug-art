@@ -392,14 +392,78 @@ def _rig_plugy_v139(raw:bytes):
     except Exception as exc:
         print(f'PLUGY_V139_RIG_ERROR {type(exc).__name__}: {str(exc)[:220]}',flush=True);return raw,False
 
+def _upgrade_plugy_motion_v143(raw:bytes):
+    """Add richer eye/arm clips to the existing procedural rig without touching geometry."""
+    if len(raw)<20 or raw[:4]!=b'glTF':return raw,False
+    try:
+        _,version,_=struct.unpack_from('<4sII',raw,0);pos=12;doc=None;bin_blob=b'';extras_chunks=[]
+        while pos+8<=len(raw):
+            ln,kind=struct.unpack_from('<I4s',raw,pos);pos+=8;chunk=bytes(raw[pos:pos+ln]);pos+=ln
+            if kind==b'JSON':doc=json.loads(chunk.decode('utf-8').rstrip(' ').rstrip(chr(0)))
+            elif kind==bytes((66,73,78,0)):bin_blob=chunk
+            else:extras_chunks.append((kind,chunk))
+        if not isinstance(doc,dict):return raw,False
+        asset=doc.setdefault('asset',{'version':'2.0'});ax=asset.setdefault('extras',{})
+        if ax.get('plugyMotion')=='autonomous-eyes-arms-v143':return raw,False
+        nodes=doc.get('nodes') or []
+        by_name={str(n.get('name')):i for i,n in enumerate(nodes) if isinstance(n,dict)}
+        left=by_name.get('PLUGY_LeftArmNode');right=by_name.get('PLUGY_RightArmNode')
+        leye=by_name.get('PLUGY_LeftEyelid');reye=by_name.get('PLUGY_RightEyelid')
+        if None in (left,right,leye,reye):return raw,False
+        blob=bytearray(bin_blob)
+        while len(blob)%4:blob.append(0)
+        doc.setdefault('bufferViews',[]);doc.setdefault('accessors',[]);doc.setdefault('buffers',[{'byteLength':len(blob)}]);doc.setdefault('animations',[])
+        if not doc['buffers']:doc['buffers']=[{'byteLength':len(blob)}]
+        def add_acc(rows,type_name):
+            nonlocal blob
+            width={'SCALAR':1,'VEC3':3,'VEC4':4}[type_name]
+            vals=[row if isinstance(row,(tuple,list)) else (row,) for row in rows]
+            flat=[float(x) for row in vals for x in row];off=len(blob)
+            packed=struct.pack('<'+'f'*len(flat),*flat);blob.extend(packed)
+            while len(blob)%4:blob.append(0)
+            vi=len(doc['bufferViews']);doc['bufferViews'].append({'buffer':0,'byteOffset':off,'byteLength':len(packed)})
+            ai=len(doc['accessors']);acc={'bufferView':vi,'componentType':5126,'count':len(vals),'type':type_name}
+            acc['min']=[min(float(v[j]) for v in vals) for j in range(width)];acc['max']=[max(float(v[j]) for v in vals) for j in range(width)]
+            doc['accessors'].append(acc);return ai
+        def replace(name,times,specs):
+            doc['animations']=[a for a in doc['animations'] if not (isinstance(a,dict) and a.get('name')==name)]
+            ti=add_acc([(t,) for t in times],'SCALAR');samplers=[];channels=[]
+            for node,path,values,typ in specs:
+                oi=add_acc(values,typ);si=len(samplers);samplers.append({'input':ti,'output':oi,'interpolation':'LINEAR'})
+                channels.append({'sampler':si,'target':{'node':node,'path':path}})
+            doc['animations'].append({'name':name,'samplers':samplers,'channels':channels})
+        q=lambda a:_v106_quat((0,0,1),a);qx=lambda a:_v106_quat((1,0,0),a)
+        O=(1,.01,1);C=(1,1,1);H=(1,.42,1);S=(1,.20,1)
+        replace('Blink',[0,.055,.11,.18],[(leye,'scale',[O,C,C,O],'VEC3'),(reye,'scale',[O,C,C,O],'VEC3')])
+        replace('DoubleBlink',[0,.05,.10,.16,.23,.29,.38],[(leye,'scale',[O,C,O,O,C,C,O],'VEC3'),(reye,'scale',[O,C,O,O,C,C,O],'VEC3')])
+        replace('Wink',[0,.07,.15,.27],[(leye,'scale',[O,C,C,O],'VEC3'),(reye,'scale',[O,O,O,O],'VEC3')])
+        replace('SoftEyes',[0,.22,.55,.86],[(leye,'scale',[O,H,S,O],'VEC3'),(reye,'scale',[O,H,S,O],'VEC3')])
+        replace('EyeThink',[0,.28,.64,1.0],[(leye,'scale',[O,S,H,O],'VEC3'),(reye,'scale',[O,H,S,O],'VEC3')])
+        replace('ArmHello',[0,.16,.34,.52,.72,.96],[(right,'rotation',[q(0),q(-.58),q(-.25),q(-.62),q(-.20),q(0)],'VEC4'),(left,'rotation',[q(0),q(.05),q(.02),q(.04),q(.01),q(0)],'VEC4')])
+        replace('ArmExplain',[0,.24,.52,.82,1.12],[(left,'rotation',[q(0),q(.24),q(.12),q(.30),q(0)],'VEC4'),(right,'rotation',[q(0),q(-.16),q(-.28),q(-.12),q(0)],'VEC4')])
+        replace('ArmShrug',[0,.24,.52,.82],[(left,'rotation',[q(0),q(.34),q(.22),q(0)],'VEC4'),(right,'rotation',[q(0),q(-.34),q(-.22),q(0)],'VEC4')])
+        replace('ArmStretch',[0,.30,.68,1.05],[(left,'rotation',[q(0),q(.48),q(.30),q(0)],'VEC4'),(right,'rotation',[q(0),q(-.48),q(-.30),q(0)],'VEC4')])
+        replace('ArmThink',[0,.32,.72,1.12],[(left,'rotation',[q(0),q(-.18),q(-.26),q(0)],'VEC4'),(right,'rotation',[q(0),q(.08),q(.14),q(0)],'VEC4'),(leye,'scale',[O,S,H,O],'VEC3'),(reye,'scale',[O,H,S,O],'VEC3')])
+        doc['buffers'][0]['byteLength']=len(blob);ax['plugyMotion']='autonomous-eyes-arms-v143'
+        asset['generator']=str(asset.get('generator',''))+' + PLUGY V143 AutonomousEyesArms'
+        j=_v106_pad4(json.dumps(doc,separators=(',',':')).encode('utf-8'),b' ');b=_v106_pad4(bytes(blob),bytes((0,)))
+        chunks=[(b'JSON',j),(bytes((66,73,78,0)),b)]+extras_chunks;total=12+sum(8+len(c) for _,c in chunks)
+        out=bytearray(struct.pack('<4sII',b'glTF',version,total))
+        for kind,chunk in chunks:out.extend(struct.pack('<I4s',len(chunk),kind));out.extend(chunk)
+        print('PLUGY_V143_MOTION_READY clips=9 eyes=interactive arms=independent',flush=True)
+        return bytes(out),True
+    except Exception as exc:
+        print(f'PLUGY_V143_MOTION_ERROR {type(exc).__name__}: {str(exc)[:220]}',flush=True);return raw,False
+
 def _ensure_realistic_plugy():
     try:
         if REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>10000:
             patched,mat_changed=_patch_plugy_reflectionless_v138(REALISTIC_PLUGY.read_bytes())
             patched,rig_changed=_rig_plugy_v139(patched)
-            if mat_changed or rig_changed:
+            patched,motion_changed=_upgrade_plugy_motion_v143(patched)
+            if mat_changed or rig_changed or motion_changed:
                 tmp=REALISTIC_PLUGY.with_suffix('.v139.tmp');tmp.write_bytes(patched);tmp.replace(REALISTIC_PLUGY)
-                print(f"PLUGY_V139_PERSISTED bytes={REALISTIC_PLUGY.stat().st_size} material={mat_changed} rig={rig_changed}",flush=True)
+                print(f"PLUGY_V139_PERSISTED bytes={REALISTIC_PLUGY.stat().st_size} material={mat_changed} rig={rig_changed} motion={motion_changed}",flush=True)
             return True
     except Exception:
         pass
@@ -408,7 +472,8 @@ def _ensure_realistic_plugy():
             if REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>10000:
                 patched,mat_changed=_patch_plugy_reflectionless_v138(REALISTIC_PLUGY.read_bytes())
                 patched,rig_changed=_rig_plugy_v139(patched)
-                if mat_changed or rig_changed:
+                patched,motion_changed=_upgrade_plugy_motion_v143(patched)
+                if mat_changed or rig_changed or motion_changed:
                     tmp=REALISTIC_PLUGY.with_suffix('.v139.tmp');tmp.write_bytes(patched);tmp.replace(REALISTIC_PLUGY)
                 return True
         except Exception:
@@ -421,6 +486,7 @@ def _ensure_realistic_plugy():
                 prepared=_inject_v106_motion(rr.content)
                 prepared,_=_patch_plugy_reflectionless_v138(prepared)
                 prepared,_=_rig_plugy_v139(prepared)
+                prepared,_=_upgrade_plugy_motion_v143(prepared)
                 tmp.write_bytes(prepared)
                 tmp.replace(REALISTIC_PLUGY)
                 print(f"PLUGY_V138_REFLECTIONLESS_READY bytes={REALISTIC_PLUGY.stat().st_size} motion=embedded materials=baked",flush=True)
