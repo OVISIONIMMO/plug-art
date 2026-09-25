@@ -6,15 +6,16 @@ const mv=$('#plugyStandaloneModel'),chat=$('#chatScroll'),input=$('#plugyStandal
 
 function clean(v){return String(v??'').replace(/\s+/g,' ').trim()}
 function standaloneDistance(){
-  if(innerWidth<=390)return '3.92';
-  if(innerWidth<=780)return '3.70';
+  if(innerWidth<=390)return '4.42';
+  if(innerWidth<=780)return '4.12';
   return '3.38';
 }
 function resetStandaloneFraming(){
   if(!mv)return;
-  try{mv.setAttribute('camera-orbit','0deg 76deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'31deg':'30deg')}catch{}
+  try{mv.setAttribute('camera-orbit','0deg 76deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'33deg':'30deg')}catch{}
 }
 function setState(name,label){
+  if(innerWidth<=820&&['blink','doubleblink','wink','softeyes'].includes(name))name='idle';
   document.body.dataset.plugyState=name;
   $('#plugyLiveState span').textContent=label;$('#topState').textContent=label;
   const animMap={idle:'Idle',listen:'Listen',think:'ArmThink',speak:'Speak',happy:'Happy',curious:'Curious',wave:'ArmHello',charge:'Charge',blink:'Blink',doubleblink:'DoubleBlink',wink:'Wink',softeyes:'SoftEyes',softturn:'SoftTurn',explain:'ArmExplain',shrug:'ArmShrug',stretch:'ArmStretch'};
@@ -67,19 +68,46 @@ function resolvePreferredVoice(){
 }
 function primeVoiceOutput(){
   if(!('speechSynthesis' in window))return;
-  try{speechSynthesis.resume();resolvePreferredVoice()}catch{}
+  try{
+    speechSynthesis.resume();resolvePreferredVoice();
+    const u=new SpeechSynthesisUtterance(' ');u.lang='fr-FR';u.volume=0;u.rate=1.05;
+    const v=preferredVoice||resolvePreferredVoice();if(v)u.voice=v;
+    speechSynthesis.speak(u);setTimeout(()=>{try{speechSynthesis.cancel()}catch{}},35);
+  }catch{}
 }
 if('speechSynthesis' in window){
   resolvePreferredVoice();
   try{speechSynthesis.addEventListener?.('voiceschanged',resolvePreferredVoice)}catch{}
 }
 
+function speechChunks(text,max=190){
+  const src=clean(text);if(!src)return[];
+  const sentences=src.match(/[^.!?]+[.!?]?/g)||[src],out=[];let part='';
+  for(const sentence of sentences){
+    const s=clean(sentence);if(!s)continue;
+    if((part+' '+s).trim().length<=max){part=(part+' '+s).trim();continue}
+    if(part)out.push(part);part='';
+    if(s.length<=max){part=s;continue}
+    const words=s.split(' ');let line='';
+    for(const word of words){const test=(line+' '+word).trim();if(test.length<=max)line=test;else{if(line)out.push(line);line=word}}
+    if(line)part=line;
+  }
+  if(part)out.push(part);return out;
+}
 function speak(text){
   if(!state.voiceReply||!('speechSynthesis'in window)||!clean(text)){setState('idle','Prêt');return}
+  const chunks=speechChunks(text);if(!chunks.length){setState('idle','Prêt');return}
   try{
-    speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(clean(text));u.lang='fr-FR';u.rate=1.12;u.pitch=1;u.volume=1;const voice=preferredVoice||resolvePreferredVoice();if(voice)u.voice=voice;
-    u.onstart=()=>setState('speak','Je parle…');u.onend=()=>{setState('idle','Prêt');if(state.listening===false&&$('#voiceButton')?.classList.contains('conversation'))setTimeout(startVoice,380)};
-    u.onerror=()=>setState('idle','Prêt');speechSynthesis.speak(u);
+    speechSynthesis.cancel();let index=0;const voice=preferredVoice||resolvePreferredVoice();
+    const next=()=>{
+      if(index>=chunks.length){setState('idle','Prêt');return}
+      const u=new SpeechSynthesisUtterance(chunks[index++]);u.lang='fr-FR';u.rate=1.10;u.pitch=1;u.volume=1;if(voice)u.voice=voice;
+      u.onstart=()=>setState('speak','Je parle…');
+      u.onend=()=>setTimeout(next,65);
+      u.onerror=()=>{setState('idle','Prêt')};
+      speechSynthesis.speak(u);
+    };
+    next();
   }catch{setState('idle','Prêt')}
 }
 function parseSSEBlock(block,onDelta,onDone){
@@ -166,13 +194,15 @@ function pickAmbient(){
   if(!pool.length)return 'curious';const pick=pool[Math.floor(Math.random()*pool.length)];recentAmbient=[pick,...recentAmbient.filter(x=>x!==pick)].slice(0,3);return pick;
 }
 function scheduleEye(){
-  clearTimeout(scheduleEye.t);scheduleEye.t=setTimeout(()=>{
+  clearTimeout(scheduleEye.t);
+  if(innerWidth<=820)return;
+  scheduleEye.t=setTimeout(()=>{
     const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
     if(!reduced&&!state.busy&&!state.listening&&document.visibilityState==='visible'&&hasAnim('Blink')){
       setState('blink','Présent');setTimeout(()=>{if(!state.busy&&!state.listening)setState('idle','Prêt')},330);
     }
     scheduleEye();
-  },82000+Math.random()*52000);
+  },95000+Math.random()*65000);
 }
 function scheduleAmbient(){
   clearTimeout(ambientTimer);
@@ -191,7 +221,7 @@ addEventListener('orientationchange',()=>setTimeout(resetStandaloneFraming,180),
 form?.addEventListener('submit',e=>{e.preventDefault();ask(input.value)});
 input?.addEventListener('input',autoGrow);
 input?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});
-$('#voiceButton')?.addEventListener('click',()=>{primeVoiceOutput();startVoice()});$('#heroVoice')?.addEventListener('click',()=>{primeVoiceOutput();$('#chatSection').scrollIntoView({behavior:'smooth'});setTimeout(startVoice,420)});
+$('#voiceButton')?.addEventListener('click',()=>{state.voiceReply=true;$('#voiceReplyToggle')?.classList.add('active');primeVoiceOutput();startVoice()});$('#heroVoice')?.addEventListener('click',()=>{state.voiceReply=true;$('#voiceReplyToggle')?.classList.add('active');primeVoiceOutput();$('#chatSection').scrollIntoView({behavior:'smooth'});setTimeout(startVoice,420)});
 $('#goChat')?.addEventListener('click',()=>$('#chatSection').scrollIntoView({behavior:'smooth'}));
 $('#voiceReplyToggle')?.addEventListener('click',e=>{state.voiceReply=!state.voiceReply;e.currentTarget.classList.toggle('active',state.voiceReply);e.currentTarget.textContent=state.voiceReply?'Voix activée':'Voix coupée';if(!state.voiceReply&&'speechSynthesis'in window)speechSynthesis.cancel()});
 $$('[data-mode]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;$$('[data-mode]').forEach(x=>x.classList.toggle('active',x===b))});
