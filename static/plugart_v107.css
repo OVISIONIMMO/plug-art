@@ -1933,3 +1933,203 @@ body[data-plugy-motion] #plugyModel{filter:none!important}
     min-height:auto!important;
   }
 }
+
+
+/* V146 · one Content Studio, Canva-like rail, iPhone-first */
+#view-creation .creation-studio-shell{
+  --studio-violet:#725cff;
+  --studio-cyan:#45cbd7;
+  --studio-pink:#e96cae;
+  --studio-ink:#17181d;
+}
+#view-creation .studio-tool-tabs{display:none!important}
+#view-creation .studio-designer{
+  display:grid!important;
+  grid-template-columns:268px minmax(0,1fr)!important;
+  grid-template-rows:auto minmax(0,1fr)!important;
+  gap:10px!important;
+  align-items:start!important;
+}
+#studioUnifiedTabs{
+  grid-column:1!important;
+  grid-row:1!important;
+  position:sticky;
+  top:138px;
+  z-index:18;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:3px;
+  padding:5px;
+  border:1px solid rgba(106,108,116,.12);
+  border-radius:15px;
+  background:rgba(250,250,252,.90);
+  -webkit-backdrop-filter:blur(22px) saturate(1.12);
+  backdrop-filter:blur(22px) saturate(1.12);
+}
+#studioUnifiedTabs button{
+  min-width:0;
+  min-height:45px;
+  border:0;
+  border-radius:11px;
+  background:transparent;
+  color:#7a7d86;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:2px;
+  font-size:6px;
+  font-weight:850;
+}
+#studioUnifiedTabs button b{font-size:13px;line-height:1}
+#studioUnifiedTabs button:nth-child(1) b{color:var(--studio-violet)}
+#studioUnifiedTabs button:nth-child(2) b{color:var(--studio-cyan)}
+#studioUnifiedTabs button:nth-child(3) b{color:#405bd8}
+#studioUnifiedTabs button:nth-child(4) b{color:var(--studio-pink)}
+#studioUnifiedTabs button:nth-child(5) b{color:#ef8d43}
+#studioUnifiedTabs button.active{
+  color:#fff;
+  background:linear-gradient(135deg,#262832,#111318);
+  box-shadow:0 8px 20px rgba(27,29,38,.14);
+}
+#studioUnifiedTabs button.active b{color:#fff}
+@media(min-width:821px){
+  #view-creation .studio-library,
+  #view-creation .studio-inspector{
+    grid-column:1!important;
+    grid-row:2!important;
+    display:none!important;
+    position:sticky!important;
+    top:198px!important;
+    max-height:calc(100dvh - 218px)!important;
+    overflow:auto!important;
+    padding:12px!important;
+  }
+  #view-creation .studio-library.rail-active,
+  #view-creation .studio-inspector.rail-active{display:grid!important}
+  #view-creation .studio-stage{
+    grid-column:2!important;
+    grid-row:1 / span 2!important;
+    min-height:760px!important;
+  }
+}
+#view-creation .studio-scale-section label,
+#view-creation .layer-control{
+  padding:7px 8px;
+  border-radius:11px;
+  background:rgba(246,247,250,.84);
+}
+#view-creation input[type="range"]{
+  accent-color:var(--studio-violet);
+  min-height:28px;
+}
+#view-creation input[type="range"]::-webkit-slider-runnable-track{
+  height:5px;
+  border-radius:999px;
+  background:linear-gradient(90deg,rgba(114,92,255,.26),rgba(69,203,215,.22));
+}
+#view-creation input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:20px;height:20px;
+  margin-top:-7.5px;
+  border-radius:50%;
+  background:#fff;
+  border:2px solid var(--studio-violet);
+  box-shadow:0 3px 10px rgba(62,48,140,.20);
+}
+#view-creation .studio-color-swatches button{
+  width:28px!important;height:28px!important;
+  border-radius:10px!important;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);
+}
+#view-creation .creation-ai-rail .studio-panel-title strong{font-size:11px}
+#view-creation .creation-ai-rail{
+  background:linear-gradient(145deg,rgba(248,246,255,.88),rgba(241,250,252,.80))!important;
+  border-color:rgba(112,91,223,.12)!important;
+}
+
+/* PLUGY miniature: smaller card, more camera distance, full body always visible */
+.plugy-follower{
+  width:82px!important;
+  height:106px!important;
+  border-radius:23px!important;
+}
+.plugy-follower #plugyModel{
+  inset:3px 5px 21px!important;
+  width:72px!important;
+  height:78px!important;
+  object-fit:contain!important;
+}
+.plugy-follower-aura{width:48px!important;height:48px!important}
+.plugy-follower-status{font-size:4.5px!important;padding:3px 5px!important}
+
+@media(max-width:820px){
+  #studioUnifiedTabs{display:none!important}
+  #view-creation .studio-designer{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:6px!important;
+  }
+  #view-creation .studio-stage{
+    order:1!important;
+    width:100%!important;
+    min-height:0!important;
+  }
+  #view-creation .studio-library,
+  #view-creation .studio-inspector{
+    display:none!important;
+    position:fixed!important;
+    left:max(6px,env(safe-area-inset-left))!important;
+    right:max(6px,env(safe-area-inset-right))!important;
+    bottom:calc(140px + env(safe-area-inset-bottom))!important;
+    max-height:min(60svh,570px)!important;
+    border-radius:24px 24px 19px 19px!important;
+  }
+  #view-creation .studio-library.mobile-open,
+  #view-creation .studio-inspector.mobile-open{display:grid!important}
+  #view-creation .studio-canvas-frame{
+    padding:4px!important;
+    background:transparent!important;
+  }
+  #view-creation .studio-canvas-frame .carousel-canvas{
+    width:min(100%,410px)!important;
+    max-height:59svh!important;
+    border-radius:18px!important;
+  }
+  .studio-mobile-dock{
+    grid-template-columns:repeat(5,1fr)!important;
+    padding:4px!important;
+    gap:2px!important;
+  }
+  .studio-mobile-dock button{
+    min-height:50px!important;
+    border-radius:13px!important;
+  }
+  .studio-mobile-dock button:nth-child(1) b{color:var(--studio-violet)}
+  .studio-mobile-dock button:nth-child(2) b{color:var(--studio-cyan)}
+  .studio-mobile-dock button:nth-child(3) b{color:#405bd8}
+  .studio-mobile-dock button:nth-child(4) b{color:var(--studio-pink)}
+  .studio-mobile-dock button:nth-child(5) b{color:#ef8d43}
+  .studio-mobile-dock button.active{
+    background:linear-gradient(135deg,#272936,#15161b)!important;
+    color:#fff!important;
+  }
+  .studio-mobile-dock button.active b{color:#fff!important}
+  #view-creation .studio-scale-section label,
+  #view-creation .layer-control{padding:9px 8px}
+  #view-creation input[type="range"]{min-height:34px}
+
+  .plugy-follower{
+    width:66px!important;
+    height:88px!important;
+    right:6px!important;
+    bottom:calc(82px + env(safe-area-inset-bottom))!important;
+    border-radius:20px!important;
+  }
+  .plugy-follower #plugyModel{
+    inset:4px 5px 20px!important;
+    width:56px!important;
+    height:61px!important;
+  }
+  .plugy-follower-aura{width:38px!important;height:38px!important}
+  .plugy-follower-status{font-size:4px!important}
+}
