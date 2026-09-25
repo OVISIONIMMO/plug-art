@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='152.20260925.1';
+const VERSION='153.20260925.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -300,6 +300,7 @@ function syncPlugyHomeMount(){
 }
 
 function openPlugy(seed=''){
+  primePlugySpeech();
   movePlugyModel(plugyDrawerStage());
   $('#plugyDrawer')?.classList.add('open');
   const mv=$('#plugyModel');if(mv&&!mv.loaded)$('#plugyState span').textContent='Chargement 3D…';
@@ -485,7 +486,7 @@ function createProgressiveSpeaker(){
   const finish=()=>{if(!finished||queued>0)return;state.voiceReply=false;$('#plugyState span').textContent='Prêt';playMotion('Idle',true);resumeConversationListening(430)};
   const enqueue=text=>{
     text=clean(text);if(!text)return;
-    queued++;const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';u.rate=1.12;u.pitch=1;
+    queued++;const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';u.rate=1.12;u.pitch=1;u.volume=1;const voice=plugySpeechVoice||resolvePlugySpeechVoice();if(voice)u.voice=voice;
     u.onstart=()=>{$('#plugyState span').textContent='Parle…';playMotion('Speak',true)};
     const done=()=>{queued=Math.max(0,queued-1);finish()};u.onend=done;u.onerror=done;speechSynthesis.speak(u);
   };
@@ -2473,7 +2474,12 @@ function processCanvasUpload(file){
 }
 function applyEditorialPattern(pattern){
   const s=state.carousel.slides[state.carousel.active];if(!s)return toast('Crée ou charge une slide');
-  pushCreationHistory();s.image='';slideDesign(s).pattern=pattern;renderCarousel();scheduleDraftAutosave();toast('Direction éditoriale appliquée');
+  pushCreationHistory();s.image='';const d=slideDesign(s);d.pattern=pattern;if(d.layout==='minimal')d.layout='editorial';renderCarousel();scheduleDraftAutosave();toast('Direction éditoriale appliquée');
+}
+function applySlideVisual(url,label='Visuel'){
+  const s=state.carousel.slides[state.carousel.active];if(!s||!url)return false;
+  pushCreationHistory();s.image=url;const d=slideDesign(s);if(d.layout==='minimal')d.layout='editorial';d.imageOpacity=Math.max(78,Number(d.imageOpacity||0));state.visual.url=url;
+  renderCarousel();scheduleDraftAutosave();toast(label+' appliqué');return true;
 }
 function renderStudioImages(){
   const box=$('#studioImageLibrary');if(!box)return;
@@ -2486,7 +2492,7 @@ function renderStudioImages(){
     '<div class="studio-generated-head"><span>VISUELS GÉNÉRÉS</span><button id="studioGenerateVariants">✦ Générer 3 variantes</button></div>'+
     '<div class="studio-generated-grid">'+(urls.slice(0,12).map((x,i)=>'<button data-studio-image="'+i+'" style="background-image:url(&quot;'+esc(x.url).replace(/"/g,'%22')+'&quot;)"><span>'+esc(x.label)+'</span></button>').join('')||'<div class="studio-image-empty">Choisis une direction ci-dessus ou génère plusieurs variantes.</div>')+'</div>';
   $$('[data-editorial-pattern]',box).forEach(b=>b.onclick=()=>applyEditorialPattern(b.dataset.editorialPattern));
-  $$('[data-studio-image]',box).forEach(b=>b.onclick=()=>{const x=urls[Number(b.dataset.studioImage)],s=state.carousel.slides[state.carousel.active];if(!x||!s)return;pushCreationHistory();s.image=x.url;renderCarousel();scheduleDraftAutosave();toast('Visuel appliqué à la slide')});
+  $('[data-studio-image]',box).forEach(b=>b.onclick=()=>{const x=urls[Number(b.dataset.studioImage)];if(x)applySlideVisual(x.url,x.label||'Visuel')});
   $('#studioGenerateVariants')?.addEventListener('click',generateCarouselVariants);
 }
 async function generateCarouselVariants(){
@@ -2506,7 +2512,7 @@ async function generateCarouselVariants(){
     const [label,style,direction]=directions[i];
     try{
       const out=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt:base+'. '+direction+'. Aucun texte lisible.',style,ratio,quality:'medium'})});
-      if(out.url){state.visual.history=state.visual.history||[];state.visual.history.unshift({url:out.url,label:label+' · '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});state.visual.url=out.url;made++;if(made===1){s.image=out.url;renderCarousel()}}
+      if(out.url){state.visual.history=state.visual.history||[];state.visual.history.unshift({url:out.url,label:label+' · '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});state.visual.url=out.url;made++;if(made===1){s.image=out.url;const d=slideDesign(s);if(d.layout==='minimal')d.layout='editorial';d.imageOpacity=Math.max(82,Number(d.imageOpacity||0));renderCarousel()}}
     }catch(e){console.warn('[Studio variant]',e)}
   }
   if(btn){btn.disabled=false;btn.textContent='✦ Générer 3 variantes'}
@@ -2731,6 +2737,7 @@ function installCreationModes(){
     '<section class="studio-stage panel">'+
       '<div class="studio-stage-head"><div><small>CANVAS</small><strong>Aperçu temps réel</strong></div><div class="stage-actions"><button id="stageGuidesToggle" class="active" title="Afficher les guides">Guides</button><button id="stageSafeToggle" class="active" title="Afficher la zone sûre">Safe</button><button id="stageSnapToggle" class="active" title="Activer le snapping">Aimant</button><button id="carouselGenerateImage">✦ Image</button><button id="carouselExport">PNG</button><button id="carouselExportAll">Tout exporter</button></div></div>'+
       '<div class="canvas-context-toolbar" id="canvasContextToolbar" hidden><button data-canvas-action="left">←</button><button data-canvas-action="center">↔</button><button data-canvas-action="middle">↕</button><button data-canvas-action="back">Arrière</button><button data-canvas-action="front">Avant</button><button data-canvas-action="duplicate">Dupliquer</button><button data-canvas-action="lock">Verrou</button><button data-canvas-action="delete">×</button></div>'+
+      '<div class="studio-visual-rail" id="studioVisualRail"><span>VISUEL</span><button data-stage-pattern="orbit">Orbites</button><button data-stage-pattern="grid">Grille</button><button data-stage-pattern="ribbon">Rubans</button><button data-stage-pattern="blocks">Blocs</button><button data-stage-pattern="signal">Signal</button><button data-stage-pattern="frame">Cadre</button><button class="ai" id="stageGenerateVariants">✦ 3 variantes</button><button id="stageOpenMedia">Médias</button></div>'+
       '<div class="studio-canvas-frame"><div class="carousel-canvas free-canvas show-guides show-safe" id="carouselCanvas"><div class="canvas-safe-zone" aria-hidden="true"></div><div class="canvas-guide guide-x" aria-hidden="true"></div><div class="canvas-guide guide-y" aria-hidden="true"></div><div class="carousel-image" id="carouselImage"></div><div class="carousel-copy"><small id="carouselKicker">PLUG ART</small><h3 id="carouselTitle">Choisis un template ou génère un carrousel</h3><p id="carouselBody">Le canvas reste entièrement modifiable.</p><b id="carouselCta">Découvrir →</b></div><div class="canvas-layers" id="canvasLayers"></div></div></div>'+
       '<div class="carousel-strip premium-strip"><div class="strip-head"><span id="carouselCounter">0 slide</span><div><button id="slideAdd">＋</button><button id="slideDuplicate">Dupliquer</button><button id="slideDeleteManual">Supprimer</button></div></div><div id="carouselSlides"></div></div>'+
       '<div class="instagram-export-row"><textarea id="carouselCaption" rows="3" placeholder="Légende Instagram…"></textarea><div><button id="carouselCaptionGenerate">✦ Légende</button><button class="primary-btn" id="carouselPublishInstagram">Publier Instagram</button><button id="carouselToBureau">Bureau</button></div></div>'+
@@ -2792,6 +2799,9 @@ function installCreationModes(){
 
   $('#carouselSource').onchange=syncCarouselBrief;$('#carouselGenerate').onclick=generateCarousel;
   $('#carouselGenerateImage').onclick=()=>generateCarouselImage(state.carousel.active);$('#carouselGenerateAll').onclick=generateAllCarouselImages;
+  $('[data-stage-pattern]').forEach(b=>b.onclick=()=>applyEditorialPattern(b.dataset.stagePattern));
+  $('#stageGenerateVariants')?.addEventListener('click',generateCarouselVariants);
+  $('#stageOpenMedia')?.addEventListener('click',()=>openStudioRailPane('images'));
   $('#carouselExport').onclick=()=>exportCarouselSlide(state.carousel.active);$('#carouselExportAll').onclick=exportAllCarouselSlides;
   $('#carouselCaptionGenerate').onclick=prepareInstagramCaption;$('#carouselPublishInstagram').onclick=publishCarouselInstagram;$('#carouselToBureau').onclick=carouselToBureau;
   $('#carouselFormat').onchange=e=>{state.carousel.format=e.target.value;renderCarousel()};
@@ -2809,7 +2819,7 @@ function installCreationModes(){
   $$('[data-add-shape]').forEach(b=>b.onclick=()=>{const shape=b.dataset.addShape;addCanvasLayer('shape',shape==='circle'?{shape,color:'#7657ff',w:18,h:18,radius:60}:shape==='pill'?{shape,color:'#111318',w:34,h:10,radius:60}:shape==='line'?{shape,color:'#111318',w:46,h:1.2,radius:0}:{shape,color:'#7657ff'})});
   $('#canvasImageUpload')?.addEventListener('change',e=>{processCanvasUpload(e.target.files?.[0]);e.target.value=''});
   $('#canvasUseGenerated')?.addEventListener('click',()=>state.visual.url?addCanvasLayer('image',{src:state.visual.url}):toast('Génère d’abord un visuel'));
-  $('#slideUseVisual')?.addEventListener('click',()=>{const s=state.carousel.slides[state.carousel.active];if(!s)return;if(!state.visual.url)return toast('Aucun visuel généré à utiliser');pushCreationHistory();s.image=state.visual.url;renderCarousel();scheduleDraftAutosave()});
+  $('#slideUseVisual')?.addEventListener('click',()=>state.visual.url?applySlideVisual(state.visual.url,'Dernier visuel'):toast('Aucun visuel généré à utiliser'));
   $('#slideAdd')?.addEventListener('click',addCarouselSlide);$('#slideDuplicate')?.addEventListener('click',duplicateCarouselSlide);$('#slideDeleteManual')?.addEventListener('click',deleteCarouselSlideManual);
   $('#stageGuidesToggle')?.addEventListener('click',()=>{state.studioGuides=!state.studioGuides;renderStudioCanvasAids()});$('#stageSafeToggle')?.addEventListener('click',()=>{state.studioSafe=!state.studioSafe;renderStudioCanvasAids()});$('#stageSnapToggle')?.addEventListener('click',()=>{state.studioSnap=!state.studioSnap;renderStudioCanvasAids()});
   $$('[data-canvas-action]').forEach(b=>b.onclick=()=>runCanvasAction(b.dataset.canvasAction));installStudioKeyboard();renderStudioCanvasAids();
@@ -3092,7 +3102,7 @@ async function generateCarouselImage(index){
   const s=state.carousel.slides[index];if(!s)return toast('Génère d’abord les slides');
   const source=opportunityById($('#carouselSource').value),ratio=state.carousel.format||'4:5',btn=$('#carouselGenerateImage'),old=btn.textContent;btn.disabled=true;btn.textContent='Image…';
   const prompt=clean((s.image_prompt||'Key visual éditorial contemporain pour '+s.title+'. '+s.body)+' Univers PLUG ART, campagne culturelle, composition graphique, lignes, formes, matière, espace négatif. Le visuel doit fonctionner sans photographie d’exposition. Aucun texte lisible, aucun logo, aucun watermark.'+(source?' Contexte : '+source.title+'.':''));
-  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt,style:'editorial',ratio,quality:'medium'})});if(r.url){s.image=r.url;state.visual.url=r.url;state.visual.history=state.visual.history||[];state.visual.history.unshift({url:r.url,label:'Slide '+(index+1)});renderCarousel();scheduleDraftAutosave();toast('Visuel généré')}}catch(e){console.error('[Image Studio]',e);toast('Image : '+String(e?.message||'génération indisponible').replace(/^\{"detail":"?|"?\}$/g,'').slice(0,150))}finally{btn.disabled=false;btn.textContent=old}
+  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt,style:'editorial',ratio,quality:'medium'})});if(r.url){s.image=r.url;const d=slideDesign(s);if(d.layout==='minimal')d.layout='editorial';d.imageOpacity=Math.max(82,Number(d.imageOpacity||0));state.visual.url=r.url;state.visual.history=state.visual.history||[];state.visual.history.unshift({url:r.url,label:'Slide '+(index+1)});renderCarousel();scheduleDraftAutosave();toast('Visuel généré et affiché')}}catch(e){console.error('[Image Studio]',e);toast('Image : '+String(e?.message||'génération indisponible').replace(/^\{"detail":"?|"?\}$/g,'').slice(0,150))}finally{btn.disabled=false;btn.textContent=old}
 }
 async function generateAllCarouselImages(){
   if(!state.carousel.slides.length)return toast('Génère d’abord les slides');const b=$('#carouselGenerateAll'),old=b.textContent;b.disabled=true;
