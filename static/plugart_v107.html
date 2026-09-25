@@ -69,7 +69,6 @@
         <button class="icon-btn" id="refreshData" title="Actualiser">↻</button>
         <button class="map-access-btn" data-route="map" title="Carte des opportunités">⌖ Map</button>
         <button class="instagram-access-btn" data-route="social" title="Instagram">◎ Instagram</button>
-        <button class="secondary-btn design-lab-trigger" id="designLabButton" title="Édition visuelle">◫ Design</button>
         <button class="primary-btn" id="newAction">＋ Nouveau</button>
         <button class="plugy-btn" id="topPlugy"><i></i> PLUGY</button>
       </div>
@@ -335,55 +334,6 @@
       <button data-create="lead"><b>◎</b><strong>Contact</strong><span>Ajouter à la prospection</span></button>
       <button data-create="radar"><b>◉</b><strong>Recherche Radar</strong><span>Lancer une veille</span></button>
     </div>
-  </div>
-</div>
-
-<div class="overlay design-lab-overlay" id="designLabOverlay">
-  <div class="overlay-card design-lab-card">
-    <div class="design-lab-head">
-      <div><small>ÉDITION VISUELLE</small><h2>Interface Lab</h2><p>Ajuste le langage visuel du workspace en direct.</p></div>
-      <button id="designLabClose">×</button>
-    </div>
-    <div class="design-lab-grid">
-      <section class="design-lab-controls">
-        <label>Accent
-          <select id="uiAccent"><option value="violet">Violet</option><option value="cyan">Cyan</option><option value="coral">Rose</option><option value="cobalt">Bleu</option><option value="mono">Noir</option></select>
-        </label>
-        <label>Surface
-          <select id="uiSurface"><option value="editorial">Éditorial</option><option value="glass">Verre</option><option value="flat">Minimal</option></select>
-        </label>
-        <label>Densité
-          <select id="uiDensity"><option value="airy">Aérée</option><option value="balanced">Équilibrée</option><option value="compact">Compacte</option></select>
-        </label>
-        <label>Arrondis <output id="uiRadiusOut">22</output>
-          <input id="uiRadius" type="range" min="12" max="34" step="1" value="22">
-        </label>
-        <label>Échelle typo <output id="uiFontScaleOut">100%</output>
-          <input id="uiFontScale" type="range" min="88" max="116" step="1" value="100">
-        </label>
-        <label>Mouvement
-          <select id="uiMotion"><option value="subtle">Subtil</option><option value="expressive">Expressif</option><option value="off">Aucun</option></select>
-        </label>
-        <label>Navigation
-          <select id="uiSidebar"><option value="standard">Standard</option><option value="compact">Compacte</option></select>
-        </label>
-      </section>
-      <section class="design-lab-preview">
-        <div class="design-preview-device">
-          <div class="design-preview-nav"><i></i><span></span><span></span><b></b></div>
-          <div class="design-preview-hero"><small>PLUG ART</small><h3>Un workspace plus clair.</h3><p>Hiérarchie forte, beaucoup d’air, une action évidente.</p><button>Action principale</button></div>
-          <div class="design-preview-cards"><i></i><i></i><i></i></div>
-        </div>
-        <div class="design-lab-presets">
-          <button data-ui-preset="ultra">Ultra</button>
-          <button data-ui-preset="editorial">Éditorial</button>
-          <button data-ui-preset="minimal">Minimal</button>
-          <button data-ui-preset="night">Contraste</button>
-        </div>
-        <div class="design-lab-history"><select id="uiVersionPicker"><option value="">Historique</option></select><button id="uiRestoreVersion">Restaurer</button></div>
-      </section>
-    </div>
-    <div class="design-lab-actions"><span id="uiDesignStatus">Aperçu local</span><button id="uiResetDesign">Réinitialiser</button><button class="primary-btn" id="uiSaveDesign">Enregistrer sur le site</button></div>
   </div>
 </div>
 
