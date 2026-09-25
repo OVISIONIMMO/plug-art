@@ -2393,7 +2393,7 @@ function openStudioRailPane(pane,mobile=false){
     inspector.classList.toggle('mobile-open',style);
     dock?.classList.add('sheet-open');
     $('#studioSheetScrim')?.classList.add('open');document.body.classList.add('studio-sheet-open');
-    $('[data-mobile-studio]',dock).forEach(b=>b.classList.toggle('active',(style?'style':pane)===b.dataset.mobileStudio));
+    $$('[data-mobile-studio]',dock).forEach(b=>b.classList.toggle('active',(style?'style':pane)===b.dataset.mobileStudio));
   }
 }
 
@@ -2513,13 +2513,13 @@ function installMobileStudioDock(){
     installStudioSheetGesture(box);
   });
 
-  $$('[data-mobile-studio]',dock).forEach(b=>b.onclick=()=>{
+  $$$('[data-mobile-studio]',dock).forEach(b=>b.onclick=()=>{
     const pane=b.dataset.mobileStudio;
     const already=b.classList.contains('active')&&document.body.classList.contains('studio-sheet-open');
     if(already)return closeMobileStudioSheet();
     openStudioRailPane(pane,true);
     scrim.classList.add('open');document.body.classList.add('studio-sheet-open');
-    $$('[data-mobile-studio]',dock).forEach(x=>x.classList.toggle('active',x===b));
+    $$$('[data-mobile-studio]',dock).forEach(x=>x.classList.toggle('active',x===b));
   });
 
   stage.addEventListener('pointerdown',e=>{
