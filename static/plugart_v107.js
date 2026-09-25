@@ -166,7 +166,7 @@ function ensureModelViewer(){
 function playMotion(name='Idle',loop=false){
   const mv=$('#plugyModel');if(!mv)return;
   const mini=$('#plugyFollower')?.contains(mv)&&$('#plugyFollower')?.classList.contains('visible');
-  if(mini&&['Blink','DoubleBlink','Wink','SoftEyes'].includes(name))name='Idle';
+  if(mini&&['Blink','DoubleBlink','Wink','SoftEyes','EyeThink'].includes(name))name='Idle';
   document.body.dataset.plugyMotion=name;
   const run=()=>{
     const a=mv.availableAnimations||[];
@@ -210,6 +210,8 @@ function tunePlugyMaterials(){
 }
 $('#plugyModel')?.addEventListener('load',()=>{tunePlugyMaterials();if($('#plugyState span'))$('#plugyState span').textContent='Prêt';playMotion('Idle',true)},{once:true});
 $('#plugyModel')?.addEventListener('pointerenter',()=>{
+  const mini=$('#plugyFollower')?.classList.contains('visible')&&$('#plugyFollower')?.contains($('#plugyModel'));
+  if(mini)return;
   const hello=choosePlugyMotion(['ArmHello','Curious','Happy']);
   if(hello)playMotion(hello);
   plugySoftGaze();
@@ -2341,7 +2343,7 @@ function syncLayerInspector(){
         '<label>Alignement<select id="layerAlign"><option value="left">Gauche</option><option value="center">Centre</option><option value="right">Droite</option></select></label>'+
         '<label>Casse<select id="layerTextTransform"><option value="none">Normal</option><option value="uppercase">MAJUSCULES</option><option value="lowercase">minuscules</option></select></label>'+
         '<label>Couleur<input id="layerColor" type="color" value="'+esc(l.color||'#111318')+'"></label>'+
-        '<div class="layer-quick-sizes"><small>TAILLE RAPIDE</small><div><button data-layer-size="18">S</button><button data-layer-size="26">M</button><button data-layer-size="36">L</button><button data-layer-size="52">XL</button><button data-layer-size="72">XXL</button></div></div>'+
+        '<div class="layer-quick-sizes"><small>ÉCHELLE TYPOGRAPHIQUE</small><div><button data-layer-size="14">Caption</button><button data-layer-size="22">Texte</button><button data-layer-size="32">Sous-titre</button><button data-layer-size="48">Titre</button><button data-layer-size="72">Hero</button></div></div>'+
         '<div class="layer-quick-colors"><small>PALETTE PLUG ART</small><div><button data-layer-color="#111318" style="--sw:#111318"></button><button data-layer-color="#735cff" style="--sw:#735cff"></button><button data-layer-color="#45cbd7" style="--sw:#45cbd7"></button><button data-layer-color="#e96cae" style="--sw:#e96cae"></button><button data-layer-color="#f2944b" style="--sw:#f2944b"></button><button data-layer-color="#55b982" style="--sw:#55b982"></button><button data-layer-color="#ffffff" style="--sw:#ffffff"></button></div></div>'+
         range('layerShadow','Ombre',0,32,Number(l.shadow||0),1,' px')+
        '</div>'
@@ -2367,6 +2369,55 @@ function syncLayerInspector(){
   $$('[data-layer-align]',box).forEach(b=>b.onclick=()=>alignLayerToPage(b.dataset.layerAlign));
   $('#layerDelete')?.addEventListener('click',deleteCanvasLayer);$('#layerDuplicate')?.addEventListener('click',duplicateCanvasLayer);$('#layerBack')?.addEventListener('click',()=>moveCanvasLayer('back'));$('#layerFront')?.addEventListener('click',()=>moveCanvasLayer('front'));
 }
+const STUDIO_PALETTES={
+  plug:{background:'#efeaff',accent:'violet',text:'#111318',shape:'#735cff',theme:'editorial'},
+  electric:{background:'#e8f8fa',accent:'cyan',text:'#11202a',shape:'#4b7cff',theme:'ultra'},
+  pop:{background:'#fff0f6',accent:'pink',text:'#241720',shape:'#f2944b',theme:'soft'},
+  gallery:{background:'#f4f3ef',accent:'black',text:'#111318',shape:'#735cff',theme:'ultra'},
+  night:{background:'#171820',accent:'cyan',text:'#ffffff',shape:'#e96cae',theme:'night'}
+};
+function applyStudioPalette(key){
+  const p=STUDIO_PALETTES[key];if(!p)return;
+  const scope=$('#studioPaletteScope')?.value||'slide',targets=scope==='all'?state.carousel.slides:[state.carousel.slides[state.carousel.active]].filter(Boolean);
+  if(!targets.length)return toast('Crée ou charge une slide');
+  pushCreationHistory();
+  targets.forEach(s=>{
+    const d=slideDesign(s);d.backgroundColor=p.background;d.accent=p.accent;d.theme=p.theme;
+    slideLayers(s).forEach(l=>{
+      if(l.type==='text')l.color=p.text;
+      else if(l.type==='shape')l.color=p.shape;
+    });
+  });
+  const active=activeCanvasLayer();
+  if(active){if(active.type==='text')active.color=p.text;if(active.type==='shape')active.color=p.shape}
+  renderCarousel();syncLayerInspector();scheduleDraftAutosave();toast('Palette '+key+' appliquée');
+}
+function applyStructureLayout(layout){
+  const s=state.carousel.slides[state.carousel.active];if(!s)return toast('Crée ou charge une slide');
+  pushCreationHistory();slideDesign(s).layout=layout;renderCarousel();scheduleDraftAutosave();
+}
+async function restructureStudioContent(kind){
+  const slides=state.carousel.slides;if(!slides.length)return toast('Génère d’abord le contenu');
+  if(kind==='premium')return assistSlideDesign('premium');
+  const instructions={
+    storyline:'Réorganise la séquence pour créer une narration claire : accroche, contexte, information utile, preuve ou détail, puis action. Garde le même nombre de slides.',
+    hook:'Renforce uniquement les accroches et titres. Ils doivent être immédiats, lisibles et factuels.',
+    clarity:'Simplifie chaque slide. Une idée principale par slide, phrases plus courtes, aucune information inventée.',
+    cta:'Clarifie les CTA et la progression vers l’action finale. Ne transforme pas les faits.'
+  };
+  const prompt=(instructions[kind]||instructions.storyline)+' Réponds uniquement en JSON valide {"slides":[{"kicker":"","title":"","body":"","cta":""}]}. Conserve le nombre de slides et tous les faits présents. Données : '+JSON.stringify(slides.map(({kicker,title,body,cta})=>({kicker,title,body,cta})));
+  const buttons=$$('[data-structure-action]');buttons.forEach(b=>b.disabled=true);playMotion(plugyAvailable('ArmThink')?'ArmThink':'Think',true);
+  try{
+    const out=await api('/api/v32/plugy',{method:'POST',timeout:60000,body:JSON.stringify({message:prompt,page:'content',mode:'deep'})});
+    const parsed=parseLooseJSON(out.answer),next=Array.isArray(parsed.slides)?parsed.slides:[];
+    if(!next.length)throw new Error('Structure vide');
+    pushCreationHistory();
+    next.slice(0,slides.length).forEach((n,i)=>{if(!slides[i])return;['kicker','title','body','cta'].forEach(k=>{if(typeof n[k]==='string')slides[i][k]=n[k]})});
+    renderCarousel();scheduleDraftAutosave();toast('Structure du contenu mise à jour');
+  }catch(e){console.warn('[Studio structure]',e);toast('PLUGY n’a pas pu restructurer le contenu')}
+  finally{buttons.forEach(b=>b.disabled=false);playMotion('Idle',true)}
+}
+
 function setStudioTool(tool){
   state.canvasTool=tool;$$('[data-studio-tool]').forEach(b=>b.classList.toggle('active',b.dataset.studioTool===tool));$$('[data-tool-panel]').forEach(p=>p.classList.toggle('active',p.dataset.toolPanel===tool));
 }
@@ -2504,7 +2555,7 @@ function installMobileStudioDock(){
   const scrim=document.createElement('button');scrim.type='button';scrim.id='studioSheetScrim';scrim.className='studio-sheet-scrim';scrim.setAttribute('aria-label','Fermer les réglages');scrim.onclick=closeMobileStudioSheet;panel.appendChild(scrim);
 
   const dock=document.createElement('nav');dock.id='mobileStudioDock';dock.className='studio-mobile-dock';dock.setAttribute('aria-label','Outils du Studio');
-  dock.innerHTML='<button data-mobile-studio="templates"><b>▦</b><span>Modèles</span></button><button data-mobile-studio="images"><b>▧</b><span>Médias</span></button><button data-mobile-studio="text"><b>Aa</b><span>Texte</span></button><button data-mobile-studio="elements"><b>◯</b><span>Éléments</span></button><button data-mobile-studio="layers"><b>≡</b><span>Calques</span></button><button data-mobile-studio="style"><b>⌁</b><span>Style</span></button>';
+  dock.innerHTML='<button data-mobile-studio="templates"><b>▦</b><span>Modèles</span></button><button data-mobile-studio="structure"><b>↳</b><span>Structure</span></button><button data-mobile-studio="text"><b>Aa</b><span>Texte</span></button><button data-mobile-studio="images"><b>▧</b><span>Médias</span></button><button data-mobile-studio="elements"><b>◯</b><span>Éléments</span></button><button data-mobile-studio="colors"><b>●</b><span>Couleurs</span></button><button data-mobile-studio="layers"><b>≡</b><span>Calques</span></button><button data-mobile-studio="style"><b>⌁</b><span>Style</span></button>';
   panel.appendChild(dock);
 
   [library,inspector].forEach(box=>{
@@ -2598,7 +2649,7 @@ function installCreationModes(){
   const carousel=document.createElement('section');carousel.id='carouselCreationPanel';carousel.className='creation-mode-panel studio-designer';
   carousel.innerHTML=
     '<aside class="studio-library panel">'+
-      '<div class="studio-tool-tabs"><button class="active" data-studio-tool="templates">Templates</button><button data-studio-tool="images">Images</button><button data-studio-tool="text">Texte</button><button data-studio-tool="elements">Éléments</button><button data-studio-tool="layers">Calques</button></div>'+
+      '<div class="studio-tool-tabs"><button class="active" data-studio-tool="templates">Modèles</button><button data-studio-tool="structure">Structure</button><button data-studio-tool="text">Texte</button><button data-studio-tool="images">Médias</button><button data-studio-tool="elements">Éléments</button><button data-studio-tool="colors">Couleurs</button><button data-studio-tool="layers">Calques</button></div>'+
       '<div class="studio-tool-panel active" data-tool-panel="templates"><div class="studio-panel-title"><small>TEMPLATES</small><strong>Design marketing</strong></div>'+
       '<div class="marketing-template-grid">'+
         '<button data-marketing-template="open-call"><i class="mk-open"></i><span><b>Open Call</b><small>Éditorial clair</small></span></button>'+
@@ -2607,9 +2658,17 @@ function installCreationModes(){
         '<button data-marketing-template="artist"><i class="mk-artist"></i><span><b>Artiste</b><small>Portrait / focus</small></span></button>'+
         '<button data-marketing-template="partnership"><i class="mk-partner"></i><span><b>Partenariat</b><small>Pro / institutionnel</small></span></button>'+
       '</div></div>'+
+      '<div class="studio-tool-panel" data-tool-panel="structure"><div class="studio-panel-title"><small>STRUCTURE</small><strong>Hiérarchie du contenu</strong></div>'+
+      '<div class="studio-structure-grid"><button data-structure-action="storyline"><b>01</b><span><strong>Storyline</strong><small>Réorganiser les slides</small></span></button><button data-structure-action="hook"><b>02</b><span><strong>Accroche</strong><small>Renforcer l’ouverture</small></span></button><button data-structure-action="clarity"><b>03</b><span><strong>Clarté</strong><small>Simplifier les messages</small></span></button><button data-structure-action="cta"><b>04</b><span><strong>CTA</strong><small>Clarifier l’action finale</small></span></button></div>'+
+      '<div class="studio-structure-layouts"><small>MISE EN PAGE</small><div><button data-structure-layout="editorial">Éditorial</button><button data-structure-layout="split">Split</button><button data-structure-layout="poster">Poster</button><button data-structure-layout="minimal">Minimal</button></div></div>'+
+      '<div class="studio-structure-ai"><button class="plugy-inline wide" data-structure-action="premium">✦ Repenser avec PLUGY</button></div></div>'+
       '<div class="studio-tool-panel" data-tool-panel="images"><div class="studio-panel-title"><small>IMAGES</small><strong>Médias</strong></div><label class="studio-upload">Importer une image<input id="canvasImageUpload" type="file" accept="image/*"></label><button class="secondary-btn wide" id="canvasUseGenerated">Utiliser le dernier visuel généré</button><div class="studio-image-library" id="studioImageLibrary"></div></div>'+
       '<div class="studio-tool-panel" data-tool-panel="text"><div class="studio-panel-title"><small>TEXTE</small><strong>Ajouter</strong></div><button class="studio-add-item" data-add-text="heading"><b>Aa</b><span>Titre</span></button><button class="studio-add-item" data-add-text="body"><b>Ag</b><span>Paragraphe</span></button><button class="studio-add-item" data-add-text="label"><b>TAG</b><span>Label</span></button></div>'+
       '<div class="studio-tool-panel" data-tool-panel="elements"><div class="studio-panel-title"><small>ÉLÉMENTS</small><strong>Formes</strong></div><div class="studio-element-grid"><button data-add-shape="rect"><i></i><span>Bloc</span></button><button data-add-shape="pill"><i class="pill"></i><span>Pill</span></button><button data-add-shape="circle"><i class="circle"></i><span>Cercle</span></button><button data-add-shape="line"><i class="line"></i><span>Ligne</span></button></div></div>'+
+      '<div class="studio-tool-panel" data-tool-panel="colors"><div class="studio-panel-title"><small>COULEURS</small><strong>Identité PLUG ART</strong></div>'+
+      '<label class="studio-palette-scope">Appliquer à<select id="studioPaletteScope"><option value="slide">Slide active</option><option value="all">Tout le carrousel</option></select></label>'+
+      '<div class="studio-palette-grid"><button data-studio-palette="plug"><i style="--p1:#735cff;--p2:#efeaff;--p3:#111318"></i><span><b>Plug Violet</b><small>Signature PLUG ART</small></span></button><button data-studio-palette="electric"><i style="--p1:#45cbd7;--p2:#e8f8fa;--p3:#4b7cff"></i><span><b>Electric</b><small>Cyan + bleu</small></span></button><button data-studio-palette="pop"><i style="--p1:#e96cae;--p2:#fff0f6;--p3:#f2944b"></i><span><b>Pop</b><small>Rose + orange</small></span></button><button data-studio-palette="gallery"><i style="--p1:#111318;--p2:#f4f3ef;--p3:#735cff"></i><span><b>Gallery</b><small>Sobre éditorial</small></span></button><button data-studio-palette="night"><i style="--p1:#45cbd7;--p2:#171820;--p3:#e96cae"></i><span><b>Night</b><small>Sombre premium</small></span></button></div>'+
+      '<div class="studio-palette-note">Les couleurs s’appliquent au fond, à l’accent et aux éléments sélectionnés sans modifier le texte du contenu.</div></div>'+
       '<div class="studio-tool-panel" data-tool-panel="layers"><div class="studio-panel-title"><small>CALQUES</small><strong>Ordre & visibilité</strong></div><div class="studio-layer-list" id="studioLayerList"></div></div>'+
       '<div class="studio-library-divider"></div>'+
       '<label>Source<select id="carouselSource"><option value="">Brief libre</option></select></label>'+
@@ -2692,6 +2751,9 @@ function installCreationModes(){
   $$('[data-slide-help]').forEach(b=>b.onclick=()=>assistSlideDesign(b.dataset.slideHelp));
   $$('[data-marketing-template]').forEach(b=>b.onclick=()=>applyMarketingTemplate(b.dataset.marketingTemplate));
   $$('[data-studio-tool]').forEach(b=>b.onclick=()=>setStudioTool(b.dataset.studioTool));
+  $$('[data-structure-action]').forEach(b=>b.onclick=()=>restructureStudioContent(b.dataset.structureAction));
+  $$('[data-structure-layout]').forEach(b=>b.onclick=()=>applyStructureLayout(b.dataset.structureLayout));
+  $$('[data-studio-palette]').forEach(b=>b.onclick=()=>applyStudioPalette(b.dataset.studioPalette));
   $$('[data-add-text]').forEach(b=>b.onclick=()=>{const kind=b.dataset.addText;addCanvasLayer('text',kind==='heading'?{text:'Nouveau titre',size:38,w:70,h:16}:kind==='label'?{text:'PLUG ART',size:15,weight:800,w:30,h:8,color:'#7657ff'}:{text:'Ajoute ton texte ici.',size:22,weight:500,w:68,h:18})});
   $$('[data-add-shape]').forEach(b=>b.onclick=()=>{const shape=b.dataset.addShape;addCanvasLayer('shape',shape==='circle'?{shape,color:'#7657ff',w:18,h:18,radius:60}:shape==='pill'?{shape,color:'#111318',w:34,h:10,radius:60}:shape==='line'?{shape,color:'#111318',w:46,h:1.2,radius:0}:{shape,color:'#7657ff'})});
   $('#canvasImageUpload')?.addEventListener('change',e=>{processCanvasUpload(e.target.files?.[0]);e.target.value=''});
@@ -2707,7 +2769,6 @@ function installCreationModes(){
   $$('[data-visual-help]').forEach(b=>b.onclick=()=>improveVisualPrompt(b.dataset.visualHelp));
 
   $$('[data-studio-start]').forEach(b=>b.onclick=()=>{const mode=b.dataset.studioStart;setCreationMode(mode);if(b.dataset.marketingTemplate)applyMarketingTemplate(b.dataset.marketingTemplate);if(b.dataset.visualUsecase)applyVisualPreset(b.dataset.visualUsecase);document.querySelector('.creation-studio-shell')?.scrollIntoView({behavior:'smooth',block:'start'})});
-  $$('[data-creative-prompt]').forEach(b=>b.onclick=()=>{const brief=clean($('#contentBrief')?.value),body=clean($('#contentBody')?.value);askPlugy(b.dataset.creativePrompt+' Contexte : '+(brief||body||'aucun brief encore'),'#contentBody')});
   $$('[data-copy-action]').forEach(b=>b.onclick=()=>improveTextContent(b.dataset.copyAction));
 
   function refreshQuickSources(){
@@ -2755,7 +2816,7 @@ function installCreationModes(){
   // is surfaced in the console instead of silently pretending to be a button.
   const creationInteractive=$('#view-creation button, #view-creation select, #view-creation input, #view-creation textarea');
   const inert=creationInteractive.filter(el=>el.tagName==='BUTTON'&&!el.onclick&&!el.dataset.bound&&
-    !el.matches('[data-route],[data-create-mode],[data-studio-start],[data-creative-prompt],[data-copy-action],[data-marketing-template],[data-studio-tool],[data-add-text],[data-add-shape],[data-slide-preset],[data-slide-help],[data-visual-preset],[data-visual-help]'));
+    !el.matches('[data-route],[data-create-mode],[data-studio-start],[data-copy-action],[data-marketing-template],[data-studio-tool],[data-add-text],[data-add-shape],[data-slide-preset],[data-slide-help],[data-visual-preset],[data-visual-help]'));
   inert.forEach(el=>{
     el.dataset.bound='fallback';
     el.addEventListener('click',()=>toast('Commande indisponible : '+clean(el.textContent||el.id||'outil')));
@@ -3524,13 +3585,7 @@ function choosePlugyMotion(pool){
 }
 function schedulePlugyBlink(){
   clearTimeout(schedulePlugyBlink.t);
-  schedulePlugyBlink.t=setTimeout(()=>{
-    const busy=['Think','Charge','Listen','Speak','ArmThink','ArmHello','ArmExplain','ArmShrug','ArmStretch'].includes(document.body.dataset.plugyMotion||'');
-    const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const miniVisible=$('#plugyFollower')?.classList.contains('visible')&&!$('#plugyDrawer')?.classList.contains('open');
-    if(!reduced&&!miniVisible&&!state.voice&&!busy&&document.visibilityState==='visible'&&plugyIsVisible()&&plugyAvailable('Blink'))playMotion('Blink');
-    schedulePlugyBlink();
-  },76000+Math.random()*52000);
+  // V151: no autonomous eyelid animation. PLUGY keeps a calm, readable face.
 }
 function schedulePlugyAmbient(){
   clearTimeout(plugyAmbientTimer);
