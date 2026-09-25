@@ -194,3 +194,41 @@ body[data-plugy-state="blink"] #plugyStandaloneModel{filter:drop-shadow(0 28px 3
   .hero-actions{grid-template-columns:1fr}
   .hero-secondary{display:none}
 }
+
+
+/* V146 · full-body iPhone framing, quieter presence */
+@media(max-width:780px){
+  .plugy-hero{
+    grid-template-rows:minmax(286px,43svh) auto!important;
+    gap:0!important;
+  }
+  .plugy-model-wrap{
+    min-height:39svh!important;
+    max-height:45svh!important;
+  }
+  #plugyStandaloneModel{
+    width:min(76vw,360px)!important;
+    height:min(42svh,400px)!important;
+  }
+  .plugy-model-wrap:before{width:66%!important}
+  .plugy-model-wrap:after{width:min(74vw,380px)!important;opacity:.62}
+  .plugy-live-state{bottom:1%!important}
+}
+@media(max-width:390px){
+  .plugy-hero{
+    grid-template-rows:minmax(250px,39svh) auto!important;
+    min-height:86svh!important;
+  }
+  .plugy-model-wrap{
+    min-height:36svh!important;
+    max-height:41svh!important;
+  }
+  #plugyStandaloneModel{
+    width:70vw!important;
+    height:37svh!important;
+  }
+  .plugy-model-wrap:after{width:70vw!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .ring,.plugy-model-wrap:after{animation:none!important}
+}
