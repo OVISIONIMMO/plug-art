@@ -233,14 +233,18 @@ def _image_size(ratio):
 def _image_prompt(prompt, style):
     styles = {
         "photo":"premium photorealistic editorial photography",
-        "gallery":"photorealistic contemporary art gallery",
+        "gallery":"contemporary cultural campaign art direction, not necessarily a literal gallery interior",
         "portrait":"premium editorial portrait of a contemporary artist",
         "urban":"contemporary urban art and culture scene in Europe",
         "studio":"photorealistic artist studio",
         "architecture":"premium cultural architecture photography",
-        "product":"premium art-object still life"
+        "product":"premium art-object still life",
+        "editorial":"high-end graphic editorial art direction for a contemporary culture magazine",
+        "graphic":"abstract graphic design for an art exhibition campaign, geometric lines, fields, grids, paper, ink and negative space",
+        "poster":"museum-grade contemporary exhibition poster background, abstract shapes, bold composition, restrained palette, no literal exhibition photo"
     }
-    return f"{styles.get(style, styles['photo'])}. {prompt}. High-end PLUG ART social visual. No typography, no letters, no logos, no watermark, no UI mockup. Refined lighting, believable materials, clean editorial composition."
+    direction=styles.get(style, styles['editorial'])
+    return f"{direction}. {prompt}. High-end PLUG ART social campaign visual. Prioritize composition, rhythm, negative space, graphic lines, geometry, paper or material texture when relevant. The visual must work as a designed marketing post even without any exhibition photograph. No typography, no readable letters, no logos, no watermark, no UI mockup. Clean editorial composition with deliberate space reserved for text added later by the PLUG ART editor."
 
 def _decode_image(data):
     items = (data or {}).get("data") or []
