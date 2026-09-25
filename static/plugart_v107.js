@@ -2500,7 +2500,7 @@ function renderStudioImages(){
   if(state.visual.url&&!urls.some(x=>x.url===state.visual.url))urls.unshift({url:state.visual.url,label:'Dernier visuel'});
   state.carousel.slides.forEach((s,i)=>{if(s.image&&!urls.some(x=>x.url===s.image))urls.push({url:s.image,label:'Slide '+(i+1)})});
   box.innerHTML=
-    '<div class="editorial-visual-choices">'+EDITORIAL_PATTERNS.map((p,i)=>'<button class="editorial-choice pattern-'+p+'" data-editorial-pattern="'+p+'"><i></i><span>'+['Orbites','Grille','Rubans','Blocs','Signal','Cadre'][i]+'</span></button>').join('')+'</div>'+
+    '<div class="editorial-visual-choices">'+EDITORIAL_PATTERNS.map((p,i)=>'<button class="editorial-choice pattern-'+p+' '+(p===slideDesign(state.carousel.slides[state.carousel.active]||{}).pattern?'active':'')+'" data-editorial-pattern="'+p+'"><i></i><span>'+['Orbites','Grille','Rubans','Blocs','Signal','Cadre'][i]+'</span></button>').join('')+'</div>'+
     '<div class="studio-generated-head"><span>VISUELS GÉNÉRÉS</span><button id="studioGenerateVariants">✦ Générer 3 variantes</button></div>'+
     '<div class="studio-generated-grid">'+(urls.slice(0,12).map((x,i)=>'<button class="'+(x.url===state.visual.url?'active':'')+'" data-studio-image="'+i+'" style="background-image:url(&quot;'+esc(x.url).replace(/"/g,'%22')+'&quot;)"><span>'+esc(x.label)+'</span></button>').join('')||'<div class="studio-image-empty">Choisis une direction ci-dessus ou génère plusieurs variantes.</div>')+'</div>';
   $$('[data-editorial-pattern]',box).forEach(b=>b.onclick=()=>applyEditorialPattern(b.dataset.editorialPattern));
@@ -3108,7 +3108,8 @@ function renderCarousel(){
   if($('#slideFontScale'))$('#slideFontScale').value=d.fontScale;if($('#slideFontScaleOut'))$('#slideFontScaleOut').textContent=d.fontScale+'%';[['Title',d.titleScale],['Body',d.bodyScale],['Label',d.labelScale],['Cta',d.ctaScale],['Spacing',d.spacing]].forEach(([k,v])=>{const el=$('#slide'+k+'Scale'),out=$('#slide'+k+'ScaleOut');if(el)el.value=v;if(out)out.textContent=v+'%'});if($('#slideSpacing'))$('#slideSpacing').value=d.spacing;if($('#slideSpacingOut'))$('#slideSpacingOut').textContent=d.spacing+'%';
   if($('#slideImageOpacity'))$('#slideImageOpacity').value=d.imageOpacity;if($('#slideImageOpacityOut'))$('#slideImageOpacityOut').textContent=d.imageOpacity+'%';
   if($('#slideImageUrl'))$('#slideImageUrl').value=s.image||'';
-  $$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
+  $('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
+  $('[data-stage-pattern]').forEach(b=>b.classList.toggle('active',!s.image&&b.dataset.stagePattern===d.pattern));
   renderCanvasLayers();renderStudioImages();
 }
 
