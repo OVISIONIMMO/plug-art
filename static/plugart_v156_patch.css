@@ -262,3 +262,37 @@ body[data-plugy-motion="EyeThink"] #plugyModel{animation:none!important}
 @media(prefers-reduced-motion:reduce){
   .plugy-follower.v156-integrated.visible{animation:none!important}
 }
+
+
+/* PLUG ART V157 — contextual 3D action ring + idea workflow bridges */
+.plugy-action-ring{
+  position:fixed;right:116px;bottom:78px;z-index:171;width:300px;
+  padding:11px;border:1px solid rgba(255,255,255,.84);border-radius:22px;
+  background:linear-gradient(145deg,rgba(252,252,250,.96),rgba(244,242,250,.94));
+  box-shadow:0 24px 70px rgba(40,38,58,.17);
+  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  opacity:0;visibility:hidden;pointer-events:none;transform:translate3d(14px,10px,0) scale(.97);
+  transition:opacity .18s ease,transform .24s cubic-bezier(.2,.8,.2,1),visibility .18s;
+}
+.plugy-action-ring.open{opacity:1;visibility:visible;pointer-events:auto;transform:none}
+.plugy-action-ring-head{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.plugy-action-ring-head>i{width:29px;height:29px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff 0 12%,#aaf7fb 14% 28%,#8a70e7 53%,#ea77b5 76%,#29263b 100%);box-shadow:0 0 18px rgba(126,102,218,.26)}
+.plugy-action-ring-head div{display:grid;min-width:0}.plugy-action-ring-head small{font-size:6px;font-weight:900;letter-spacing:1.2px;color:#8c84ad}.plugy-action-ring-head strong{font:700 11px/1.2 "Space Grotesk",sans-serif;color:#2f3038;margin-top:2px}
+.plugy-action-ring-close{margin-left:auto;width:27px;height:27px;border:1px solid #e2e1e6;border-radius:50%;background:#fff;color:#777a83}
+.plugy-action-ring-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.plugy-action-ring-action{position:relative;min-height:64px;padding:9px;border:1px solid #e3e2e7;border-radius:14px;background:rgba(255,255,255,.92);text-align:left;transition:transform .16s,box-shadow .16s,border-color .16s}
+.plugy-action-ring-action:hover{transform:translateY(-2px);border-color:#cbc4ed;box-shadow:0 10px 24px rgba(83,72,126,.09)}
+.plugy-action-ring-action b,.plugy-action-ring-action span{display:block}.plugy-action-ring-action b{font:700 8px/1.15 "Space Grotesk";color:#363842}.plugy-action-ring-action span{font-size:6px;line-height:1.35;color:#9498a1;margin-top:4px}
+.plugy-action-ring-action.primary{background:#20222a;border-color:#20222a}.plugy-action-ring-action.primary b{color:#fff}.plugy-action-ring-action.primary span{color:#c6c8d0}
+.plugy-action-ring-action em{position:absolute;right:7px;top:7px;font-style:normal;font-size:5px;color:#9b91bd;background:#f1eef9;border-radius:999px;padding:2px 5px}
+.plugy-action-ring-foot{margin-top:7px;font-size:6px;line-height:1.35;color:#9a9da5}
+.plugy-follower.v156-integrated.ring-open .plugy-follower-aura{opacity:1!important;transform:scale(1.12)}
+body[data-view="creation"] .plugy-action-ring{right:105px;bottom:116px}
+body[data-view="bureau"] .plugy-action-ring{right:108px;bottom:144px}
+body[data-view="ideas"] .plugy-action-ring{right:120px;bottom:98px}
+body[data-view="social"] .plugy-action-ring{right:102px;bottom:124px}
+body[data-view="map"] .plugy-action-ring{right:98px;bottom:82px}
+.idea-node{touch-action:none;cursor:grab}.idea-node.v157-dragging{cursor:grabbing;z-index:8;transition:none!important;box-shadow:0 28px 70px rgba(52,48,71,.2);transform:scale(1.035)}
+.idea-detail-actions .bridge{background:#f4f1fb;border-color:#ded7f0;color:#61568d}.idea-detail-actions .bridge:not(:disabled):hover{background:#ece6f8}.idea-detail-actions button:disabled{opacity:.42;cursor:not-allowed}
+@media(max-width:820px){.plugy-action-ring{right:72px!important;bottom:176px!important;width:min(288px,calc(100vw - 92px));border-radius:20px}}
+@media(max-width:540px){.plugy-action-ring{right:14px!important;bottom:196px!important;width:calc(100vw - 28px)}.plugy-action-ring-action{min-height:58px}}

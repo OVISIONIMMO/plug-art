@@ -48,11 +48,63 @@ function watchPlugyFollower(){
       const status=f.querySelector('.plugy-follower-status');if(status)status.innerHTML='<i></i><span>PLUGY</span>';
       repositionPlugyByRoute();
       stabilizePlugy();
+      bindPlugyActionRing(f);
+      if($('#plugyActionRing')?.classList.contains('open'))renderPlugyActionRing();
     }
   });
   obs.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-view']});
+  const first=$('#plugyFollower');if(first)bindPlugyActionRing(first);
   repositionPlugyByRoute();stabilizePlugy();
 }
+
+/* ---------------- PLUGY ACTION RING V157 ---------------- */
+const V157_ACTION_USAGE_KEY='plugart_plugy_action_usage_v157';
+function v157Usage(){try{return JSON.parse(localStorage.getItem(V157_ACTION_USAGE_KEY)||'{}')||{}}catch{return {}}}
+function v157CountAction(key){const u=v157Usage();u[key]=(Number(u[key])||0)+1;try{localStorage.setItem(V157_ACTION_USAGE_KEY,JSON.stringify(u))}catch{}}
+function v157A(label,desc,type,target,key,primary=false){return{label,desc,type,target,key,primary}}
+function plugyActionMenu(view){
+  if(view==='radar')return[v157A('Lancer le Radar','Nouvelle recherche','click','#radarRun','radar-run',true),v157A('Open Calls','Voir les résultats','route','opencalls','radar-open'),v157A('Map','Explorer les zones','route','map','radar-map'),v157A('Analyser','PLUGY priorise','plugy','Analyse mon Radar PLUG ART et indique-moi les prochaines actions concrètes, sans inventer de faits.','radar-plugy')];
+  if(view==='opencalls')return[v157A('Créer','Transformer en contenu','route','creation','open-create',true),v157A('Map','Voir les lieux','route','map','open-map'),v157A('Radar','Retour à la veille','route','radar','open-radar'),v157A('PLUGY','Choisir une priorité','plugy','Aide-moi à choisir quel Open Call traiter maintenant selon accessibilité, deadline et intérêt pour PLUG ART.','open-plugy')];
+  if(view==='creation')return[v157A('Générer','Créer le contenu','click','#contentGenerate','creation-generate',true),v157A('Contrôler','Audit publication','click','#v156Audit','creation-audit'),v157A('Instagram','Préparer la diffusion','route','social','creation-social'),v157A('Bureau','Archiver le travail','route','bureau','creation-bureau')];
+  if(view==='bureau')return[v157A('Nouveau doc','Écrire maintenant','click','#bureauNew','bureau-new',true),v157A('HUB','Ouvrir les projets','bureau','#bureauHubTab, [data-bureau-mode="hub"]','bureau-hub'),v157A('PDF','Bibliothèque PDF','bureau','#bureauPdfTab, [data-bureau-mode="pdf"]','bureau-pdf'),v157A('Idées','Passer au nuage','route','ideas','bureau-ideas')];
+  if(view==='ideas')return[v157A('Nouvelle idée','Créer un nœud','click','#ideaNew','ideas-new',true),v157A('Studio','Transformer l’idée','ideaStudio','','ideas-studio'),v157A('Bureau','Créer un document','ideaBureau','','ideas-bureau'),v157A('PLUGY','Développer l’idée','plugy','Développe avec moi l’idée actuellement ouverte dans le Nuage PLUG ART et propose sa prochaine étape concrète.','ideas-plugy')];
+  if(view==='social')return[v157A('Créer','Ouvrir le Studio','route','creation','social-create',true),v157A('Actualiser','Rafraîchir le feed','click','#igRefresh','social-refresh'),v157A('Connexion','Diagnostic Meta','click','#igDiagnostics','social-meta'),v157A('PLUGY','Améliorer le post','plugy','Aide-moi à améliorer la prochaine publication Instagram de PLUG ART avec un angle clair et un CTA précis.','social-plugy')];
+  if(view==='prospection')return[v157A('Ajouter','Nouveau contact','click','#leadNew','prospect-new',true),v157A('Bureau','Préparer une relance','route','bureau','prospect-bureau'),v157A('Studio','Créer un support','route','creation','prospect-create'),v157A('PLUGY','Préparer le message','plugy','Prépare une relance courte, professionnelle et personnalisable pour ma prospection PLUG ART.','prospect-plugy')];
+  if(view==='map')return[v157A('Radar','Relancer la veille','route','radar','map-radar',true),v157A('Open Calls','Ouvrir les fiches','route','opencalls','map-open'),v157A('Agenda','Voir les rendez-vous','route','agenda','map-agenda'),v157A('PLUGY','Lire la carte','plugy','Aide-moi à interpréter la Map PLUG ART et à identifier les zones à explorer en priorité.','map-plugy')];
+  if(view==='agenda')return[v157A('Map','Voir les lieux','route','map','agenda-map',true),v157A('Créer','Faire un contenu','route','creation','agenda-create'),v157A('Open Calls','Voir les opportunités','route','opencalls','agenda-open'),v157A('PLUGY','Préparer la suite','plugy','Analyse mon agenda PLUG ART et aide-moi à préparer les actions utiles liées aux prochains événements.','agenda-plugy')];
+  if(view==='network')return[v157A('Créer','Focus artiste','route','creation','artists-create',true),v157A('Prospection','Passer aux contacts','route','prospection','artists-prospect'),v157A('Open Calls','Voir les opportunités','route','opencalls','artists-open'),v157A('PLUGY','Exploiter un profil','plugy','Aide-moi à transformer le profil artiste que je consulte en idée de contenu, collaboration ou opportunité.','artists-plugy')];
+  return[v157A('Radar','Trouver des opportunités','route','radar','home-radar',true),v157A('Créer','Ouvrir le Studio','route','creation','home-create'),v157A('Idées','Ouvrir le nuage','route','ideas','home-ideas'),v157A('PLUGY','Décider quoi faire','plugy','Aide-moi à choisir la prochaine action utile dans mon workspace PLUG ART.','home-plugy')];
+}
+function ensurePlugyActionRing(){
+  let ring=$('#plugyActionRing');if(ring)return ring;
+  ring=document.createElement('section');ring.id='plugyActionRing';ring.className='plugy-action-ring';ring.setAttribute('aria-hidden','true');
+  ring.innerHTML='<div class="plugy-action-ring-head"><i></i><div><small>PLUGY · ACTIONS</small><strong id="plugyActionRingTitle">Accès rapide</strong></div><button class="plugy-action-ring-close" id="plugyActionRingClose" aria-label="Fermer">×</button></div><div class="plugy-action-ring-grid" id="plugyActionRingGrid"></div><div class="plugy-action-ring-foot">Les raccourcis s’adaptent à la rubrique et apprennent ceux que tu utilises le plus.</div>';
+  document.body.appendChild(ring);
+  $('#plugyActionRingClose').onclick=()=>setPlugyActionRing(false);
+  document.addEventListener('pointerdown',e=>{if(ring.classList.contains('open')&&!ring.contains(e.target)&&!$('#plugyFollower')?.contains(e.target))setPlugyActionRing(false)},{capture:true});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')setPlugyActionRing(false)});
+  return ring;
+}
+function renderPlugyActionRing(){
+  const view=document.body.dataset.view||'dashboard',grid=ensurePlugyActionRing().querySelector('#plugyActionRingGrid'),usage=v157Usage();
+  const names={dashboard:'Dashboard',radar:'Radar',opencalls:'Open Calls',creation:'Création',bureau:'Bureau',ideas:'Nuage à idées',social:'Instagram',prospection:'Prospection',map:'Map',agenda:'Agenda',network:'Artistes'};
+  $('#plugyActionRingTitle').textContent=names[view]||'Accès rapide';
+  const items=plugyActionMenu(view).sort((a,b)=>(Number(b.primary)-Number(a.primary))||((usage[b.key]||0)-(usage[a.key]||0)));
+  grid.innerHTML='';
+  items.forEach(a=>{const b=document.createElement('button');b.type='button';b.className='plugy-action-ring-action'+(a.primary?' primary':'');const used=Number(usage[a.key]||0);b.innerHTML='<b>'+escapeHtml(a.label)+'</b><span>'+escapeHtml(a.desc)+'</span>'+(used>1?'<em>'+used+'×</em>':'');b.onclick=()=>runPlugyAction(a);grid.appendChild(b)});
+}
+function setPlugyActionRing(open){const ring=ensurePlugyActionRing(),f=$('#plugyFollower');ring.classList.toggle('open',!!open);ring.setAttribute('aria-hidden',String(!open));f?.classList.toggle('ring-open',!!open);if(open)renderPlugyActionRing()}
+function openPlugyV157(prompt=''){const opener=$('#topPlugy')||$('[data-open-plugy]')||$('#sidebarPlugy');opener?.click();setTimeout(()=>{const input=$('#plugyInput');if(input){input.value=prompt;input.focus()}},180)}
+function routeV157(id){$('[data-route="'+id+'"]')?.click()}
+function bureauModeV157(selector){routeV157('bureau');setTimeout(()=>{for(const s of selector.split(',')){const el=$(s.trim());if(el){el.click();break}}},180)}
+function runPlugyAction(a){v157CountAction(a.key);setPlugyActionRing(false);if(a.type==='route')return routeV157(a.target);if(a.type==='click'){const el=$(a.target);if(el)el.click();else toast('Action en cours de chargement');return}if(a.type==='plugy')return openPlugyV157(a.target);if(a.type==='bureau')return bureauModeV157(a.target);if(a.type==='ideaStudio')return ideaToStudio();if(a.type==='ideaBureau')return ideaToBureau()}
+function bindPlugyActionRing(f){
+  if(!f||f.dataset.v157RingBound==='1')return;f.dataset.v157RingBound='1';let down=0;
+  f.addEventListener('pointerdown',()=>{down=Date.now()},{capture:true,passive:true});
+  f.addEventListener('click',e=>{if(!f.classList.contains('visible'))return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();if(Date.now()-down>600)return;const ring=ensurePlugyActionRing();setPlugyActionRing(!ring.classList.contains('open'))},true);
+  f.addEventListener('keydown',e=>{if(!f.classList.contains('visible'))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();const ring=ensurePlugyActionRing();setPlugyActionRing(!ring.classList.contains('open'))}},true);
+}
+
 
 /* ---------------- CREATION / OPEN CALL CONTROL ---------------- */
 function creationChecklist(){
@@ -278,8 +330,9 @@ function renderIdeas(){
   board.innerHTML=ideas.map((x,i)=>'<button class="idea-node color-'+escapeHtml(x.color||'violet')+'" data-idea-id="'+x.id+'" style="--ix:'+Number(x.pos_x||20+(i%4)*22)+'%;--iy:'+Number(x.pos_y||20+Math.floor(i/4)*25)+'%">'+
    (x.image_url?'<span class="idea-image" style="background-image:url(&quot;'+escapeHtml(x.image_url)+'&quot;)"></span>':'<i>✦</i>')+
    '<strong>'+escapeHtml(x.title||'Idée')+'</strong><small>'+escapeHtml(x.project||x.stage||'explorer')+'</small></button>').join('')||'<div class="idea-empty"><b>☁</b><strong>Le nuage est vide.</strong><span>Ajoute une idée brute, même mal formulée. C’est littéralement à ça que sert un brouillon.</span></div>';
-  $$('[data-idea-id]',board).forEach(b=>b.onclick=()=>selectIdea(Number(b.dataset.ideaId)));
+  $('[data-idea-id]',board).forEach(b=>b.onclick=()=>selectIdea(Number(b.dataset.ideaId)));
   renderIdeaList();
+  enableIdeaDragging();
 }
 function renderIdeaList(){
   const list=$('#ideaList');if(!list)return;
@@ -290,6 +343,7 @@ function selectIdea(id){
   activeIdea=id;const x=ideas.find(v=>Number(v.id)===Number(id));if(!x)return;renderIdeaList();
   $('#ideaTitle').value=x.title||'';$('#ideaBody').value=x.body||'';$('#ideaStage').value=x.stage||'explore';$('#ideaTags').value=x.tags||'';$('#ideaProject').value=x.project||'';$('#ideaColor').value=x.color||'violet';$('#ideaImageUrl').value=x.image_url||'';
   $('#ideaDelete').disabled=false;$('#ideaDevelop').disabled=false;$('#ideaImagine').disabled=false;
+  $('#ideaToStudio')&&( $('#ideaToStudio').disabled=false);$('#ideaToBureau')&&( $('#ideaToBureau').disabled=false);
 }
 async function newIdea(){
   const x=await api('/api/v156/ideas',{method:'POST',body:JSON.stringify({title:'Nouvelle idée',stage:'explore',color:'violet',pos_x:20+Math.random()*60,pos_y:18+Math.random()*58})});ideas.unshift(x);renderIdeas();selectIdea(x.id);$('#ideaTitle').focus();
@@ -307,6 +361,7 @@ function clearIdeaForm(){
   ['ideaTitle','ideaBody','ideaTags','ideaProject','ideaImageUrl'].forEach(id=>{if($('#'+id))$('#'+id).value=''});
   if($('#ideaStage'))$('#ideaStage').value='explore';if($('#ideaColor'))$('#ideaColor').value='violet';
   $('#ideaDelete')&&( $('#ideaDelete').disabled=true);$('#ideaDevelop')&&( $('#ideaDevelop').disabled=true);$('#ideaImagine')&&( $('#ideaImagine').disabled=true);
+  $('#ideaToStudio')&&( $('#ideaToStudio').disabled=true);$('#ideaToBureau')&&( $('#ideaToBureau').disabled=true);
 }
 async function developIdea(){
   const x=ideas.find(v=>Number(v.id)===Number(activeIdea));if(!x)return;
@@ -327,7 +382,33 @@ async function imagineIdea(){
 }
 function bindIdeaView(){
   $('#ideaNew')?.addEventListener('click',newIdea);$('#ideaSave')?.addEventListener('click',saveIdea);$('#ideaDelete')?.addEventListener('click',deleteIdea);$('#ideaDevelop')?.addEventListener('click',developIdea);$('#ideaImagine')?.addEventListener('click',imagineIdea);
+  $('#ideaToStudio')?.addEventListener('click',ideaToStudio);$('#ideaToBureau')?.addEventListener('click',ideaToBureau);
   $('#ideaSearch')?.addEventListener('input',e=>{const term=e.target.value.toLowerCase();$$('[data-idea-list]').forEach(b=>b.hidden=!b.textContent.toLowerCase().includes(term))});
+}
+
+
+function currentIdeaV157(){return ideas.find(v=>Number(v.id)===Number(activeIdea))||null}
+function ideaSnapshotV157(){const x=currentIdeaV157();if(!x)return null;return{id:x.id,title:String($('#ideaTitle')?.value||x.title||'Idée PLUG ART').trim(),body:String($('#ideaBody')?.value||x.body||'').trim(),project:String($('#ideaProject')?.value||x.project||'').trim(),tags:String($('#ideaTags')?.value||x.tags||'').trim(),stage:String($('#ideaStage')?.value||x.stage||'explore').trim()}}
+function enableIdeaDragging(){
+  const board=$('#ideaCloudBoard');if(!board)return;
+  $('[data-idea-id]',board).forEach(node=>{
+    if(node.dataset.v157DragBound==='1')return;node.dataset.v157DragBound='1';let drag=null;
+    node.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;drag={id:e.pointerId,startX:e.clientX,startY:e.clientY,x:0,y:0,moved:false};try{node.setPointerCapture(e.pointerId)}catch{}});
+    node.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.startX,dy=e.clientY-drag.startY;if(!drag.moved&&Math.hypot(dx,dy)<5)return;drag.moved=true;node.classList.add('v157-dragging');const rect=board.getBoundingClientRect();drag.x=Math.max(6,Math.min(94,(e.clientX-rect.left)/rect.width*100));drag.y=Math.max(8,Math.min(92,(e.clientY-rect.top)/rect.height*100));node.style.setProperty('--ix',drag.x.toFixed(2)+'%');node.style.setProperty('--iy',drag.y.toFixed(2)+'%')});
+    const finish=async e=>{if(!drag||drag.id!==e.pointerId)return;const moved=drag.moved,x=drag.x,y=drag.y;drag=null;node.classList.remove('v157-dragging');try{node.releasePointerCapture(e.pointerId)}catch{}if(!moved)return;node.dataset.v157JustDragged='1';setTimeout(()=>delete node.dataset.v157JustDragged,80);const id=Number(node.dataset.ideaId),item=ideas.find(v=>Number(v.id)===id);if(item){item.pos_x=x;item.pos_y=y}try{await api('/api/v156/ideas/'+id,{method:'PATCH',body:JSON.stringify({pos_x:x,pos_y:y})})}catch{toast('Position non enregistrée')}};
+    node.addEventListener('pointerup',finish);node.addEventListener('pointercancel',finish);node.addEventListener('click',e=>{if(node.dataset.v157JustDragged==='1'){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()}},true);
+  });
+}
+async function ideaToStudio(){
+  const x=ideaSnapshotV157();if(!x){toast('Sélectionne une idée');return}try{await saveIdea()}catch{}
+  const brief=[x.body,x.project?'Projet : '+x.project:'',x.tags?'Tags : '+x.tags:'',x.stage?'Étape : '+x.stage:''].filter(Boolean).join('\n\n');
+  if($('#contentTitle'))$('#contentTitle').value=x.title;if($('#contentObjective'))$('#contentObjective').value='Transformer cette idée en contenu PLUG ART clair, visuel et directement exploitable';if($('#contentBrief'))$('#contentBrief').value=brief;if($('#contentBody'))$('#contentBody').value='';
+  if($('#contentType')){const wanted=[...$('#contentType').options].find(o=>/Carrousel Instagram/i.test(o.textContent));if(wanted)$('#contentType').value=wanted.value}
+  if($('#carouselBrief'))$('#carouselBrief').value=[x.title,brief].filter(Boolean).join('\n');routeV157('creation');setTimeout(()=>{$('#contentBrief')?.focus();toast('Idée envoyée au Studio')},160);
+}
+async function ideaToBureau(){
+  const x=ideaSnapshotV157();if(!x){toast('Sélectionne une idée');return}try{await saveIdea()}catch{}
+  try{const doc=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:x.title,body:x.body||'Idée à développer.',folder:'Idées',tags:['idée','PLUG ART',x.project,x.tags].filter(Boolean).join(', '),source_type:'idea_cloud',source_id:String(x.id)})});toast('Document créé dans le Bureau');routeV157('bureau');return doc}catch{toast('Création du document impossible')}
 }
 
 /* ---------------- BOOT ---------------- */
@@ -341,6 +422,7 @@ function observeRuntime(){
   obs.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['data-view','style']});
 }
 window.PLUGV156={renderIdeas:()=>{loadIdeas()},loadPdfs,normalizeStudioVisuals};
+window.PLUGV157={renderIdeas:()=>{loadIdeas()},loadPdfs,normalizeStudioVisuals,ideaToStudio,ideaToBureau,openActions:()=>setPlugyActionRing(true)};
 document.addEventListener('DOMContentLoaded',()=>{
   watchPlugyFollower();installCreationPro();ensurePdfMode();enhanceHub();bindIdeaView();observeRuntime();
   if(document.body.dataset.view==='ideas')loadIdeas();
