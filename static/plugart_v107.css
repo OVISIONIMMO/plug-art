@@ -1520,3 +1520,77 @@ body[data-plugy-motion="Charge"] .plugy-follower:after{width:92px!important;heig
   .plugy-follower-spark.s1{left:11px!important;top:29px!important}
   .plugy-follower-spark.s2{right:10px!important;top:40px!important}
 }
+
+
+/* V143 · Simple Content Studio */
+#view-creation .creation-quick-flow{
+  display:grid;grid-template-columns:minmax(210px,.72fr) minmax(520px,1.65fr);gap:18px;
+  width:min(1180px,100%);margin:4px auto 14px;padding:18px 20px;
+  border:1px solid rgba(73,68,105,.09);border-radius:24px;
+  background:linear-gradient(135deg,rgba(255,255,255,.86),rgba(245,245,248,.74));
+  box-shadow:0 22px 65px rgba(37,40,52,.055);backdrop-filter:blur(28px)
+}
+#view-creation .quick-flow-intro{display:grid;align-content:center;gap:5px;padding-right:12px}
+#view-creation .quick-flow-intro small{font-size:6px;font-weight:900;letter-spacing:1.25px;color:#8176c7}
+#view-creation .quick-flow-intro strong{font-family:var(--display);font-size:25px;line-height:.98;letter-spacing:-1.2px;color:#191a1e}
+#view-creation .quick-flow-intro span{font-size:8px;line-height:1.55;color:#858891;max-width:280px}
+#view-creation .quick-flow-steps{display:grid;grid-template-columns:1.25fr .85fr 1.3fr 1.1fr;gap:7px;align-items:stretch}
+#view-creation .quick-flow-steps label{
+  min-width:0;display:grid;grid-template-columns:18px 1fr;grid-template-rows:auto 1fr;column-gap:5px;align-items:center;
+  padding:9px 10px;border:1px solid rgba(44,48,61,.065);border-radius:14px;background:rgba(255,255,255,.62)
+}
+#view-creation .quick-flow-steps label>b{grid-row:1/3;width:17px;height:17px;display:grid;place-items:center;border-radius:50%;background:#f0eefc;color:#6659c7;font-size:6px}
+#view-creation .quick-flow-steps label>span{font-size:6px;font-weight:850;letter-spacing:.45px;color:#8b8e97;text-transform:uppercase}
+#view-creation .quick-flow-steps select,#view-creation .quick-flow-steps input{
+  min-width:0;width:100%;height:28px;border:0!important;border-radius:0!important;background:transparent!important;padding:2px 0!important;
+  font-size:8px!important;font-weight:750;color:#24262b;box-shadow:none!important
+}
+#view-creation .quick-flow-generate{
+  border:0;border-radius:14px;background:#17181c;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 11px;text-align:left
+}
+#view-creation .quick-flow-generate>i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#765cff,#45cbd7);font-style:normal}
+#view-creation .quick-flow-generate span{display:grid;gap:2px}#view-creation .quick-flow-generate strong{font-size:8px}#view-creation .quick-flow-generate small{font-size:6px;color:#aeb0b8}
+#view-creation .quick-flow-generate:disabled{opacity:.62;cursor:progress}
+#view-creation .quick-flow-foot{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding-top:2px}
+#view-creation .quick-flow-foot button{border:0;background:transparent;color:#6e7190;font-size:7px;font-weight:800;padding:4px}
+#view-creation .quick-flow-foot span{font-size:6.5px;color:#a0a2a9}
+
+/* Default view: only the guided workflow. Generated view: canvas + useful properties. */
+#view-creation.simple-studio:not(.quick-generated) #creationModeBar,
+#view-creation.simple-studio:not(.quick-generated) #textCreationPanel,
+#view-creation.simple-studio:not(.quick-generated) #carouselCreationPanel,
+#view-creation.simple-studio:not(.quick-generated) #visualCreationPanel{display:none!important}
+#view-creation.simple-studio:not(.quick-generated) .creation-studio-head{display:none!important}
+#view-creation.simple-studio #contentGenerate{display:none!important}
+#view-creation.quick-generated:not(.advanced-studio) #creationModeBar,
+#view-creation.quick-generated:not(.advanced-studio) #textCreationPanel,
+#view-creation.quick-generated:not(.advanced-studio) #visualCreationPanel{display:none!important}
+#view-creation.quick-generated:not(.advanced-studio) #carouselCreationPanel.active{
+  display:grid!important;grid-template-columns:minmax(0,1fr) 252px!important;gap:10px
+}
+#view-creation.quick-generated:not(.advanced-studio) #carouselCreationPanel .studio-library{display:none!important}
+#view-creation.quick-generated:not(.advanced-studio) #carouselCreationPanel .studio-stage{grid-column:1!important;min-height:690px}
+#view-creation.quick-generated:not(.advanced-studio) #carouselCreationPanel .studio-inspector{grid-column:2!important;grid-row:1!important;position:relative!important;top:auto!important;max-height:690px!important}
+#view-creation.advanced-studio #creationModeBar{display:flex!important}
+#view-creation.advanced-studio #carouselCreationPanel.active{display:grid!important}
+
+/* PLUGY: no CSS drop-shadow trail while articulated parts move. */
+#plugyModel,.plugy-stage model-viewer,.slide-plugy-mount model-viewer,.plugy-follower #plugyModel{
+  filter:none!important;backface-visibility:hidden;isolation:isolate;
+}
+body[data-plugy-motion] #plugyModel{filter:none!important}
+.plugy-stage,.plugy-follower,.slide-plugy-mount{contain:layout paint;isolation:isolate}
+
+@media(max-width:900px){
+  #view-creation .creation-quick-flow{grid-template-columns:1fr;padding:14px}
+  #view-creation .quick-flow-steps{grid-template-columns:1fr 1fr}
+  #view-creation .quick-flow-generate{min-height:54px}
+  #view-creation.quick-generated:not(.advanced-studio) #carouselCreationPanel.active{grid-template-columns:1fr!important}
+  #view-creation.quick-generated:not(.advanced-studio) #carouselCreationPanel .studio-inspector{grid-column:1!important;grid-row:auto!important;max-height:none!important}
+}
+@media(max-width:620px){
+  #view-creation .creation-quick-flow{border-radius:19px;margin-top:0}
+  #view-creation .quick-flow-intro strong{font-size:22px}
+  #view-creation .quick-flow-steps{grid-template-columns:1fr}
+  #view-creation .quick-flow-foot{justify-content:space-between}
+}
