@@ -2279,10 +2279,38 @@ function updateCanvasLayerVisual(l){
   el.setAttribute('style',layerStyle(l));
   el.classList.toggle('locked',!!l.locked);
 }
+
+function renderPageInspector(box){
+  const s=state.carousel.slides[state.carousel.active];
+  if(!s){
+    box.classList.add('empty');box.innerHTML='<span>Crée ou charge une slide pour afficher ses propriétés.</span>';return;
+  }
+  const d=slideDesign(s),zoom=Math.round(Number($('#creationZoom')?.value||1)*100);
+  box.classList.remove('empty');
+  box.innerHTML=
+    '<div class="layer-inspector-head page-inspector-head"><strong>Page · Slide '+(state.carousel.active+1)+'</strong><span>'+esc(state.carousel.format||'4:5')+'</span></div>'+
+    '<div class="page-property-block"><small>FORMAT</small><select id="pageInspectorFormat"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></div>'+
+    '<div class="page-property-block"><small>STYLE</small><div class="page-preset-grid"><button data-page-preset="ultra">Ultra</button><button data-page-preset="editorial">Éditorial</button><button data-page-preset="soft">Soft</button><button data-page-preset="night">Sombre</button></div></div>'+
+    '<div class="page-property-block"><small>FOND</small><div class="page-bg-line"><input id="pageInspectorBg" type="color" value="'+esc(d.backgroundColor||'#f4f3ef')+'"><div class="page-color-row"><button data-page-bg="#f4f3ef" style="--sw:#f4f3ef"></button><button data-page-bg="#efeaff" style="--sw:#efeaff"></button><button data-page-bg="#e8f8fa" style="--sw:#e8f8fa"></button><button data-page-bg="#fff0f6" style="--sw:#fff0f6"></button><button data-page-bg="#fff4e9" style="--sw:#fff4e9"></button><button data-page-bg="#171820" style="--sw:#171820"></button></div></div></div>'+
+    '<div class="page-property-block"><small>CANVAS</small><div class="page-toggle-grid"><button id="pageGuidesToggle" class="'+(state.studioGuides?'active':'')+'">Guides</button><button id="pageSafeToggle" class="'+(state.studioSafe?'active':'')+'">Zone sûre</button><button id="pageSnapToggle" class="'+(state.studioSnap?'active':'')+'">Aimant</button></div></div>'+
+    '<label class="layer-control"><span>Zoom <output id="pageZoomOut">'+zoom+'%</output></span><input id="pageZoom" type="range" min="55" max="150" value="'+zoom+'"></label>'+
+    '<div class="page-property-actions"><button id="pageFitCanvas">Ajuster au cadre</button><button id="pageDuplicateSlide">Dupliquer la slide</button></div>';
+  const format=$('#pageInspectorFormat');if(format){format.value=state.carousel.format||'4:5';format.onchange=e=>{state.carousel.format=e.target.value;if($('#carouselFormat'))$('#carouselFormat').value=e.target.value;renderCarousel();scheduleDraftAutosave();syncLayerInspector()}}
+  $('#pageInspectorBg')?.addEventListener('input',e=>activeSlideBackground(e.target.value));
+  $$('[data-page-bg]',box).forEach(b=>b.onclick=()=>{activeSlideBackground(b.dataset.pageBg);syncLayerInspector()});
+  $$('[data-page-preset]',box).forEach(b=>b.onclick=()=>{setSlideDesignPreset(b.dataset.pagePreset);syncLayerInspector()});
+  $('#pageGuidesToggle')?.addEventListener('click',()=>{state.studioGuides=!state.studioGuides;renderStudioCanvasAids();syncLayerInspector()});
+  $('#pageSafeToggle')?.addEventListener('click',()=>{state.studioSafe=!state.studioSafe;renderStudioCanvasAids();syncLayerInspector()});
+  $('#pageSnapToggle')?.addEventListener('click',()=>{state.studioSnap=!state.studioSnap;renderStudioCanvasAids();syncLayerInspector()});
+  $('#pageZoom')?.addEventListener('input',e=>{setStudioZoom(Number(e.target.value)/100);const o=$('#pageZoomOut');if(o)o.textContent=e.target.value+'%'});
+  $('#pageFitCanvas')?.addEventListener('click',()=>{fitStudioCanvas();syncLayerInspector()});
+  $('#pageDuplicateSlide')?.addEventListener('click',duplicateCarouselSlide);
+}
+
 function syncLayerInspector(){
   const l=activeCanvasLayer(),box=$('#layerInspector');if(!box)return;
   box.classList.toggle('empty',!l);
-  if(!l){box.innerHTML='<span>Sélectionne un élément sur le canvas.</span>';return}
+  if(!l){renderPageInspector(box);return}
   const range=(id,label,min,max,value,step='1',unit='')=>'<label class="layer-control"><span>'+label+' <output id="'+id+'Out">'+value+unit+'</output></span><input id="'+id+'" type="range" min="'+min+'" max="'+max+'" step="'+step+'" value="'+value+'"></label>';
   box.innerHTML='<div class="layer-inspector-head"><strong>'+esc(l.type==='text'?'Texte':l.type==='image'?'Image':'Élément')+'</strong><div><button id="layerLock" title="Verrouiller">'+(l.locked?'🔒':'🔓')+'</button><button id="layerDelete" title="Supprimer">×</button></div></div>'+
     '<div class="layer-control-grid">'+
