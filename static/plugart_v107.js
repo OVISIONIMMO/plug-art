@@ -2247,7 +2247,7 @@ function renderCanvasLayers(){
     const inner=l.type==='text'?'<span contenteditable="true" spellcheck="false">'+esc(l.text||'Texte')+'</span>':l.type==='image'?(l.src?'<img src="'+esc(l.src)+'" alt="">':'<span class="layer-placeholder">Image</span>'):'';
     return '<div class="canvas-layer layer-'+esc(l.type)+selected+(l.locked?' locked':'')+'" data-layer-id="'+esc(l.id)+'" style="'+layerStyle(l)+'">'+inner+'<i class="layer-resize"></i></div>';
   }).join('');
-  $$$('[data-layer-id]',box).forEach(el=>{
+  $$('[data-layer-id]',box).forEach(el=>{
     const id=el.dataset.layerId,l=layers.find(x=>String(x.id)===String(id));if(!l)return;
     el.addEventListener('pointerdown',e=>{
       if(e.target.classList.contains('layer-resize'))return;
@@ -2833,7 +2833,7 @@ function renderCarousel(){
   if($('#slideFontScale'))$('#slideFontScale').value=d.fontScale;if($('#slideFontScaleOut'))$('#slideFontScaleOut').textContent=d.fontScale+'%';[['Title',d.titleScale],['Body',d.bodyScale],['Label',d.labelScale],['Cta',d.ctaScale],['Spacing',d.spacing]].forEach(([k,v])=>{const el=$('#slide'+k+'Scale'),out=$('#slide'+k+'ScaleOut');if(el)el.value=v;if(out)out.textContent=v+'%'});if($('#slideSpacing'))$('#slideSpacing').value=d.spacing;if($('#slideSpacingOut'))$('#slideSpacingOut').textContent=d.spacing+'%';
   if($('#slideImageOpacity'))$('#slideImageOpacity').value=d.imageOpacity;if($('#slideImageOpacityOut'))$('#slideImageOpacityOut').textContent=d.imageOpacity+'%';
   if($('#slideImageUrl'))$('#slideImageUrl').value=s.image||'';
-  $$$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
+  $$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
   renderCanvasLayers();renderStudioImages();
 }
 
