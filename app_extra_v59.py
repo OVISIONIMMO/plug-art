@@ -2836,7 +2836,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print(f"PLUG_ART_V156_READY ui=creative_workspace plugy=frameless_round_eyes_no_blink creation=open_call_pro bureau=pdf_navigation hub=gennevilliers ideas=cloud instagram=social_studio map=live
+print("PLUG_ART_V156_READY ui=creative_workspace plugy=frameless_round_eyes_no_blink creation=open_call_pro bureau=pdf_navigation hub=gennevilliers ideas=cloud instagram=social_studio map=live",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
