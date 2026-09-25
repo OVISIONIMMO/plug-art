@@ -3392,9 +3392,10 @@ function schedulePlugyBlink(){
   schedulePlugyBlink.t=setTimeout(()=>{
     const busy=['Think','Charge','Listen','Speak','ArmThink','ArmHello','ArmExplain','ArmShrug','ArmStretch'].includes(document.body.dataset.plugyMotion||'');
     const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if(!reduced&&!state.voice&&!busy&&document.visibilityState==='visible'&&plugyIsVisible()&&plugyAvailable('Blink'))playMotion('Blink');
+    const miniVisible=$('#plugyFollower')?.classList.contains('visible')&&!$('#plugyDrawer')?.classList.contains('open');
+    if(!reduced&&!miniVisible&&!state.voice&&!busy&&document.visibilityState==='visible'&&plugyIsVisible()&&plugyAvailable('Blink'))playMotion('Blink');
     schedulePlugyBlink();
-  },26000+Math.random()*18000);
+  },38000+Math.random()*26000);
 }
 function schedulePlugyAmbient(){
   clearTimeout(plugyAmbientTimer);
