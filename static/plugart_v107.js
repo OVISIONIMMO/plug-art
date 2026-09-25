@@ -138,6 +138,7 @@ function route(id,push=true){
   mobileSheet?.classList.remove('open');
   $('.workspace')?.scrollTo({top:0,behavior:'auto'});
   if(id!=='bureau')document.body.classList.remove('mobile-bureau-editing');
+  if(id!=='creation')closeMobileStudioSheet();
   if(id!=='prospection')$('#leadDetail')?.classList.remove('mobile-open');
   const missing=requiredFamilies(id).some(name=>!state.dataLoaded[name]);
   setTimeout(syncPlugyHomeMount,0);
@@ -266,7 +267,7 @@ function ensurePlugyFollower(){
 function plugyFollowerStage(){return ensurePlugyFollower()}
 function plugyFramingFor(target){
   const follower=$('#plugyFollower');
-  if(target&&follower&&target===follower)return{orbit:'0deg 76deg 5.65m',fov:'34deg'};
+  if(target&&follower&&target===follower)return{orbit:'0deg 76deg 6.35m',fov:'35deg'};
   if(target&&target===plugyDashboardStage())return{orbit:'0deg 76deg 3.42m',fov:'28deg'};
   return{orbit:'0deg 76deg 3.08m',fov:'27deg'};
 }
@@ -465,6 +466,15 @@ async function streamPlugyRequest(payload,onDelta){
     if(buffer.trim())consume(buffer);
     return meta||{};
   }finally{clearTimeout(timer)}
+}
+function primeIOSPlugyVoice(){
+  if(!('speechSynthesis' in window))return;
+  try{
+    speechSynthesis.resume();
+    const u=new SpeechSynthesisUtterance(' ');
+    u.lang='fr-FR';u.volume=0;u.rate=1.1;speechSynthesis.speak(u);
+    setTimeout(()=>{try{speechSynthesis.cancel()}catch{}},30);
+  }catch{}
 }
 function createProgressiveSpeaker(){
   if(!state.voiceReply||!('speechSynthesis' in window))return null;
@@ -2382,7 +2392,8 @@ function openStudioRailPane(pane,mobile=false){
     library.classList.toggle('mobile-open',!style);
     inspector.classList.toggle('mobile-open',style);
     dock?.classList.add('sheet-open');
-    $$('[data-mobile-studio]',dock).forEach(b=>b.classList.toggle('active',(style?'style':pane)===b.dataset.mobileStudio));
+    $('#studioSheetScrim')?.classList.add('open');document.body.classList.add('studio-sheet-open');
+    $('[data-mobile-studio]',dock).forEach(b=>b.classList.toggle('active',(style?'style':pane)===b.dataset.mobileStudio));
   }
 }
 
@@ -2467,15 +2478,53 @@ function applyVisualPreset(key){
   scheduleDraftAutosave();
 }
 
+function closeMobileStudioSheet(){
+  const panel=$('#carouselCreationPanel'),library=panel?.querySelector('.studio-library'),inspector=panel?.querySelector('.studio-inspector'),dock=$('#mobileStudioDock'),scrim=$('#studioSheetScrim');
+  library?.classList.remove('mobile-open');inspector?.classList.remove('mobile-open');dock?.classList.remove('sheet-open');scrim?.classList.remove('open');document.body.classList.remove('studio-sheet-open');
+  $$('[data-mobile-studio]',dock||document).forEach(b=>b.classList.remove('active'));
+}
+function installStudioSheetGesture(box){
+  if(!box||box.dataset.sheetGesture==='1')return;box.dataset.sheetGesture='1';
+  let startY=0,lastY=0,dragging=false;
+  box.addEventListener('pointerdown',e=>{
+    if(e.target.closest('input,textarea,select,button,a,[contenteditable]'))return;
+    startY=lastY=e.clientY;dragging=true;box.setPointerCapture?.(e.pointerId);
+  });
+  box.addEventListener('pointermove',e=>{
+    if(!dragging)return;lastY=e.clientY;const dy=Math.max(0,lastY-startY);box.style.setProperty('--sheet-drag',dy+'px');
+  });
+  const finish=()=>{if(!dragging)return;dragging=false;const dy=Math.max(0,lastY-startY);box.style.removeProperty('--sheet-drag');if(dy>72)closeMobileStudioSheet()};
+  box.addEventListener('pointerup',finish);box.addEventListener('pointercancel',finish);
+}
 function installMobileStudioDock(){
   if($('#mobileStudioDock'))return;
   const panel=$('#carouselCreationPanel'),library=panel?.querySelector('.studio-library'),inspector=panel?.querySelector('.studio-inspector'),stage=panel?.querySelector('.studio-stage');
   if(!panel||!library||!inspector||!stage)return;
-  const dock=document.createElement('div');dock.id='mobileStudioDock';dock.className='studio-mobile-dock';
+
+  const scrim=document.createElement('button');scrim.type='button';scrim.id='studioSheetScrim';scrim.className='studio-sheet-scrim';scrim.setAttribute('aria-label','Fermer les réglages');scrim.onclick=closeMobileStudioSheet;panel.appendChild(scrim);
+
+  const dock=document.createElement('nav');dock.id='mobileStudioDock';dock.className='studio-mobile-dock';dock.setAttribute('aria-label','Outils du Studio');
   dock.innerHTML='<button data-mobile-studio="templates"><b>▦</b><span>Modèles</span></button><button data-mobile-studio="images"><b>▧</b><span>Médias</span></button><button data-mobile-studio="text"><b>Aa</b><span>Texte</span></button><button data-mobile-studio="elements"><b>◯</b><span>Éléments</span></button><button data-mobile-studio="layers"><b>≡</b><span>Calques</span></button><button data-mobile-studio="style"><b>⌁</b><span>Style</span></button>';
   panel.appendChild(dock);
-  [library,inspector].forEach(box=>{if(!box.querySelector('.studio-sheet-close')){const b=document.createElement('button');b.className='studio-sheet-close';b.type='button';b.textContent='×';b.setAttribute('aria-label','Fermer');b.onclick=()=>{library.classList.remove('mobile-open');inspector.classList.remove('mobile-open');dock.classList.remove('sheet-open')};box.prepend(b)}});
-  $$('[data-mobile-studio]',dock).forEach(b=>b.onclick=()=>openStudioRailPane(b.dataset.mobileStudio,true));
+
+  [library,inspector].forEach(box=>{
+    if(!box.querySelector('.studio-sheet-handle')){const h=document.createElement('div');h.className='studio-sheet-handle';h.setAttribute('aria-hidden','true');box.prepend(h)}
+    if(!box.querySelector('.studio-sheet-close')){const b=document.createElement('button');b.className='studio-sheet-close';b.type='button';b.textContent='×';b.setAttribute('aria-label','Fermer');b.onclick=closeMobileStudioSheet;box.prepend(b)}
+    installStudioSheetGesture(box);
+  });
+
+  $$('[data-mobile-studio]',dock).forEach(b=>b.onclick=()=>{
+    const pane=b.dataset.mobileStudio;
+    const already=b.classList.contains('active')&&document.body.classList.contains('studio-sheet-open');
+    if(already)return closeMobileStudioSheet();
+    openStudioRailPane(pane,true);
+    scrim.classList.add('open');document.body.classList.add('studio-sheet-open');
+    $$('[data-mobile-studio]',dock).forEach(x=>x.classList.toggle('active',x===b));
+  });
+
+  stage.addEventListener('pointerdown',e=>{
+    if(matchMedia('(max-width:820px)').matches&&document.body.classList.contains('studio-sheet-open')&&!e.target.closest('.canvas-layer'))closeMobileStudioSheet();
+  },{passive:true});
 }
 
 
