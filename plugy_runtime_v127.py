@@ -1,6 +1,6 @@
 from pathlib import Path
 from fastapi import Body, HTTPException, Query
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse, Response
 import base64, hashlib, json, os, re, time, requests
 
 import app as core
@@ -212,6 +212,54 @@ def plugy_stream_v127(payload: dict = Body(default={})):
         "X-Accel-Buffering": "no",
         "Connection": "keep-alive"
     })
+
+
+TTS_MODEL = os.getenv("PLUGY_TTS_MODEL", "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
+TTS_VOICES = {"alloy","ash","ballad","coral","echo","fable","onyx","nova","sage","shimmer","verse","marin","cedar"}
+
+@app.post("/api/v162/plugy/speech")
+def plugy_speech_v162(payload: dict = Body(default={})):
+    key = os.getenv("OPENAI_API_KEY", "").strip()
+    if not key:
+        raise HTTPException(503, "Voix naturelle indisponible")
+    text = re.sub(r"\s+", " ", str((payload or {}).get("text") or "")).strip()[:4096]
+    if not text:
+        raise HTTPException(400, "Texte vocal vide")
+    voice = str((payload or {}).get("voice") or "marin").strip().lower()
+    if voice not in TTS_VOICES:
+        voice = "marin"
+    body = {
+        "model": TTS_MODEL,
+        "input": text,
+        "voice": voice,
+        "response_format": "mp3",
+        "speed": 1.02,
+        "instructions": (
+            "Parle en français de France avec une voix naturelle, chaleureuse, calme et moderne. "
+            "Débit fluide, articulation nette, sans ton publicitaire ni voix robotique. "
+            "Marque de petites pauses naturelles aux virgules et fins de phrases. "
+            "Le ton doit ressembler à un assistant personnel premium, direct et vivant."
+        )
+    }
+    started = time.time()
+    try:
+        r = OPENAI_SESSION.post(
+            "https://api.openai.com/v1/audio/speech",
+            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+            json=body,
+            timeout=(8, 75)
+        )
+        if not r.ok:
+            try:
+                detail = (r.json().get("error") or {}).get("message") or r.text[:220]
+            except Exception:
+                detail = r.text[:220]
+            raise RuntimeError(f"HTTP {r.status_code}: {detail}")
+        print(f"PLUGY_V162_TTS_OK voice={voice} model={TTS_MODEL} elapsed_ms={int((time.time()-started)*1000)} chars={len(text)}", flush=True)
+        return Response(content=r.content, media_type="audio/mpeg", headers={"Cache-Control":"no-store"})
+    except Exception as exc:
+        print(f"PLUGY_V162_TTS_ERROR {type(exc).__name__}: {str(exc)[:220]}", flush=True)
+        raise HTTPException(502, "Synthèse vocale momentanément indisponible")
 
 IMAGE_MODELS = ("gpt-image-2.5-flare", "gpt-image-2.5-sunburst", "gpt-image-2")
 DEFAULT_IMAGE_MODEL = os.getenv("PLUGART_IMAGE_MODEL", "").strip()
