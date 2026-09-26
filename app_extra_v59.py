@@ -3038,34 +3038,7 @@ def status_v90():
 
 print("PLUG_ART_V163_READY ui=fast_project_workspace plugy=full_body_dezoom lazy=studio_hub ideas=visible pdf=project_generation cache=memory_session",flush=True)
 
-def _v127_runtime_smoke()
-
-def _v163_connectivity_smoke():
-    openai='not_configured';meta='not_configured';instagram='disconnected'
-    try:
-        key=os.getenv('OPENAI_API_KEY','').strip()
-        if key:
-            rr=requests.get('https://api.openai.com/v1/models',headers={'Authorization':f'Bearer {key}'},timeout=8)
-            openai='ok' if rr.ok else f'http_{rr.status_code}'
-    except Exception as exc:
-        openai='network_error'
-    try:
-        configured=bool(os.getenv('META_APP_ID','').strip() and os.getenv('META_APP_SECRET','').strip())
-        meta='configured' if configured else 'not_configured'
-        row=_ig_row()
-        token=str(row.get('page_access_token') or '').strip()
-        igid=str(row.get('ig_user_id') or '').strip()
-        if token and igid:
-            rr=requests.get(f'https://graph.facebook.com/{_ig_graph_version()}/{igid}',params={'fields':'id,username','access_token':token},timeout=8)
-            instagram='ok' if rr.ok else f'http_{rr.status_code}'
-        elif configured:
-            instagram='not_connected'
-    except Exception:
-        instagram='network_error'
-    print(f'PLUG_ART_CONNECTIONS openai={openai} meta={meta} instagram={instagram}',flush=True)
-
-threading.Thread(target=_v163_connectivity_smoke,daemon=True).start()
-:
+def _v127_runtime_smoke():
     required_routes={
       ('GET','/api/health'),
       ('GET','/plugy'),
@@ -3111,13 +3084,13 @@ threading.Thread(target=_v163_connectivity_smoke,daemon=True).start()
     db_ok=False
     quick='unknown'
     try:
-        c=core.conn()
-        existing={str(x[0]) for x in c.execute("select name from sqlite_master where type='table'").fetchall()}
+        db=core.conn()
+        existing={str(x[0]) for x in db.execute("select name from sqlite_master where type='table'").fetchall()}
         table_missing=[t for t in required_tables if t not in existing]
-        row=c.execute('pragma quick_check').fetchone()
+        row=db.execute('pragma quick_check').fetchone()
         quick=str(row[0] if row else 'unknown')
         db_ok=(quick.lower()=='ok')
-        c.close()
+        db.close()
     except Exception as exc:
         quick=f"{type(exc).__name__}:{str(exc)[:120]}"
     ok=(not missing and not table_missing and db_ok)
@@ -3129,4 +3102,29 @@ threading.Thread(target=_v163_connectivity_smoke,daemon=True).start()
       flush=True
     )
 
+def _v163_connectivity_smoke():
+    openai='not_configured';meta='not_configured';instagram='disconnected'
+    try:
+        key=os.getenv('OPENAI_API_KEY','').strip()
+        if key:
+            rr=requests.get('https://api.openai.com/v1/models',headers={'Authorization':f'Bearer {key}'},timeout=8)
+            openai='ok' if rr.ok else f'http_{rr.status_code}'
+    except Exception:
+        openai='network_error'
+    try:
+        configured=bool(os.getenv('META_APP_ID','').strip() and os.getenv('META_APP_SECRET','').strip())
+        meta='configured' if configured else 'not_configured'
+        row=_ig_row()
+        token=str(row.get('page_access_token') or '').strip()
+        igid=str(row.get('ig_user_id') or '').strip()
+        if token and igid:
+            rr=requests.get(f'https://graph.facebook.com/{_ig_graph_version()}/{igid}',params={'fields':'id,username','access_token':token},timeout=8)
+            instagram='ok' if rr.ok else f'http_{rr.status_code}'
+        elif configured:
+            instagram='not_connected'
+    except Exception:
+        instagram='network_error'
+    print(f'PLUG_ART_CONNECTIONS openai={openai} meta={meta} instagram={instagram}',flush=True)
+
 _v127_runtime_smoke()
+threading.Thread(target=_v163_connectivity_smoke,daemon=True).start()
