@@ -36,7 +36,17 @@ DISCOVERY_SOURCES=[
  ('Sortir à Paris — Expositions','https://www.sortiraparis.com/arts-culture/exposition',70),
  ('VAA OpenSpaces — Partner Venues','https://visual-artists.org/vaa-openspaces/openspaces-2026-partner-venues/',86),
  ('CFF — Photography Program','https://centrumforfotografi.se/en/program/',86),
- ('CFF — Photography','https://centrumforfotografi.se/en/',82)
+ ('CFF — Photography','https://centrumforfotografi.se/en/',82),
+ ('Galerie Mona Lisa — candidatures','https://galerie-monalisa.org/fr/appel-a-candidature/',90),
+ ('The Muisca Gallery — appels artistes','https://www.themuisca.com/appel-aux-artistes',88),
+ ('CENTQUATRE — appels artistes','https://www.104.fr/appels-a-artistes/',92),
+ ('OpenCallArtist — France','https://www.opencallartist.com/',80),
+ ('Cultura Portugal — appels arts','https://www.culturaportugal.gov.pt/pt/criar/apoios/',88),
+ ('REA Art Fair Milan — open call','https://www.reafair.com/open-call',84),
+ ('MONAD — Paris submissions','https://www.monadnyc.com/paris',80),
+ ('Full Circle — emerging artists','https://fullcircle.eu/opencall',84),
+ ('Boomer Gallery — calls','https://boomergallery.net/',76),
+ ('Gallery46 — open calls','https://gallery46.co.uk/exhibitions/',78)
 ]
 LINK_HINTS=('opportun','open-call','open_call','opencall','call-for','appel','candid','exhibition','exposition','expo','artist','artiste','collective','collectif','emerging','emergent','residen','culture','programmation','agenda','lieu','galerie','gallery','pop-up','popup','photograph','photographie','photographer','photographe','hotel','hôtel','restaurant','cafe','café','hospitality','venue')
 BAD_LINK_HINTS=('login','register','privacy','terms','contact','about','newsletter','facebook','instagram','cookie','press','shop')
@@ -47,7 +57,9 @@ def blocked_opportunity_text(text):
  low=norm(text).lower()
  return any(re.search(r'\b'+re.escape(k)+r'\b',low,re.I) for k in BLOCKED_OPPORTUNITY_HINTS)
 EUROPE_WORDS=('france','italy','italie','spain','espagne','portugal','belgium','belgique','netherlands','pays-bas','united kingdom','royaume-uni','germany','allemagne','austria','autriche','switzerland','suisse')
-PARIS_WORDS=('paris','aubervilliers','saint-denis','pantin','montreuil','93','seine-saint-denis')
+PARIS_WORDS=('paris','aubervilliers','saint-denis','pantin','montreuil','bagnolet','ivry','vitry','boulogne','clichy','gennevilliers','93','92','94','seine-saint-denis')
+FRANCE_CITY_WORDS=('marseille','lyon','bordeaux','lille','nantes','toulouse','montpellier','nice','strasbourg','rennes','rouen','grenoble','avignon','aix-en-provence')
+EUROPE_CITY_WORDS=('madrid','barcelona','barcelone','milan','milano','rome','roma','florence','firenze','lisbon','lisbonne','porto','brussels','bruxelles','amsterdam','london','londres')
 
 def domain(u):
  try:return urlparse(u).netloc.lower().replace('www.','')
@@ -163,7 +175,9 @@ def score_opp(o):
  country=(o.get('country') or '').lower();city=(o.get('city') or '').lower()
  if 'france' in country:score+=10;why.append('France')
  elif any(k in country for k in EUROPE_WORDS):score+=7;why.append('Europe')
- if any(k in city for k in PARIS_WORDS):score+=15;why.append('Paris/93')
+ if any(k in city for k in PARIS_WORDS):score+=15;why.append('Paris/IDF')
+ elif any(k in city for k in FRANCE_CITY_WORDS):score+=9;why.append('grande ville France')
+ elif any(k in city for k in EUROPE_CITY_WORDS):score+=6;why.append('Europe ciblée')
  days=None
  try:
   if o.get('deadline'):days=(date.fromisoformat(o['deadline'])-today).days
