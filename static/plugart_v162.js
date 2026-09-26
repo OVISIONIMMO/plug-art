@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='164.20260926.2';
+const VERSION='164.20260926.3';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -162,7 +162,7 @@ function route(id,push=true){
   ensureRouteRuntime(id);
   state.view=id;document.body.dataset.view=id;
   $$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+id));
-  $$$('[data-route]').forEach(b=>b.classList.toggle('active',b.dataset.route===id));
+  $$('[data-route]').forEach(b=>b.classList.toggle('active',b.dataset.route===id));
   $('#pageEyebrow').textContent=viewMeta[id][0];$('#pageTitle').textContent=viewMeta[id][1];
   document.title='PLUG ART · '+viewMeta[id][1];
   $('#plugyContext').textContent='Contexte : '+contexts[id].label;
@@ -3248,7 +3248,7 @@ function renderCarousel(){
   [['TitlePx',d.titlePx,' px'],['BodyPx',d.bodyPx,' px'],['LabelPx',d.labelPx,' px'],['CtaPx',d.ctaPx,' px']].forEach(([k,v,u])=>{const el=$('#slide'+k),out=$('#slide'+k+'Out');if(el)el.value=v;if(out)out.textContent=v+u});
   if($('#slideLineHeight'))$('#slideLineHeight').value=d.lineHeight;if($('#slideLineHeightOut'))$('#slideLineHeightOut').textContent=Number(d.lineHeight||1.08).toFixed(2)+'×';
   if($('#slideLetterSpacing'))$('#slideLetterSpacing').value=d.letterSpacing;if($('#slideLetterSpacingOut'))$('#slideLetterSpacingOut').textContent=Number(d.letterSpacing||0).toFixed(1)+' px';
-  $$$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
+  $$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
   $$('[data-stage-pattern]').forEach(b=>b.classList.toggle('active',!s.image&&b.dataset.stagePattern===d.pattern));
   renderCanvasLayers();renderStudioImages();
 }
