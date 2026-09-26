@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='164.0'
+app.version='165.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -24,6 +24,27 @@ REALISTIC_PLUGY=Path('/data/plugy_v113_realistic_premium.glb') if Path('/data').
 REALISTIC_PLUGY_LOCK=threading.Lock()
 
 MIGRATION_BACKUP=Path('/data/backups/pre-eu-migration-v123.db') if Path('/data').exists() else None
+
+_V165_DB_WRITE_LOCK=threading.RLock()
+def _v165_db_write(fn,attempts=4):
+    last=None
+    for attempt in range(max(1,attempts)):
+        with _V165_DB_WRITE_LOCK:
+            db=core.conn()
+            try:
+                out=fn(db)
+                db.commit()
+                return out
+            except sqlite3.OperationalError as exc:
+                try:db.rollback()
+                except Exception:pass
+                last=exc
+                if 'locked' not in str(exc).lower() or attempt>=attempts-1:
+                    raise
+            finally:
+                db.close()
+        time.sleep(0.06*(attempt+1))
+    if last:raise last
 
 def _v123_prepare_region_migration_backup():
     if MIGRATION_BACKUP is None:return
@@ -706,7 +727,7 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='164.20260926.3'
+    expected='165.20260926.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
       'version':'164.0',
@@ -2191,17 +2212,17 @@ def open_call_workflow_upsert_v107(opportunity_id:int,body:dict):
     next_action=str(body.get('next_action') or '').strip()[:500]
     next_date=str(body.get('next_date') or '').strip()[:20]
     now=_now_v85()
-    c=core.conn()
-    c.execute("""insert into opportunity_workspace(opportunity_id,workflow_status,notes,next_action,next_date,created_at,updated_at)
-                 values(?,?,?,?,?,?,?)
-                 on conflict(opportunity_id) do update set
-                   workflow_status=excluded.workflow_status,
-                   notes=excluded.notes,
-                   next_action=excluded.next_action,
-                   next_date=excluded.next_date,
-                   updated_at=excluded.updated_at""",
-              (opportunity_id,status,notes,next_action,next_date,now,now))
-    c.commit();c.close()
+    def _write(db):
+        db.execute("""insert into opportunity_workspace(opportunity_id,workflow_status,notes,next_action,next_date,created_at,updated_at)
+                     values(?,?,?,?,?,?,?)
+                     on conflict(opportunity_id) do update set
+                       workflow_status=excluded.workflow_status,
+                       notes=excluded.notes,
+                       next_action=excluded.next_action,
+                       next_date=excluded.next_date,
+                       updated_at=excluded.updated_at""",
+                  (opportunity_id,status,notes,next_action,next_date,now,now))
+    _v165_db_write(_write)
     return core.one('select * from opportunity_workspace where opportunity_id=?',(opportunity_id,))
 
 @app.delete('/api/v107/open-calls/{opportunity_id}/workflow')
@@ -2859,9 +2880,9 @@ def ideas_create_v156(body:dict):
       str(body.get('image_url') or '')[:2000],str(body.get('project') or '')[:160],
       float(body.get('pos_x') or 50),float(body.get('pos_y') or 50),now,now
     )
-    c=core.conn();cur=c.execute("""insert into idea_cloud
+    iid=_v165_db_write(lambda db: db.execute("""insert into idea_cloud
       (title,body,stage,tags,color,image_url,project,pos_x,pos_y,created_at,updated_at)
-      values(?,?,?,?,?,?,?,?,?,?,?)""",vals);c.commit();iid=cur.lastrowid;c.close()
+      values(?,?,?,?,?,?,?,?,?,?,?)""",vals).lastrowid)
     return _idea_out_v156(core.one('select * from idea_cloud where id=?',(iid,)))
 
 @app.patch('/api/v156/ideas/{idea_id}')
@@ -2877,13 +2898,13 @@ def ideas_update_v156(idea_id:int,body:dict):
             except Exception:pass
     if not data:return _idea_out_v156(core.one('select * from idea_cloud where id=?',(idea_id,)))
     data['updated_at']=_now_v85();sets=','.join(f"{k}=?" for k in data)
-    c=core.conn();c.execute(f"update idea_cloud set {sets} where id=?",(*data.values(),idea_id));c.commit();c.close()
+    _v165_db_write(lambda db: db.execute(f"update idea_cloud set {sets} where id=?",(*data.values(),idea_id)))
     return _idea_out_v156(core.one('select * from idea_cloud where id=?',(idea_id,)))
 
 @app.delete('/api/v156/ideas/{idea_id}')
 def ideas_delete_v156(idea_id:int):
-    c=core.conn();cur=c.execute('delete from idea_cloud where id=?',(idea_id,));c.commit();c.close()
-    if not cur.rowcount:raise HTTPException(404,'Idée introuvable')
+    affected=_v165_db_write(lambda db: db.execute('delete from idea_cloud where id=?',(idea_id,)).rowcount)
+    if not affected:raise HTTPException(404,'Idée introuvable')
     return {'ok':True}
 
 
@@ -2982,7 +3003,15 @@ def _v164_seed_project_library_startup():
     except Exception as exc:
         print(f"PLUG_ART_V164_LIBRARY_SEED_ERROR {type(exc).__name__}: {str(exc)[:240]}",flush=True)
 
-threading.Thread(target=_v164_seed_project_library_startup,daemon=True).start()
+try:
+    _seed_expected=sum(len(v.get('pdfs') or [])+len(v.get('visuals') or []) for v in _V164_PROJECT_LIBRARY.values())
+    _seed_existing=int((core.one("select count(*) count from bureau_documents where source_type like 'chatgpt_library_%'") or {}).get('count',0))
+except Exception:
+    _seed_expected=1;_seed_existing=0
+if _seed_existing<_seed_expected:
+    threading.Thread(target=_v164_seed_project_library_startup,daemon=True).start()
+else:
+    print(f"PLUG_ART_V165_LIBRARY_SEED_SKIP existing={_seed_existing} expected={_seed_expected}",flush=True)
 
 @app.get('/api/v163/diagnostics')
 def diagnostics_v163():
