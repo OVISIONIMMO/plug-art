@@ -1175,17 +1175,18 @@ function installBureauWorkspace(){
 function setBureauMode(mode){
   state.bureauMode=mode;
   $$('[data-bureau-mode]').forEach(b=>b.classList.toggle('active',b.dataset.bureauMode===mode));
-  const docs=$('#bureauDocumentsMode'),projects=$('#bureauProjectsMode'),packages=$('#bureauPackagesMode'),templates=$('#bureauTemplatesMode'),hub=$('#bureauHubMode');
+  const docs=$('#bureauDocumentsMode'),projects=$('#bureauProjectsMode'),packages=$('#bureauPackagesMode'),templates=$('#bureauTemplatesMode'),hub=$('#bureauHubMode'),pdf=$('#bureauPdfV167');
   if(docs)docs.style.display=mode==='documents'?'grid':'none';
   projects?.classList.toggle('active',mode==='projects');
   packages?.classList.toggle('active',mode==='packages');
-  templates?.classList.toggle('active',mode==='templates');hub?.classList.toggle('active',mode==='hub');
+  templates?.classList.toggle('active',mode==='templates');hub?.classList.toggle('active',mode==='hub');pdf?.classList.toggle('active',mode==='pdf');
   if($('#bureauNew'))$('#bureauNew').style.display=mode==='documents'?'':'none';
   if(mode==='documents'){renderBureauFolders();renderBureau()}
   if(mode==='projects')renderProjectWorkspaceV163(state.projectMode||'millenaire');
   if(mode==='packages')renderBureauPackages();
   if(mode==='templates')renderBureauTemplates();
   if(mode==='hub')renderHubWorkspace();
+  if(mode==='pdf')loadPdfProjectsV167(false);
   renderPlugyActions();
 }
 const HUB_PROJECTS={
@@ -4392,6 +4393,361 @@ function bindIdeaDragV163(card){
     if(idea){idea.pos_x=x;idea.pos_y=y;api('/api/v156/ideas/'+id,{method:'PATCH',body:JSON.stringify({pos_x:x,pos_y:y})}).catch(()=>{})}
   };
 }
+
+
+/* ================= V167 WORKSPACE ================= */
+const CREATION_TEMPLATES_V167=[
+  ['open-call-clean-white','Clean white'],['open-call-side-rail','Side rail'],['open-call-photo-first','Photo first'],
+  ['open-call-gallery-premium','Galerie premium'],['open-call-plug-blue','PLUG blue'],['open-call-editorial','Éditorial'],
+  ['open-call-deadline','Deadline'],['open-call-minimal-black','Minimal black'],['open-call-pop','Pop'],['open-call-institutional','Institutionnel']
+];
+const CREATION_PATTERNS_V167=[
+  ['grid-fine','Grille fine'],['grid-large','Grille large'],['dots','Points'],['dots-sparse','Points espacés'],
+  ['diagonal','Diagonales'],['horizontal','Horizontales'],['vertical','Verticales'],['cross-grid','Cross grid'],
+  ['wave','Vague'],['organic','Organique'],['rings','Anneaux'],['halo','Halo'],['star-field','Étoiles'],
+  ['sparks','Étincelles'],['paper-grain','Papier'],['paint-light','Peinture'],['spray-subtle','Spray'],
+  ['noise','Grain'],['gradient-mesh','Mesh'],['editorial-rail','Rail éditorial'],['side-ribbon','Ruban'],['corner-accent','Angle']
+];
+const CREATION_SYMBOLS_V167=['✦','✧','✺','★','●','○','◆','◇','◎','→','↗','↓','＋','×','⚡','🔌','◫','▤','▦','◉','◌'];
+
+function v167DateISO(d){const x=new Date(d);return isNaN(x)?'':x.toISOString().slice(0,10)}
+function v167Today(){return v167DateISO(new Date())}
+function v167AddDays(n){const d=new Date();d.setDate(d.getDate()+n);return v167DateISO(d)}
+function v167FmtDate(v){
+  if(!v)return 'Date à confirmer';
+  const d=new Date(String(v).length===10?v+'T12:00:00':v);
+  if(isNaN(d))return v;
+  return new Intl.DateTimeFormat('fr-FR',{weekday:'short',day:'numeric',month:'short',hour:String(v).includes('T')?'2-digit':undefined,minute:String(v).includes('T')?'2-digit':undefined}).format(d);
+}
+
+/* ---------- Radar Vernissages ---------- */
+function installRadarV167(){
+  const view=$('#view-radar');if(!view||$('#radarModeV167'))return;
+  const toolbar=view.querySelector('.page-toolbar'),open=view.querySelector('.tool-layout');if(!toolbar||!open)return;
+  open.id='radarOpenCallsV167';
+  const tabs=document.createElement('nav');tabs.id='radarModeV167';tabs.className='radar-mode-v167';
+  tabs.innerHTML='<button class="active" data-radar-v167="opencalls">Open Calls</button><button data-radar-v167="events">Vernissages</button><button data-radar-v167="places">Lieux</button><button data-radar-v167="favorites">Favoris</button>';
+  toolbar.insertAdjacentElement('afterend',tabs);
+  const panel=document.createElement('section');panel.id='radarEventsV167';panel.className='radar-events-v167';
+  panel.innerHTML=
+    '<div class="event-search-v167">'+
+      '<div class="event-search-main-v167"><label>Recherche<input id="eventQueryV167" placeholder="Galerie, exposition, artiste…"></label><label>Ville<input id="eventCityV167" value="Paris" placeholder="Paris, Aubervilliers…"></label>'+
+      '<label>Type<select id="eventTypeV167"><option value="">Tous</option><option value="vernissage">Vernissage</option><option value="opening">Opening</option><option value="artist_talk">Artist talk</option><option value="finissage">Finissage</option><option value="nocturne">Nocturne</option></select></label>'+
+      '<button class="primary-btn" id="eventSearchWebV167">◉ Rechercher sur le web</button></div>'+
+      '<div class="event-ranges-v167"><button data-event-range="today">Aujourd’hui</button><button class="active" data-event-range="week">Cette semaine</button><button data-event-range="weekend">Ce week-end</button><button data-event-range="month">Ce mois</button><label><input type="checkbox" id="eventFreeV167"> Gratuit</label><label><input type="checkbox" id="eventVerifiedV167"> Vérifié</label><span></span><button class="event-week-content-v167" id="eventWeekContentV167">✦ Créer les vernissages de la semaine</button></div>'+
+    '</div>'+
+    '<div class="event-head-v167"><div><small>AGENDA ARTISTIQUE</small><strong id="eventCountV167">0 événement</strong></div><button id="eventRefreshV167">Actualiser</button></div>'+
+    '<div class="event-grid-v167" id="eventGridV167"><div class="empty">Ouvre le Radar Vernissages pour charger les événements.</div></div>';
+  open.insertAdjacentElement('afterend',panel);
+  $('[data-radar-v167]',tabs).forEach(b=>b.onclick=()=>{
+    const m=b.dataset.radarV167;
+    if(m==='places'){route('map');return}
+    if(m==='favorites'){state.radarV167Mode='events';setRadarModeV167('events');loadEventsV167(true,{favorite:true});return}
+    setRadarModeV167(m);
+  });
+  $('[data-event-range]',panel).forEach(b=>b.onclick=()=>{$('[data-event-range]',panel).forEach(x=>x.classList.toggle('active',x===b));panel.dataset.range=b.dataset.eventRange;loadEventsV167(true)});
+  $('#eventSearchWebV167').onclick=searchEventsV167;
+  $('#eventRefreshV167').onclick=()=>loadEventsV167(true);
+  $('#eventWeekContentV167').onclick=generateWeeklyVernissagesV167;
+  $('#eventQueryV167').oninput=()=>{clearTimeout(loadEventsV167.t);loadEventsV167.t=setTimeout(()=>loadEventsV167(true),260)};
+  $('#eventCityV167').onchange=()=>loadEventsV167(true);
+  $('#eventTypeV167').onchange=()=>loadEventsV167(true);
+  $('#eventFreeV167').onchange=()=>loadEventsV167(true);
+  $('#eventVerifiedV167').onchange=()=>loadEventsV167(true);
+  panel.dataset.range='week';
+  setRadarModeV167(state.radarV167Mode||'opencalls');
+}
+function setRadarModeV167(mode){
+  state.radarV167Mode=mode==='events'?'events':'opencalls';
+  $('#radarOpenCallsV167')?.classList.toggle('v167-hidden',state.radarV167Mode==='events');
+  $('#radarEventsV167')?.classList.toggle('active',state.radarV167Mode==='events');
+  $('[data-radar-v167]').forEach(b=>b.classList.toggle('active',b.dataset.radarV167===state.radarV167Mode));
+  if(state.radarV167Mode==='events')loadEventsV167(false);
+}
+function eventRangeV167(){
+  const range=$('#radarEventsV167')?.dataset.range||'week',now=new Date(),start=v167Today(),end=v167AddDays(7);
+  if(range==='today')end=start;
+  if(range==='month')end=v167AddDays(31);
+  if(range==='weekend'){
+    const day=now.getDay(),toSat=(6-day+7)%7;const s=new Date(now);s.setDate(s.getDate()+toSat);const e=new Date(s);e.setDate(e.getDate()+1);return{from:v167DateISO(s),to:v167DateISO(e)}
+  }
+  return{from:start,to:end};
+}
+async function loadEventsV167(force=false,extra={}){
+  const box=$('#eventGridV167');if(!box||state.eventsV167Loading)return;
+  state.eventsV167Loading=true;if(!state.eventsV167.length)box.innerHTML='<div class="event-loading-v167"><i></i><span>Chargement des vernissages…</span></div>';
+  const r=eventRangeV167(),p=new URLSearchParams();
+  const q=clean($('#eventQueryV167')?.value),city=clean($('#eventCityV167')?.value),type=$('#eventTypeV167')?.value||'';
+  if(q)p.set('q',q);if(city)p.set('city',city);if(type)p.set('event_type',type);p.set('date_from',r.from);p.set('date_to',r.to);
+  if($('#eventFreeV167')?.checked)p.set('free','true');if($('#eventVerifiedV167')?.checked)p.set('verified','true');if(extra.favorite)p.set('favorite','true');
+  try{
+    const rows=await api('/api/v167/events?'+p.toString(),{noMemCache:force,cacheTtl:15000});
+    state.eventsV167=Array.isArray(rows)?rows:[];renderEventsV167();
+  }catch(e){box.innerHTML='<div class="event-empty-v167"><b>◷</b><strong>Agenda momentanément indisponible</strong><span>'+esc(e.message||'Réessaie dans un instant.')+'</span></div>'}
+  finally{state.eventsV167Loading=false}
+}
+async function searchEventsV167(){
+  const btn=$('#eventSearchWebV167');if(!btn||btn.disabled)return;const old=btn.textContent,range=eventRangeV167();
+  btn.disabled=true;btn.textContent='Recherche des vernissages…';
+  try{
+    const city=clean($('#eventCityV167')?.value)||'Paris',type=$('#eventTypeV167')?.value;
+    const body={cities:city.split(',').map(x=>clean(x)).filter(Boolean),date_from:range.from,date_to:range.to,q:clean($('#eventQueryV167')?.value),types:type?[type]:['vernissage','opening','artist_talk','finissage','nocturne']};
+    const out=await api('/api/v167/events/search',{method:'POST',timeout:60000,body:JSON.stringify(body)});
+    state.eventsV167=Array.isArray(out.items)?out.items:[];renderEventsV167();toast((out.found||0)+' événement'+((out.found||0)>1?'s':'')+' trouvé'+((out.found||0)>1?'s':''));
+  }catch(e){toast('Recherche Vernissages impossible : '+clean(e.message||'erreur'))}
+  finally{btn.disabled=false;btn.textContent=old}
+}
+function renderEventsV167(){
+  const box=$('#eventGridV167');if(!box)return;const rows=state.eventsV167||[];
+  $('#eventCountV167').textContent=rows.length+' événement'+(rows.length>1?'s':'');
+  if(!rows.length){box.innerHTML='<div class="event-empty-v167"><b>◷</b><strong>Aucun vernissage dans cette sélection</strong><span>Élargis la période ou lance une recherche web.</span></div>';return}
+  box.innerHTML=rows.map(e=>{
+    const image='/api/v167/events/'+encodeURIComponent(e.id)+'/media/0';
+    return '<article class="event-card-v167">'+
+      '<div class="event-visual-v167"><img src="'+image+'" alt="" loading="lazy" decoding="async" onerror="this.style.display=\'none\'"><span>'+esc((e.event_type||'vernissage').replaceAll('_',' '))+'</span></div>'+
+      '<div class="event-copy-v167"><div class="event-date-v167"><strong>'+esc(v167FmtDate(e.starts_at))+'</strong><small>'+esc(e.city||e.country||'')+'</small></div><h3>'+esc(e.title)+'</h3><p>'+esc(e.venue_name||'Lieu à confirmer')+'</p>'+
+      '<div class="event-tags-v167">'+(e.is_free?'<span>Gratuit</span>':'')+(e.verified?'<span>✓ Vérifié</span>':'')+(e.rsvp_url?'<span>RSVP</span>':'')+'</div>'+
+      '<div class="event-actions-v167"><button data-event-create="'+e.id+'">✦ Créer</button><button data-event-agenda="'+e.id+'">Agenda</button><button data-event-fav="'+e.id+'">'+(e.favorite?'★':'☆')+'</button><a href="'+esc(e.source_url)+'" target="_blank" rel="noopener">Source ↗</a></div></div></article>';
+  }).join('');
+  $('[data-event-create]',box).forEach(b=>b.onclick=()=>eventToCreationV167(Number(b.dataset.eventCreate)));
+  $('[data-event-agenda]',box).forEach(b=>b.onclick=async()=>{try{await api('/api/v167/events/'+b.dataset.eventAgenda+'/to-agenda',{method:'POST',body:'{}'});toast('Vernissage préparé pour l’agenda')}catch{toast('Ajout agenda impossible')}});
+  $('[data-event-fav]',box).forEach(b=>b.onclick=async()=>{const e=rows.find(x=>Number(x.id)===Number(b.dataset.eventFav));if(!e)return;try{const saved=await api('/api/v167/events/'+e.id+'/favorite',{method:'POST',body:JSON.stringify({favorite:!e.favorite})});Object.assign(e,saved);renderEventsV167()}catch{toast('Favori impossible')}});
+}
+function v167EventImage(id){return '/api/v167/events/'+encodeURIComponent(id)+'/media/0'}
+function v167ApplyDesign(slide,key='open-call-side-rail'){
+  const maps={
+    'open-call-clean-white':{theme:'ultra',layout:'editorial',accent:'black',backgroundColor:'#ffffff',pattern:'grid-fine',imageOpacity:72},
+    'open-call-side-rail':{theme:'editorial',layout:'editorial',accent:'violet',backgroundColor:'#f6f5f1',pattern:'editorial-rail',imageOpacity:82},
+    'open-call-photo-first':{theme:'editorial',layout:'poster',accent:'black',backgroundColor:'#f4f3ef',pattern:'corner-accent',imageOpacity:92},
+    'open-call-gallery-premium':{theme:'ultra',layout:'split',accent:'violet',backgroundColor:'#f1eef8',pattern:'rings',imageOpacity:88},
+    'open-call-plug-blue':{theme:'editorial',layout:'editorial',accent:'blue',backgroundColor:'#eef4ff',pattern:'side-ribbon',imageOpacity:78},
+    'open-call-editorial':{theme:'editorial',layout:'split',accent:'black',backgroundColor:'#f4f3ef',pattern:'grid-large',imageOpacity:82},
+    'open-call-deadline':{theme:'night',layout:'poster',accent:'pink',backgroundColor:'#171820',pattern:'sparks',imageOpacity:70},
+    'open-call-minimal-black':{theme:'night',layout:'minimal',accent:'cyan',backgroundColor:'#111318',pattern:'dots-sparse',imageOpacity:55},
+    'open-call-pop':{theme:'soft',layout:'editorial',accent:'pink',backgroundColor:'#fff0f6',pattern:'organic',imageOpacity:72},
+    'open-call-institutional':{theme:'ultra',layout:'split',accent:'blue',backgroundColor:'#f7f7f5',pattern:'cross-grid',imageOpacity:80}
+  };
+  slide.design={...slideDesign(slide),...(maps[key]||maps['open-call-side-rail'])};return slide;
+}
+async function eventToCreationV167(id){
+  try{
+    const p=await api('/api/v167/events/'+id+'/to-content',{method:'POST',body:'{}'}),img=v167EventImage(id);
+    state.carousel.slides=[
+      v167ApplyDesign({kicker:'VERNISSAGE',title:p.title||'Vernissage',body:[p.venue,p.city].filter(Boolean).join(' · '),cta:v167FmtDate(p.date),image:img,image_prompt:''},'open-call-photo-first'),
+      v167ApplyDesign({kicker:'RENDEZ-VOUS',title:v167FmtDate(p.date),body:[p.address,p.venue].filter(Boolean).join('\n'),cta:'À noter →',image:img,image_prompt:''},'open-call-side-rail'),
+      v167ApplyDesign({kicker:'LE LIEU',title:p.venue||p.city||'Lieu',body:p.city||'',cta:'Découvrir →',image:img,image_prompt:''},'open-call-gallery-premium'),
+      v167ApplyDesign({kicker:'PLUG ART',title:'À voir cette semaine.',body:'Retrouve les prochains rendez-vous artistiques dans le Radar Vernissages.',cta:'PLUG 🔌',image:'',image_prompt:''},'open-call-clean-white')
+    ];state.carousel.active=0;state.carousel.format='4:5';route('creation');setTimeout(()=>{setCreationMode('carousel');renderCarousel();fitStudioCanvas()},60);
+  }catch(e){toast('Création depuis ce vernissage impossible')}
+}
+async function generateWeeklyVernissagesV167(){
+  if(!state.eventsV167.length)await loadEventsV167(true);
+  const rows=(state.eventsV167||[]).slice(0,8);if(!rows.length)return toast('Aucun vernissage à transformer');
+  const range=eventRangeV167();
+  const slides=[v167ApplyDesign({kicker:'PLUG ART',title:'Les vernissages de la semaine',body:range.from+' → '+range.to,cta:'À enregistrer',image:'',image_prompt:''},'open-call-side-rail')];
+  rows.forEach(e=>slides.push(v167ApplyDesign({kicker:(e.event_type||'VERNISSAGE').replaceAll('_',' ').toUpperCase(),title:e.title,body:[e.venue_name,v167FmtDate(e.starts_at),e.city].filter(Boolean).join(' · '),cta:e.is_free?'Entrée libre →':'Voir les infos →',image:v167EventImage(e.id),image_prompt:''},'open-call-photo-first')));
+  slides.push(v167ApplyDesign({kicker:'AGENDA',title:'Garde la semaine ouverte.',body:rows.map(e=>v167FmtDate(e.starts_at)+' · '+e.venue_name).join('\n'),cta:'PLUG 🔌',image:'',image_prompt:''},'open-call-clean-white'));
+  state.carousel.slides=slides;state.carousel.active=0;state.carousel.format='4:5';route('creation');setTimeout(()=>{setCreationMode('carousel');renderCarousel();fitStudioCanvas()},60);
+}
+
+/* ---------- Creation ultrawide ---------- */
+function applyCreationTemplateV167(key){
+  const slide=state.carousel.slides[state.carousel.active];if(!slide)return toast('Aucune slide active');
+  pushCreationHistory();v167ApplyDesign(slide,key);renderCarousel();scheduleDraftAutosave();
+  $('[data-v167-template]').forEach(b=>b.classList.toggle('active',b.dataset.v167Template===key));
+}
+function applyCreationPatternV167(key){
+  const slide=state.carousel.slides[state.carousel.active];if(!slide)return toast('Aucune slide active');
+  pushCreationHistory();slide.image='';slideDesign(slide).pattern=key;renderCarousel();scheduleDraftAutosave();
+}
+async function generateOpenCallPackV167(id){
+  const source=opportunityById(id||$('#carouselSource')?.value||$('#quickContentSource')?.value);if(!source)return toast('Choisis un Open Call');
+  let img='';try{const media=await api('/api/v67/opportunities/'+source.id+'/media',{cacheTtl:120000});if(media?.media?.length)img='/api/v166/opportunities/'+source.id+'/media/0'}catch{}
+  const loc=[source.city,source.country].filter(Boolean).join(' · '),deadline=source.deadline?'Deadline · '+source.deadline:'Deadline à vérifier',fee=source.fee||'Frais à vérifier',summary=source.summary||source.radar_reason||'Consulte la source officielle pour les détails.';
+  state.carousel.slides=[
+    v167ApplyDesign({kicker:'OPEN CALL FOR ARTISTS',title:source.title,body:loc,cta:deadline,image:img,image_prompt:''},'open-call-side-rail'),
+    v167ApplyDesign({kicker:'INFOS CLÉS',title:'À retenir',body:[deadline,loc,source.type||'',fee,source.eligibility||''].filter(Boolean).join('\n'),cta:'Enregistrer →',image:'',image_prompt:''},'open-call-clean-white'),
+    v167ApplyDesign({kicker:'POURQUOI REGARDER',title:'Une opportunité à examiner',body:summary,cta:'Voir les critères →',image:'',image_prompt:''},'open-call-editorial'),
+    v167ApplyDesign({kicker:'LE LIEU',title:source.organizer||source.city||'Structure',body:loc||summary,cta:'Découvrir →',image:img,image_prompt:''},'open-call-gallery-premium'),
+    v167ApplyDesign({kicker:'ACTION',title:'La candidature est ouverte.',body:[deadline,fee].filter(Boolean).join(' · '),cta:'Commente PLUG 🔌',image:'',image_prompt:''},'open-call-deadline')
+  ];
+  state.carousel.active=0;state.carousel.format='4:5';renderCarousel();fitStudioCanvas();scheduleDraftAutosave();toast('Pack Open Call · 5 slides prêt');
+}
+function toggleCreationFullscreenV167(){
+  const stage=$('#carouselCreationPanel .studio-stage');if(!stage)return;
+  if(document.fullscreenElement)document.exitFullscreen?.();else stage.requestFullscreen?.();
+}
+function installCreationV167(){
+  const view=$('#view-creation'),panel=$('#carouselCreationPanel');if(!view||!panel||$('#creationLibraryV167'))return;
+  view.classList.add('creation-v167-view');panel.classList.add('creation-v167');
+  const lib=panel.querySelector('.studio-library');if(lib){
+    const section=document.createElement('section');section.id='creationLibraryV167';section.className='creation-library-v167';
+    section.innerHTML='<div class="v167-library-head"><small>DA PLUG ART</small><strong>Templates sociaux</strong></div>'+
+      '<div class="v167-template-grid">'+CREATION_TEMPLATES_V167.map(x=>'<button data-v167-template="'+x[0]+'"><i class="tpl-'+x[0]+'"></i><span>'+x[1]+'</span></button>').join('')+'</div>'+
+      '<div class="v167-library-head"><small>MOTIFS</small><strong>Habillage</strong></div><div class="v167-pattern-grid">'+CREATION_PATTERNS_V167.map(x=>'<button data-v167-pattern="'+x[0]+'"><i data-pattern="'+x[0]+'"></i><span>'+x[1]+'</span></button>').join('')+'</div>'+
+      '<div class="v167-library-head"><small>SYMBOLES</small><strong>Éléments rapides</strong></div><div class="v167-symbol-grid">'+CREATION_SYMBOLS_V167.map(x=>'<button data-v167-symbol="'+esc(x)+'">'+esc(x)+'</button>').join('')+'</div>'+
+      '<button class="v167-open-call-pack" id="openCallPackV167">✦ Générer Open Call · 5 slides</button>';
+    lib.prepend(section);
+  }
+  const toolbar=$('#creationTopToolsV166')||$('#studioProToolbar');if(toolbar&&!$('#creationFullscreenV167')){
+    const extra=document.createElement('div');extra.className='creation-actions-v167';extra.innerHTML='<button id="creationFitV167">Fit</button><button id="creation100V167">100%</button><button id="creationFillV167">Fill</button><button id="creationFullscreenV167">⛶</button>';
+    toolbar.appendChild(extra);
+  }
+  $('[data-v167-template]').forEach(b=>b.onclick=()=>applyCreationTemplateV167(b.dataset.v167Template));
+  $('[data-v167-pattern]').forEach(b=>b.onclick=()=>applyCreationPatternV167(b.dataset.v167Pattern));
+  $('[data-v167-symbol]').forEach(b=>b.onclick=()=>addCanvasLayer('text',{text:b.dataset.v167Symbol,size:48,weight:700,w:18,h:14,color:'#7657ff',align:'center'}));
+  $('#openCallPackV167')?.addEventListener('click',()=>generateOpenCallPackV167());
+  $('#creationFitV167')?.addEventListener('click',fitStudioCanvas);
+  $('#creation100V167')?.addEventListener('click',()=>setStudioZoom(1));
+  $('#creationFillV167')?.addEventListener('click',()=>setStudioZoom(innerWidth>=2200?1.55:innerWidth>=1600?1.3:1.1));
+  $('#creationFullscreenV167')?.addEventListener('click',toggleCreationFullscreenV167);
+  requestAnimationFrame(()=>fitStudioCanvas());
+}
+
+/* ---------- Bureau PDF workspace ---------- */
+let pdfJsPromiseV167=null,pdfDocV167=null,pdfPageV167=1,pdfZoomV167=1;
+function loadPdfJsV167(){
+  if(window.pdfjsLib)return Promise.resolve(window.pdfjsLib);
+  if(pdfJsPromiseV167)return pdfJsPromiseV167;
+  pdfJsPromiseV167=new Promise((resolve,reject)=>{
+    const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onload=()=>{if(window.pdfjsLib){window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';resolve(window.pdfjsLib)}else reject(new Error('PDF.js indisponible'))};s.onerror=reject;document.head.appendChild(s);
+  });return pdfJsPromiseV167;
+}
+function installBureauV167(){
+  const view=$('#view-bureau'),bar=$('#bureauModeBar');if(!view||!bar||$('#bureauPdfV167'))return;
+  const spacer=bar.querySelector('span');const tab=document.createElement('button');tab.dataset.bureauMode='pdf';tab.textContent='PDF Studio';bar.insertBefore(tab,spacer);
+  tab.onclick=()=>setBureauMode('pdf');
+  const panel=document.createElement('section');panel.id='bureauPdfV167';panel.className='bureau-mode-panel bureau-pdf-v167';
+  panel.innerHTML=
+    '<aside class="pdf-projects-v167"><div class="pdf-project-actions-v167"><button id="pdfNewV167">＋ Nouveau PDF</button><button id="pdfFromDocV167">Depuis le document</button></div><div id="pdfProjectListV167"></div><div class="pdf-imported-title-v167">PDF importés</div><div id="pdfImportedListV167"></div></aside>'+
+    '<section class="pdf-reader-v167"><div class="pdf-reader-toolbar-v167"><button id="pdfPrevV167">←</button><span id="pdfPageInfoV167">Page 0 / 0</span><button id="pdfNextV167">→</button><button id="pdfZoomOutV167">−</button><span id="pdfZoomInfoV167">100%</span><button id="pdfZoomInV167">＋</button><button id="pdfFitV167">Ajuster</button><button id="pdfFullscreenV167">⛶</button></div><div class="pdf-canvas-wrap-v167" id="pdfCanvasWrapV167"><canvas id="pdfCanvasV167"></canvas><iframe id="pdfFallbackV167" title="Lecteur PDF" hidden></iframe></div></section>'+
+    '<aside class="pdf-inspector-v167"><div class="v167-library-head"><small>PROJET PDF</small><strong id="pdfInspectorTitleV167">Aucun projet</strong></div><label>Titre<input id="pdfTitleV167"></label><label>Type<select id="pdfTypeV167"><option value="dossier_projet">Dossier projet</option><option value="dossier_artistique">Dossier artistique</option><option value="candidature">Candidature</option><option value="presentation">Présentation</option></select></label><label>Page<textarea id="pdfPageBodyV167" rows="12" placeholder="Texte de la page active…"></textarea></label><div class="pdf-inspector-actions-v167"><button id="pdfAddPageV167">＋ Page</button><button id="pdfSaveV167">Enregistrer</button><button id="pdfExportV167">Générer PDF</button><button id="pdfCanvaV167">Canva ↗</button></div></aside>';
+  view.appendChild(panel);
+  $('#pdfNewV167').onclick=createPdfProjectV167;$('#pdfFromDocV167').onclick=createPdfFromBureauV167;
+  $('#pdfPrevV167').onclick=()=>{if(pdfPageV167>1){pdfPageV167--;renderPdfPageV167()}};
+  $('#pdfNextV167').onclick=()=>{if(pdfDocV167&&pdfPageV167<pdfDocV167.numPages){pdfPageV167++;renderPdfPageV167()}};
+  $('#pdfZoomOutV167').onclick=()=>{pdfZoomV167=Math.max(.4,pdfZoomV167-.15);renderPdfPageV167()};
+  $('#pdfZoomInV167').onclick=()=>{pdfZoomV167=Math.min(2.5,pdfZoomV167+.15);renderPdfPageV167()};
+  $('#pdfFitV167').onclick=()=>{pdfZoomV167=1;renderPdfPageV167(true)};
+  $('#pdfFullscreenV167').onclick=()=>$('#pdfCanvasWrapV167')?.requestFullscreen?.();
+  $('#pdfAddPageV167').onclick=addPdfPageV167;$('#pdfSaveV167').onclick=savePdfProjectV167;$('#pdfExportV167').onclick=exportPdfProjectV167;$('#pdfCanvaV167').onclick=openCanvaBridgeV167;
+}
+async function loadPdfProjectsV167(force=false){
+  if(!$('#bureauPdfV167'))return;
+  try{
+    const [projects,files]=await Promise.all([api('/api/v167/pdf-projects',{noMemCache:force}),api('/api/v156/bureau/files',{noMemCache:force})]);
+    state.pdfProjectsV167=Array.isArray(projects)?projects:[];renderPdfProjectsV167(files||[]);
+  }catch(e){$('#pdfProjectListV167').innerHTML='<div class="empty">PDF Studio indisponible.</div>'}
+}
+function renderPdfProjectsV167(files=[]){
+  const list=$('#pdfProjectListV167'),imports=$('#pdfImportedListV167');if(!list)return;
+  list.innerHTML=state.pdfProjectsV167.map(p=>'<button data-pdf-project-v167="'+p.id+'" class="'+(Number(state.activePdfProjectV167?.id)===Number(p.id)?'active':'')+'"><i>PDF</i><span><strong>'+esc(p.title)+'</strong><small>'+esc(p.project_type||'Projet')+'</small></span></button>').join('')||'<div class="empty">Aucun projet PDF.</div>';
+  imports.innerHTML=(files||[]).map(p=>'<button data-pdf-file-v167="'+p.id+'"><i>↗</i><span><strong>'+esc(p.name||p.original_name||'PDF')+'</strong><small>'+esc(p.project||p.folder||'Importé')+'</small></span></button>').join('')||'<div class="empty">Aucun PDF importé.</div>';
+  $('[data-pdf-project-v167]',list).forEach(b=>b.onclick=()=>openPdfProjectV167(Number(b.dataset.pdfProjectV167)));
+  $('[data-pdf-file-v167]',imports).forEach(b=>b.onclick=()=>openPdfUrlV167('/api/v156/bureau/files/'+b.dataset.pdfFileV167+'/content',null));
+}
+async function createPdfProjectV167(){
+  try{
+    const p=await api('/api/v167/pdf-projects',{method:'POST',body:JSON.stringify({title:'Nouveau dossier PLUG ART',project_type:'dossier_projet',metadata:{format:'A4 portrait'},pages:[{content:{kicker:'PLUG ART',title:'Nouveau dossier',body:'Commence à structurer ton projet ici.',background:'#FFFFFF'}}]})});
+    state.pdfProjectsV167.unshift(p);await openPdfProjectV167(p.id);toast('Projet PDF créé');
+  }catch{toast('Création PDF impossible')}
+}
+async function createPdfFromBureauV167(){
+  if(!state.activeDoc)return toast('Sélectionne un document Bureau');
+  try{const p=await api('/api/v167/pdf-projects/from-bureau/'+state.activeDoc.id,{method:'POST',body:'{}'});state.pdfProjectsV167.unshift(p);await openPdfProjectV167(p.id);toast('Document transformé en projet PDF')}catch{toast('Transformation PDF impossible')}
+}
+async function openPdfProjectV167(id){
+  try{
+    const p=await api('/api/v167/pdf-projects/'+id,{noMemCache:true});state.activePdfProjectV167=p;
+    $('#pdfInspectorTitleV167').textContent=p.title;$('#pdfTitleV167').value=p.title||'';$('#pdfTypeV167').value=p.project_type||'dossier_projet';
+    const page=p.pages?.[0];$('#pdfPageBodyV167').value=page?.content?.body||page?.content?.text||'';
+    renderPdfProjectsV167(await api('/api/v156/bureau/files').catch(()=>[]));
+    await api('/api/v167/pdf-projects/'+id+'/export',{method:'POST',body:'{}'});openPdfUrlV167('/api/v167/pdf-projects/'+id+'/preview.pdf',p);
+  }catch(e){toast('Ouverture du projet PDF impossible')}
+}
+async function openPdfUrlV167(url,project){
+  pdfPageV167=1;pdfZoomV167=1;const iframe=$('#pdfFallbackV167'),canvas=$('#pdfCanvasV167');
+  try{
+    const pdfjs=await loadPdfJsV167();pdfDocV167=await pdfjs.getDocument({url}).promise;if(iframe)iframe.hidden=true;if(canvas)canvas.hidden=false;renderPdfPageV167(true);
+  }catch(e){pdfDocV167=null;if(canvas)canvas.hidden=true;if(iframe){iframe.hidden=false;iframe.src=url}$('#pdfPageInfoV167').textContent='Lecteur navigateur'}
+}
+async function renderPdfPageV167(fit=false){
+  if(!pdfDocV167)return;const page=await pdfDocV167.getPage(pdfPageV167),wrap=$('#pdfCanvasWrapV167'),canvas=$('#pdfCanvasV167');if(!canvas)return;
+  const base=page.getViewport({scale:1}),maxW=Math.max(320,(wrap?.clientWidth||800)-48),maxH=Math.max(480,(wrap?.clientHeight||900)-48);
+  const fitScale=Math.min(maxW/base.width,maxH/base.height),scale=(fit?fitScale:fitScale*pdfZoomV167),vp=page.getViewport({scale});
+  const ctx=canvas.getContext('2d');canvas.width=Math.round(vp.width*devicePixelRatio);canvas.height=Math.round(vp.height*devicePixelRatio);canvas.style.width=vp.width+'px';canvas.style.height=vp.height+'px';ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  await page.render({canvasContext:ctx,viewport:vp}).promise;$('#pdfPageInfoV167').textContent='Page '+pdfPageV167+' / '+pdfDocV167.numPages;$('#pdfZoomInfoV167').textContent=Math.round(pdfZoomV167*100)+'%';
+}
+async function savePdfProjectV167(){
+  const p=state.activePdfProjectV167;if(!p)return toast('Aucun projet PDF');
+  try{
+    await api('/api/v167/pdf-projects/'+p.id,{method:'PATCH',body:JSON.stringify({title:$('#pdfTitleV167').value,project_type:$('#pdfTypeV167').value})});
+    const page=p.pages?.[0];if(page)await api('/api/v167/pdf-pages/'+page.id,{method:'PATCH',body:JSON.stringify({content:{...(page.content||{}),title:$('#pdfTitleV167').value,body:$('#pdfPageBodyV167').value}})});
+    toast('Projet PDF enregistré');await openPdfProjectV167(p.id);
+  }catch{toast('Enregistrement PDF impossible')}
+}
+async function addPdfPageV167(){
+  const p=state.activePdfProjectV167;if(!p)return toast('Crée un projet PDF');
+  try{await api('/api/v167/pdf-projects/'+p.id+'/pages',{method:'POST',body:JSON.stringify({page_type:'content',content:{kicker:'PLUG ART',title:'Nouvelle page',body:'',background:'#FFFFFF'}})});await openPdfProjectV167(p.id);toast('Page ajoutée')}catch{toast('Ajout de page impossible')}
+}
+async function exportPdfProjectV167(){
+  const p=state.activePdfProjectV167;if(!p)return toast('Aucun projet PDF');
+  try{const out=await api('/api/v167/pdf-projects/'+p.id+'/export',{method:'POST',body:'{}'});await openPdfUrlV167(out.preview_url,p);toast('PDF généré')}catch{toast('Export PDF impossible')}
+}
+async function openCanvaBridgeV167(){
+  try{const cfg=await api('/api/v167/canva/config',{noMemCache:true});if(cfg.enabled&&cfg.starter_url){window.open(cfg.starter_url,'_blank','noopener');return}toast('Canva Bridge prêt : exporte le PDF ou le pack avant ouverture dans Canva')}catch{toast('Canva Bridge indisponible')}
+}
+
+/* ---------- Ideas resilient sync ---------- */
+const IDEAS_CACHE_KEY_V167='plugart:v167:ideas-cache';
+function ideasCacheReadV167(){try{return JSON.parse(localStorage.getItem(IDEAS_CACHE_KEY_V167)||'[]')}catch{return[]}}
+function ideasCacheWriteV167(rows){try{localStorage.setItem(IDEAS_CACHE_KEY_V167,JSON.stringify(rows||[]))}catch{}}
+function ideasQueueDbV167(){
+  return new Promise((resolve,reject)=>{const req=indexedDB.open('plugart-v167',1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains('ideaQueue'))db.createObjectStore('ideaQueue',{keyPath:'qid',autoIncrement:true})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)});
+}
+async function queueIdeaOpV167(op){try{const db=await ideasQueueDbV167();await new Promise((resolve,reject)=>{const tx=db.transaction('ideaQueue','readwrite');tx.objectStore('ideaQueue').add({...op,created_at:Date.now()});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}catch{}}
+async function readIdeaQueueV167(){try{const db=await ideasQueueDbV167();const rows=await new Promise((resolve,reject)=>{const r=db.transaction('ideaQueue','readonly').objectStore('ideaQueue').getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error)});db.close();return rows}catch{return[]}}
+async function clearIdeaQueueV167(ids){try{const db=await ideasQueueDbV167();await new Promise((resolve,reject)=>{const tx=db.transaction('ideaQueue','readwrite'),s=tx.objectStore('ideaQueue');ids.forEach(id=>s.delete(id));tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}catch{}}
+async function flushIdeasV167(){
+  const health=await api('/api/v167/ideas/health',{noMemCache:true,timeout:5000}).catch(()=>null);if(!health?.ok||!health.writable)return false;
+  const queue=await readIdeaQueueV167(),done=[];
+  for(const op of queue){
+    try{
+      if(op.kind==='create')await api('/api/v156/ideas',{method:'POST',body:JSON.stringify(op.payload)});
+      if(op.kind==='patch'&&op.id>0)await api('/api/v156/ideas/'+op.id,{method:'PATCH',body:JSON.stringify(op.payload)});
+      if(op.kind==='delete'&&op.id>0)await api('/api/v156/ideas/'+op.id,{method:'DELETE'});
+      done.push(op.qid);
+    }catch{}
+  }
+  if(done.length)await clearIdeaQueueV167(done);return done.length===queue.length;
+}
+function setIdeasSyncStateV167(label,tone='ok'){
+  let el=$('#ideasSyncV167');if(!el){el=document.createElement('span');el.id='ideasSyncV167';el.className='ideas-sync-v167';$('#view-ideas .toolbar-actions')?.prepend(el)}if(el){el.textContent=label;el.dataset.tone=tone}
+}
+function installIdeasV167(){
+  if($('#view-ideas')?.dataset.v167==='1')return;const view=$('#view-ideas');if(!view)return;view.dataset.v167='1';
+  setIdeasSyncStateV167('Synchronisation…','wait');
+  api('/api/v167/ideas/health',{noMemCache:true,timeout:5000}).then(h=>{setIdeasSyncStateV167(h.ok?'Synchronisé':'Mode hors ligne',h.ok?'ok':'offline');if(h.ok)flushIdeasV167().then(()=>loadIdeasV163(true))}).catch(()=>setIdeasSyncStateV167('Mode hors ligne','offline'));
+}
+async function ideaToBureauV167(id){try{await api('/api/v167/ideas/'+id+'/to-bureau',{method:'POST',body:'{}'});toast('Idée envoyée au Bureau')}catch{toast('Envoi Bureau impossible')}}
+async function ideaToPdfV167(id){try{const p=await api('/api/v167/ideas/'+id+'/to-pdf',{method:'POST',body:'{}'});state.bureauMode='pdf';route('bureau');setTimeout(()=>{setBureauMode('pdf');openPdfProjectV167(p.id)},80)}catch{toast('Création PDF impossible')}}
+function ideaToCreationV167(id){
+  const i=state.ideas.find(x=>Number(x.id)===Number(id));if(!i)return;route('creation');setTimeout(()=>{setCreationMode('carousel');ensureCreationSlideV166();const s=state.carousel.slides[state.carousel.active];s.kicker='IDÉE';s.title=i.title||'Concept';s.body=i.body||'';if(i.image_url)s.image=i.image_url;renderCarousel();fitStudioCanvas()},80)
+}
+async function linkIdeaV167(id){
+  const options=state.ideas.filter(x=>Number(x.id)!==Number(id));if(!options.length)return toast('Ajoute une autre idée à relier');
+  const raw=prompt('ID de l’idée à relier :\n'+options.slice(0,12).map(x=>x.id+' · '+x.title).join('\n'));if(!raw)return;const to=Number(raw);
+  try{await api('/api/v167/ideas/'+id+'/links',{method:'POST',body:JSON.stringify({to_idea_id:to})});toast('Idées reliées')}catch{toast('Lien impossible')}
+}
+
+/* ---------- lightweight interactive QA ---------- */
+function qaVisibleButtonsV167(){
+  const all=$('button,a,[role="button"],[data-action],[data-route]').filter(el=>el.offsetParent!==null),dead=[];
+  all.forEach(el=>{const hasRoute=!!el.dataset.route,hasHref=el.tagName==='A'&&!!el.getAttribute('href'),hasHandler=typeof el.onclick==='function'||hasRoute||hasHref||el.dataset.bound==='1';if(!hasHandler)dead.push((el.id||el.textContent||el.className||el.tagName).toString().trim().slice(0,80))});
+  window.PLUGART_QA_V167={visible:all.length,dead};return window.PLUGART_QA_V167;
+}
+setTimeout(()=>{try{qaVisibleButtonsV167()}catch{}},1800);
+
 
 /* V164 direct workspace shortcuts */
 $('#dashboardProjectsV164')?.addEventListener('click',()=>{state.bureauMode='projects';route('bureau');setTimeout(()=>setBureauMode('projects'),0)});
