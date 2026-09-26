@@ -3033,6 +3033,263 @@ if _seed_existing<_seed_expected:
 else:
     print(f"PLUG_ART_V165_LIBRARY_SEED_SKIP existing={_seed_existing} expected={_seed_expected}",flush=True)
 
+
+# ================= V167 · VERNISSAGES RADAR =================
+_v167e=core.conn()
+_v167e.executescript("""
+CREATE TABLE IF NOT EXISTS art_events(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_type TEXT NOT NULL DEFAULT 'vernissage',
+  title TEXT NOT NULL,
+  venue_name TEXT DEFAULT '',
+  venue_type TEXT DEFAULT '',
+  city TEXT DEFAULT '',
+  address TEXT DEFAULT '',
+  country TEXT DEFAULT '',
+  starts_at TEXT DEFAULT '',
+  ends_at TEXT DEFAULT '',
+  artists_json TEXT DEFAULT '[]',
+  disciplines_json TEXT DEFAULT '[]',
+  description TEXT DEFAULT '',
+  image_url TEXT DEFAULT '',
+  source_url TEXT NOT NULL,
+  source_type TEXT DEFAULT '',
+  rsvp_url TEXT DEFAULT '',
+  price_text TEXT DEFAULT '',
+  is_free INTEGER DEFAULT 0,
+  verified INTEGER DEFAULT 0,
+  verified_at TEXT DEFAULT '',
+  favorite INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'active',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT '',
+  UNIQUE(source_url,starts_at)
+);
+CREATE INDEX IF NOT EXISTS idx_art_events_starts_at ON art_events(starts_at);
+CREATE INDEX IF NOT EXISTS idx_art_events_city ON art_events(city);
+CREATE INDEX IF NOT EXISTS idx_art_events_type ON art_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_art_events_venue ON art_events(venue_name);
+CREATE INDEX IF NOT EXISTS idx_art_events_status ON art_events(status);
+""")
+_v167e.commit();_v167e.close()
+
+_V167_EVENT_TYPES={'vernissage','opening','finissage','artist_talk','gallery_event','preview','nocturne','rencontre_artiste','lancement_exposition'}
+_V167_EVENT_SEARCH_MODEL=os.getenv('PLUGART_EVENT_SEARCH_MODEL','gpt-5.6-luna').strip() or 'gpt-5.6-luna'
+
+def _v167_output_text(data):
+    if isinstance((data or {}).get('output_text'),str) and data['output_text'].strip():return data['output_text'].strip()
+    out=[]
+    for item in (data or {}).get('output') or []:
+        for part in item.get('content') or []:
+            if part.get('type')=='output_text' and part.get('text'):out.append(part['text'])
+    return '\n'.join(out).strip()
+
+def _v167_json(value,default):
+    try:return json.loads(value) if isinstance(value,str) else (value if value is not None else default)
+    except Exception:return default
+
+def _v167_extract_json(raw):
+    raw=str(raw or '').strip()
+    fence=chr(96)*3
+    raw=raw.replace(fence+'json','').replace(fence+'JSON','').replace(fence,'').strip()
+    try:return json.loads(raw)
+    except Exception:pass
+    a=raw.find('{');b=raw.rfind('}')
+    if a>=0 and b>a:
+        try:return json.loads(raw[a:b+1])
+        except Exception:pass
+    a=raw.find('[');b=raw.rfind(']')
+    if a>=0 and b>a:
+        try:return {'events':json.loads(raw[a:b+1])}
+        except Exception:pass
+    raise ValueError('JSON événementiel invalide')
+
+def _v167_event_out(row):
+    if not row:return None
+    x=dict(row)
+    x['artists']=_v167_json(x.pop('artists_json','[]'),[])
+    x['disciplines']=_v167_json(x.pop('disciplines_json','[]'),[])
+    x['is_free']=bool(x.get('is_free'));x['verified']=bool(x.get('verified'));x['favorite']=bool(x.get('favorite'))
+    return x
+
+def _v167_normalize_event(item):
+    item=item or {};now=_now_v85()
+    typ=str(item.get('event_type') or 'vernissage').strip().lower().replace(' ','_')
+    if typ not in _V167_EVENT_TYPES:typ='gallery_event'
+    title=str(item.get('title') or '').strip()[:260]
+    source=str(item.get('source_url') or '').strip()[:2400]
+    if not title or not source.startswith(('http://','https://')):return None
+    starts=str(item.get('starts_at') or item.get('date') or '').strip()[:40]
+    artists=item.get('artists') if isinstance(item.get('artists'),list) else []
+    disciplines=item.get('disciplines') if isinstance(item.get('disciplines'),list) else []
+    price=str(item.get('price_text') or '').strip()[:100]
+    free=item.get('is_free')
+    if free is None:free=bool(re.search(r'\b(gratuit|free|entrée libre|entree libre)\b',price,re.I))
+    return {
+      'event_type':typ,'title':title,'venue_name':str(item.get('venue_name') or '')[:220],
+      'venue_type':str(item.get('venue_type') or '')[:100],'city':str(item.get('city') or '')[:120],
+      'address':str(item.get('address') or '')[:420],'country':str(item.get('country') or '')[:100],
+      'starts_at':starts,'ends_at':str(item.get('ends_at') or '')[:40],
+      'artists_json':json.dumps(artists[:30],ensure_ascii=False),
+      'disciplines_json':json.dumps(disciplines[:30],ensure_ascii=False),
+      'description':str(item.get('description') or '')[:4000],
+      'image_url':str(item.get('image_url') or '')[:2400],
+      'source_url':source,'source_type':str(item.get('source_type') or 'web')[:80],
+      'rsvp_url':str(item.get('rsvp_url') or '')[:2400],'price_text':price,
+      'is_free':1 if free else 0,'verified':1 if item.get('verified') else 0,
+      'verified_at':now if item.get('verified') else '','status':'active','created_at':now,'updated_at':now
+    }
+
+def _v167_upsert_events(events):
+    ids=[]
+    for raw in events or []:
+        e=_v167_normalize_event(raw)
+        if not e:continue
+        def _write(db,e=e):
+            db.execute("""INSERT INTO art_events(
+              event_type,title,venue_name,venue_type,city,address,country,starts_at,ends_at,artists_json,
+              disciplines_json,description,image_url,source_url,source_type,rsvp_url,price_text,is_free,
+              verified,verified_at,status,created_at,updated_at)
+              VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+              ON CONFLICT(source_url,starts_at) DO UPDATE SET
+                event_type=excluded.event_type,title=excluded.title,venue_name=excluded.venue_name,
+                venue_type=excluded.venue_type,city=excluded.city,address=excluded.address,country=excluded.country,
+                ends_at=excluded.ends_at,artists_json=excluded.artists_json,disciplines_json=excluded.disciplines_json,
+                description=excluded.description,image_url=coalesce(nullif(excluded.image_url,''),art_events.image_url),
+                source_type=excluded.source_type,rsvp_url=excluded.rsvp_url,price_text=excluded.price_text,
+                is_free=excluded.is_free,verified=max(art_events.verified,excluded.verified),
+                verified_at=case when excluded.verified=1 then excluded.verified_at else art_events.verified_at end,
+                status='active',updated_at=excluded.updated_at""",tuple(e.values()))
+            hit=db.execute('select id from art_events where source_url=? and starts_at=?',(e['source_url'],e['starts_at'])).fetchone()
+            return int(hit[0]) if hit else None
+        iid=_v165_db_write(_write)
+        if iid:ids.append(iid)
+    return ids
+
+def _v167_event_search_ai(body):
+    key=os.getenv('OPENAI_API_KEY','').strip()
+    if not key:raise HTTPException(503,'Recherche web IA non configurée')
+    cities=[str(x).strip() for x in (body.get('cities') or ['Paris']) if str(x).strip()][:12]
+    types=[str(x).strip() for x in (body.get('types') or ['vernissage','opening','artist_talk']) if str(x).strip()][:10]
+    date_from=str(body.get('date_from') or time.strftime('%Y-%m-%d'))[:10]
+    date_to=str(body.get('date_to') or '')[:10]
+    query=str(body.get('q') or '').strip()[:500]
+    prompt=("Tu es le moteur Radar Vernissages de PLUG ART. Effectue une recherche web ACTUELLE et trouve uniquement des événements artistiques à venir. "
+      "Zones: "+', '.join(cities)+". Période: "+date_from+" à "+(date_to or "dans les 31 prochains jours")+". Types: "+', '.join(types)+". "
+      "Requête additionnelle: "+(query or "aucune")+". Priorité absolue aux sites officiels de galeries, institutions, lieux et pages officielles. "
+      "Ignore tout événement passé ou non daté. Retourne UNIQUEMENT du JSON valide sous la forme "
+      "{\"events\":[{\"event_type\":\"vernissage\",\"title\":\"\",\"venue_name\":\"\",\"venue_type\":\"gallery\",\"city\":\"\",\"address\":\"\",\"country\":\"France\","
+      "\"starts_at\":\"YYYY-MM-DDTHH:MM\",\"ends_at\":\"\",\"artists\":[],\"disciplines\":[],\"description\":\"\",\"image_url\":\"\",\"source_url\":\"https://...\","
+      "\"source_type\":\"official\",\"rsvp_url\":\"\",\"price_text\":\"\",\"is_free\":false,\"verified\":true}]}. "
+      "Maximum 24 événements. Si l'heure manque, utilise YYYY-MM-DD. Ne fabrique aucune information.")
+    payload={'model':_V167_EVENT_SEARCH_MODEL,'store':False,'tools':[{'type':'web_search','search_context_size':'medium'}],
+      'tool_choice':'required','input':prompt,'max_output_tokens':6000,'text':{'verbosity':'low'}}
+    started=time.time()
+    rr=requests.post('https://api.openai.com/v1/responses',
+      headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},json=payload,timeout=(8,45))
+    if not rr.ok:raise HTTPException(502,'Recherche web indisponible ('+str(rr.status_code)+')')
+    parsed=_v167_extract_json(_v167_output_text(rr.json()))
+    events=parsed.get('events') if isinstance(parsed,dict) else parsed
+    if not isinstance(events,list):events=[]
+    print("PLUG_ART_V167_EVENT_SEARCH cities="+','.join(cities)+" found="+str(len(events))+" elapsed_ms="+str(int((time.time()-started)*1000)),flush=True)
+    return events
+
+@app.get('/api/v167/events')
+def events_list_v167(q:str='',city:str='',date_from:str='',date_to:str='',event_type:str='',free:bool=False,venue:str='',verified:bool=False,favorite:bool=False):
+    sql="select * from art_events where status='active'";params=[]
+    if q:sql+=" and lower(title||' '||venue_name||' '||description||' '||city) like ?";params.append('%'+q.lower()+'%')
+    if city:sql+=" and lower(city) like ?";params.append('%'+city.lower()+'%')
+    if date_from:sql+=" and substr(starts_at,1,10)>=?";params.append(date_from[:10])
+    if date_to:sql+=" and substr(starts_at,1,10)<=?";params.append(date_to[:10])
+    if event_type:sql+=" and event_type=?";params.append(event_type)
+    if free:sql+=" and is_free=1"
+    if verified:sql+=" and verified=1"
+    if favorite:sql+=" and favorite=1"
+    if venue:sql+=" and lower(venue_name) like ?";params.append('%'+venue.lower()+'%')
+    sql+=" order by case when starts_at='' then 1 else 0 end,starts_at asc,id desc limit 250"
+    return [_v167_event_out(x) for x in core.rows(sql,tuple(params))]
+
+@app.post('/api/v167/events/search')
+def events_search_v167(body:dict):
+    events=_v167_event_search_ai(body or {})
+    ids=_v167_upsert_events(events)
+    if not ids:return {'ok':True,'found':0,'items':events_list_v167()}
+    marks=','.join('?' for _ in ids)
+    return {'ok':True,'found':len(ids),'items':[_v167_event_out(x) for x in core.rows('select * from art_events where id in ('+marks+') order by starts_at',tuple(ids))]}
+
+@app.get('/api/v167/events/{event_id}')
+def event_get_v167(event_id:int):
+    row=core.one('select * from art_events where id=?',(event_id,))
+    if not row:raise HTTPException(404,'Événement introuvable')
+    return _v167_event_out(row)
+
+@app.post('/api/v167/events/{event_id}/favorite')
+def event_favorite_v167(event_id:int,body:dict={}):
+    if not core.one('select id from art_events where id=?',(event_id,)):raise HTTPException(404,'Événement introuvable')
+    value=1 if (body or {}).get('favorite',True) else 0
+    _v165_db_write(lambda db: db.execute('update art_events set favorite=?,updated_at=? where id=?',(value,_now_v85(),event_id)))
+    return event_get_v167(event_id)
+
+@app.post('/api/v167/events/{event_id}/verify')
+def event_verify_v167(event_id:int):
+    row=core.one('select * from art_events where id=?',(event_id,))
+    if not row:raise HTTPException(404,'Événement introuvable')
+    try:
+        rr=requests.get(row['source_url'],timeout=10,headers={'User-Agent':'Mozilla/5.0 PLUGART-Events/167'},allow_redirects=True);ok=bool(rr.ok)
+    except Exception:ok=False
+    _v165_db_write(lambda db: db.execute('update art_events set verified=?,verified_at=?,updated_at=? where id=?',(1 if ok else 0,_now_v85() if ok else '',_now_v85(),event_id)))
+    return {'ok':ok,'event':event_get_v167(event_id)}
+
+def _v167_event_page_image(url):
+    if not url:return ''
+    try:
+        rr=requests.get(url,timeout=9,headers={'User-Agent':'Mozilla/5.0 PLUGART-Media/167'},allow_redirects=True)
+        if not rr.ok:return ''
+        head=rr.text[:350000]
+        pats=[r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)',
+              r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']']
+        for p in pats:
+            m=re.search(p,head,re.I)
+            if m:return urljoin(rr.url,m.group(1).strip())
+    except Exception:pass
+    return ''
+
+@app.get('/api/v167/events/{event_id}/media')
+def event_media_v167(event_id:int):
+    e=event_get_v167(event_id);items=[]
+    if e.get('image_url'):items.append({'url':e['image_url'],'source':'event'})
+    page=_v167_event_page_image(e.get('source_url'))
+    if page and page not in [x['url'] for x in items]:items.append({'url':page,'source':'official_page'})
+    return {'event_id':event_id,'media':items[:8]}
+
+@app.get('/api/v167/events/{event_id}/media/{index}')
+def event_media_asset_v167(event_id:int,index:int):
+    items=event_media_v167(event_id).get('media') or []
+    if index<0 or index>=len(items):raise HTTPException(404,'Média introuvable')
+    url=items[index]['url'];key='event167:'+str(event_id)+':'+str(index);now=time.time();cached=MEDIA_BYTES_CACHE.get(key)
+    if cached and now-cached[0]<21600:return Response(content=cached[1],media_type=cached[2],headers={'Cache-Control':'public,max-age=86400'})
+    try:
+        rr=requests.get(url,timeout=10,headers={'User-Agent':'Mozilla/5.0 PLUGART-Media/167','Accept':'image/avif,image/webp,image/*,*/*;q=0.8'},allow_redirects=True)
+        ct=(rr.headers.get('content-type') or '').split(';')[0].lower()
+        if not rr.ok or not ct.startswith('image/') or len(rr.content)<500:raise HTTPException(404,'Média indisponible')
+        MEDIA_BYTES_CACHE[key]=(now,rr.content,ct)
+        return Response(content=rr.content,media_type=ct,headers={'Cache-Control':'public,max-age=86400,stale-while-revalidate=604800'})
+    except HTTPException:raise
+    except Exception:raise HTTPException(404,'Média indisponible')
+
+@app.post('/api/v167/events/{event_id}/to-content')
+def event_to_content_v167(event_id:int):
+    e=event_get_v167(event_id);media=event_media_v167(event_id).get('media') or []
+    return {'sourceType':'event','sourceId':event_id,'title':e.get('title'),'subtitle':e.get('venue_name'),'date':e.get('starts_at'),
+      'venue':e.get('venue_name'),'city':e.get('city'),'address':e.get('address'),'disciplines':e.get('disciplines') or [],
+      'price':e.get('price_text'),'cta':'Voir les informations du vernissage','sourceUrl':e.get('source_url'),'media':media}
+
+@app.post('/api/v167/events/{event_id}/to-agenda')
+def event_to_agenda_v167(event_id:int):
+    e=event_get_v167(event_id)
+    return {'ok':True,'agenda_item':{'kind':'vernissage','source_id':event_id,'title':e.get('title'),'date':e.get('starts_at'),'venue':e.get('venue_name'),'city':e.get('city'),'source_url':e.get('source_url')}}
+
+
 @app.get('/api/v163/diagnostics')
 def diagnostics_v163():
     started=time.perf_counter()
