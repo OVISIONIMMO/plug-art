@@ -521,3 +521,106 @@ body[data-plugy-state="listen"] #plugyStandaloneModel{transition:filter .22s eas
   .plugy-model-wrap{min-height:54svh!important}
   #plugyStandaloneModel{height:56svh!important}
 }
+
+
+/* ================= PLUGY V163 · full-body stage + calmer sticky companion ================= */
+.plugy-hero{
+  min-height:100svh!important;
+  display:grid!important;
+  grid-template-columns:minmax(300px,.82fr) minmax(520px,1.18fr)!important;
+  align-items:center!important;
+  gap:clamp(20px,4vw,64px)!important;
+  padding:82px clamp(24px,6vw,96px) 36px!important;
+  overflow:visible!important
+}
+.plugy-model-wrap{
+  grid-column:2!important;
+  grid-row:1!important;
+  width:min(58vw,760px)!important;
+  height:min(82svh,760px)!important;
+  min-height:560px!important;
+  padding:4svh 3vw!important;
+  overflow:visible!important;
+  justify-self:center!important;
+  align-self:center!important
+}
+#plugyStandaloneModel{
+  width:100%!important;
+  height:100%!important;
+  min-height:540px!important;
+  object-fit:contain!important;
+  overflow:visible!important
+}
+.plugy-intro{
+  grid-column:1!important;
+  grid-row:1!important;
+  align-self:center!important;
+  max-width:520px!important;
+  padding:24px 0!important
+}
+.plugy-intro h1{font-size:clamp(48px,6vw,92px)!important;line-height:.92!important;letter-spacing:-4px!important}
+.plugy-intro p{max-width:440px!important;font-size:13px!important;line-height:1.65!important}
+.plugy-live-state{bottom:6%!important}
+
+/* Conversation: model stays clearly subordinate to the chat while remaining fully visible */
+.plugy-chat-section{
+  grid-template-columns:minmax(250px,310px) minmax(0,860px)!important;
+  gap:16px!important;
+  padding-top:72px!important
+}
+.plugy-companion-v162{
+  top:70px!important;
+  min-height:calc(100svh - 88px)!important;
+  max-height:calc(100svh - 82px)!important;
+  border-radius:24px!important;
+  padding:12px!important;
+  box-shadow:0 18px 55px rgba(31,31,43,.065)!important
+}
+.plugy-companion-mount-v162{
+  min-height:390px!important;
+  height:auto!important;
+  overflow:visible!important
+}
+.plugy-model-wrap.companion-mode-v162{
+  grid-column:auto!important;grid-row:auto!important;
+  width:320px!important;
+  height:440px!important;
+  min-height:440px!important;
+  padding:8px!important;
+  overflow:visible!important;
+  transition:none!important
+}
+.plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{
+  width:320px!important;
+  height:440px!important;
+  min-height:440px!important
+}
+.companion-transition-v163{visibility:hidden!important}
+.chat-shell{border-radius:24px!important}
+.chat-scroll{max-height:68svh!important;min-height:60svh!important}
+
+/* Avoid heavy GPU filters during scrolling */
+@media (prefers-reduced-motion:no-preference){
+  .plugy-model-wrap:not(.companion-transition-v163){transition:transform .55s cubic-bezier(.2,.75,.2,1)}
+}
+@media(max-width:900px){
+  .plugy-hero{grid-template-columns:1fr!important;grid-template-rows:auto auto!important;padding:68px 12px 28px!important;gap:0!important}
+  .plugy-model-wrap{grid-column:1!important;grid-row:1!important;width:100%!important;height:52svh!important;min-height:390px!important;padding:8px!important}
+  #plugyStandaloneModel{min-height:380px!important;height:100%!important}
+  .plugy-intro{grid-column:1!important;grid-row:2!important;text-align:center!important;margin:0 auto!important;padding:8px 18px 30px!important}
+  .plugy-intro p{margin-inline:auto!important}
+  .plugy-chat-section{grid-template-columns:1fr!important;padding:56px 8px 80px!important}
+  .plugy-companion-v162{
+    top:54px!important;height:220px!important;min-height:220px!important;max-height:220px!important;
+    grid-template-columns:115px minmax(0,1fr)!important
+  }
+  .plugy-companion-mount-v162{height:205px!important;min-height:205px!important}
+  .plugy-model-wrap.companion-mode-v162{width:230px!important;height:210px!important;min-height:210px!important;padding:0!important}
+  .plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{width:230px!important;height:210px!important;min-height:210px!important}
+  .chat-scroll{max-height:60svh!important;min-height:50svh!important}
+}
+@media(max-width:520px){
+  .plugy-model-wrap{height:48svh!important;min-height:350px!important}
+  #plugyStandaloneModel{min-height:340px!important}
+  .plugy-intro h1{font-size:52px!important;letter-spacing:-2.5px!important}
+}
