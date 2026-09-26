@@ -6,13 +6,13 @@ const mv=$('#plugyStandaloneModel'),chat=$('#chatScroll'),input=$('#plugyStandal
 
 function clean(v){return String(v??'').replace(/\s+/g,' ').trim()}
 function standaloneDistance(){
-  if(innerWidth<=390)return '5.85';
-  if(innerWidth<=780)return '5.35';
-  return '4.85';
+  if(innerWidth<=390)return '7.10';
+  if(innerWidth<=780)return '6.80';
+  return '6.45';
 }
 function resetStandaloneFraming(){
   if(!mv)return;
-  try{mv.setAttribute('camera-orbit','0deg 76deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'44deg':'40deg')}catch{}
+  try{mv.setAttribute('camera-target','0m 0m 0m');mv.setAttribute('camera-orbit','0deg 78deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'46deg':'44deg')}catch{}
 }
 function setState(name,label){
   if(['blink','doubleblink','wink','softeyes','eyethink'].includes(String(name||'').toLowerCase()))name='idle';
