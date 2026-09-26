@@ -2,6 +2,7 @@ from pathlib import Path
 from fastapi import Request, HTTPException
 from fastapi.responses import HTMLResponse, Response, RedirectResponse, FileResponse
 from urllib.parse import urljoin, urlencode
+from datetime import date, timedelta
 import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64,hmac,math,struct,io,zipfile,sqlite3,shutil
 import app as core
 import plugy_runtime_v127 as runtime_v127
@@ -3073,6 +3074,17 @@ CREATE INDEX IF NOT EXISTS idx_art_events_status ON art_events(status);
 """)
 _v167e.commit();_v167e.close()
 
+_v168r=core.conn()
+_v168r.execute("""CREATE TABLE IF NOT EXISTS radar_refresh_state(
+  key TEXT PRIMARY KEY,
+  last_run_epoch REAL DEFAULT 0,
+  last_count INTEGER DEFAULT 0,
+  last_error TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+)""")
+_v168r.commit();_v168r.close()
+
+
 _V167_EVENT_TYPES={'vernissage','opening','finissage','artist_talk','gallery_event','preview','nocturne','rencontre_artiste','lancement_exposition'}
 _V167_EVENT_SEARCH_MODEL=os.getenv('PLUGART_EVENT_SEARCH_MODEL','gpt-5.6-luna').strip() or 'gpt-5.6-luna'
 
@@ -3176,7 +3188,9 @@ def _v167_event_search_ai(body):
     query=str(body.get('q') or '').strip()[:500]
     prompt=("Tu es le moteur Radar Vernissages de PLUG ART. Effectue une recherche web ACTUELLE et trouve uniquement des événements artistiques à venir. "
       "Zones: "+', '.join(cities)+". Période: "+date_from+" à "+(date_to or "dans les 31 prochains jours")+". Types: "+', '.join(types)+". "
-      "Requête additionnelle: "+(query or "aucune")+". Priorité absolue aux sites officiels de galeries, institutions, lieux et pages officielles. "
+      "Requête additionnelle: "+(query or "aucune")+". Cherche activement dans plusieurs familles de sources : sites officiels de galeries, centres d'art, fondations, ateliers collectifs, mairies et hôtels de ville, écoles d'art, associations culturelles, tiers-lieux, hôtels et lieux hybrides, agendas Paris.fr et autres agendas culturels fiables. "
+      "Effectue aussi des recherches web indexables de type site:instagram.com avec les termes vernissage Paris, opening Paris, galerie Paris et les hashtags #vernissage #vernissageparis #parisart #galerieparis #expositionparis #openingparis. "
+      "Priorité absolue aux pages officielles ou aux annonces du lieu/collectif. Une page Instagram indexable peut être utilisée si elle indique clairement lieu et date. "
       "Ignore tout événement passé ou non daté. Retourne UNIQUEMENT du JSON valide sous la forme "
       "{\"events\":[{\"event_type\":\"vernissage\",\"title\":\"\",\"venue_name\":\"\",\"venue_type\":\"gallery\",\"city\":\"\",\"address\":\"\",\"country\":\"France\","
       "\"starts_at\":\"YYYY-MM-DDTHH:MM\",\"ends_at\":\"\",\"artists\":[],\"disciplines\":[],\"description\":\"\",\"image_url\":\"\",\"source_url\":\"https://...\","
@@ -3196,6 +3210,9 @@ def _v167_event_search_ai(body):
 
 @app.get('/api/v167/events')
 def events_list_v167(q:str='',city:str='',date_from:str='',date_to:str='',event_type:str='',free:bool=False,rsvp:bool=False,venue:str='',verified:bool=False,favorite:bool=False):
+    try:
+        if _v168_should_refresh('events',float(os.getenv('PLUGART_EVENT_INTERVAL_HOURS','4'))):_v168_start_refresh('events')
+    except Exception:pass
     sql="select * from art_events where status='active'";params=[]
     if q:sql+=" and lower(title||' '||venue_name||' '||description||' '||city) like ?";params.append('%'+q.lower()+'%')
     if city:sql+=" and lower(city) like ?";params.append('%'+city.lower()+'%')
@@ -3290,6 +3307,152 @@ def event_to_agenda_v167(event_id:int):
     e=event_get_v167(event_id)
     return {'ok':True,'agenda_item':{'kind':'vernissage','source_id':event_id,'title':e.get('title'),'date':e.get('starts_at'),'venue':e.get('venue_name'),'city':e.get('city'),'source_url':e.get('source_url')}}
 
+
+
+
+# ================= V168 · LIVE RADAR REFRESH ENGINE =================
+_v168_refresh_lock=threading.Lock()
+_v168_refresh_running=set()
+
+def _v168_refresh_state(key):
+    return core.one('select * from radar_refresh_state where key=?',(key,)) or {'key':key,'last_run_epoch':0,'last_count':0,'last_error':'','updated_at':''}
+
+def _v168_set_refresh_state(key,count=0,error=''):
+    now=time.time()
+    def _write(db):
+        db.execute("""insert into radar_refresh_state(key,last_run_epoch,last_count,last_error,updated_at)
+          values(?,?,?,?,?) on conflict(key) do update set
+          last_run_epoch=excluded.last_run_epoch,last_count=excluded.last_count,last_error=excluded.last_error,updated_at=excluded.updated_at""",
+          (key,now,int(count or 0),str(error or '')[:500],_now_v85()))
+    _v165_db_write(_write)
+
+def _v168_should_refresh(key,hours):
+    row=_v168_refresh_state(key)
+    return time.time()-float(row.get('last_run_epoch') or 0)>=max(.25,float(hours))*3600
+
+def _v168_refresh_events():
+    start=date.today();end=start+timedelta(days=16)
+    body={
+      'cities':['Paris','Aubervilliers','Saint-Denis','Pantin','Montreuil','Boulogne-Billancourt','Ivry-sur-Seine','Vitry-sur-Seine'],
+      'date_from':start.isoformat(),'date_to':end.isoformat(),
+      'types':['vernissage','opening','artist_talk','finissage','preview','nocturne','rencontre_artiste','lancement_exposition'],
+      'q':"Paris et proche banlieue. Inclure galeries, collectifs, centres d'art, mairies, hôtels de ville, écoles, fondations, tiers-lieux, hôtels et pages Instagram indexables. Chercher notamment #vernissage #vernissageparis #parisart #galerieparis #expositionparis #openingparis."
+    }
+    events=_v167_event_search_ai(body);ids=_v167_upsert_events(events);_v168_set_refresh_state('events',len(ids),'')
+    return {'ok':True,'found':len(ids),'items':events_list_v167(date_from=start.isoformat(),date_to=end.isoformat())}
+
+def _v168_extract_opportunities(raw):
+    parsed=_v167_extract_json(raw)
+    items=parsed.get('opportunities') if isinstance(parsed,dict) else parsed
+    return items if isinstance(items,list) else []
+
+def _v168_search_opportunities_ai():
+    key=os.getenv('OPENAI_API_KEY','').strip()
+    if not key:raise HTTPException(503,'Recherche Open Calls IA non configurée')
+    prompt="""Tu es le Radar Open Calls de PLUG ART. Recherche sur le web des opportunités D'EXPOSITION encore ouvertes au 27 septembre 2026.
+Priorité géographique :
+1) Paris, Île-de-France, Seine-Saint-Denis et proche banlieue ;
+2) France : Lyon, Marseille/Aix, Bordeaux, Lille, Nantes, Toulouse, Montpellier, Nice, Strasbourg, Rennes, Avignon ;
+3) Espagne : Madrid, Barcelone ; Italie : Milan, Rome, Florence ; Portugal : Lisbonne, Porto ; Belgique : Bruxelles ; Pays-Bas : Amsterdam ; Royaume-Uni : Londres.
+Critères PLUG ART : artistes émergents ou toutes carrières, expositions collectives, peinture, photographie, arts visuels, mixed media et sculpture. Préférer candidature gratuite ou coût total inférieur ou égal à 400 EUR. Les petites galeries, associations, collectifs, hôtels, mairies, centres culturels, pop-up et lieux hybrides sont pertinents.
+EXCLURE strictement concours, prix, awards, competitions, jobs, formations et opportunités dont la deadline est passée.
+Cherche des sources officielles et des plateformes fiables comme ArtConnect, CuratorSpace, CNAP, Artagon, 104/CENTQUATRE, Ville de Paris, galeries, Callfor, ArtFond et pages officielles des lieux.
+Retourne UNIQUEMENT du JSON valide :
+{"opportunities":[{"title":"","organizer":"","city":"","country":"","deadline":"YYYY-MM-DD","fee":"","eligibility":"","summary":"","source_url":"https://...","source_name":"","confidence":85}]}
+Maximum 35 résultats. Ne fabrique aucune deadline, aucun prix ni aucun frais."""
+    payload={'model':_V167_EVENT_SEARCH_MODEL,'store':False,'tools':[{'type':'web_search','search_context_size':'high'}],
+      'tool_choice':'required','input':prompt,'max_output_tokens':9000,'text':{'verbosity':'low'}}
+    rr=requests.post('https://api.openai.com/v1/responses',headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},json=payload,timeout=(8,70))
+    if not rr.ok:raise HTTPException(502,'Recherche Open Calls indisponible ('+str(rr.status_code)+')')
+    return _v168_extract_opportunities(_v167_output_text(rr.json()))
+
+def _v168_upsert_opportunities(items):
+    today=date.today();saved=[]
+    for raw in items or []:
+        title=str(raw.get('title') or '').strip()[:260];url=str(raw.get('source_url') or '').strip()[:2400]
+        if not title or not url.startswith(('http://','https://')):continue
+        text=' '.join(str(raw.get(k) or '') for k in ('title','summary','eligibility')).lower()
+        if core.blocked_opportunity_text(text):continue
+        deadline=str(raw.get('deadline') or '').strip()[:10]
+        try:
+            if deadline and date.fromisoformat(deadline)<today:continue
+        except Exception:deadline=''
+        fee=str(raw.get('fee') or 'À vérifier')[:120]
+        amount=core.money_fee(fee)
+        if amount is not None and amount>400:continue
+        o={'title':title,'type':'Open Call','organizer':str(raw.get('organizer') or raw.get('source_name') or '')[:220],
+           'city':str(raw.get('city') or '')[:120],'country':str(raw.get('country') or '')[:100],
+           'deadline':deadline or None,'fee':fee,'status':'open','accessibility':'collectif / émergent à vérifier',
+           'eligibility':str(raw.get('eligibility') or 'À vérifier sur la source')[:1000],
+           'summary':str(raw.get('summary') or '')[:4000],'source_url':url,'source_name':str(raw.get('source_name') or '')[:220],
+           'verified_on':today.isoformat(),'last_checked':_now_v85(),'source_status':'online',
+           'confidence':max(45,min(100,int(raw.get('confidence') or 70))),'reliability':82,'discovered_at':_now_v85(),'last_seen':_now_v85()}
+        score,priority,days,reason=core.score_opp(o);o.update({'score':score,'priority':priority,'radar_score':score,'radar_reason':reason,'days_left':days})
+        existing=core.one('select id from opportunities where source_url=?',(url,))
+        if existing:
+            cols=['title','organizer','city','country','deadline','fee','status','accessibility','eligibility','summary','source_name','verified_on','last_checked','source_status','confidence','reliability','last_seen','score','priority','radar_score','radar_reason','days_left']
+            _v165_db_write(lambda db,o=o,cols=cols,eid=existing['id']: db.execute('update opportunities set '+','.join(k+'=?' for k in cols)+' where id=?',(*[o.get(k) for k in cols],eid)))
+            saved.append(int(existing['id']))
+        else:
+            slug=core.slugify(title)+'-'+hashlib.sha1(url.encode()).hexdigest()[:7]
+            cols=['slug']+list(o.keys());vals=[slug]+[o[k] for k in o]
+            try:
+                oid=_v165_db_write(lambda db,cols=cols,vals=vals: db.execute('insert into opportunities ('+','.join(cols)+') values ('+','.join('?' for _ in cols)+')',vals).lastrowid)
+                if oid:saved.append(int(oid))
+            except Exception:pass
+    return saved
+
+def _v168_refresh_opportunities():
+    items=_v168_search_opportunities_ai();ids=_v168_upsert_opportunities(items);_v168_set_refresh_state('opportunities_ai',len(ids),'')
+    try:core.run_full_radar()
+    except Exception:pass
+    return {'ok':True,'found':len(ids),'items':core.rows("select * from opportunities where status in ('open','rolling') order by coalesce(radar_score,score,0) desc,deadline limit 80")}
+
+def _v168_run_refresh(kind):
+    if kind in _v168_refresh_running:return
+    with _v168_refresh_lock:
+        if kind in _v168_refresh_running:return
+        _v168_refresh_running.add(kind)
+    try:
+        if kind=='events':_v168_refresh_events()
+        elif kind=='opportunities':_v168_refresh_opportunities()
+    except Exception as exc:
+        _v168_set_refresh_state('events' if kind=='events' else 'opportunities_ai',0,type(exc).__name__+': '+str(exc))
+        print('PLUG_ART_V168_REFRESH_ERROR kind='+kind+' error='+type(exc).__name__+':'+str(exc)[:240],flush=True)
+    finally:
+        _v168_refresh_running.discard(kind)
+
+def _v168_start_refresh(kind):
+    if kind in _v168_refresh_running:return False
+    threading.Thread(target=_v168_run_refresh,args=(kind,),name='plugart-v168-'+kind,daemon=True).start();return True
+
+@app.get('/api/v168/radar/refresh-status')
+def radar_refresh_status_v168():
+    return {'events':_v168_refresh_state('events'),'opportunities':_v168_refresh_state('opportunities_ai'),'running':sorted(_v168_refresh_running)}
+
+@app.post('/api/v168/events/refresh')
+def events_refresh_v168(body:dict={}):
+    force=bool((body or {}).get('force',True))
+    if force:return _v168_refresh_events()
+    return {'ok':True,'started':_v168_start_refresh('events')}
+
+@app.post('/api/v168/opportunities/refresh')
+def opportunities_refresh_v168(body:dict={}):
+    force=bool((body or {}).get('force',True))
+    if force:return _v168_refresh_opportunities()
+    return {'ok':True,'started':_v168_start_refresh('opportunities')}
+
+def _v168_live_radar_loop():
+    time.sleep(max(10,int(os.getenv('PLUGART_V168_START_DELAY_SECONDS','30'))))
+    while True:
+        try:
+            if _v168_should_refresh('events',float(os.getenv('PLUGART_EVENT_INTERVAL_HOURS','4'))):_v168_run_refresh('events')
+            if _v168_should_refresh('opportunities_ai',float(os.getenv('PLUGART_OPPORTUNITY_AI_INTERVAL_HOURS','12'))):_v168_run_refresh('opportunities')
+        except Exception as exc:print('PLUG_ART_V168_LOOP_ERROR '+str(exc)[:240],flush=True)
+        time.sleep(900)
+
+if os.getenv('PLUGART_EVENT_AUTORADAR','1')=='1':
+    threading.Thread(target=_v168_live_radar_loop,name='plugart-v168-live-radar',daemon=True).start()
 
 
 # ================= V167 · EDITABLE PDF WORKSPACE =================
