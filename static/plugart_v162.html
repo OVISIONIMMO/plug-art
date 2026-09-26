@@ -12,9 +12,9 @@
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ajax.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="//ajax.googleapis.com">
-<link rel="preload" href="/static/plugart_v162.js?v=16231.20260926.1" as="script">
-<link rel="stylesheet" href="/static/plugart_v162.css?v=16231.20260926.1">
-<link rel="stylesheet" href="/static/plugart_v160_slide.css?v=16231.20260926.1">
+<link rel="preload" href="/static/plugart_v162.js?v=163.20260926.1" as="script">
+<link rel="stylesheet" href="/static/plugart_v162.css?v=163.20260926.1">
+<link rel="stylesheet" href="/static/plugart_v160_slide.css?v=163.20260926.1">
 <script id="plugart-v160-diag">
 (function(){
   function send(data){
@@ -29,8 +29,6 @@
     var b=e.target&&e.target.closest?e.target.closest('[data-route],#topPlugy,.plugy-solo-v160,.quick-plugy-v160'):null;
     if(b)send({type:'click',route:b.getAttribute('data-route')||b.getAttribute('href')||b.id||'',view:document.body&&document.body.getAttribute('data-view')||''});
   },true);
-  window.addEventListener('load',function(){send({type:'load',view:document.body&&document.body.getAttribute('data-view')||''})});
-  setTimeout(function(){send({type:'probe',view:document.body&&document.body.getAttribute('data-view')||'',title:document.title})},1800);
 })();
 </script>
 </head>
@@ -55,6 +53,7 @@
       <div class="nav-group">
         <small>ORGANISER</small>
         <button class="nav-item" data-route="bureau"><b>▤</b><span>Bureau</span></button>
+        <button class="nav-item" data-route="ideas"><b>✦</b><span>Nuage à idées</span></button>
         <button class="nav-item" data-route="agenda"><b>◷</b><span>Agenda</span></button>
         <button class="nav-item" data-route="prospection"><b>◎</b><span>Contacts & Prospection</span></button>
         <button class="nav-item" data-route="network"><b>◌</b><span>Artistes</span></button>
@@ -237,6 +236,25 @@
       </div>
     </section>
 
+    <section class="view" id="view-ideas">
+      <div class="page-toolbar">
+        <div><small>IDÉATION</small><h2>Nuage à idées</h2><p>Capture, déplace et relie tes idées aux projets PLUG ART.</p></div>
+        <div class="toolbar-actions"><select id="ideasProjectFilter"><option value="">Tous les projets</option><option value="aubervilliers">Aubervilliers</option><option value="millenaire">Le Millénaire</option><option value="gennevilliers">Gennevilliers</option><option value="chanteraines">Chanteraines</option></select><button class="secondary-btn" id="ideasRefresh">Actualiser</button><button class="primary-btn" id="ideasNew">＋ Nouvelle idée</button></div>
+      </div>
+      <div class="idea-workspace-v163">
+        <aside class="idea-sidebar-v163 panel">
+          <div><small>PROJETS</small><strong>Branche tes idées à un projet.</strong></div>
+          <button data-idea-project="">Tout</button>
+          <button data-idea-project="aubervilliers">Aubervilliers</button>
+          <button data-idea-project="millenaire">Le Millénaire</button>
+          <button data-idea-project="gennevilliers">Gennevilliers</button>
+          <button data-idea-project="chanteraines">Chanteraines</button>
+          <div class="idea-sidebar-actions-v163"><button id="ideasToBureau">▤ Ouvrir les projets</button><button id="ideasPlugy">✦ Développer avec PLUGY</button></div>
+        </aside>
+        <section class="idea-cloud-v163 panel" id="ideaCloudV163"><div class="empty">Chargement du nuage…</div></section>
+      </div>
+    </section>
+
     <section class="view" id="view-prospection">
       <div class="page-toolbar">
         <div><small>CONTACTS & PROSPECTION</small><h2>Suivi des démarches</h2><p>Galeries, lieux, partenaires, médias et relances au même endroit.</p></div>
@@ -322,7 +340,7 @@
   </div>
   <div class="plugy-stage">
     <div class="plugy-energy e1"></div><div class="plugy-energy e2"></div>
-    <model-viewer id="plugyModel" loading="eager" src="/assets/plugy-v113-premium.glb?v=16231.20260926.1" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity="0" shadow-softness="1" exposure=".70" animation-crossfade-duration="80" camera-target="0m 0m 0m" camera-orbit="0deg 78deg 6.35m" field-of-view="44deg" alt="PLUGY"></model-viewer>
+    <model-viewer id="plugyModel" loading="eager" src="/assets/plugy-v113-premium.glb?v=163.20260926.1" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity="0" shadow-softness="1" exposure=".70" animation-crossfade-duration="80" camera-target="0m 0m 0m" camera-orbit="0deg 78deg 6.35m" field-of-view="44deg" alt="PLUGY"></model-viewer>
     <div class="plugy-state" id="plugyState"><i></i><span>Prêt</span></div>
   </div>
   <div class="plugy-context" id="plugyContext">Contexte : Dashboard</div>
@@ -351,7 +369,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<script defer src="/static/plugart_v162.js?v=16231.20260926.1"></script>
-<script src="/static/hub_v160_assets.js?v=16231.20260926.1"></script>
+<script defer src="/static/plugart_v162.js?v=163.20260926.1"></script>
+<script src="/static/hub_v160_assets.js?v=163.20260926.1"></script>
 </body>
 </html>
