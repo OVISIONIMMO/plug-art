@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='164.20260926.3';
+const VERSION='165.20260926.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -330,9 +330,9 @@ function ensurePlugyFollower(){
 function plugyFollowerStage(){return ensurePlugyFollower()}
 function plugyFramingFor(target){
   const follower=$('#plugyFollower');
-  if(target&&follower&&target===follower)return{orbit:'0deg 79deg 9.35m',fov:'50deg'};
-  if(target&&target===plugyDashboardStage())return{orbit:'0deg 79deg 9.45m',fov:'50deg'};
-  return{orbit:'0deg 79deg 9.30m',fov:'50deg'};
+  if(target&&follower&&target===follower)return{orbit:'0deg 79deg 6.55m',fov:'43deg'};
+  if(target&&target===plugyDashboardStage())return{orbit:'0deg 79deg 6.25m',fov:'42deg'};
+  return{orbit:'0deg 79deg 6.10m',fov:'42deg'};
 }
 function applyPlugyFraming(target){
   const mv=$('#plugyModel');if(!mv)return;
@@ -616,6 +616,10 @@ function deadline(v){
 function daysLeft(o){
   if(!o?.deadline)return 9999;const d=new Date(String(o.deadline)+'T12:00:00');return Math.ceil((d-new Date())/86400000);
 }
+function opportunityMedia(o){
+  const src=clean(o?.thumbnail_url||o?.image_url||'');
+  return src?'<img src="'+esc(src)+'" alt="" loading="lazy" decoding="async">':'<span class="opp-media-placeholder" aria-hidden="true">✦</span>';
+}
 function accessible(o){const f=String(o?.fee||'').toLowerCase();if(/gratuit|free|sans frais/.test(f))return true;const m=f.match(/(\d{1,4})\s*€/);return !!(m&&Number(m[1])<=400)}
 function collective(o){return /collectif|collective|group|emerg|young artist|open exhibition/.test([o?.type,o?.summary,o?.eligibility].join(' ').toLowerCase())}
 function workflowFor(id){return state.workflow.find(x=>String(x.opportunity_id)===String(id))}
@@ -629,7 +633,7 @@ function workflowLabel(s){return({saved:'À lire',working:'À traiter',drafting:
 function oppCard(o,mode='radar'){
   const score=Number(o.radar_score??o.score??0),meta=[o.city,o.country].filter(Boolean).join(' · ')||o.type||'Open Call',flow=workflowFor(o.id);
   const cls=mode==='open'?'open-card':'opp-card',media=mode==='open'?'open-media':'opp-media',body=mode==='open'?'open-body':'opp-body';
-  return '<article class="'+cls+'"><div class="'+media+'"><img src="/api/v67/opportunities/'+encodeURIComponent(o.id)+'/thumbnail" alt="" loading="lazy"></div><div class="'+body+'"><small>'+esc(deadline(o.deadline))+'</small><h3>'+esc(o.title||'Opportunité')+'</h3><p>'+esc(meta)+(o.fee?' · '+esc(o.fee):'')+'</p><div class="card-actions"><span class="score">'+score+'/100</span><button class="favorite-btn '+(o.favorite?'active':'')+'" data-opp-fav="'+esc(o.id)+'" title="Favori">'+(o.favorite?'★':'☆')+'</button><button class="dark" data-opp-create="'+esc(o.id)+'">Créer publication</button><button data-opp-detail="'+esc(o.id)+'">Détails</button><button data-opp-plugy="'+esc(o.id)+'">PLUGY</button>'+(o.source_url?'<a href="'+esc(o.source_url)+'" target="_blank" rel="noopener">Source ↗</a>':'')+'</div>'+(mode==='open'?'<select class="workflow-select" data-opp-workflow="'+esc(o.id)+'"><option value="">Non suivi</option><option value="saved">À lire</option><option value="working">À traiter</option><option value="drafting">En rédaction</option><option value="submitted">Envoyé</option><option value="followup">Relance</option><option value="closed">Clos</option></select>':(flow?'<button class="workflow-mini" data-route="opencalls">Suivi · '+esc(workflowLabel(flow.workflow_status))+'</button>':'<button class="workflow-mini" data-opp-follow="'+esc(o.id)+'">＋ Suivre</button>'))+'</div></article>';
+  return '<article class="'+cls+'"><div class="'+media+'">'+opportunityMedia(o)+'</div><div class="'+body+'"><small>'+esc(deadline(o.deadline))+'</small><h3>'+esc(o.title||'Opportunité')+'</h3><p>'+esc(meta)+(o.fee?' · '+esc(o.fee):'')+'</p><div class="card-actions"><span class="score">'+score+'/100</span><button class="favorite-btn '+(o.favorite?'active':'')+'" data-opp-fav="'+esc(o.id)+'" title="Favori">'+(o.favorite?'★':'☆')+'</button><button class="dark" data-opp-create="'+esc(o.id)+'">Créer publication</button><button data-opp-detail="'+esc(o.id)+'">Détails</button><button data-opp-plugy="'+esc(o.id)+'">PLUGY</button>'+(o.source_url?'<a href="'+esc(o.source_url)+'" target="_blank" rel="noopener">Source ↗</a>':'')+'</div>'+(mode==='open'?'<select class="workflow-select" data-opp-workflow="'+esc(o.id)+'"><option value="">Non suivi</option><option value="saved">À lire</option><option value="working">À traiter</option><option value="drafting">En rédaction</option><option value="submitted">Envoyé</option><option value="followup">Relance</option><option value="closed">Clos</option></select>':(flow?'<button class="workflow-mini" data-route="opencalls">Suivi · '+esc(workflowLabel(flow.workflow_status))+'</button>':'<button class="workflow-mini" data-opp-follow="'+esc(o.id)+'">＋ Suivre</button>'))+'</div></article>';
 }
 function bindOppActions(root=document){
   $$('[data-opp-fav]',root).forEach(b=>b.onclick=()=>toggleFavorite(Number(b.dataset.oppFav)));
@@ -843,7 +847,7 @@ function renderSlideDashboard(){
     else openOpportunity(id);
   });
 
-  $('#slideOpportunityList').innerHTML=priorities.map(o=>'<button data-slide-opp="'+o.id+'"><span class="slide-opp-thumb"><img src="/api/v67/opportunities/'+o.id+'/thumbnail" alt="" loading="lazy"></span><span><strong>'+esc(o.title)+'</strong><small>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</small></span><b>'+Number(o.radar_score??o.score??0)+'</b></button>').join('')||'<div class="slide-empty">Aucune opportunité active.</div>';
+  $('#slideOpportunityList').innerHTML=priorities.map(o=>'<button data-slide-opp="'+o.id+'"><span class="slide-opp-thumb">'+opportunityMedia(o)+'</span><span><strong>'+esc(o.title)+'</strong><small>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</small></span><b>'+Number(o.radar_score??o.score??0)+'</b></button>').join('')||'<div class="slide-empty">Aucune opportunité active.</div>';
   $$('[data-slide-opp]',deck).forEach(b=>b.onclick=()=>openOpportunity(Number(b.dataset.slideOpp)));
 
   const work=[
@@ -947,7 +951,7 @@ function renderDashboard(){
   const trackedIds=new Set(state.workflow.filter(x=>x.workflow_status!=='closed').map(x=>String(x.opportunity_id)));
   const opps=(b.opportunities||[]).slice().sort((a,b)=>Number(!!b.favorite)-Number(!!a.favorite)||Number(trackedIds.has(String(b.id)))-Number(trackedIds.has(String(a.id)))||Number(b.radar_score??b.score??0)-Number(a.radar_score??a.score??0)).slice(0,4);
   $('#statOpp').textContent=stats.opportunities??opps.length;$('#statUrgent').textContent=stats.urgent??0;$('#statArtists').textContent=stats.drafts??state.drafts.length;$('#statContacts').textContent=stats.contacts??state.leads.length;
-  const box=$('#dashboardCalls');box.innerHTML=opps.length?opps.map(o=>'<div class="priority-row"><div class="priority-thumb"><img src="/api/v67/opportunities/'+o.id+'/thumbnail" alt="" loading="lazy"></div><button data-dashboard-opp="'+o.id+'" style="border:0;background:transparent;text-align:left"><h3>'+esc(o.title)+'</h3><p>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</p></button><span class="score">'+Number(o.radar_score??o.score??0)+'/100</span></div>').join(''):'<div class="empty">Aucune opportunité active.</div>';
+  const box=$('#dashboardCalls');box.innerHTML=opps.length?opps.map(o=>'<div class="priority-row"><div class="priority-thumb">'+opportunityMedia(o)+'</div><button data-dashboard-opp="'+o.id+'" style="border:0;background:transparent;text-align:left"><h3>'+esc(o.title)+'</h3><p>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</p></button><span class="score">'+Number(o.radar_score??o.score??0)+'/100</span></div>').join(''):'<div class="empty">Aucune opportunité active.</div>';
   $$('[data-dashboard-opp]').forEach(x=>x.onclick=()=>openOpportunity(Number(x.dataset.dashboardOpp)));
   $('#dashboardBureau').innerHTML=state.bureau.slice(0,4).map(n=>'<button class="compact-row" data-dash-doc="'+n.id+'" style="border:0;background:transparent;text-align:left;width:100%"><strong>'+esc(n.title||'Sans titre')+'</strong><span>'+esc(n.folder||'Notes')+' · '+esc((n.updated_at||'').replace('T',' '))+'</span></button>').join('')||'<div class="empty">Aucun document.</div>';
   $$('[data-dash-doc]').forEach(b=>b.onclick=async()=>{const id=Number(b.dataset.dashDoc);route('bureau');try{await ensureViewData('bureau');selectDoc(id)}catch{}});
@@ -2163,11 +2167,6 @@ async function loadAll(){
     return true;
   }
   await syncBoot();
-  const idleV164=()=>{
-    ensureProjectLibrarySeedV164().catch(()=>{});
-    api('/api/v156/ideas',{cacheTtl:30000}).catch(()=>{});
-  };
-  if('requestIdleCallback' in window)requestIdleCallback(idleV164,{timeout:3500});else setTimeout(idleV164,1800);
   return true;
 }
 
@@ -3016,7 +3015,7 @@ function installCreationModes(){
 
   // V137: fail-safe binding audit. Any interactive Studio control left without a handler
   // is surfaced in the console instead of silently pretending to be a button.
-  const creationInteractive=$('#view-creation button, #view-creation select, #view-creation input, #view-creation textarea');
+  const creationInteractive=$$('#view-creation button, #view-creation select, #view-creation input, #view-creation textarea');
   const inert=creationInteractive.filter(el=>el.tagName==='BUTTON'&&!el.onclick&&!el.dataset.bound&&
     !el.matches('[data-route],[data-create-mode],[data-studio-start],[data-copy-action],[data-marketing-template],[data-studio-tool],[data-add-text],[data-add-shape],[data-slide-preset],[data-slide-help],[data-visual-preset],[data-visual-help]'));
   inert.forEach(el=>{
@@ -3887,7 +3886,7 @@ const startAmbientDeferred=()=>startPlugyAmbient();
 if('requestIdleCallback' in window)requestIdleCallback(startAmbientDeferred,{timeout:2600});else setTimeout(startAmbientDeferred,1800);
 
 addEventListener('beforeunload',()=>{if(state.view==='creation'&&state.creationDirty)saveLocalCreationBackup()});
-const initial=location.hash.slice(1)||'dashboard';history.replaceState({view:initial},'','#'+initial);route(initial,false);renderSuggestions();loadAll().finally(scheduleSmartPlugyWarm);
+queueMicrotask(()=>{const initial=location.hash.slice(1)||'dashboard';history.replaceState({view:initial},'','#'+initial);route(initial,false);renderSuggestions();loadAll().finally(scheduleSmartPlugyWarm)});
 
 /* ---------------- V161 IMMERSIVE WORKSPACE ---------------- */
 const CREATION_V161_STYLES=[
@@ -3948,14 +3947,14 @@ function ensureArtistDrawerV161(){let d=$('#artistProfileV161');if(d)return d;d=
 async function openArtistProfileV161(aid){
  const drawer=ensureArtistDrawerV161(),body=$('#artistProfileBodyV161');drawer.classList.add('open');body.innerHTML='<div class="empty">Chargement du profil…</div>';
  try{const p=await api('/api/v161/artists/'+aid+'/profile',{timeout:20000}),a=p.artist||{},works=p.works||[],sug=p.suggestions||[],contact=p.contact;$('#artistProfileNameV161').textContent=a.name||'Artiste';const cover=a.featured_image?'<img src="'+esc(a.featured_image)+'" alt="">':'<div class="artist-profile-orb-v161"><i></i><b>'+esc((a.name||'?').slice(0,2).toUpperCase())+'</b></div>';
- body.innerHTML='<section class="artist-profile-hero-v161">'+cover+'<div><small>'+esc([a.city,a.country].filter(Boolean).join(' · ')||'Artiste')+'</small><h2>'+esc(a.name||'Artiste')+'</h2><p>'+esc(a.discipline||'Arts visuels')+'</p><div class="artist-profile-links-v161">'+(a.instagram?'<a href="https://instagram.com/'+esc(String(a.instagram).replace(/^@/,''))+'" target="_blank">Instagram ↗</a>':'')+(a.website?'<a href="'+esc(a.website)+'" target="_blank">Site ↗</a>':'')+(a.email?'<a href="mailto:'+esc(a.email)+'">Email</a>':'')+'</div></div></section><section class="artist-profile-copy-v161"><small>DÉMARCHE</small><p>'+esc(a.bio||a.statement||'Bio à compléter.')+'</p></section><section><div class="artist-section-head-v161"><div><small>CONTACT</small><strong>Suivi CRM</strong></div><button id="artistContactV161">'+(contact?'Voir le contact':'＋ Créer une fiche contact')+'</button><button id="artistPlugyV161">✦ PLUGY</button></div><div class="artist-contact-state-v161">'+(contact?'<b>'+esc(contact.status||'lead')+'</b><span>'+esc(contact.next_action||'Aucune prochaine action')+'</span>':'<span>Pas encore ajouté à la prospection.</span>')+'</div></section><section><div class="artist-section-head-v161"><div><small>ŒUVRES</small><strong>Portfolio</strong></div></div><div class="artist-works-v161">'+(works.length?works.slice(0,8).map(w=>'<article>'+(w.image_url?'<img src="'+esc(w.image_url)+'" loading="lazy" alt="">':'<div class="artist-work-placeholder-v161">◈</div>')+'<b>'+esc(w.title||'Œuvre')+'</b><span>'+esc([w.medium,w.year].filter(Boolean).join(' · '))+'</span></article>').join(''):'<div class="empty">Aucune œuvre enregistrée.</div>')+'</div></section><section><div class="artist-section-head-v161"><div><small>SUGGESTIONS</small><strong>Expositions & Open Calls</strong></div><span>Sans concours ni prix</span></div><div class="artist-suggestions-v161">'+(sug.length?sug.map(o=>'<article><img src="/api/v67/opportunities/'+encodeURIComponent(o.id)+'/thumbnail" loading="lazy" alt=""><div><small>'+esc(deadline(o.deadline))+'</small><b>'+esc(o.title||'Opportunité')+'</b><span>'+esc([o.city,o.country].filter(Boolean).join(' · '))+'</span><div><button data-artist-suggest-detail="'+o.id+'">Détails</button><button data-artist-suggest-create="'+o.id+'">Créer</button></div></div></article>').join(''):'<div class="empty">Pas encore de suggestion adaptée.</div>')+'</div></section>';
+ body.innerHTML='<section class="artist-profile-hero-v161">'+cover+'<div><small>'+esc([a.city,a.country].filter(Boolean).join(' · ')||'Artiste')+'</small><h2>'+esc(a.name||'Artiste')+'</h2><p>'+esc(a.discipline||'Arts visuels')+'</p><div class="artist-profile-links-v161">'+(a.instagram?'<a href="https://instagram.com/'+esc(String(a.instagram).replace(/^@/,''))+'" target="_blank">Instagram ↗</a>':'')+(a.website?'<a href="'+esc(a.website)+'" target="_blank">Site ↗</a>':'')+(a.email?'<a href="mailto:'+esc(a.email)+'">Email</a>':'')+'</div></div></section><section class="artist-profile-copy-v161"><small>DÉMARCHE</small><p>'+esc(a.bio||a.statement||'Bio à compléter.')+'</p></section><section><div class="artist-section-head-v161"><div><small>CONTACT</small><strong>Suivi CRM</strong></div><button id="artistContactV161">'+(contact?'Voir le contact':'＋ Créer une fiche contact')+'</button><button id="artistPlugyV161">✦ PLUGY</button></div><div class="artist-contact-state-v161">'+(contact?'<b>'+esc(contact.status||'lead')+'</b><span>'+esc(contact.next_action||'Aucune prochaine action')+'</span>':'<span>Pas encore ajouté à la prospection.</span>')+'</div></section><section><div class="artist-section-head-v161"><div><small>ŒUVRES</small><strong>Portfolio</strong></div></div><div class="artist-works-v161">'+(works.length?works.slice(0,8).map(w=>'<article>'+(w.image_url?'<img src="'+esc(w.image_url)+'" loading="lazy" alt="">':'<div class="artist-work-placeholder-v161">◈</div>')+'<b>'+esc(w.title||'Œuvre')+'</b><span>'+esc([w.medium,w.year].filter(Boolean).join(' · '))+'</span></article>').join(''):'<div class="empty">Aucune œuvre enregistrée.</div>')+'</div></section><section><div class="artist-section-head-v161"><div><small>SUGGESTIONS</small><strong>Expositions & Open Calls</strong></div><span>Sans concours ni prix</span></div><div class="artist-suggestions-v161">'+(sug.length?sug.map(o=>'<article>'+opportunityMedia(o)+'<div><small>'+esc(deadline(o.deadline))+'</small><b>'+esc(o.title||'Opportunité')+'</b><span>'+esc([o.city,o.country].filter(Boolean).join(' · '))+'</span><div><button data-artist-suggest-detail="'+o.id+'">Détails</button><button data-artist-suggest-create="'+o.id+'">Créer</button></div></div></article>').join(''):'<div class="empty">Pas encore de suggestion adaptée.</div>')+'</div></section>';
  $('#artistContactV161').onclick=()=>contact?route('prospection'):createArtistContactV161(aid,true);$('#artistPlugyV161').onclick=()=>askPlugy('Analyse le profil artiste '+clean(a.name)+', discipline '+clean(a.discipline)+'. Propose des expositions pertinentes et une prochaine action. Exclure concours, prix et récompenses.');$$('[data-artist-suggest-detail]',body).forEach(b=>b.onclick=()=>openOpportunity(Number(b.dataset.artistSuggestDetail)));$$('[data-artist-suggest-create]',body).forEach(b=>b.onclick=()=>{route('creation');setTimeout(()=>{const s=$('#contentSource');if(s){s.value=String(b.dataset.artistSuggestCreate);s.dispatchEvent(new Event('change'))}setCreationMode('carousel')},80)})
  }catch{body.innerHTML='<div class="empty">Profil momentanément indisponible.</div>'}
 }
 async function createArtistContactV161(aid,reopen=false){try{const r=await api('/api/v161/artists/'+aid+'/contact',{method:'POST',body:'{}'});if(r.lead&&!state.leads.some(x=>Number(x.id)===Number(r.lead.id)))state.leads.unshift(r.lead);state.dataLoaded.leads=true;toast(r.existing?'Contact déjà présent':'Fiche contact créée');if(reopen)openArtistProfileV161(aid)}catch{toast('Création du contact impossible')}}
 function openArtistEditorV161(){const name=prompt('Nom de l’artiste');if(!clean(name))return;const discipline=prompt('Discipline (ex. Photographie, Peinture)','Arts visuels')||'Arts visuels';api('/api/v86/artists',{method:'POST',body:JSON.stringify({name:clean(name),discipline:clean(discipline),tags:[]})}).then(a=>{state.bootstrap.artists=state.bootstrap.artists||[];state.bootstrap.artists.push(a);renderArtists();openArtistProfileV161(a.id)}).catch(()=>toast('Ajout artiste impossible'))}
 let plugyRoamV161Timer=0;
-function schedulePlugyRoamV161(){clearTimeout(plugyRoamV161Timer);const f=$('#plugyFollower');if(!f||!f.classList.contains('visible'))return;const mobile=innerWidth<760,max=Math.min(mobile?70:Math.max(120,innerWidth*.28),360),x=mobile?(-Math.random()*max*.55):(-Math.random()*max),y=(Math.random()-.5)*(mobile?36:72);f.style.setProperty('--plugy-roam-x',x.toFixed(0)+'px');f.style.setProperty('--plugy-roam-y',y.toFixed(0)+'px');const mv=$('#plugyModel');if(mv){mv.setAttribute('camera-orbit','0deg 76deg '+(mobile?'8.70':'8.10')+'m');mv.setAttribute('field-of-view',mobile?'52deg':'50deg')}const motion=choosePlugyMotion(['Travel','SoftTurn','Attentive','Curious']);if(motion)playMotion(motion);plugyRoamV161Timer=setTimeout(schedulePlugyRoamV161,6800+Math.random()*5200)}
+function schedulePlugyRoamV161(){clearTimeout(plugyRoamV161Timer);const f=$('#plugyFollower');if(!f||!f.classList.contains('visible'))return;const mobile=innerWidth<760,max=Math.min(mobile?70:Math.max(120,innerWidth*.28),360),x=mobile?(-Math.random()*max*.55):(-Math.random()*max),y=(Math.random()-.5)*(mobile?36:72);f.style.setProperty('--plugy-roam-x',x.toFixed(0)+'px');f.style.setProperty('--plugy-roam-y',y.toFixed(0)+'px');const mv=$('#plugyModel');if(mv){mv.setAttribute('camera-orbit','0deg 76deg '+(mobile?'6.70':'6.20')+'m');mv.setAttribute('field-of-view',mobile?'44deg':'42deg')}const motion=choosePlugyMotion(['Travel','SoftTurn','Attentive','Curious']);if(motion)playMotion(motion);plugyRoamV161Timer=setTimeout(schedulePlugyRoamV161,6800+Math.random()*5200)}
 const v161PlugyObserver=new MutationObserver(()=>{const f=$('#plugyFollower');if(f?.classList.contains('visible'))schedulePlugyRoamV161();else clearTimeout(plugyRoamV161Timer)});v161PlugyObserver.observe(document.body,{attributes:true,subtree:true,attributeFilter:['class','data-view']});addEventListener('resize',()=>{const f=$('#plugyFollower');if(f?.classList.contains('visible'))schedulePlugyRoamV161()},{passive:true});
 
 /* ---------------- V162 PREVIEW + OPPORTUNITY PUBLICATION ---------------- */
@@ -4181,7 +4180,7 @@ function installIdeasV163(){
   loadIdeasV163(false);
 }
 async function loadIdeasV163(force=false){
-  const cloud=$('#ideaCloudV163');if(cloud&&!state.ideas.length)cloud.innerHTML='<div class="idea-loading-v163"><i></i><span>Chargement des idées…</span></div>';
+  const cloud=$('#ideaCloudV164');if(cloud&&!state.ideas.length)cloud.innerHTML='<div class="idea-loading-v163"><i></i><span>Chargement des idées…</span></div>';
   try{
     const rows=await api('/api/v156/ideas',{cacheTtl:5000,noMemCache:force});
     state.ideas=Array.isArray(rows)?rows:[];
@@ -4191,7 +4190,7 @@ async function loadIdeasV163(force=false){
   }
 }
 function renderIdeasV163(){
-  const cloud=$('#ideaCloudV163');if(!cloud)return;
+  const cloud=$('#ideaCloudV164');if(!cloud)return;
   const project=state.ideaProject||$('#ideasProjectFilter')?.value||'';
   if($('#ideasProjectFilter'))$('#ideasProjectFilter').value=project;
   $$('[data-idea-project]').forEach(b=>b.classList.toggle('active',(b.dataset.ideaProject||'')===project));
@@ -4244,7 +4243,7 @@ async function deleteIdeaV163(id){
 function bindIdeaDragV163(card){
   const handle=card.querySelector('.idea-drag-v163');if(!handle)return;
   let active=false,rect=null;
-  handle.onpointerdown=e=>{active=true;rect=$('#ideaCloudV163').getBoundingClientRect();handle.setPointerCapture?.(e.pointerId);card.classList.add('dragging');e.preventDefault()};
+  handle.onpointerdown=e=>{active=true;rect=$('#ideaCloudV164').getBoundingClientRect();handle.setPointerCapture?.(e.pointerId);card.classList.add('dragging');e.preventDefault()};
   handle.onpointermove=e=>{
     if(!active||!rect)return;
     const x=Math.max(1,Math.min(84,(e.clientX-rect.left)/Math.max(1,rect.width)*100));
