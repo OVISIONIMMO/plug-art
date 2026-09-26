@@ -661,3 +661,16 @@ body[data-plugy-state="listen"] #plugyStandaloneModel{transition:filter .22s eas
   .plugy-model-wrap{height:52svh!important;min-height:385px!important}
   #plugyStandaloneModel{min-height:365px!important}
 }
+
+
+/* ================= PLUGY V165 · closer, more present framing ================= */
+.plugy-model-wrap{min-height:66svh!important}
+#plugyStandaloneModel{width:min(58vw,680px)!important;height:min(70svh,700px)!important}
+.plugy-model-wrap.companion-mode-v162{width:310px!important;height:285px!important;min-height:285px!important}
+.plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{width:310px!important;height:285px!important;min-height:285px!important}
+@media(max-width:780px){
+  .plugy-model-wrap{min-height:48svh!important;height:50svh!important}
+  #plugyStandaloneModel{width:100vw!important;height:52svh!important;min-height:0!important}
+  .plugy-model-wrap.companion-mode-v162{width:250px!important;height:230px!important;min-height:230px!important}
+  .plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{width:250px!important;height:230px!important;min-height:230px!important}
+}
