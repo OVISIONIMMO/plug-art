@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='164.20260926.1';
+const VERSION='164.20260926.2';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -162,7 +162,7 @@ function route(id,push=true){
   ensureRouteRuntime(id);
   state.view=id;document.body.dataset.view=id;
   $$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+id));
-  $$('[data-route]').forEach(b=>b.classList.toggle('active',b.dataset.route===id));
+  $$$('[data-route]').forEach(b=>b.classList.toggle('active',b.dataset.route===id));
   $('#pageEyebrow').textContent=viewMeta[id][0];$('#pageTitle').textContent=viewMeta[id][1];
   document.title='PLUG ART · '+viewMeta[id][1];
   $('#plugyContext').textContent='Contexte : '+contexts[id].label;
@@ -182,7 +182,7 @@ function route(id,push=true){
     ensureViewData(id).then(()=>{if(state.view===id)renderRouteView(id)}).catch(()=>{if(state.view===id)toast('Données momentanément indisponibles')});
   }else renderRouteView(id);
 }
-$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route)}));
+$$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route)}));
 window.PLUGART_ROUTE=route;
 
 const ROUTE_PREFETCH_TIMERS_V164=new WeakMap();
@@ -198,13 +198,13 @@ function prefetchRouteV164(id){
   (requiredFamilies(id)||[]).forEach(name=>ensureDataFamily(name,false).catch(()=>{}));
 }
 function bindRoutePrefetchV164(){
-  $('[data-route]').forEach(el=>{
+  $$('[data-route]').forEach(el=>{
     const id=el.dataset.route;if(!id)return;
     const start=()=>{clearTimeout(ROUTE_PREFETCH_TIMERS_V164.get(el));ROUTE_PREFETCH_TIMERS_V164.set(el,setTimeout(()=>prefetchRouteV164(id),90))};
     const stop=()=>clearTimeout(ROUTE_PREFETCH_TIMERS_V164.get(el));
     el.addEventListener('pointerenter',start,{passive:true});el.addEventListener('focus',start,{passive:true});el.addEventListener('pointerleave',stop,{passive:true});
   });
-  $('a[href="/plugy"]').forEach(el=>el.addEventListener('pointerenter',()=>{if(!document.querySelector('link[data-prefetch-plugy-v164]')){const l=document.createElement('link');l.rel='prefetch';l.href='/plugy';l.dataset.prefetchPlugyV164='1';document.head.appendChild(l)}},{once:true,passive:true}));
+  $$('a[href="/plugy"]').forEach(el=>el.addEventListener('pointerenter',()=>{if(!document.querySelector('link[data-prefetch-plugy-v164]')){const l=document.createElement('link');l.rel='prefetch';l.href='/plugy';l.dataset.prefetchPlugyV164='1';document.head.appendChild(l)}},{once:true,passive:true}));
 }
 
 bindRoutePrefetchV164();
@@ -633,7 +633,7 @@ function oppCard(o,mode='radar'){
 }
 function bindOppActions(root=document){
   $$('[data-opp-fav]',root).forEach(b=>b.onclick=()=>toggleFavorite(Number(b.dataset.oppFav)));
-  $('[data-opp-create]',root).forEach(b=>b.onclick=()=>createPublicationFromOpportunityV162(Number(b.dataset.oppCreate)));
+  $$('[data-opp-create]',root).forEach(b=>b.onclick=()=>createPublicationFromOpportunityV162(Number(b.dataset.oppCreate)));
   $$('[data-opp-detail]',root).forEach(b=>b.onclick=()=>openOpportunity(Number(b.dataset.oppDetail)));
   $$('[data-opp-plugy]',root).forEach(b=>{b.onclick=()=>{const o=(state.bootstrap?.opportunities||[]).find(x=>String(x.id)===String(b.dataset.oppPlugy));askPlugy('Analyse cet Open Call : '+clean(o?.title)+'. Donne-moi les points clés, risques, deadline et prochaine action.')}});
   $$('[data-opp-follow]',root).forEach(b=>b.onclick=async()=>{try{const row=await api('/api/v107/open-calls/'+b.dataset.oppFollow+'/workflow',{method:'PUT',body:JSON.stringify({workflow_status:'saved'})});state.workflow=state.workflow.filter(x=>String(x.opportunity_id)!==String(row.opportunity_id));state.workflow.push(row);renderRadar();renderOpenCalls();renderDashboard();toast('Open Call ajouté au suivi')}catch{toast('Suivi impossible')}});
@@ -2948,7 +2948,7 @@ function installCreationModes(){
   ['slideLayout','slideAccent','slideAlign','slideBackground'].forEach(id=>$('#'+id)?.addEventListener('change',updateSlideDesignFromControls));
   ['slideFontScale','slideTitleScale','slideBodyScale','slideLabelScale','slideCtaScale','slideSpacing','slideImageOpacity','slideImageUrl','slideTitlePx','slideBodyPx','slideLabelPx','slideCtaPx','slideLineHeight','slideLetterSpacing'].forEach(id=>$('#'+id)?.addEventListener('input',updateSlideDesignFromControls));
   ['slideFontFamily','slideFontWeight'].forEach(id=>$('#'+id)?.addEventListener('change',updateSlideDesignFromControls));
-  $('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));$$('[data-accent-swatch]').forEach(b=>b.onclick=()=>{if($('#slideAccent'))$('#slideAccent').value=b.dataset.accentSwatch;updateSlideDesignFromControls()});$$('[data-bg-swatch]').forEach(b=>b.onclick=()=>{if($('#slideBackground'))$('#slideBackground').value=b.dataset.bgSwatch;updateSlideDesignFromControls()});
+  $$('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));$$('[data-accent-swatch]').forEach(b=>b.onclick=()=>{if($('#slideAccent'))$('#slideAccent').value=b.dataset.accentSwatch;updateSlideDesignFromControls()});$$('[data-bg-swatch]').forEach(b=>b.onclick=()=>{if($('#slideBackground'))$('#slideBackground').value=b.dataset.bgSwatch;updateSlideDesignFromControls()});
   $$('[data-slide-help]').forEach(b=>b.onclick=()=>assistSlideDesign(b.dataset.slideHelp));
   $$('[data-marketing-template]').forEach(b=>b.onclick=()=>applyMarketingTemplate(b.dataset.marketingTemplate));
   $$('[data-studio-tool]').forEach(b=>b.onclick=()=>setStudioTool(b.dataset.studioTool));
@@ -3248,7 +3248,7 @@ function renderCarousel(){
   [['TitlePx',d.titlePx,' px'],['BodyPx',d.bodyPx,' px'],['LabelPx',d.labelPx,' px'],['CtaPx',d.ctaPx,' px']].forEach(([k,v,u])=>{const el=$('#slide'+k),out=$('#slide'+k+'Out');if(el)el.value=v;if(out)out.textContent=v+u});
   if($('#slideLineHeight'))$('#slideLineHeight').value=d.lineHeight;if($('#slideLineHeightOut'))$('#slideLineHeightOut').textContent=Number(d.lineHeight||1.08).toFixed(2)+'×';
   if($('#slideLetterSpacing'))$('#slideLetterSpacing').value=d.letterSpacing;if($('#slideLetterSpacingOut'))$('#slideLetterSpacingOut').textContent=Number(d.letterSpacing||0).toFixed(1)+' px';
-  $$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
+  $$$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
   $$('[data-stage-pattern]').forEach(b=>b.classList.toggle('active',!s.image&&b.dataset.stagePattern===d.pattern));
   renderCanvasLayers();renderStudioImages();
 }
