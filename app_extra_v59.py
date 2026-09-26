@@ -7,16 +7,16 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='161.0'
+app.version='162.0'
 BASE=Path(__file__).resolve().parent
-DASH=BASE/'static'/'plugart_v161.html'
-PLUGY_PAGE=BASE/'static'/'plugy_v161.html'
+DASH=BASE/'static'/'plugart_v162.html'
+PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
 GLB=BASE/'static'/'PLUGY_final_animated.glb'
 RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-premium','profile':'runtime-fallback'}
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='161.20260926.1'
+VERSION='162.20260926.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -404,7 +404,7 @@ def _upgrade_plugy_motion_v143(raw:bytes):
             else:extras_chunks.append((kind,chunk))
         if not isinstance(doc,dict):return raw,False
         asset=doc.setdefault('asset',{'version':'2.0'});ax=asset.setdefault('extras',{})
-        if ax.get('plugyMotion')=='autonomous-eyes-arms-v161':return raw,False
+        if ax.get('plugyMotion')=='autonomous-eyes-arms-v162':return raw,False
         nodes=doc.get('nodes') or []
         by_name={str(n.get('name')):i for i,n in enumerate(nodes) if isinstance(n,dict)}
         left=by_name.get('PLUGY_LeftArmNode');right=by_name.get('PLUGY_RightArmNode')
@@ -433,7 +433,7 @@ def _upgrade_plugy_motion_v143(raw:bytes):
                 channels.append({'sampler':si,'target':{'node':node,'path':path}})
             doc['animations'].append({'name':name,'samplers':samplers,'channels':channels})
         q=lambda a:_v106_quat((0,0,1),a);qx=lambda a:_v106_quat((1,0,0),a)
-        O=(1,.01,1);C=(1,1,1);H=(1,.42,1);S=(1,.20,1)
+        O=(1,.04,1);C=(1,.72,1);H=(1,.28,1);S=(1,.14,1)
         replace('Blink',[0,.055,.11,.18],[(leye,'scale',[O,C,C,O],'VEC3'),(reye,'scale',[O,C,C,O],'VEC3')])
         replace('DoubleBlink',[0,.05,.10,.16,.23,.29,.38],[(leye,'scale',[O,C,O,O,C,C,O],'VEC3'),(reye,'scale',[O,C,O,O,C,C,O],'VEC3')])
         replace('Wink',[0,.07,.15,.27],[(leye,'scale',[O,C,C,O],'VEC3'),(reye,'scale',[O,O,O,O],'VEC3')])
@@ -443,17 +443,75 @@ def _upgrade_plugy_motion_v143(raw:bytes):
         replace('ArmExplain',[0,.24,.52,.82,1.12],[(left,'rotation',[q(0),q(.16),q(.08),q(.18),q(0)],'VEC4'),(right,'rotation',[q(0),q(-.10),q(-.16),q(-.07),q(0)],'VEC4')])
         replace('ArmShrug',[0,.24,.52,.82],[(left,'rotation',[q(0),q(.18),q(.12),q(0)],'VEC4'),(right,'rotation',[q(0),q(-.18),q(-.12),q(0)],'VEC4')])
         replace('ArmStretch',[0,.30,.68,1.05],[(left,'rotation',[q(0),q(.22),q(.14),q(0)],'VEC4'),(right,'rotation',[q(0),q(-.22),q(-.14),q(0)],'VEC4')])
-        replace('ArmThink',[0,.32,.72,1.12],[(left,'rotation',[q(0),q(-.10),q(-.14),q(0)],'VEC4'),(right,'rotation',[q(0),q(.05),q(.09),q(0)],'VEC4'),(leye,'scale',[O,S,H,O],'VEC3'),(reye,'scale',[O,H,S,O],'VEC3')])
-        doc['buffers'][0]['byteLength']=len(blob);ax['plugyMotion']='autonomous-eyes-arms-v161'
+        replace('ArmThink',[0,.32,.72,1.12],[(left,'rotation',[q(0),q(-.10),q(-.14),q(0)],'VEC4'),(right,'rotation',[q(0),q(.05),q(.09),q(0)],'VEC4')])
+        doc['buffers'][0]['byteLength']=len(blob);ax['plugyMotion']='autonomous-eyes-arms-v162'
         asset['generator']=str(asset.get('generator',''))+' + PLUGY V143 AutonomousEyesArms'
         j=_v106_pad4(json.dumps(doc,separators=(',',':')).encode('utf-8'),b' ');b=_v106_pad4(bytes(blob),bytes((0,)))
         chunks=[(b'JSON',j),(bytes((66,73,78,0)),b)]+extras_chunks;total=12+sum(8+len(c) for _,c in chunks)
         out=bytearray(struct.pack('<4sII',b'glTF',version,total))
         for kind,chunk in chunks:out.extend(struct.pack('<I4s',len(chunk),kind));out.extend(chunk)
-        print('PLUGY_V161_MOTION_READY clips=9 eyes=interactive arms=independent',flush=True)
+        print('PLUGY_V162_MOTION_READY clips=9 eyes=soft arms=independent',flush=True)
         return bytes(out),True
     except Exception as exc:
         print(f'PLUGY_V143_MOTION_ERROR {type(exc).__name__}: {str(exc)[:220]}',flush=True);return raw,False
+
+
+def _refine_plugy_eyes_v162(raw:bytes):
+    """Refine the procedural eyelid mask into a slimmer rounded lens and remove eye jitter from Think."""
+    if len(raw)<20 or raw[:4]!=b'glTF':return raw,False
+    try:
+        _,version,_=struct.unpack_from('<4sII',raw,0);pos=12;doc=None;bin_blob=b'';extras_chunks=[]
+        while pos+8<=len(raw):
+            ln,kind=struct.unpack_from('<I4s',raw,pos);pos+=8;chunk=bytes(raw[pos:pos+ln]);pos+=ln
+            if kind==b'JSON':doc=json.loads(chunk.decode('utf-8').rstrip(' ').rstrip(chr(0)))
+            elif kind==bytes((66,73,78,0)):bin_blob=chunk
+            else:extras_chunks.append((kind,chunk))
+        if not isinstance(doc,dict):return raw,False
+        asset=doc.setdefault('asset',{'version':'2.0'});ax=asset.setdefault('extras',{})
+        if ax.get('plugyEyeShape')=='soft-lens-v162':return raw,False
+        meshes=doc.get('meshes') or [];nodes=doc.get('nodes') or []
+        eye_mesh=next((i for i,m in enumerate(meshes) if isinstance(m,dict) and m.get('name')=='PLUGY_Eyelid'),None)
+        by_name={str(n.get('name')):i for i,n in enumerate(nodes) if isinstance(n,dict)}
+        leye=by_name.get('PLUGY_LeftEyelid');reye=by_name.get('PLUGY_RightEyelid')
+        if eye_mesh is None or None in (leye,reye):return raw,False
+        blob=bytearray(bin_blob)
+        while len(blob)%4:blob.append(0)
+        doc.setdefault('bufferViews',[]);doc.setdefault('accessors',[]);doc.setdefault('buffers',[{'byteLength':len(blob)}])
+        import math as _math
+        seg=28
+        verts=[(0.,0.,0.)]
+        for i in range(seg):
+            a=2*_math.pi*i/seg
+            x=.048*_math.cos(a)
+            y=.022*_math.sin(a)*(0.90+0.10*abs(_math.cos(a)))
+            verts.append((x,y,0.))
+        flat=[float(x) for row in verts for x in row]
+        off=len(blob);packed=struct.pack('<'+'f'*len(flat),*flat);blob.extend(packed)
+        while len(blob)%4:blob.append(0)
+        vi=len(doc['bufferViews']);doc['bufferViews'].append({'buffer':0,'byteOffset':off,'byteLength':len(packed)})
+        ai=len(doc['accessors']);doc['accessors'].append({
+            'bufferView':vi,'componentType':5126,'count':len(verts),'type':'VEC3',
+            'min':[min(v[j] for v in verts) for j in range(3)],
+            'max':[max(v[j] for v in verts) for j in range(3)]
+        })
+        prim=(meshes[eye_mesh].get('primitives') or [])[0];prim.setdefault('attributes',{})['POSITION']=ai
+        for ni,x in ((leye,-.09),(reye,.09)):
+            nodes[ni]['translation']=[x,.15,.2945]
+            nodes[ni]['scale']=[1,.04,1]
+        # Thinking should move the body/arms, not distort the eye mask.
+        for anim in doc.get('animations') or []:
+            if not isinstance(anim,dict) or anim.get('name')!='Think':continue
+            anim['channels']=[ch for ch in (anim.get('channels') or []) if (ch.get('target') or {}).get('node') not in (leye,reye)]
+        doc['buffers'][0]['byteLength']=len(blob);ax['plugyEyeShape']='soft-lens-v162'
+        asset['generator']=str(asset.get('generator',''))+' + PLUGY V162 SoftLensEyes'
+        j=_v106_pad4(json.dumps(doc,separators=(',',':')).encode('utf-8'),b' ');b=_v106_pad4(bytes(blob),bytes((0,)))
+        chunks=[(b'JSON',j),(bytes((66,73,78,0)),b)]+extras_chunks;total=12+sum(8+len(ch) for _,ch in chunks)
+        out=bytearray(struct.pack('<4sII',b'glTF',version,total))
+        for kind,ch in chunks:out.extend(struct.pack('<I4s',len(ch),kind));out.extend(ch)
+        print('PLUGY_V162_EYES_READY shape=soft-lens think_eye_jitter=off',flush=True)
+        return bytes(out),True
+    except Exception as exc:
+        print(f'PLUGY_V162_EYES_ERROR {type(exc).__name__}: {str(exc)[:220]}',flush=True);return raw,False
 
 def _ensure_realistic_plugy():
     try:
@@ -461,9 +519,10 @@ def _ensure_realistic_plugy():
             patched,mat_changed=_patch_plugy_reflectionless_v138(REALISTIC_PLUGY.read_bytes())
             patched,rig_changed=_rig_plugy_v139(patched)
             patched,motion_changed=_upgrade_plugy_motion_v143(patched)
-            if mat_changed or rig_changed or motion_changed:
+            patched,eye_changed=_refine_plugy_eyes_v162(patched)
+            if mat_changed or rig_changed or motion_changed or eye_changed:
                 tmp=REALISTIC_PLUGY.with_suffix('.v139.tmp');tmp.write_bytes(patched);tmp.replace(REALISTIC_PLUGY)
-                print(f"PLUGY_V139_PERSISTED bytes={REALISTIC_PLUGY.stat().st_size} material={mat_changed} rig={rig_changed} motion={motion_changed}",flush=True)
+                print(f"PLUGY_V162_PERSISTED bytes={REALISTIC_PLUGY.stat().st_size} material={mat_changed} rig={rig_changed} motion={motion_changed} eyes={eye_changed}",flush=True)
             return True
     except Exception:
         pass
@@ -473,7 +532,8 @@ def _ensure_realistic_plugy():
                 patched,mat_changed=_patch_plugy_reflectionless_v138(REALISTIC_PLUGY.read_bytes())
                 patched,rig_changed=_rig_plugy_v139(patched)
                 patched,motion_changed=_upgrade_plugy_motion_v143(patched)
-                if mat_changed or rig_changed or motion_changed:
+                patched,eye_changed=_refine_plugy_eyes_v162(patched)
+                if mat_changed or rig_changed or motion_changed or eye_changed:
                     tmp=REALISTIC_PLUGY.with_suffix('.v139.tmp');tmp.write_bytes(patched);tmp.replace(REALISTIC_PLUGY)
                 return True
         except Exception:
@@ -487,6 +547,7 @@ def _ensure_realistic_plugy():
                 prepared,_=_patch_plugy_reflectionless_v138(prepared)
                 prepared,_=_rig_plugy_v139(prepared)
                 prepared,_=_upgrade_plugy_motion_v143(prepared)
+                prepared,_=_refine_plugy_eyes_v162(prepared)
                 tmp.write_bytes(prepared)
                 tmp.replace(REALISTIC_PLUGY)
                 print(f"PLUGY_V138_REFLECTIONLESS_READY bytes={REALISTIC_PLUGY.stat().st_size} motion=embedded materials=baked",flush=True)
@@ -579,7 +640,7 @@ def plugy_v106_realistic_asset():
 @app.get('/api/v106/plugy-realistic/status')
 def plugy_v106_realistic_status():
     ready=REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>10000
-    return {'ok':True,'ready':ready,'bytes':REALISTIC_PLUGY.stat().st_size if ready else 0,'asset':'/assets/plugy-v113-premium.glb','profile':'autonomous-eyes-arms-v161'}
+    return {'ok':True,'ready':ready,'bytes':REALISTIC_PLUGY.stat().st_size if ready else 0,'asset':'/assets/plugy-v113-premium.glb','profile':'autonomous-eyes-arms-v162'}
 
 for route in list(app.router.routes):
     route_path=getattr(route,'path',None)
@@ -596,14 +657,15 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'161.0',
-      'ui':'plug-art-v161-immersive-workspace',
+      'version':'162.0',
+      'ui':'plug-art-v162-creation-plugy',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
       'migration_backup_ready':backup_ready
     }
 
+@app.get('/api/v162/ui-manifest')
 @app.get('/api/v161/ui-manifest')
 @app.get('/api/v160/ui-manifest')
 @app.get('/api/v159/ui-manifest')
@@ -638,17 +700,17 @@ def health_v124():
 @app.get('/api/v128/ui-manifest')
 def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
-    js_path=BASE/'static'/'plugart_v161.js'
+    js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='161.20260926.1'
+    expected='162.20260926.1'
     return {
-      'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v161.js').exists() and (BASE/'static'/'plugy_v161.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
-      'version':'161.0',
-      'ui':'plug-art-v161-immersive-workspace',
+      'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
+      'version':'162.0',
+      'ui':'plug-art-v162-creation-plugy',
       'asset_version':expected,
-      'html_has_js':f'plugart_v161.js?v={expected}' in html,
+      'html_has_js':f'plugart_v162.js?v={expected}' in html,
       'html_has_slide_css':f'plugart_v160_slide.css?v={expected}' in html,
-      'html_has_sidebar_version':'V161' in html,
+      'html_has_sidebar_version':'V162' in html,
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
@@ -668,7 +730,7 @@ def plugy_page_v130(request:Request):
     headers={
       'Cache-Control':'no-store, max-age=0',
       'ETag':etag,
-      'X-Plug-Art-Version':'161.0',
+      'X-Plug-Art-Version':'162.0',
       'X-Plug-Art-UI':'plugy-v130-standalone'
     }
     return HTMLResponse(html,headers=headers)
@@ -681,8 +743,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'no-store, max-age=0',
       'ETag':etag,
-      'X-Plug-Art-Version':'161.0',
-      'X-Plug-Art-UI':'plug-art-v161-immersive-workspace'
+      'X-Plug-Art-Version':'162.0',
+      'X-Plug-Art-UI':'plug-art-v162-creation-plugy'
     }
     return HTMLResponse(html,headers=headers)
 
@@ -2820,6 +2882,7 @@ def ideas_delete_v156(idea_id:int):
     if not cur.rowcount:raise HTTPException(404,'Idée introuvable')
     return {'ok':True}
 
+@app.get('/api/v162/status')
 @app.get('/api/v161/status')
 @app.get('/api/v160/status')
 @app.get('/api/v159/status')
@@ -2828,7 +2891,7 @@ def ideas_delete_v156(idea_id:int):
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'161.0','ui':'plug-art-v161-immersive-workspace',
+      'ok':True,'version':'162.0','ui':'plug-art-v162-creation-plugy',
       'plugy':'frameless-static-round-gaze-no-blink',
       'creation':'open-call-production-workflow',
       'bureau':'documents-packages-templates-pdf-hub',
@@ -2897,8 +2960,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'161.0',
-      'ui':'plug-art-v161-immersive-workspace',
+      'version':'162.0',
+      'ui':'plug-art-v162-creation-plugy',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -2925,7 +2988,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V161_READY ui=immersive_workspace plugy=expanded_stage_safe_arms creation=live_preview visual=chat_to_bureau radar=photo_hospitality_no_contests artists=profile_crm_suggestions",flush=True)
+print("PLUG_ART_V162_READY ui=creation_preview_fixed plugy=full_body_natural_voice_sticky_chat eyes=soft_lens opportunity_to_publication=direct",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
@@ -2939,6 +3002,7 @@ def _v127_runtime_smoke():
       ('POST','/api/v125/plugy/stream'),
       ('POST','/api/v32/plugy'),
       ('POST','/api/v32/content/image'),
+      ('POST','/api/v162/plugy/speech'),
       ('GET','/api/v86/crm'),
       ('GET','/api/v107/bureau'),
       ('GET','/api/v107/open-calls/workflow'),
