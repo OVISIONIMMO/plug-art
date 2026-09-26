@@ -327,23 +327,23 @@ function ensurePlugyFollower(){
   return host;
 }
 function plugyFollowerStage(){return ensurePlugyFollower()}
+function computePlugyCameraV167(target,mode='hero'){
+  const w=innerWidth||1200,h=innerHeight||900,r=target?.getBoundingClientRect?.()||{width:w*.5,height:h*.5};
+  const short=Number(r.height||0)<350,compact=w<=820,tablet=w>820&&w<=1180,ultrawide=w>=2200,desktop=w>=1440;
+  let distance=4.15,fov=37;
+  if(compact){distance=5.35;fov=41}
+  else if(tablet){distance=h<900?5.45:5.20;fov=40}
+  else if(ultrawide){distance=mode==='follower'?3.28:mode==='drawer'?3.55:3.05;fov=34}
+  else if(desktop){distance=mode==='follower'?3.85:mode==='drawer'?4.05:3.55;fov=35}
+  else{distance=mode==='follower'?4.45:4.05;fov=37}
+  if(short)distance+=.45;
+  const aspect=(Number(r.width||1)/Math.max(1,Number(r.height||1)));
+  if(aspect<.72)distance+=.25;
+  return{orbit:'0deg 79deg '+distance.toFixed(2)+'m',fov:fov+'deg',distance,fovNumber:fov};
+}
 function plugyFramingFor(target){
-  const follower=$('#plugyFollower'),w=innerWidth||1200,h=innerHeight||900;
-  const tablet=w>820&&w<=1180;
-  const compact=w<=820;
-  if(target&&follower&&target===follower){
-    if(compact)return{orbit:'0deg 79deg 5.15m',fov:'41deg'};
-    if(tablet)return{orbit:'0deg 79deg 5.25m',fov:'40deg'};
-    return{orbit:'0deg 79deg 4.72m',fov:'39deg'};
-  }
-  if(target&&target===plugyDashboardStage()){
-    if(compact)return{orbit:'0deg 79deg 5.35m',fov:'41deg'};
-    if(tablet)return{orbit:'0deg 79deg '+(h<900?'5.45':'5.20')+'m',fov:'40deg'};
-    return{orbit:'0deg 79deg 4.48m',fov:'38deg'};
-  }
-  if(compact)return{orbit:'0deg 79deg 5.05m',fov:'40deg'};
-  if(tablet)return{orbit:'0deg 79deg 5.10m',fov:'40deg'};
-  return{orbit:'0deg 79deg 4.38m',fov:'38deg'};
+  const follower=$('#plugyFollower'),mode=target&&follower&&target===follower?'follower':target&&target===plugyDrawerStage()?'drawer':target&&target===plugyDashboardStage()?'hero':'hero';
+  return computePlugyCameraV167(target,mode);
 }
 function applyPlugyFraming(target){
   const mv=$('#plugyModel');if(!mv)return;
@@ -3982,7 +3982,7 @@ async function openArtistProfileV161(aid){
 async function createArtistContactV161(aid,reopen=false){try{const r=await api('/api/v161/artists/'+aid+'/contact',{method:'POST',body:'{}'});if(r.lead&&!state.leads.some(x=>Number(x.id)===Number(r.lead.id)))state.leads.unshift(r.lead);state.dataLoaded.leads=true;toast(r.existing?'Contact déjà présent':'Fiche contact créée');if(reopen)openArtistProfileV161(aid)}catch{toast('Création du contact impossible')}}
 function openArtistEditorV161(){const name=prompt('Nom de l’artiste');if(!clean(name))return;const discipline=prompt('Discipline (ex. Photographie, Peinture)','Arts visuels')||'Arts visuels';api('/api/v86/artists',{method:'POST',body:JSON.stringify({name:clean(name),discipline:clean(discipline),tags:[]})}).then(a=>{state.bootstrap.artists=state.bootstrap.artists||[];state.bootstrap.artists.push(a);renderArtists();openArtistProfileV161(a.id)}).catch(()=>toast('Ajout artiste impossible'))}
 let plugyRoamV161Timer=0;
-function schedulePlugyRoamV161(){clearTimeout(plugyRoamV161Timer);const f=$('#plugyFollower');if(!f||!f.classList.contains('visible'))return;const mobile=innerWidth<760,max=Math.min(mobile?70:Math.max(120,innerWidth*.28),360),x=mobile?(-Math.random()*max*.55):(-Math.random()*max),y=(Math.random()-.5)*(mobile?36:72);f.style.setProperty('--plugy-roam-x',x.toFixed(0)+'px');f.style.setProperty('--plugy-roam-y',y.toFixed(0)+'px');const mv=$('#plugyModel');if(mv){const tablet=innerWidth>820&&innerWidth<=1180;mv.setAttribute('camera-orbit','0deg 76deg '+(mobile?'5.25':tablet?'5.15':'4.62')+'m');mv.setAttribute('field-of-view',mobile?'41deg':tablet?'40deg':'38deg')}const motion=choosePlugyMotion(['Travel','SoftTurn','Attentive','Curious']);if(motion)playMotion(motion);plugyRoamV161Timer=setTimeout(schedulePlugyRoamV161,6800+Math.random()*5200)}
+function schedulePlugyRoamV161(){clearTimeout(plugyRoamV161Timer);const f=$('#plugyFollower');if(!f||!f.classList.contains('visible'))return;const mobile=innerWidth<760,max=Math.min(mobile?70:Math.max(120,innerWidth*.28),360),x=mobile?(-Math.random()*max*.55):(-Math.random()*max),y=(Math.random()-.5)*(mobile?36:72);f.style.setProperty('--plugy-roam-x',x.toFixed(0)+'px');f.style.setProperty('--plugy-roam-y',y.toFixed(0)+'px');const mv=$('#plugyModel');if(mv){const framing=computePlugyCameraV167(f,'follower');mv.setAttribute('camera-orbit',framing.orbit.replace('79deg','76deg'));mv.setAttribute('field-of-view',framing.fov)}const motion=choosePlugyMotion(['Travel','SoftTurn','Attentive','Curious']);if(motion)playMotion(motion);plugyRoamV161Timer=setTimeout(schedulePlugyRoamV161,6800+Math.random()*5200)}
 const v161PlugyObserver=new MutationObserver(()=>{const f=$('#plugyFollower');if(f?.classList.contains('visible'))schedulePlugyRoamV161();else clearTimeout(plugyRoamV161Timer)});v161PlugyObserver.observe(document.body,{attributes:true,subtree:true,attributeFilter:['class','data-view']});addEventListener('resize',()=>{const f=$('#plugyFollower');if(f?.classList.contains('visible'))schedulePlugyRoamV161()},{passive:true});
 
 /* ---------------- V162 PREVIEW + OPPORTUNITY PUBLICATION ---------------- */
