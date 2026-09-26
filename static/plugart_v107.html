@@ -12,16 +12,35 @@
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://ajax.googleapis.com" crossorigin>
 <link rel="dns-prefetch" href="//ajax.googleapis.com">
-<link rel="preload" href="/static/plugart_v107.js?v=158.20260926.1" as="script">
-<link rel="stylesheet" href="/static/plugart_v107.css?v=158.20260926.1">
-<link rel="stylesheet" href="/static/plugart_v122_slide.css?v=158.20260926.1">
-<link rel="stylesheet" href="/static/plugart_v156_patch.css?v=158.20260926.1">
+<link rel="preload" href="/static/plugart_v107.js?v=159.20260926.1" as="script">
+<link rel="stylesheet" href="/static/plugart_v107.css?v=159.20260926.1">
+<link rel="stylesheet" href="/static/plugart_v122_slide.css?v=159.20260926.1">
+<link rel="stylesheet" href="/static/plugart_v156_patch.css?v=159.20260926.1">
 
 <style id="plugy-flow-v155-style">
 /* PLUGY FLOW V155 */
 .plugy-flow-fab{position:fixed;right:22px;bottom:22px;z-index:155;display:flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.78);border-radius:999px;background:rgba(18,22,36,.92);color:#fff;padding:8px 14px 8px 8px;box-shadow:0 22px 70px rgba(30,36,76,.32);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);cursor:pointer;transition:transform .22s ease,box-shadow .22s ease}.plugy-flow-fab:hover{transform:translateY(-2px);box-shadow:0 28px 80px rgba(30,36,76,.4)}.plugy-flow-orb{width:38px;height:38px;border-radius:50%;position:relative;display:grid;place-items:center;background:radial-gradient(circle at 34% 26%,#fff 0 10%,#abf9ff 12% 24%,#7864ff 48%,#ef60be 76%,#151a31 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.78),0 0 26px rgba(100,85,255,.42)}.plugy-flow-orb:after{content:"";position:absolute;inset:-5px;border:1px solid rgba(118,92,255,.3);border-radius:50%;animation:plugyFlowPulse 2.5s ease-out infinite}.plugy-flow-fab-copy{display:grid;text-align:left;line-height:1}.plugy-flow-fab-copy strong{font:700 11px/1 "Space Grotesk",sans-serif;letter-spacing:.7px}.plugy-flow-fab-copy small{margin-top:5px;color:#b8c1d9;font-size:9px}.plugy-flow-panel{position:fixed;right:22px;bottom:82px;z-index:154;width:min(540px,calc(100vw - 44px));padding:16px;border:1px solid rgba(255,255,255,.78);border-radius:28px;background:linear-gradient(145deg,rgba(250,251,255,.97),rgba(241,244,255,.93));box-shadow:0 32px 100px rgba(34,42,88,.27);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);opacity:0;pointer-events:none;transform:translateY(14px) scale(.985);transform-origin:right bottom;transition:opacity .2s ease,transform .24s cubic-bezier(.2,.75,.2,1)}.plugy-flow-panel.open{opacity:1;pointer-events:auto;transform:none}.plugy-flow-head{display:flex;align-items:center;gap:11px}.plugy-flow-head .plugy-flow-orb{width:43px;height:43px;flex:0 0 auto}.plugy-flow-head-copy{min-width:0}.plugy-flow-head-copy small{display:block;font-size:9px;font-weight:800;letter-spacing:1.2px;color:#7864e8}.plugy-flow-head-copy strong{display:block;margin-top:3px;font:700 15px/1.1 "Space Grotesk",sans-serif;color:#12192a}.plugy-flow-close{margin-left:auto;width:34px;height:34px;border:1px solid rgba(71,81,115,.15);border-radius:50%;background:#fff;color:#536078;cursor:pointer}.plugy-flow-context{margin:12px 0 13px;padding:11px 13px;border-radius:15px;background:rgba(255,255,255,.75);font-size:11px;line-height:1.45;color:#64708b}.plugy-flow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.plugy-flow-action{min-height:82px;padding:11px;border:1px solid rgba(71,81,115,.13);border-radius:17px;background:rgba(255,255,255,.9);text-align:left;cursor:pointer;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}.plugy-flow-action:hover{transform:translateY(-2px);border-color:#bbb9ff;box-shadow:0 10px 25px rgba(91,72,224,.12)}.plugy-flow-action b{display:block;font:700 11px/1.15 "Space Grotesk",sans-serif;color:#182038}.plugy-flow-action span{display:block;margin-top:6px;font-size:9px;line-height:1.35;color:#7a849a}.plugy-flow-action.primary{background:linear-gradient(145deg,#111827,#263457);border-color:#111827}.plugy-flow-action.primary b{color:#fff}.plugy-flow-action.primary span{color:#c9d2e6}.plugy-flow-foot{display:flex;justify-content:space-between;gap:12px;margin-top:10px;color:#929aae;font-size:9px}.plugy-flow-foot kbd{border:1px solid rgba(71,81,115,.14);background:#fff;border-radius:7px;padding:2px 6px;color:#59647c}@keyframes plugyFlowPulse{0%{transform:scale(.86);opacity:.9}75%,100%{transform:scale(1.38);opacity:0}}@media(max-width:760px){.plugy-flow-fab{right:12px;bottom:12px}.plugy-flow-panel{right:10px;bottom:70px;width:calc(100vw - 20px);padding:13px;border-radius:23px}.plugy-flow-grid{grid-template-columns:repeat(2,1fr)}.plugy-flow-action{min-height:68px}.plugy-flow-foot{display:none}}
 </style>
 
+<script id="plugart-client-diagnostics-v159">
+(function(){
+  function report(data){
+    try{
+      data=data||{};data.href=location.href;data.ua=navigator.userAgent;data.ts=Date.now();
+      var payload=JSON.stringify(data);
+      if(navigator.sendBeacon){navigator.sendBeacon('/api/v159/client-report',new Blob([payload],{type:'application/json'}));return}
+      fetch('/api/v159/client-report',{method:'POST',headers:{'Content-Type':'application/json'},body:payload,keepalive:true}).catch(function(){});
+    }catch(_){}
+  }
+  window.addEventListener('error',function(e){report({type:'error',message:String(e.message||''),source:String(e.filename||''),line:e.lineno||0,col:e.colno||0})});
+  window.addEventListener('unhandledrejection',function(e){report({type:'rejection',message:String((e.reason&&e.reason.message)||e.reason||'')})});
+  document.addEventListener('click',function(e){
+    var el=e.target&&e.target.closest?e.target.closest('[data-route]'):null;
+    if(el)report({type:'route-click',route:el.getAttribute('data-route')||'',view:document.body&&document.body.getAttribute('data-view')||''});
+  },true);
+  setTimeout(function(){report({type:'boot-probe',ready:document.documentElement.getAttribute('data-plugart-ready')||'',view:document.body&&document.body.getAttribute('data-view')||''})},2200);
+})();
+</script>
 </head>
 <body data-view="dashboard" data-plugy-motion="Idle">
 <div class="app-shell">
@@ -63,14 +82,14 @@
       </button>
       <a class="plugy-full-link" href="/plugy">Plein écran ↗</a>
     </div>
-    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small>V158</small></div>
+    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small>V159</small></div>
   </aside>
 
   <main class="workspace">
     <header class="topbar">
       <div class="top-title">
         <small id="pageEyebrow">WORKSPACE</small>
-        <div class="top-title-line"><h1 id="pageTitle">Dashboard</h1><span class="build-pill">V158</span></div>
+        <div class="top-title-line"><h1 id="pageTitle">Dashboard</h1><span class="build-pill">V159</span></div>
       </div>
       <button class="global-search" id="globalSearch"><span>⌕</span><strong>Rechercher dans PLUG ART</strong><kbd>⌘ K</kbd></button>
       <div class="top-actions">
@@ -351,7 +370,7 @@
   </div>
   <div class="plugy-stage">
     <div class="plugy-energy e1"></div><div class="plugy-energy e2"></div>
-    <model-viewer id="plugyModel" loading="eager" src="/assets/plugy-v113-premium.glb?v=158.20260926.1" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity="0" shadow-softness="1" exposure=".70" animation-crossfade-duration="80" camera-orbit="0deg 76deg 3.05m" field-of-view="27deg" alt="PLUGY"></model-viewer>
+    <model-viewer id="plugyModel" loading="eager" src="/assets/plugy-v113-premium.glb?v=159.20260926.1" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity="0" shadow-softness="1" exposure=".70" animation-crossfade-duration="80" camera-orbit="0deg 76deg 3.05m" field-of-view="27deg" alt="PLUGY"></model-viewer>
     <div class="plugy-state" id="plugyState"><i></i><span>Prêt</span></div>
   </div>
   <div class="plugy-context" id="plugyContext">Contexte : Dashboard</div>
@@ -397,9 +416,9 @@
 </section>
 
 <div class="toast" id="toast"></div>
-<script defer src="/static/plugart_v107.js?v=158.20260926.1"></script>
-<script src="/static/hub_v132_assets.js?v=158.20260926.1"></script>
-<script defer src="/static/plugart_v156_patch.js?v=158.20260926.1"></script>
+<script defer src="/static/plugart_v107.js?v=159.20260926.1"></script>
+<script src="/static/hub_v132_assets.js?v=159.20260926.1"></script>
+<script defer src="/static/plugart_v156_patch.js?v=159.20260926.1"></script>
 
 <script id="plugy-flow-v155-script">
 document.addEventListener('DOMContentLoaded',function(){

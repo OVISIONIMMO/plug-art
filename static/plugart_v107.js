@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='158.20260926.1';
+const VERSION='159.20260926.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -151,7 +151,11 @@ function route(id,push=true){
     ensureViewData(id).then(()=>{if(state.view===id)renderRouteView(id)}).catch(()=>{if(state.view===id)toast('Données momentanément indisponibles')});
   }else renderRouteView(id);
 }
-$$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route)}));
+window.PLUGART_ROUTE=route;
+document.addEventListener('click',e=>{
+  const b=e.target?.closest?.('[data-route]');if(!b)return;
+  e.preventDefault();route(b.dataset.route);
+});
 addEventListener('popstate',()=>route(location.hash.slice(1)||'dashboard',false));
 
 let modelViewerPromise=null;

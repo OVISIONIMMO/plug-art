@@ -415,13 +415,19 @@ async function ideaToBureau(){
 
 /* ---------------- BOOT ---------------- */
 function observeRuntime(){
-  const obs=new MutationObserver(()=>{
-    if(document.body.dataset.view==='creation'){installCreationPro();normalizeStudioVisuals()}
-    if(document.body.dataset.view==='bureau'){ensurePdfMode();enhanceHub()}
-    if(document.body.dataset.view==='ideas'&&!ideas.length)loadIdeas();
+  let lastView=document.body.dataset.view||'dashboard';
+  const sync=()=>{
+    const view=document.body.dataset.view||'dashboard';
+    if(view===lastView)return;
+    lastView=view;
+    if(view==='creation')installCreationPro();
+    if(view==='bureau'){ensurePdfMode();enhanceHub()}
+    if(view==='ideas'&&!ideas.length)loadIdeas();
     repositionPlugyByRoute();
-  });
-  obs.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['data-view','style']});
+    if($('#plugyActionRing')?.classList.contains('open'))renderPlugyActionRing();
+  };
+  const obs=new MutationObserver(sync);
+  obs.observe(document.body,{attributes:true,attributeFilter:['data-view']});
 }
 window.PLUGV156={renderIdeas:()=>{loadIdeas()},loadPdfs,normalizeStudioVisuals};
 window.PLUGV157={renderIdeas:()=>{loadIdeas()},loadPdfs,normalizeStudioVisuals,ideaToStudio,ideaToBureau,openActions:()=>setPlugyActionRing(true)};
