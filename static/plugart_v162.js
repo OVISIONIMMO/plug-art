@@ -4346,12 +4346,12 @@ function renderIdeasV163(){
   }).join('');
   $$('[data-idea-edit]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();editIdeaV163(Number(b.dataset.ideaEdit))});
   $$('[data-idea-delete]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();deleteIdeaV163(Number(b.dataset.ideaDelete))});
-  $('[data-idea-plugy]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();const i=state.ideas.find(x=>Number(x.id)===Number(b.dataset.ideaPlugy));if(i)openPlugy('Développe cette idée : '+i.title+'. '+(i.body||'')+' Donne-moi une version plus structurée, des usages possibles et la prochaine action concrète.')});
-  $('[data-idea-create-v167]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();ideaToCreationV167(Number(b.dataset.ideaCreateV167))});
-  $('[data-idea-bureau-v167]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();ideaToBureauV167(Number(b.dataset.ideaBureauV167))});
-  $('[data-idea-pdf-v167]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();ideaToPdfV167(Number(b.dataset.ideaPdfV167))});
-  $('[data-idea-link-v167]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();linkIdeaV167(Number(b.dataset.ideaLinkV167))});
-  $('.idea-card-v163',cloud).forEach(bindIdeaDragV163);
+  $$('[data-idea-plugy]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();const i=state.ideas.find(x=>Number(x.id)===Number(b.dataset.ideaPlugy));if(i)openPlugy('Développe cette idée : '+i.title+'. '+(i.body||'')+' Donne-moi une version plus structurée, des usages possibles et la prochaine action concrète.')});
+  $$('[data-idea-create-v167]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();ideaToCreationV167(Number(b.dataset.ideaCreateV167))});
+  $$('[data-idea-bureau-v167]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();ideaToBureauV167(Number(b.dataset.ideaBureauV167))});
+  $$('[data-idea-pdf-v167]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();ideaToPdfV167(Number(b.dataset.ideaPdfV167))});
+  $$('[data-idea-link-v167]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();linkIdeaV167(Number(b.dataset.ideaLinkV167))});
+  $$('.idea-card-v163',cloud).forEach(bindIdeaDragV163);
 }
 async function createIdeaV163(project=''){
   const title=prompt('Titre de l’idée');if(!clean(title))return;
@@ -4441,18 +4441,18 @@ function installRadarV167(){
       '<div class="event-search-main-v167"><label>Recherche<input id="eventQueryV167" placeholder="Galerie, exposition, artiste…"></label><label>Ville<input id="eventCityV167" value="Paris" placeholder="Paris, Aubervilliers…"></label>'+
       '<label>Type<select id="eventTypeV167"><option value="">Tous</option><option value="vernissage">Vernissage</option><option value="opening">Opening</option><option value="artist_talk">Artist talk</option><option value="finissage">Finissage</option><option value="nocturne">Nocturne</option></select></label>'+
       '<button class="primary-btn" id="eventSearchWebV167">◉ Rechercher sur le web</button></div>'+
-      '<div class="event-ranges-v167"><button data-event-range="today">Aujourd’hui</button><button class="active" data-event-range="week">Cette semaine</button><button data-event-range="weekend">Ce week-end</button><button data-event-range="month">Ce mois</button><label><input type="checkbox" id="eventFreeV167"> Gratuit</label><label><input type="checkbox" id="eventVerifiedV167"> Vérifié</label><span></span><button class="event-week-content-v167" id="eventWeekContentV167">✦ Créer les vernissages de la semaine</button></div>'+
+      '<div class="event-ranges-v167"><button data-event-range="today">Aujourd’hui</button><button class="active" data-event-range="week">Cette semaine</button><button data-event-range="weekend">Ce week-end</button><button data-event-range="month">Ce mois</button><label><input type="checkbox" id="eventFreeV167"> Gratuit</label><label><input type="checkbox" id="eventRsvpV167"> RSVP</label><label><input type="checkbox" id="eventVerifiedV167"> Vérifié</label><span></span><button class="event-week-content-v167" id="eventWeekContentV167">✦ Créer les vernissages de la semaine</button></div>'+
     '</div>'+
     '<div class="event-head-v167"><div><small>AGENDA ARTISTIQUE</small><strong id="eventCountV167">0 événement</strong></div><button id="eventRefreshV167">Actualiser</button></div>'+
     '<div class="event-grid-v167" id="eventGridV167"><div class="empty">Ouvre le Radar Vernissages pour charger les événements.</div></div>';
   open.insertAdjacentElement('afterend',panel);
-  $('[data-radar-v167]',tabs).forEach(b=>b.onclick=()=>{
+  $$('[data-radar-v167]',tabs).forEach(b=>b.onclick=()=>{
     const m=b.dataset.radarV167;
     if(m==='places'){route('map');return}
     if(m==='favorites'){state.radarV167Mode='events';setRadarModeV167('events');loadEventsV167(true,{favorite:true});return}
     setRadarModeV167(m);
   });
-  $('[data-event-range]',panel).forEach(b=>b.onclick=()=>{$('[data-event-range]',panel).forEach(x=>x.classList.toggle('active',x===b));panel.dataset.range=b.dataset.eventRange;loadEventsV167(true)});
+  $$('[data-event-range]',panel).forEach(b=>b.onclick=()=>{$$('[data-event-range]',panel).forEach(x=>x.classList.toggle('active',x===b));panel.dataset.range=b.dataset.eventRange;loadEventsV167(true)});
   $('#eventSearchWebV167').onclick=searchEventsV167;
   $('#eventRefreshV167').onclick=()=>loadEventsV167(true);
   $('#eventWeekContentV167').onclick=generateWeeklyVernissagesV167;
@@ -4460,6 +4460,7 @@ function installRadarV167(){
   $('#eventCityV167').onchange=()=>loadEventsV167(true);
   $('#eventTypeV167').onchange=()=>loadEventsV167(true);
   $('#eventFreeV167').onchange=()=>loadEventsV167(true);
+  $('#eventRsvpV167').onchange=()=>loadEventsV167(true);
   $('#eventVerifiedV167').onchange=()=>loadEventsV167(true);
   panel.dataset.range='week';
   setRadarModeV167(state.radarV167Mode||'opencalls');
@@ -4468,7 +4469,7 @@ function setRadarModeV167(mode){
   state.radarV167Mode=mode==='events'?'events':'opencalls';
   $('#radarOpenCallsV167')?.classList.toggle('v167-hidden',state.radarV167Mode==='events');
   $('#radarEventsV167')?.classList.toggle('active',state.radarV167Mode==='events');
-  $('[data-radar-v167]').forEach(b=>b.classList.toggle('active',b.dataset.radarV167===state.radarV167Mode));
+  $$('[data-radar-v167]').forEach(b=>b.classList.toggle('active',b.dataset.radarV167===state.radarV167Mode));
   if(state.radarV167Mode==='events')loadEventsV167(false);
 }
 function eventRangeV167(){
@@ -4486,7 +4487,7 @@ async function loadEventsV167(force=false,extra={}){
   const r=eventRangeV167(),p=new URLSearchParams();
   const q=clean($('#eventQueryV167')?.value),city=clean($('#eventCityV167')?.value),type=$('#eventTypeV167')?.value||'';
   if(q)p.set('q',q);if(city)p.set('city',city);if(type)p.set('event_type',type);p.set('date_from',r.from);p.set('date_to',r.to);
-  if($('#eventFreeV167')?.checked)p.set('free','true');if($('#eventVerifiedV167')?.checked)p.set('verified','true');if(extra.favorite)p.set('favorite','true');
+  if($('#eventFreeV167')?.checked)p.set('free','true');if($('#eventRsvpV167')?.checked)p.set('rsvp','true');if($('#eventVerifiedV167')?.checked)p.set('verified','true');if(extra.favorite)p.set('favorite','true');
   try{
     const rows=await api('/api/v167/events?'+p.toString(),{noMemCache:force,cacheTtl:15000});
     state.eventsV167=Array.isArray(rows)?rows:[];renderEventsV167();
@@ -4514,11 +4515,12 @@ function renderEventsV167(){
       '<div class="event-visual-v167"><img src="'+image+'" alt="" loading="lazy" decoding="async" onerror="this.style.display=\'none\'"><span>'+esc((e.event_type||'vernissage').replaceAll('_',' '))+'</span></div>'+
       '<div class="event-copy-v167"><div class="event-date-v167"><strong>'+esc(v167FmtDate(e.starts_at))+'</strong><small>'+esc(e.city||e.country||'')+'</small></div><h3>'+esc(e.title)+'</h3><p>'+esc(e.venue_name||'Lieu à confirmer')+'</p>'+
       '<div class="event-tags-v167">'+(e.is_free?'<span>Gratuit</span>':'')+(e.verified?'<span>✓ Vérifié</span>':'')+(e.rsvp_url?'<span>RSVP</span>':'')+'</div>'+
-      '<div class="event-actions-v167"><button data-event-create="'+e.id+'">✦ Créer</button><button data-event-agenda="'+e.id+'">Agenda</button><button data-event-fav="'+e.id+'">'+(e.favorite?'★':'☆')+'</button><a href="'+esc(e.source_url)+'" target="_blank" rel="noopener">Source ↗</a></div></div></article>';
+      '<div class="event-actions-v167"><button data-event-create="'+e.id+'">✦ Créer</button><button data-event-agenda="'+e.id+'">Agenda</button><button data-event-map="'+e.id+'">Map</button><button data-event-fav="'+e.id+'">'+(e.favorite?'★':'☆')+'</button><a href="'+esc(e.source_url)+'" target="_blank" rel="noopener">Source ↗</a></div></div></article>';
   }).join('');
-  $('[data-event-create]',box).forEach(b=>b.onclick=()=>eventToCreationV167(Number(b.dataset.eventCreate)));
-  $('[data-event-agenda]',box).forEach(b=>b.onclick=async()=>{try{await api('/api/v167/events/'+b.dataset.eventAgenda+'/to-agenda',{method:'POST',body:'{}'});toast('Vernissage préparé pour l’agenda')}catch{toast('Ajout agenda impossible')}});
-  $('[data-event-fav]',box).forEach(b=>b.onclick=async()=>{const e=rows.find(x=>Number(x.id)===Number(b.dataset.eventFav));if(!e)return;try{const saved=await api('/api/v167/events/'+e.id+'/favorite',{method:'POST',body:JSON.stringify({favorite:!e.favorite})});Object.assign(e,saved);renderEventsV167()}catch{toast('Favori impossible')}});
+  $$('[data-event-create]',box).forEach(b=>b.onclick=()=>eventToCreationV167(Number(b.dataset.eventCreate)));
+  $$('[data-event-agenda]',box).forEach(b=>b.onclick=async()=>{try{await api('/api/v167/events/'+b.dataset.eventAgenda+'/to-agenda',{method:'POST',body:'{}'});toast('Vernissage préparé pour l’agenda')}catch{toast('Ajout agenda impossible')}});
+  $$('[data-event-map]',box).forEach(b=>b.onclick=()=>{const e=rows.find(x=>Number(x.id)===Number(b.dataset.eventMap));if(!e)return;state.mapSearch=[e.venue_name,e.address,e.city].filter(Boolean).join(' ');route('map');setTimeout(()=>{if($('#mapSearch')){$('#mapSearch').value=state.mapSearch;renderMap()}},50)});
+  $$('[data-event-fav]',box).forEach(b=>b.onclick=async()=>{const e=rows.find(x=>Number(x.id)===Number(b.dataset.eventFav));if(!e)return;try{const saved=await api('/api/v167/events/'+e.id+'/favorite',{method:'POST',body:JSON.stringify({favorite:!e.favorite})});Object.assign(e,saved);renderEventsV167()}catch{toast('Favori impossible')}});
 }
 function v167EventImage(id){return '/api/v167/events/'+encodeURIComponent(id)+'/media/0'}
 function v167ApplyDesign(slide,key='open-call-side-rail'){
@@ -4561,7 +4563,7 @@ async function generateWeeklyVernissagesV167(){
 function applyCreationTemplateV167(key){
   const slide=state.carousel.slides[state.carousel.active];if(!slide)return toast('Aucune slide active');
   pushCreationHistory();v167ApplyDesign(slide,key);renderCarousel();scheduleDraftAutosave();
-  $('[data-v167-template]').forEach(b=>b.classList.toggle('active',b.dataset.v167Template===key));
+  $$('[data-v167-template]').forEach(b=>b.classList.toggle('active',b.dataset.v167Template===key));
 }
 function applyCreationPatternV167(key){
   const slide=state.carousel.slides[state.carousel.active];if(!slide)return toast('Aucune slide active');
@@ -4600,9 +4602,9 @@ function installCreationV167(){
     const extra=document.createElement('div');extra.className='creation-actions-v167';extra.innerHTML='<button id="creationFitV167">Fit</button><button id="creation100V167">100%</button><button id="creationFillV167">Fill</button><button id="creationFullscreenV167">⛶</button>';
     toolbar.appendChild(extra);
   }
-  $('[data-v167-template]').forEach(b=>b.onclick=()=>applyCreationTemplateV167(b.dataset.v167Template));
-  $('[data-v167-pattern]').forEach(b=>b.onclick=()=>applyCreationPatternV167(b.dataset.v167Pattern));
-  $('[data-v167-symbol]').forEach(b=>b.onclick=()=>addCanvasLayer('text',{text:b.dataset.v167Symbol,size:48,weight:700,w:18,h:14,color:'#7657ff',align:'center'}));
+  $$('[data-v167-template]').forEach(b=>b.onclick=()=>applyCreationTemplateV167(b.dataset.v167Template));
+  $$('[data-v167-pattern]').forEach(b=>b.onclick=()=>applyCreationPatternV167(b.dataset.v167Pattern));
+  $$('[data-v167-symbol]').forEach(b=>b.onclick=()=>addCanvasLayer('text',{text:b.dataset.v167Symbol,size:48,weight:700,w:18,h:14,color:'#7657ff',align:'center'}));
   $('#openCallPackV167')?.addEventListener('click',()=>generateOpenCallPackV167());
   $('#creationFitV167')?.addEventListener('click',fitStudioCanvas);
   $('#creation100V167')?.addEventListener('click',()=>setStudioZoom(1));
@@ -4650,8 +4652,8 @@ function renderPdfProjectsV167(files=[]){
   const list=$('#pdfProjectListV167'),imports=$('#pdfImportedListV167');if(!list)return;
   list.innerHTML=state.pdfProjectsV167.map(p=>'<button data-pdf-project-v167="'+p.id+'" class="'+(Number(state.activePdfProjectV167?.id)===Number(p.id)?'active':'')+'"><i>PDF</i><span><strong>'+esc(p.title)+'</strong><small>'+esc(p.project_type||'Projet')+'</small></span></button>').join('')||'<div class="empty">Aucun projet PDF.</div>';
   imports.innerHTML=(files||[]).map(p=>'<button data-pdf-file-v167="'+p.id+'"><i>↗</i><span><strong>'+esc(p.name||p.original_name||'PDF')+'</strong><small>'+esc(p.project||p.folder||'Importé')+'</small></span></button>').join('')||'<div class="empty">Aucun PDF importé.</div>';
-  $('[data-pdf-project-v167]',list).forEach(b=>b.onclick=()=>openPdfProjectV167(Number(b.dataset.pdfProjectV167)));
-  $('[data-pdf-file-v167]',imports).forEach(b=>b.onclick=()=>openPdfUrlV167('/api/v156/bureau/files/'+b.dataset.pdfFileV167+'/content',null));
+  $$('[data-pdf-project-v167]',list).forEach(b=>b.onclick=()=>openPdfProjectV167(Number(b.dataset.pdfProjectV167)));
+  $$('[data-pdf-file-v167]',imports).forEach(b=>b.onclick=()=>openPdfUrlV167('/api/v156/bureau/files/'+b.dataset.pdfFileV167+'/content',null));
 }
 async function createPdfProjectV167(){
   try{
