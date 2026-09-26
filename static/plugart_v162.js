@@ -1,10 +1,10 @@
 (function(){
 'use strict';
-const VERSION='1623.20260926.1';
+const VERSION='163.20260926.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,voiceOutput:localStorage.getItem('plugart:plugy-voice')!=='0',recognition:null,plugyBusy:false,creationMode:'carousel',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:'',history:[]},canvasLayer:null,canvasTool:'templates',studioGuides:true,studioSafe:true,studioSnap:true};
+const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,projectMode:'millenaire',projectFiles:[],ideas:[],ideaProject:'',leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,voiceOutput:localStorage.getItem('plugart:plugy-voice')!=='0',recognition:null,plugyBusy:false,creationMode:'carousel',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:'',history:[]},canvasLayer:null,canvasTool:'templates',studioGuides:true,studioSafe:true,studioSnap:true};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -12,6 +12,7 @@ const viewMeta={
  opencalls:['SÉLECTION DE TRAVAIL','Open Calls','Curious'],
  creation:['CRÉATION','Studio de contenu','Present'],
  bureau:['ÉCRITURE & DOCUMENTS','Bureau','Think'],
+ ideas:['IDÉATION','Nuage à idées','Curious'],
  prospection:['CONTACTS & PROSPECTION','Suivi des démarches','Attentive'],
  agenda:['AGENDA','Deadlines & relances','Attentive'],
  network:['RÉSEAU','Artistes','Happy'],
@@ -24,6 +25,7 @@ const contexts={
  opencalls:{label:'Open Calls',suggestions:['Analyse cet Open Call','Prépare ma candidature','Crée un contenu']},
  creation:{label:'Création',suggestions:['Améliore ce texte','Fais une version plus concise','Transforme en carrousel']},
  bureau:{label:'Bureau',suggestions:['Réécris ce brouillon','Résume ce document','Transforme en candidature']},
+ ideas:{label:'Nuage à idées',suggestions:['Développe cette idée','Relie cette idée à un projet','Transforme cette idée en contenu']},
  prospection:{label:'Prospection',suggestions:['Prépare une relance','Résume ce contact','Propose la prochaine action']},
  agenda:{label:'Agenda',suggestions:['Montre les urgences','Quelles deadlines arrivent ?','Quelles relances sont dues ?']},
  network:{label:'Artistes',suggestions:['Analyse ce profil','Propose des opportunités','Prépare une bio']},
@@ -31,21 +33,39 @@ const contexts={
  map:{label:'Carte',suggestions:['Trouve autour de Paris','Compare les villes','Montre les opportunités proches']}
 };
 
+const API_MEM_CACHE=new Map();
+const API_TTL_DEFAULT=20000;
+function apiCacheTtl(url){
+  if(url.includes('/artists'))return 120000;
+  if(url.includes('/map'))return 60000;
+  if(url.includes('/opportunities'))return 45000;
+  if(url.includes('/bureau'))return 25000;
+  if(url.includes('/workflow')||url.includes('/drafts')||url.includes('/crm'))return 20000;
+  if(url.includes('/ideas')||url.includes('/projects'))return 12000;
+  return API_TTL_DEFAULT;
+}
 async function api(url,opt={}){
+  const method=String(opt.method||'GET').toUpperCase(),useCache=method==='GET'&&!opt.noMemCache;
+  const ttl=Number(opt.cacheTtl??apiCacheTtl(url)),now=Date.now(),cached=useCache?API_MEM_CACHE.get(url):null;
+  if(useCache&&cached&&now-cached.at<ttl)return cached.data;
   const timeoutMs=Number(opt.timeout||(
     url.includes('/content/image')?90000:
     url.includes('/plugy')?60000:
     url.includes('/radar/run')?120000:15000
   ));
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
-  const {timeout,...fetchOpt}=opt;
+  const {timeout,cacheTtl,noMemCache,...fetchOpt}=opt;
   try{
-    const r=await fetch(url,{cache:'no-store',...fetchOpt,signal:controller.signal,headers:{'Accept':'application/json',...(fetchOpt.body?{'Content-Type':'application/json'}:{}),...(fetchOpt.headers||{})}});
+    const r=await fetch(url,{cache:method==='GET'?'default':'no-store',...fetchOpt,signal:controller.signal,headers:{'Accept':'application/json',...(fetchOpt.body?{'Content-Type':'application/json'}:{}),...(fetchOpt.headers||{})}});
     if(!r.ok)throw new Error((await r.text())||('HTTP '+r.status));
     const ct=r.headers.get('content-type')||'';
-    return ct.includes('json')?r.json():r.text();
+    const data=ct.includes('json')?await r.json():await r.text();
+    if(useCache)API_MEM_CACHE.set(url,{at:Date.now(),data});
+    else if(method!=='GET'){for(const key of API_MEM_CACHE.keys()){if(key.startsWith('/api/'))API_MEM_CACHE.delete(key)}}
+    return data;
   }catch(e){
     if(e?.name==='AbortError')throw new Error('Délai dépassé');
+    if(useCache&&cached)return cached.data;
     throw e;
   }finally{clearTimeout(timer)}
 }
@@ -58,6 +78,7 @@ const viewDataFamilies={
   creation:['opportunities','drafts'],
   agenda:['opportunities','workflow','leads'],
   bureau:['bureau','bureauMeta'],
+  ideas:[],
   prospection:['leads'],
   network:['artists'],
   social:[],
@@ -71,7 +92,8 @@ function ensureRouteRuntime(id){
   if(id==='radar'){installRadarPresets();installMobileRadarControls()}
   if(id==='opencalls')installOpenWorkflowFilters();
   if(id==='creation'){installCreationModes();installCreationV161();setTimeout(installCreationV162,0);}
-  if(id==='bureau'){installBureauWorkspace();ensureBureauBridge()}
+  if(id==='bureau'){installBureauWorkspace();ensureBureauBridge();installProjectWorkspaceV163()}
+  if(id==='ideas')installIdeasV163();
   if(id==='network')installArtistV161();
   routeRuntimeReady.add(id);
 }
@@ -115,7 +137,8 @@ function renderRouteView(id=state.view){
   if(id==='radar')return renderRadar();
   if(id==='opencalls')return renderOpenCalls();
   if(id==='creation'){renderContentSources();fillCreationSources();renderDraftPicker();if(typeof refreshQuickSources==='function')refreshQuickSources();return}
-  if(id==='bureau'){installBureauWorkspace();setBureauMode(state.bureauMode||'documents');return}
+  if(id==='bureau'){installBureauWorkspace();installProjectWorkspaceV163();setBureauMode(state.bureauMode||'documents');return}
+  if(id==='ideas'){renderIdeasV163();return}
   if(id==='prospection')return renderLeads();
   if(id==='agenda')return renderAgenda();
   if(id==='network')return renderArtists();
@@ -272,9 +295,9 @@ function ensurePlugyFollower(){
 function plugyFollowerStage(){return ensurePlugyFollower()}
 function plugyFramingFor(target){
   const follower=$('#plugyFollower');
-  if(target&&follower&&target===follower)return{orbit:'0deg 78deg 6.10m',fov:'43deg'};
-  if(target&&target===plugyDashboardStage())return{orbit:'0deg 78deg 6.35m',fov:'44deg'};
-  return{orbit:'0deg 78deg 6.05m',fov:'43deg'};
+  if(target&&follower&&target===follower)return{orbit:'0deg 78deg 7.15m',fov:'46deg'};
+  if(target&&target===plugyDashboardStage())return{orbit:'0deg 78deg 7.35m',fov:'46deg'};
+  return{orbit:'0deg 78deg 7.10m',fov:'46deg'};
 }
 function applyPlugyFraming(target){
   const mv=$('#plugyModel');if(!mv)return;
@@ -2065,7 +2088,7 @@ function readDashboardBootCache(){
   try{
     const raw=sessionStorage.getItem(DASH_BOOT_CACHE);if(!raw)return null;
     const payload=JSON.parse(raw);
-    if(!payload?.savedAt||Date.now()-payload.savedAt>120000||!payload.boot)return null;
+    if(!payload?.savedAt||Date.now()-payload.savedAt>600000||!payload.boot)return null;
     return payload.boot;
   }catch{return null}
 }
@@ -2075,22 +2098,25 @@ function writeDashboardBootCache(boot){
 async function loadAll(){
   state.dataLoaded={opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false};state.dataPromises={};
   const cached=readDashboardBootCache();
-  if(cached&&applyDashboardBoot(cached)){renderDashboard();renderNavBadges()}
-  try{
-    const boot=await api('/api/v124/dashboard-bootstrap',{timeout:8000,cache:'default'});
-    applyDashboardBoot(boot);writeDashboardBootCache(boot);
-    renderDashboard();renderNavBadges();
-    if(requiredFamilies(state.view).length){
-      await ensureViewData(state.view,true);
-      renderRouteView(state.view);
-    }else if(state.view!=='dashboard')renderRouteView(state.view);
-    toast(cached?'Workspace actualisé':'Workspace synchronisé');
-  }catch(e){
-    console.warn('[PLUG ART V124]',e);
-    renderNavBadges();renderRouteView(state.view);toast(cached?'Mode instantané · actualisation différée':'Synchronisation partielle');
+  if(cached&&applyDashboardBoot(cached)){renderDashboard();renderNavBadges();document.documentElement.dataset.fastBoot='1'}
+  const syncBoot=async()=>{
+    try{
+      const boot=await api('/api/v124/dashboard-bootstrap',{timeout:6500,cacheTtl:15000,noMemCache:true});
+      applyDashboardBoot(boot);writeDashboardBootCache(boot);renderDashboard();renderNavBadges();
+      if(requiredFamilies(state.view).length){await ensureViewData(state.view,false);if(state.view!=='dashboard')renderRouteView(state.view)}
+      else if(state.view!=='dashboard')renderRouteView(state.view);
+      return true;
+    }catch(e){console.warn('[PLUG ART V163 boot]',e);renderNavBadges();return false}
+  };
+  if(cached){
+    if(requiredFamilies(state.view).length)ensureViewData(state.view,false).then(()=>{if(state.view!=='dashboard')renderRouteView(state.view)}).catch(()=>{});
+    const run=()=>syncBoot().catch(()=>{});
+    if('requestIdleCallback' in window)requestIdleCallback(run,{timeout:1800});else setTimeout(run,450);
+    return true;
   }
+  await syncBoot();
+  return true;
 }
-
 
 
 
@@ -3804,7 +3830,8 @@ pm?.addEventListener('click',()=>{
 });
 pm?.addEventListener('pointerdown',()=>{clearTimeout(plugyPressTimer);plugyPressTimer=setTimeout(()=>{initVoice();playMotion('Attentive',true)},650)});
 ['pointerup','pointercancel','pointerleave'].forEach(ev=>pm?.addEventListener(ev,()=>clearTimeout(plugyPressTimer)));
-startPlugyAmbient();
+const startAmbientDeferred=()=>startPlugyAmbient();
+if('requestIdleCallback' in window)requestIdleCallback(startAmbientDeferred,{timeout:2600});else setTimeout(startAmbientDeferred,1800);
 
 addEventListener('beforeunload',()=>{if(state.view==='creation'&&state.creationDirty)saveLocalCreationBackup()});
 const initial=location.hash.slice(1)||'dashboard';history.replaceState({view:initial},'','#'+initial);route(initial,false);renderSuggestions();loadAll().finally(scheduleSmartPlugyWarm);
@@ -3875,7 +3902,7 @@ async function openArtistProfileV161(aid){
 async function createArtistContactV161(aid,reopen=false){try{const r=await api('/api/v161/artists/'+aid+'/contact',{method:'POST',body:'{}'});if(r.lead&&!state.leads.some(x=>Number(x.id)===Number(r.lead.id)))state.leads.unshift(r.lead);state.dataLoaded.leads=true;toast(r.existing?'Contact déjà présent':'Fiche contact créée');if(reopen)openArtistProfileV161(aid)}catch{toast('Création du contact impossible')}}
 function openArtistEditorV161(){const name=prompt('Nom de l’artiste');if(!clean(name))return;const discipline=prompt('Discipline (ex. Photographie, Peinture)','Arts visuels')||'Arts visuels';api('/api/v86/artists',{method:'POST',body:JSON.stringify({name:clean(name),discipline:clean(discipline),tags:[]})}).then(a=>{state.bootstrap.artists=state.bootstrap.artists||[];state.bootstrap.artists.push(a);renderArtists();openArtistProfileV161(a.id)}).catch(()=>toast('Ajout artiste impossible'))}
 let plugyRoamV161Timer=0;
-function schedulePlugyRoamV161(){clearTimeout(plugyRoamV161Timer);const f=$('#plugyFollower');if(!f||!f.classList.contains('visible'))return;const mobile=innerWidth<760,max=Math.min(mobile?70:Math.max(120,innerWidth*.28),360),x=mobile?(-Math.random()*max*.55):(-Math.random()*max),y=(Math.random()-.5)*(mobile?36:72);f.style.setProperty('--plugy-roam-x',x.toFixed(0)+'px');f.style.setProperty('--plugy-roam-y',y.toFixed(0)+'px');const mv=$('#plugyModel');if(mv){mv.setAttribute('camera-orbit','0deg 76deg '+(mobile?'6.55':'6.10')+'m');mv.setAttribute('field-of-view',mobile?'45deg':'43deg')}const motion=choosePlugyMotion(['Travel','SoftTurn','Attentive','Curious']);if(motion)playMotion(motion);plugyRoamV161Timer=setTimeout(schedulePlugyRoamV161,6800+Math.random()*5200)}
+function schedulePlugyRoamV161(){clearTimeout(plugyRoamV161Timer);const f=$('#plugyFollower');if(!f||!f.classList.contains('visible'))return;const mobile=innerWidth<760,max=Math.min(mobile?70:Math.max(120,innerWidth*.28),360),x=mobile?(-Math.random()*max*.55):(-Math.random()*max),y=(Math.random()-.5)*(mobile?36:72);f.style.setProperty('--plugy-roam-x',x.toFixed(0)+'px');f.style.setProperty('--plugy-roam-y',y.toFixed(0)+'px');const mv=$('#plugyModel');if(mv){mv.setAttribute('camera-orbit','0deg 76deg '+(mobile?'7.65':'7.15')+'m');mv.setAttribute('field-of-view',mobile?'48deg':'46deg')}const motion=choosePlugyMotion(['Travel','SoftTurn','Attentive','Curious']);if(motion)playMotion(motion);plugyRoamV161Timer=setTimeout(schedulePlugyRoamV161,6800+Math.random()*5200)}
 const v161PlugyObserver=new MutationObserver(()=>{const f=$('#plugyFollower');if(f?.classList.contains('visible'))schedulePlugyRoamV161();else clearTimeout(plugyRoamV161Timer)});v161PlugyObserver.observe(document.body,{attributes:true,subtree:true,attributeFilter:['class','data-view']});addEventListener('resize',()=>{const f=$('#plugyFollower');if(f?.classList.contains('visible'))schedulePlugyRoamV161()},{passive:true});
 
 /* ---------------- V162 PREVIEW + OPPORTUNITY PUBLICATION ---------------- */
