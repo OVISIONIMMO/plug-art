@@ -42,10 +42,10 @@ LINK_HINTS=('opportun','open-call','open_call','opencall','call-for','appel','ca
 BAD_LINK_HINTS=('login','register','privacy','terms','contact','about','newsletter','facebook','instagram','cookie','press','shop')
 POSITIVE_LINK_HINTS=('open call','appel à candid','appel a candid','appel à projets','appel a projets','exhibition','exposition','collective','collectif','emerging','émergent','emergent','painting','peinture','photography','photographie','photographer','photographe','visual art','arts visuels','artist opportunity','art contemporain','galerie','gallery','programmation culturelle','résidence','residence','lieu culturel','tiers-lieu','hotel exhibition','hôtel','restaurant','café','cafe','hospitality','partner venue')
 NEGATIVE_LINK_HINTS=('competition','contest','concours','award','awards','prize','prix','récompense','recompense','trophy','job','workshop','formation','webinar')
-BLOCKED_OPPORTUNITY_HINTS=('competition','contest','concours','award','awards','prize','prix artistique','prix photo','récompense','recompense','trophy')
+BLOCKED_OPPORTUNITY_HINTS=('competition','contest','concours','award','awards','prize','prix','récompense','recompense','trophy')
 def blocked_opportunity_text(text):
  low=norm(text).lower()
- return any(re.search(r'\\b'+re.escape(k)+r'\\b',low,re.I) for k in BLOCKED_OPPORTUNITY_HINTS)
+ return any(re.search(r'\b'+re.escape(k)+r'\b',low,re.I) for k in BLOCKED_OPPORTUNITY_HINTS)
 EUROPE_WORDS=('france','italy','italie','spain','espagne','portugal','belgium','belgique','netherlands','pays-bas','united kingdom','royaume-uni','germany','allemagne','austria','autriche','switzerland','suisse')
 PARIS_WORDS=('paris','aubervilliers','saint-denis','pantin','montreuil','93','seine-saint-denis')
 
