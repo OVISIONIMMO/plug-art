@@ -574,3 +574,124 @@ body[data-view="dashboard"] .topbar{background:rgba(248,248,249,.86);border-bott
   .slide-network-grid{grid-template-columns:1fr!important}
   .slide-network-card,.slide-network-card.plugy{grid-column:auto!important;min-height:120px!important;border-right:0!important;border-bottom:1px solid rgba(93,98,111,.13)!important;padding:16px 8px!important}
 }
+
+
+/* ================= V166.1 · iPad / tablet dashboard correction ================= */
+@media (min-width:821px) and (max-width:1180px){
+  .slide-dashboard{
+    height:calc(100dvh - 92px)!important;
+    min-height:620px!important;
+    grid-template-rows:58px minmax(0,1fr)!important
+  }
+  .slide-dashboard-nav{
+    min-height:58px!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:8px!important;
+    padding:8px 12px!important
+  }
+  .slide-nav-copy{display:none!important}
+  .slide-tabs{
+    justify-content:flex-start!important;
+    gap:16px!important;
+    min-width:0!important;
+    overflow-x:auto!important;
+    overscroll-behavior-x:contain;
+    scrollbar-width:none
+  }
+  .slide-tabs::-webkit-scrollbar{display:none}
+  .slide-tabs button{
+    flex:0 0 auto!important;
+    padding:9px 3px!important;
+    min-height:40px!important;
+    font-size:11px!important;
+    letter-spacing:-.15px!important;
+    gap:0!important
+  }
+  .slide-tabs button span{display:none!important}
+  .slide-arrows{display:flex!important}
+  .dash-slide-hero{
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:auto minmax(370px,46vh) auto!important;
+    gap:12px!important;
+    align-content:start!important;
+    overflow-y:auto!important;
+    padding:22px 24px 96px!important
+  }
+  .slide-hero-copy h2{
+    font-size:clamp(42px,6.2vw,62px)!important;
+    line-height:.94!important;
+    letter-spacing:-3px!important
+  }
+  .slide-hero-copy>p{max-width:690px!important;margin-top:12px!important}
+  .slide-hero-actions{margin-top:14px!important}
+  .slide-metrics{margin-top:12px!important}
+  .slide-plugy-zone{
+    height:min(46vh,430px)!important;
+    min-height:370px!important;
+    width:min(100%,760px)!important;
+    justify-self:center!important;
+    overflow:visible!important
+  }
+  .slide-plugy-mount{
+    width:100%!important;height:100%!important;
+    display:grid!important;place-items:center!important;
+    overflow:visible!important
+  }
+  .slide-plugy-mount model-viewer{
+    width:100%!important;height:100%!important;
+    min-width:0!important;min-height:0!important;
+    transform:none!important
+  }
+  .slide-today-card{max-height:180px!important}
+}
+@media (max-width:820px){
+  .slide-dashboard{
+    height:calc(100dvh - 148px - env(safe-area-inset-bottom))!important;
+    min-height:540px!important;
+    grid-template-rows:50px minmax(0,1fr)!important
+  }
+  .slide-dashboard-nav{min-height:50px!important;padding:6px 7px!important}
+  .slide-nav-copy,.slide-arrows{display:none!important}
+  .slide-tabs{
+    gap:16px!important;
+    padding:0 6px!important;
+    overflow-x:auto!important;
+    justify-content:flex-start!important;
+    scrollbar-width:none
+  }
+  .slide-tabs::-webkit-scrollbar{display:none}
+  .slide-tabs button{
+    flex:0 0 auto!important;
+    padding:8px 2px!important;
+    min-height:38px!important;
+    font-size:10px!important;
+    gap:0!important
+  }
+  .slide-tabs button span{display:none!important}
+  .dash-slide-hero{
+    grid-template-columns:1fr!important;
+    grid-template-rows:auto 310px auto!important;
+    gap:8px!important;
+    padding:14px 12px 88px!important;
+    overflow-y:auto!important;
+    align-content:start!important
+  }
+  .slide-hero-copy h2{font-size:37px!important;line-height:.95!important;letter-spacing:-2px!important}
+  .slide-hero-copy>p{font-size:11px!important;line-height:1.5!important;margin-top:9px!important;display:block!important}
+  .slide-hero-actions{margin-top:10px!important}
+  .slide-metrics{margin-top:8px!important}
+  .slide-plugy-zone{
+    height:310px!important;min-height:310px!important;
+    width:100%!important;overflow:visible!important
+  }
+  .slide-plugy-mount{
+    width:100%!important;height:100%!important;
+    display:grid!important;place-items:center!important;overflow:visible!important
+  }
+  .slide-plugy-mount model-viewer{
+    width:100%!important;height:100%!important;
+    min-width:0!important;min-height:0!important;
+    transform:none!important
+  }
+  .slide-plugy-label{bottom:2px!important}
+}
