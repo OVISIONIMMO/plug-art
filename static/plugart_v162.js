@@ -4146,7 +4146,7 @@ function installCreationV166(){
 async function syncRuntimeVersionBadge(){
   const pill=$('#buildPill'),side=$('#sidebarVersion');
   const apply=v=>{const label='V'+String(v||'162.3').replace(/^V/i,'');if(pill)pill.textContent=label;if(side)side.textContent=label;document.documentElement.dataset.runtimeVersion=label};
-  apply('163.0');
+  apply('167.0');
   try{
     const r=await fetch('/api/v163/status',{cache:'no-store',headers:{'Accept':'application/json'}});
     if(r.ok){const data=await r.json();if(data?.version)apply(data.version)}
