@@ -480,3 +480,44 @@ body[data-plugy-state="listen"] #plugyStandaloneModel{transition:filter .22s eas
   .plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{width:220px!important;height:205px!important}
   .plugy-companion-copy strong{font-size:12px}
 }
+
+
+/* V162.3 · full-body safe framing */
+.plugy-hero,
+.plugy-model-wrap,
+.plugy-companion-mount-v162{
+  overflow:visible!important;
+  clip-path:none!important;
+  mask:none!important;
+  -webkit-mask:none!important;
+  contain:none!important
+}
+.plugy-model-wrap{
+  width:min(74vw,900px)!important;
+  min-height:88svh!important;
+  padding:3svh 0!important
+}
+#plugyStandaloneModel{
+  width:min(70vw,860px)!important;
+  height:min(88svh,860px)!important;
+  overflow:visible!important
+}
+.plugy-model-wrap.companion-mode-v162{
+  width:430px!important;
+  height:540px!important;
+  min-height:540px!important
+}
+.plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{
+  width:430px!important;
+  height:540px!important
+}
+@media(max-width:900px){
+  .plugy-model-wrap{width:100vw!important;min-height:58svh!important;padding:1svh 0!important}
+  #plugyStandaloneModel{width:100vw!important;height:60svh!important}
+  .plugy-model-wrap.companion-mode-v162{width:270px!important;height:250px!important;min-height:250px!important}
+  .plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{width:270px!important;height:250px!important}
+}
+@media(max-width:520px){
+  .plugy-model-wrap{min-height:54svh!important}
+  #plugyStandaloneModel{height:56svh!important}
+}
