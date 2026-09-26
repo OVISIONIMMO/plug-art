@@ -2925,8 +2925,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V161_READY ui=immersive_workspace plugy=expanded_stage_safe_arms creation=live_preview visual=chat_to_bureau radar=photo_hospitality_no_contests artists=profile_crm_suggestions
-
+print("PLUG_ART_V161_READY ui=immersive_workspace plugy=expanded_stage_safe_arms creation=live_preview visual=chat_to_bureau radar=photo_hospitality_no_contests artists=profile_crm_suggestions",flush=True)\n
 def _v127_runtime_smoke():
     required_routes={
       ('GET','/api/health'),
