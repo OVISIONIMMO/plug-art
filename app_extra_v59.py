@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='163.0'
+app.version='164.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -658,14 +658,15 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'163.0',
-      'ui':'plug-art-v163-fast-project-workspace',
+      'version':'164.0',
+      'ui':'plug-art-v164-fast-project-library',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
       'migration_backup_ready':backup_ready
     }
 
+@app.get('/api/v164/ui-manifest')
 @app.get('/api/v163/ui-manifest')
 @app.get('/api/v1623/ui-manifest')
 @app.get('/api/v162/ui-manifest')
@@ -705,15 +706,15 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='1631.20260926.1'
+    expected='164.20260926.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'163.0',
-      'ui':'plug-art-v163-fast-project-workspace',
+      'version':'164.0',
+      'ui':'plug-art-v164-fast-project-library',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
       'html_has_slide_css': bool(js_path.exists() and 'plugart_v160_slide.css?v=' in js_path.read_text(encoding='utf-8')),
-      'html_has_sidebar_version':'V163' in html,
+      'html_has_sidebar_version':'V164' in html,
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
@@ -733,7 +734,7 @@ def plugy_page_v130(request:Request):
     headers={
       'Cache-Control':'no-store, max-age=0',
       'ETag':etag,
-      'X-Plug-Art-Version':'163.0',
+      'X-Plug-Art-Version':'164.0',
       'X-Plug-Art-UI':'plugy-v130-standalone'
     }
     return HTMLResponse(html,headers=headers)
@@ -746,8 +747,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'no-store, max-age=0',
       'ETag':etag,
-      'X-Plug-Art-Version':'163.0',
-      'X-Plug-Art-UI':'plug-art-v163-fast-project-workspace'
+      'X-Plug-Art-Version':'164.0',
+      'X-Plug-Art-UI':'plug-art-v164-fast-project-library'
     }
     return HTMLResponse(html,headers=headers)
 
@@ -2886,6 +2887,87 @@ def ideas_delete_v156(idea_id:int):
     return {'ok':True}
 
 
+
+_V164_PROJECT_LIBRARY={
+  'aubervilliers':{
+    'label':'Aubervilliers',
+    'pdfs':[
+      ('PLUG_ART_HUB_Aubervilliers_Dossier_Complet_2026.pdf','libfile_47ab2ab160cc8191bb96640c4597c07c',2650479),
+      ('PLUG_ART_HUB_Aubervilliers_V3_Visuel_Detaille.pdf','libfile_e967a3d79cdc8191b6c3984b45f70c37',4904302),
+      ('PLUGART_Dossier_Nouvelle_Direction_Aubervilliers_2026_FINAL.pdf','libfile_dde468b530988191b16a9bc546531b26',2569346),
+      ('PLUG_ART_HUB_01_Aubervilliers.pdf','libfile_b89373537de081919dff7028d8f88711',965806),
+      ('PLUG_ART_HUB_Benchmark_Strategie_Aubervilliers.pdf','libfile_737d476e93fc81918e7ad993388b7c34',55062)
+    ],
+    'visuals':[
+      ('Présentation Plug Art Hub Aubervilliers.png','libfile_847abb71c8dc8191aa0d80d3b9f9ffb0'),
+      ('Dossier créatif Plug Art Hub 01.png','libfile_57e6687950cc8191b1fdd87e43ba4362')
+    ]
+  },
+  'millenaire':{
+    'label':'Le Millénaire',
+    'pdfs':[
+      ('PLUG_ART_Millenaire_Dossier_25_Visuels.pdf','libfile_18265295c07081919affa444cef29444',86386002),
+      ('PLUG_ART_Le_Millenaire_Vision_2027_Premium.pdf','libfile_21b773be684c8191ab8bb7bcaf2cc856',1702176),
+      ('PLUG_ART_Le_Millenaire_Plan_3D_Investisseurs.pdf','libfile_1c5eee179da48191b3a6b171643d8e79',1533084),
+      ('PLUG_ART_HUB_Dossier_Projet_Le_Millenaire.pdf','libfile_b3fc339210848191884df93ae84d12e0',7330684),
+      ('PLUG_ART_HUB_Millenaire_Dossier_Complet.pdf','libfile_58f2252358b08191b72a2ddb49eb8b45',129652),
+      ('PLUG_ART_Guide_Strategique_Association_Millenaire_2026.pdf','libfile_6cefbc9e3370819194249036a84dbf4c',584320)
+    ],
+    'visuals':[('Galerie des Docks · visuel intégré','hub:millenaire_gallery')]
+  },
+  'gennevilliers':{
+    'label':'Gennevilliers',
+    'pdfs':[],
+    'visuals':[
+      ('PLUG ART HUB, réemploi artistique à Gennevilliers.png','libfile_d1383cc0d4ac8191b9ff1d8ef8e3e802'),
+      ('Planche architecturale du Plug Art Hub.png','libfile_5eedd19dfe988191a94d4fa14fc18848'),
+      ('Galerie et ateliers du PLUG ART HUB.png','libfile_ae90d25facc08191990a6a18ea5919eb')
+    ]
+  },
+  'chanteraines':{
+    'label':'Chanteraines',
+    'pdfs':[('PLUG_ART_Chanteraines_Schema_Directeur_2026.pdf','libfile_5603ae65810c8191827ea7e49773fe09',364821)],
+    'visuals':[]
+  }
+}
+
+@app.post('/api/v164/projects/library/seed')
+def projects_library_seed_v164(body:dict={}):
+    body=body or {}
+    target=str(body.get('project') or '').strip().lower()
+    projects=[target] if target in _V164_PROJECT_LIBRARY else list(_V164_PROJECT_LIBRARY)
+    now=_now_v85();created=[];existing=[]
+    db=core.conn()
+    try:
+      for project in projects:
+        cat=_V164_PROJECT_LIBRARY[project];label=cat['label'];folder=('Projet · '+label)[:80]
+        for kind,items in (('PDF',cat.get('pdfs') or []),('Visuel',cat.get('visuals') or [])):
+          for item in items:
+            name=str(item[0]);ref=str(item[1]);size=int(item[2]) if len(item)>2 else 0
+            source_type='chatgpt_library_'+kind.lower()
+            hit=db.execute('select id from bureau_documents where source_type=? and source_id=? limit 1',(source_type,ref[:120])).fetchone()
+            if hit:
+              existing.append(int(hit[0]));continue
+            body_text=(
+              f"Archive {kind} retrouvée dans les conversations / ChatGPT Library.\n\n"
+              f"Projet : {label}\nFichier : {name}\nRéférence Library : {ref}"
+              +(f"\nTaille : {size} octets" if size else '')
+              +"\n\nCette fiche sert d’index dans le Bureau. L’original privé reste dans ChatGPT Library tant qu’il n’est pas importé manuellement dans le stockage du site."
+            )
+            cur=db.execute("""insert into bureau_documents
+              (title,body,folder,tags,pinned,source_type,source_id,created_at,updated_at)
+              values(?,?,?,?,?,?,?,?,?)""",
+              (name.rsplit('.',1)[0],body_text,folder,f'projet, {project}, {kind.lower()}, ChatGPT Library',0,source_type,ref[:120],now,now))
+            created.append(int(cur.lastrowid))
+      db.commit()
+    finally:
+      db.close()
+    return {'ok':True,'projects':projects,'created':len(created),'existing':len(existing),'created_ids':created}
+
+@app.get('/api/v164/projects/library')
+def projects_library_v164():
+    return {'ok':True,'projects':_V164_PROJECT_LIBRARY}
+
 @app.get('/api/v163/diagnostics')
 def diagnostics_v163():
     started=time.perf_counter()
@@ -2906,7 +2988,7 @@ def diagnostics_v163():
     active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
     critical=[
       ('GET','/api/health'),('GET','/api/v124/dashboard-bootstrap'),('POST','/api/v125/plugy/stream'),
-      ('POST','/api/v162/plugy/speech'),('GET','/api/v156/bureau/files'),('GET','/api/v156/ideas'),
+      ('POST','/api/v162/plugy/speech'),('GET','/api/v156/bureau/files'),('GET','/api/v156/ideas'),('POST','/api/v164/projects/library/seed'),
       ('GET','/api/v86/crm'),('POST','/api/radar/run')
     ]
     missing=[f'{m} {p}' for m,p in critical if (m,p) not in active]
@@ -2926,8 +3008,9 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'163.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'164.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
+@app.get('/api/v164/status')
 @app.get('/api/v163/status')
 @app.get('/api/v1623/status')
 @app.get('/api/v162/status')
@@ -2939,7 +3022,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'163.0','ui':'plug-art-v163-fast-project-workspace',
+      'ok':True,'version':'164.0','ui':'plug-art-v164-fast-project-library',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -3008,8 +3091,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'163.0',
-      'ui':'plug-art-v163-fast-project-workspace',
+      'version':'164.0',
+      'ui':'plug-art-v164-fast-project-library',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -3036,7 +3119,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V163_READY ui=fast_project_workspace plugy=full_body_dezoom lazy=studio_hub ideas=visible pdf=project_generation cache=memory_session",flush=True)
+print("PLUG_ART_V164_READY ui=fast_project_library plugy=full_body_safe prefetch=intent ideas=visible pdf=project_generation library=indexed cache=memory_session",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
@@ -3064,6 +3147,7 @@ def _v127_runtime_smoke():
       ('POST','/api/v156/bureau/files'),
       ('GET','/api/v156/ideas'),
       ('POST','/api/v156/ideas'),
+      ('POST','/api/v164/projects/library/seed'),('GET','/api/v164/projects/library'),
       ('GET','/api/v163/diagnostics'),
       ('GET','/api/v163/status')
     }
