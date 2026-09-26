@@ -55,7 +55,16 @@ def domain(u):
 
 def conn():
  DB.parent.mkdir(parents=True,exist_ok=True)
- c=sqlite3.connect(DB,timeout=20);c.row_factory=sqlite3.Row;c.execute('PRAGMA journal_mode=WAL');c.execute('PRAGMA busy_timeout=10000');return c
+ c=sqlite3.connect(DB,timeout=5);c.row_factory=sqlite3.Row
+ try:
+  mode=str(c.execute('PRAGMA journal_mode').fetchone()[0]).lower()
+  if mode!='wal':c.execute('PRAGMA journal_mode=WAL')
+ except Exception:pass
+ c.execute('PRAGMA busy_timeout=3500')
+ c.execute('PRAGMA synchronous=NORMAL')
+ c.execute('PRAGMA temp_store=MEMORY')
+ c.execute('PRAGMA wal_autocheckpoint=1000')
+ return c
 
 def addcol(c,table,col,definition):
  try:c.execute(f'ALTER TABLE {table} ADD COLUMN {col} {definition}')
