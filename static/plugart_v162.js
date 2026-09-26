@@ -3925,4 +3925,16 @@ function installCreationV162(){
     stage.prepend(badge);$('#creationPreviewFitV162').onclick=()=>fitStudioCanvas();
   }
 }
+
+/* V162.3.1 · version display is sourced from the runtime, never hard-coded legacy badges. */
+async function syncRuntimeVersionBadge(){
+  const pill=$('#buildPill'),side=$('#sidebarVersion');
+  const apply=v=>{const label='V'+String(v||'162.3').replace(/^V/i,'');if(pill)pill.textContent=label;if(side)side.textContent=label;document.documentElement.dataset.runtimeVersion=label};
+  apply('162.3');
+  try{
+    const r=await fetch('/api/v1623/status',{cache:'no-store',headers:{'Accept':'application/json'}});
+    if(r.ok){const data=await r.json();if(data?.version)apply(data.version)}
+  }catch{}
+}
+syncRuntimeVersionBadge();
 })();
