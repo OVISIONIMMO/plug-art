@@ -3186,3 +3186,116 @@ body[data-plugy-motion="Charge"] .plugy-follower:before,body[data-plugy-motion="
 .plugy-follower,.plugy-follower #plugyModel{will-change:transform}
 body[data-plugy-motion="Speak"] .plugy-follower{filter:saturate(1.02)}
 body[data-plugy-motion="Think"] .plugy-follower,body[data-plugy-motion="Charge"] .plugy-follower{filter:saturate(1.05)}
+
+
+/* ================= V162.3 DISPLAY + EDITOR POLISH ================= */
+/* PLUGY must never be visually cropped by its host containers. */
+.slide-plugy-mount,
+.dashboard-plugy-mount,
+.plugy-stage,
+.plugy-follower{
+  overflow:visible!important;
+  clip-path:none!important;
+  mask:none!important;
+  -webkit-mask:none!important;
+  contain:none!important
+}
+.plugy-stage{
+  height:340px!important;
+  min-height:340px!important;
+  padding:10px 0 18px!important
+}
+.plugy-stage model-viewer,
+.slide-plugy-mount model-viewer,
+.dashboard-plugy-mount model-viewer{
+  width:100%!important;
+  height:100%!important;
+  min-height:320px!important;
+  overflow:visible!important;
+  object-fit:contain!important
+}
+.plugy-follower{
+  width:min(640px,64vw)!important;
+  height:min(600px,72vh)!important
+}
+.plugy-follower #plugyModel{
+  inset:0!important;
+  width:100%!important;
+  height:100%!important
+}
+
+/* Main slide typography now follows explicit editor controls. */
+.carousel-copy{
+  font-family:var(--slide-font-family,"Space Grotesk",sans-serif)!important;
+  line-height:var(--slide-line-height,1.08);
+  letter-spacing:var(--slide-letter-spacing,0)
+}
+.carousel-copy h3{
+  font-family:inherit!important;
+  font-size:var(--slide-title-size,46px)!important;
+  font-weight:var(--slide-font-weight,700)!important;
+  line-height:var(--slide-line-height,1.08)!important;
+  letter-spacing:var(--slide-letter-spacing,-.4px)!important
+}
+.carousel-copy p{
+  font-family:inherit!important;
+  font-size:var(--slide-body-size,15px)!important;
+  line-height:calc(var(--slide-line-height,1.08) + .28)!important;
+  letter-spacing:var(--slide-letter-spacing,0)!important
+}
+.carousel-copy small{
+  font-family:inherit!important;
+  font-size:var(--slide-label-size,11px)!important;
+  font-weight:var(--slide-font-weight,700)!important;
+  letter-spacing:calc(var(--slide-letter-spacing,0px) + .45px)!important
+}
+.carousel-copy b{
+  font-family:inherit!important;
+  font-size:var(--slide-cta-size,12px)!important;
+  font-weight:var(--slide-font-weight,700)!important;
+  letter-spacing:var(--slide-letter-spacing,0)!important
+}
+
+.studio-type-pro-v163{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  padding:11px;
+  border:1px solid #e4e5e9;
+  border-radius:14px;
+  background:linear-gradient(145deg,#fff,#f8f8fb)
+}
+.studio-type-pro-v163 label{
+  min-width:0;
+  display:grid;
+  gap:5px
+}
+.studio-type-pro-v163 label:nth-child(n+3){grid-column:1/-1}
+.studio-type-pro-v163 output{
+  float:right;
+  color:#5c5f69;
+  font-weight:800;
+  text-transform:none;
+  letter-spacing:0
+}
+.studio-type-pro-v163 input[type="range"]{padding:0!important}
+.studio-type-pro-v163 select{min-width:0}
+
+.visual-settings-row{grid-template-columns:1fr 1fr 1fr!important}
+.visual-generate-row-v163{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:7px
+}
+.visual-generate-row-v163 button{min-height:43px}
+.visual-generate-row-v163 .secondary-btn{padding-inline:14px;white-space:nowrap}
+
+@media(max-width:900px){
+  .plugy-stage{height:300px!important;min-height:300px!important}
+  .visual-settings-row{grid-template-columns:1fr!important}
+  .studio-type-pro-v163{grid-template-columns:1fr}
+  .studio-type-pro-v163 label{grid-column:1!important}
+}
+@media(max-width:760px){
+  .plugy-follower{width:96vw!important;height:58vh!important;right:-20vw!important}
+}
