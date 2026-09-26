@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='165.0'
+app.version='166.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -727,7 +727,7 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='165.20260926.1'
+    expected='166.20260926.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
       'version':'164.0',
@@ -936,6 +936,26 @@ def opportunity_thumbnail_v67(oid:int):
                 return Response(content=rr.content,media_type=ct,headers={'Cache-Control':'public,max-age=86400,stale-while-revalidate=604800','X-PLUG-Image-Source':candidate['source']})
         except Exception:pass
     return Response(status_code=404)
+
+
+@app.get('/api/v166/opportunities/{oid}/media/{index}')
+def opportunity_media_asset_v166(oid:int,index:int):
+    item,url,media=_opportunity_media(oid)
+    if index<0 or index>=min(len(media),12):raise HTTPException(404,'Media introuvable')
+    candidate=media[index];key=f"v166:{oid}:{index}";now=time.time();cached=MEDIA_BYTES_CACHE.get(key)
+    if cached and now-cached[0]<21600:
+        return Response(content=cached[1],media_type=cached[2],headers={'Cache-Control':'public,max-age=86400,stale-while-revalidate=604800','X-PLUG-Image-Source':candidate.get('source','official')})
+    headers={'User-Agent':'Mozilla/5.0 PLUGART-Media/3.0','Referer':url or 'https://plug-art-live-production.up.railway.app/','Accept':'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'}
+    try:
+        rr=requests.get(candidate['url'],timeout=10,headers=headers,allow_redirects=True)
+        ct=(rr.headers.get('content-type') or '').split(';')[0].lower()
+        if not rr.ok or not ct.startswith('image/') or len(rr.content)<1200 or len(rr.content)>12_000_000:
+            raise HTTPException(404,'Image officielle indisponible')
+        MEDIA_BYTES_CACHE[key]=(now,rr.content,ct)
+        if len(MEDIA_BYTES_CACHE)>128:MEDIA_BYTES_CACHE.pop(next(iter(MEDIA_BYTES_CACHE)))
+        return Response(content=rr.content,media_type=ct,headers={'Cache-Control':'public,max-age=86400,stale-while-revalidate=604800','X-PLUG-Image-Source':candidate.get('source','official')})
+    except HTTPException:raise
+    except Exception:raise HTTPException(404,'Image officielle indisponible')
 
 
 # V85 internal control center.
