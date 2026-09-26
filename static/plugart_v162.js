@@ -306,9 +306,9 @@ function ensurePlugyFollower(){
 function plugyFollowerStage(){return ensurePlugyFollower()}
 function plugyFramingFor(target){
   const follower=$('#plugyFollower');
-  if(target&&follower&&target===follower)return{orbit:'0deg 78deg 7.15m',fov:'46deg'};
-  if(target&&target===plugyDashboardStage())return{orbit:'0deg 78deg 7.35m',fov:'46deg'};
-  return{orbit:'0deg 78deg 7.10m',fov:'46deg'};
+  if(target&&follower&&target===follower)return{orbit:'0deg 78deg 8.10m',fov:'48deg'};
+  if(target&&target===plugyDashboardStage())return{orbit:'0deg 78deg 8.25m',fov:'48deg'};
+  return{orbit:'0deg 78deg 8.15m',fov:'48deg'};
 }
 function applyPlugyFraming(target){
   const mv=$('#plugyModel');if(!mv)return;
@@ -3926,7 +3926,7 @@ async function openArtistProfileV161(aid){
 async function createArtistContactV161(aid,reopen=false){try{const r=await api('/api/v161/artists/'+aid+'/contact',{method:'POST',body:'{}'});if(r.lead&&!state.leads.some(x=>Number(x.id)===Number(r.lead.id)))state.leads.unshift(r.lead);state.dataLoaded.leads=true;toast(r.existing?'Contact déjà présent':'Fiche contact créée');if(reopen)openArtistProfileV161(aid)}catch{toast('Création du contact impossible')}}
 function openArtistEditorV161(){const name=prompt('Nom de l’artiste');if(!clean(name))return;const discipline=prompt('Discipline (ex. Photographie, Peinture)','Arts visuels')||'Arts visuels';api('/api/v86/artists',{method:'POST',body:JSON.stringify({name:clean(name),discipline:clean(discipline),tags:[]})}).then(a=>{state.bootstrap.artists=state.bootstrap.artists||[];state.bootstrap.artists.push(a);renderArtists();openArtistProfileV161(a.id)}).catch(()=>toast('Ajout artiste impossible'))}
 let plugyRoamV161Timer=0;
-function schedulePlugyRoamV161(){clearTimeout(plugyRoamV161Timer);const f=$('#plugyFollower');if(!f||!f.classList.contains('visible'))return;const mobile=innerWidth<760,max=Math.min(mobile?70:Math.max(120,innerWidth*.28),360),x=mobile?(-Math.random()*max*.55):(-Math.random()*max),y=(Math.random()-.5)*(mobile?36:72);f.style.setProperty('--plugy-roam-x',x.toFixed(0)+'px');f.style.setProperty('--plugy-roam-y',y.toFixed(0)+'px');const mv=$('#plugyModel');if(mv){mv.setAttribute('camera-orbit','0deg 76deg '+(mobile?'7.65':'7.15')+'m');mv.setAttribute('field-of-view',mobile?'48deg':'46deg')}const motion=choosePlugyMotion(['Travel','SoftTurn','Attentive','Curious']);if(motion)playMotion(motion);plugyRoamV161Timer=setTimeout(schedulePlugyRoamV161,6800+Math.random()*5200)}
+function schedulePlugyRoamV161(){clearTimeout(plugyRoamV161Timer);const f=$('#plugyFollower');if(!f||!f.classList.contains('visible'))return;const mobile=innerWidth<760,max=Math.min(mobile?70:Math.max(120,innerWidth*.28),360),x=mobile?(-Math.random()*max*.55):(-Math.random()*max),y=(Math.random()-.5)*(mobile?36:72);f.style.setProperty('--plugy-roam-x',x.toFixed(0)+'px');f.style.setProperty('--plugy-roam-y',y.toFixed(0)+'px');const mv=$('#plugyModel');if(mv){mv.setAttribute('camera-orbit','0deg 76deg '+(mobile?'8.70':'8.10')+'m');mv.setAttribute('field-of-view',mobile?'50deg':'48deg')}const motion=choosePlugyMotion(['Travel','SoftTurn','Attentive','Curious']);if(motion)playMotion(motion);plugyRoamV161Timer=setTimeout(schedulePlugyRoamV161,6800+Math.random()*5200)}
 const v161PlugyObserver=new MutationObserver(()=>{const f=$('#plugyFollower');if(f?.classList.contains('visible'))schedulePlugyRoamV161();else clearTimeout(plugyRoamV161Timer)});v161PlugyObserver.observe(document.body,{attributes:true,subtree:true,attributeFilter:['class','data-view']});addEventListener('resize',()=>{const f=$('#plugyFollower');if(f?.classList.contains('visible'))schedulePlugyRoamV161()},{passive:true});
 
 /* ---------------- V162 PREVIEW + OPPORTUNITY PUBLICATION ---------------- */
@@ -3981,9 +3981,9 @@ function installCreationV162(){
 async function syncRuntimeVersionBadge(){
   const pill=$('#buildPill'),side=$('#sidebarVersion');
   const apply=v=>{const label='V'+String(v||'162.3').replace(/^V/i,'');if(pill)pill.textContent=label;if(side)side.textContent=label;document.documentElement.dataset.runtimeVersion=label};
-  apply('162.3');
+  apply('163.0');
   try{
-    const r=await fetch('/api/v1623/status',{cache:'no-store',headers:{'Accept':'application/json'}});
+    const r=await fetch('/api/v163/status',{cache:'no-store',headers:{'Accept':'application/json'}});
     if(r.ok){const data=await r.json();if(data?.version)apply(data.version)}
   }catch{}
 }
