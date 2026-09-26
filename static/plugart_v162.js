@@ -3977,4 +3977,132 @@ async function syncRuntimeVersionBadge(){
   }catch{}
 }
 syncRuntimeVersionBadge();
+
+
+/* ================= V163 PROJECT ASSET DESK ================= */
+const PROJECT_LIBRARY_V163={
+  aubervilliers:{
+    pdfs:[
+      {name:'PLUG_ART_HUB_Aubervilliers_Dossier_Complet_2026.pdf',ref:'libfile_47ab2ab160cc8191bb96640c4597c07c',size:2650479},
+      {name:'PLUG_ART_HUB_Aubervilliers_V3_Visuel_Detaille.pdf',ref:'libfile_e967a3d79cdc8191b6c3984b45f70c37',size:4904302},
+      {name:'PLUGART_Dossier_Nouvelle_Direction_Aubervilliers_2026_FINAL.pdf',ref:'libfile_dde468b530988191b16a9bc546531b26',size:2569346},
+      {name:'PLUG_ART_HUB_01_Aubervilliers.pdf',ref:'libfile_b89373537de081919dff7028d8f88711',size:965806},
+      {name:'PLUG_ART_HUB_Benchmark_Strategie_Aubervilliers.pdf',ref:'libfile_737d476e93fc81918e7ad993388b7c34',size:55062}
+    ],
+    visuals:[
+      {name:'Présentation Plug Art Hub Aubervilliers.png',ref:'libfile_847abb71c8dc8191aa0d80d3b9f9ffb0'},
+      {name:'Dossier créatif Plug Art Hub 01.png',ref:'libfile_57e6687950cc8191b1fdd87e43ba4362'}
+    ]
+  },
+  millenaire:{
+    pdfs:[
+      {name:'PLUG_ART_Millenaire_Dossier_25_Visuels.pdf',ref:'libfile_18265295c07081919affa444cef29444',size:86386002},
+      {name:'PLUG_ART_Le_Millenaire_Vision_2027_Premium.pdf',ref:'libfile_21b773be684c8191ab8bb7bcaf2cc856',size:1702176},
+      {name:'PLUG_ART_Le_Millenaire_Plan_3D_Investisseurs.pdf',ref:'libfile_1c5eee179da48191b3a6b171643d8e79',size:1533084},
+      {name:'PLUG_ART_HUB_Dossier_Projet_Le_Millenaire.pdf',ref:'libfile_b3fc339210848191884df93ae84d12e0',size:7330684},
+      {name:'PLUG_ART_HUB_Millenaire_Dossier_Complet.pdf',ref:'libfile_58f2252358b08191b72a2ddb49eb8b45',size:129652},
+      {name:'PLUG_ART_Guide_Strategique_Association_Millenaire_2026.pdf',ref:'libfile_6cefbc9e3370819194249036a84dbf4c',size:584320}
+    ],
+    visuals:[{name:'Galerie des Docks · visuel intégré',ref:'hub:millenaire_gallery'}]
+  },
+  gennevilliers:{
+    pdfs:[],
+    visuals:[
+      {name:'PLUG ART HUB, réemploi artistique à Gennevilliers.png',ref:'libfile_d1383cc0d4ac8191b9ff1d8ef8e3e802'},
+      {name:'Planche architecturale du Plug Art Hub.png',ref:'libfile_5eedd19dfe988191a94d4fa14fc18848'},
+      {name:'Galerie et ateliers du PLUG ART HUB.png',ref:'libfile_ae90d25facc08191990a6a18ea5919eb'}
+    ]
+  },
+  chanteraines:{
+    pdfs:[{name:'PLUG_ART_Chanteraines_Schema_Directeur_2026.pdf',ref:'libfile_5603ae65810c8191827ea7e49773fe09',size:364821}],
+    visuals:[]
+  }
+};
+function bytesLabelV163(n){n=Number(n||0);if(!n)return '';if(n>1024*1024)return (n/1024/1024).toFixed(n>10?0:1)+' Mo';return Math.max(1,Math.round(n/1024))+' Ko'}
+function projectLabelV163(key){return HUB_PROJECTS[key]?.short||key}
+function installProjectWorkspaceV163(){
+  const view=$('#view-bureau');if(!view||$('#bureauProjectsMode'))return;
+  const section=document.createElement('section');section.id='bureauProjectsMode';section.className='bureau-mode-panel project-desk-v163';
+  section.innerHTML='<aside class="project-nav-v163 panel"><div><small>PROJETS</small><strong>Dossiers & ressources</strong></div><div id="projectNavV163"></div><button id="projectNewPdfV163">＋ Importer un PDF</button><input id="projectPdfInputV163" type="file" accept="application/pdf" hidden></aside><section class="project-main-v163" id="projectMainV163"></section>';
+  view.appendChild(section);
+  $('#projectPdfInputV163').onchange=e=>uploadProjectPdfV163(e.target.files?.[0]);
+  $('#projectNewPdfV163').onclick=()=>$('#projectPdfInputV163').click();
+}
+async function renderProjectWorkspaceV163(key=state.projectMode||'millenaire'){
+  installProjectWorkspaceV163();state.projectMode=HUB_PROJECTS[key]?key:'millenaire';
+  const nav=$('#projectNavV163'),main=$('#projectMainV163');if(!nav||!main)return;
+  nav.innerHTML=Object.entries(HUB_PROJECTS).map(([k,p])=>'<button class="'+(k===state.projectMode?'active':'')+'" data-project-v163="'+k+'"><span>'+esc(p.short)+'</span><small>'+esc(p.eyebrow)+'</small></button>').join('');
+  $$('[data-project-v163]',nav).forEach(b=>b.onclick=()=>renderProjectWorkspaceV163(b.dataset.projectV163));
+  main.innerHTML='<div class="project-loading-v163">Chargement du projet…</div>';
+  await ensureHubAssetsV163().catch(()=>{});
+  const [files,ideas]=await Promise.all([
+    api('/api/v156/bureau/files?project='+encodeURIComponent(state.projectMode),{cacheTtl:5000,noMemCache:true}).catch(()=>[]),
+    api('/api/v156/ideas',{cacheTtl:5000,noMemCache:true}).catch(()=>[])
+  ]);
+  state.projectFiles=Array.isArray(files)?files:[];
+  const projectIdeas=(Array.isArray(ideas)?ideas:[]).filter(x=>(x.project||'')===state.projectMode);
+  const p=HUB_PROJECTS[state.projectMode],catalog=PROJECT_LIBRARY_V163[state.projectMode]||{pdfs:[],visuals:[]},img=p.visualKey?hubImage(p.visualKey):'';
+  main.innerHTML=
+    '<section class="project-hero-v163 panel">'+
+      '<div class="project-cover-v163 '+(img?'has-image':'')+'" id="projectCoverV163"><span>'+esc(p.short)+'</span></div>'+
+      '<div class="project-hero-copy-v163"><small>'+esc(p.eyebrow)+'</small><h2>'+esc(p.title)+'</h2><p>'+esc(p.summary)+'</p><div class="project-tags-v163">'+p.areas.slice(0,6).map(x=>'<span>'+esc(x)+'</span>').join('')+'</div><div class="project-actions-v163"><button id="projectGeneratePdfV163">▤ Générer le PDF projet</button><button id="projectIdeaV163">✦ Nouvelle idée</button><button id="projectPlugyV163">✦ PLUGY</button></div></div>'+
+    '</section>'+
+    '<div class="project-grid-v163">'+
+      '<section class="panel project-assets-v163"><div class="project-section-head-v163"><div><small>PDF BUREAU</small><strong>Fichiers stockés dans le projet</strong></div><button id="projectUploadInlineV163">＋ PDF</button></div><div id="projectUploadedPdfsV163">'+renderUploadedPdfsV163(state.projectFiles)+'</div></section>'+
+      '<section class="panel project-assets-v163"><div class="project-section-head-v163"><div><small>ARCHIVES CHATGPT LIBRARY</small><strong>PDF retrouvés dans tes conversations</strong></div><span>'+catalog.pdfs.length+' fichiers</span></div><div class="project-library-list-v163">'+renderLibraryPdfsV163(catalog.pdfs)+'</div></section>'+
+      '<section class="panel project-assets-v163"><div class="project-section-head-v163"><div><small>VISUELS</small><strong>Références du projet</strong></div><span>'+catalog.visuals.length+' références</span></div><div class="project-visual-grid-v163">'+renderProjectVisualsV163(catalog.visuals,!!img)+'</div></section>'+
+      '<section class="panel project-assets-v163"><div class="project-section-head-v163"><div><small>NUAGE À IDÉES</small><strong>'+projectIdeas.length+' idée'+(projectIdeas.length>1?'s':'')+'</strong></div><button id="projectOpenIdeasV163">Ouvrir le nuage</button></div><div class="project-ideas-mini-v163">'+(projectIdeas.slice(0,5).map(i=>'<button data-project-idea="'+i.id+'"><b>'+esc(i.title)+'</b><span>'+esc((i.body||'').slice(0,90))+'</span></button>').join('')||'<div class="empty">Aucune idée liée pour le moment.</div>')+'</div></section>'+
+    '</div>';
+  if(img){const cover=$('#projectCoverV163');if(cover)cover.style.backgroundImage='url("'+img.replace(/"/g,'%22')+'")';const first=$('.project-visual-grid-v163 .visual-preview-v163');if(first)first.style.backgroundImage='url("'+img.replace(/"/g,'%22')+'")'}
+  $('#projectGeneratePdfV163').onclick=()=>generateProjectPdfV163(state.projectMode);
+  $('#projectIdeaV163').onclick=()=>createIdeaV163(state.projectMode);
+  $('#projectPlugyV163').onclick=()=>openPlugy('Projet '+p.title+' : '+p.summary+' Analyse les prochaines priorités, les documents et les idées à consolider.');
+  $('#projectUploadInlineV163').onclick=()=>$('#projectPdfInputV163').click();
+  $('#projectOpenIdeasV163').onclick=()=>{state.ideaProject=state.projectMode;route('ideas')};
+  $$('[data-project-idea]').forEach(b=>b.onclick=()=>{state.ideaProject=state.projectMode;route('ideas')});
+  $$('[data-library-pdf]').forEach(b=>b.onclick=()=>catalogPdfToBureauV163(state.projectMode,Number(b.dataset.libraryPdf)));
+  $$('[data-project-delete-pdf]').forEach(b=>b.onclick=()=>deleteProjectPdfV163(Number(b.dataset.projectDeletePdf)));
+}
+function renderUploadedPdfsV163(files){
+  return files.length?'<div class="project-pdf-list-v163">'+files.map(f=>'<article><b>PDF</b><div><strong>'+esc(f.name||f.original_name||'Document')+'</strong><span>'+esc(bytesLabelV163(f.size_bytes))+' · '+esc(f.folder||'PDF')+'</span></div><div><a href="'+esc(f.content_url)+'" target="_blank" rel="noopener">Ouvrir ↗</a><button data-project-delete-pdf="'+f.id+'">×</button></div></article>').join('')+'</div>':'<div class="empty">Aucun PDF importé dans le stockage du Bureau.</div>';
+}
+function renderLibraryPdfsV163(pdfs){
+  return pdfs.length?pdfs.map((f,i)=>'<article><b>LIB</b><div><strong>'+esc(f.name)+'</strong><span>'+esc(bytesLabelV163(f.size))+' · ChatGPT Library</span></div><button data-library-pdf="'+i+'">Ajouter une fiche</button></article>').join(''):'<div class="empty">Aucun PDF Library indexé pour ce projet.</div>';
+}
+function renderProjectVisualsV163(visuals,hasPreview){
+  return visuals.length?visuals.map((v,i)=>'<article class="'+(hasPreview&&i===0?'visual-preview-v163':'')+'"><span>'+esc(v.name)+'</span><small>'+esc(v.ref?.startsWith('libfile_')?'ChatGPT Library':'Bureau visuel')+'</small></article>').join(''):'<div class="empty">Aucun visuel catalogué.</div>';
+}
+async function catalogPdfToBureauV163(project,index){
+  const f=PROJECT_LIBRARY_V163[project]?.pdfs?.[index];if(!f)return;
+  try{
+    const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:f.name.replace(/\.pdf$/i,''),body:'Archive PDF retrouvée dans ChatGPT Library.\\n\\nFichier : '+f.name+'\\nRéférence Library : '+f.ref+'\\nTaille : '+bytesLabelV163(f.size),folder:'Projet · '+projectLabelV163(project),tags:'PDF, projet, Library, '+project})});
+    state.bureau.unshift(n);toast('Fiche PDF ajoutée au Bureau');
+  }catch{toast('Ajout impossible')}
+}
+async function uploadProjectPdfV163(file){
+  if(!file)return;if(file.type!=='application/pdf')return toast('PDF uniquement');if(file.size>30*1024*1024)return toast('PDF limité à 30 Mo');
+  const project=state.projectMode||'millenaire',reader=new FileReader();
+  reader.onload=async()=>{try{toast('Import du PDF…');await api('/api/v156/bureau/files',{method:'POST',timeout:60000,body:JSON.stringify({data_url:reader.result,original_name:file.name,name:file.name.replace(/\.pdf$/i,''),folder:'Projet',project,notes:'Importé depuis Bureau · Projets'})});toast('PDF ajouté au projet');renderProjectWorkspaceV163(project)}catch{toast('Import PDF impossible')}};
+  reader.readAsDataURL(file);
+}
+async function deleteProjectPdfV163(id){
+  if(!confirm('Supprimer ce PDF du Bureau ?'))return;
+  try{await api('/api/v156/bureau/files/'+id,{method:'DELETE'});toast('PDF supprimé');renderProjectWorkspaceV163(state.projectMode)}catch{toast('Suppression impossible')}
+}
+function blobToDataUrlV163(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(blob)})}
+async function generateProjectPdfV163(project){
+  const p=HUB_PROJECTS[project];if(!p)return;const button=$('#projectGeneratePdfV163'),old=button?.textContent;if(button){button.disabled=true;button.textContent='Génération…'}
+  try{
+    const PDF=await loadJsPdf();if(!PDF)throw new Error('pdf');
+    const doc=new PDF({unit:'mm',format:'a4'}),m=18;doc.setFont('helvetica','bold');doc.setFontSize(23);doc.text('PLUG ART',m,23);doc.setFontSize(16);doc.text(p.short,m,34);doc.setFont('helvetica','normal');doc.setFontSize(9);
+    let y=45;for(const line of doc.splitTextToSize(p.summary,170)){doc.text(line,m,y);y+=4.5}y+=5;
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text('PROGRAMME',m,y);y+=7;doc.setFont('helvetica','normal');doc.setFontSize(9);for(const a of p.areas){doc.text('• '+a,m+2,y);y+=5}
+    const catalog=PROJECT_LIBRARY_V163[project]?.pdfs||[];if(y>210){doc.addPage();y=22}y+=5;doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text('DOCUMENTS RÉFÉRENCÉS',m,y);y+=7;doc.setFont('helvetica','normal');doc.setFontSize(8);for(const f of catalog){const lines=doc.splitTextToSize(f.name,165);doc.text(lines,m+2,y);y+=lines.length*4.2;if(y>272){doc.addPage();y=22}}
+    const ideas=await api('/api/v156/ideas',{noMemCache:true}).catch(()=>[]),filtered=(ideas||[]).filter(i=>i.project===project);if(filtered.length){if(y>225){doc.addPage();y=22}y+=4;doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text('IDÉES DU PROJET',m,y);y+=7;doc.setFont('helvetica','normal');doc.setFontSize(8);for(const idea of filtered.slice(0,12)){doc.text('• '+String(idea.title||'Idée').slice(0,95),m+2,y);y+=5;if(y>272){doc.addPage();y=22}}}
+    doc.setProperties({title:'PLUG ART · '+p.short,subject:'Dossier projet PLUG ART'});
+    const blob=doc.output('blob'),filename='PLUG_ART_'+project+'_dossier_'+new Date().toISOString().slice(0,10)+'.pdf',dataUrl=await blobToDataUrlV163(blob);
+    await api('/api/v156/bureau/files',{method:'POST',timeout:60000,body:JSON.stringify({data_url:dataUrl,original_name:filename,name:'Dossier projet · '+p.short,folder:'Généré',project,notes:'PDF généré depuis le Bureau PLUG ART'})});
+    doc.save(filename);toast('PDF projet généré et rangé dans Bureau');renderProjectWorkspaceV163(project);
+  }catch(e){console.warn(e);toast('Génération PDF indisponible')}finally{if(button){button.disabled=false;button.textContent=old}}
+}
 })();
