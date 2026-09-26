@@ -3195,7 +3195,7 @@ def _v167_event_search_ai(body):
     return events
 
 @app.get('/api/v167/events')
-def events_list_v167(q:str='',city:str='',date_from:str='',date_to:str='',event_type:str='',free:bool=False,venue:str='',verified:bool=False,favorite:bool=False):
+def events_list_v167(q:str='',city:str='',date_from:str='',date_to:str='',event_type:str='',free:bool=False,rsvp:bool=False,venue:str='',verified:bool=False,favorite:bool=False):
     sql="select * from art_events where status='active'";params=[]
     if q:sql+=" and lower(title||' '||venue_name||' '||description||' '||city) like ?";params.append('%'+q.lower()+'%')
     if city:sql+=" and lower(city) like ?";params.append('%'+city.lower()+'%')
@@ -3203,6 +3203,7 @@ def events_list_v167(q:str='',city:str='',date_from:str='',date_to:str='',event_
     if date_to:sql+=" and substr(starts_at,1,10)<=?";params.append(date_to[:10])
     if event_type:sql+=" and event_type=?";params.append(event_type)
     if free:sql+=" and is_free=1"
+    if rsvp:sql+=" and length(trim(rsvp_url))>0"
     if verified:sql+=" and verified=1"
     if favorite:sql+=" and favorite=1"
     if venue:sql+=" and lower(venue_name) like ?";params.append('%'+venue.lower()+'%')
