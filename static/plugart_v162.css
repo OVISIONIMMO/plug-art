@@ -3828,3 +3828,24 @@ body[data-view="creation"] .creation-studio-shell{max-width:none!important;width
   #view-creation .creation-v167 #studioUnifiedTabs{order:2!important;width:100%!important;min-width:0!important}
   #view-creation .creation-v167 .studio-library,#view-creation .creation-v167 .studio-inspector{order:3!important;width:100%!important;position:relative!important;top:auto!important;max-height:none!important}
 }
+
+
+/* ================= PLUGY V167 · ultrawide hero ================= */
+@media(min-width:1440px){
+  #dashboardPlugyMount{
+    width:100%!important;height:min(66vh,700px)!important;min-height:540px!important;
+    overflow:visible!important;padding:0!important
+  }
+  #dashboardPlugyMount #plugyModel{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important}
+  .slide-plugy-zone{min-height:540px!important;height:min(66vh,700px)!important;overflow:visible!important}
+  .plugy-follower{width:min(760px,58vw)!important;height:min(700px,70vh)!important;right:-7vw!important;bottom:-5vh!important}
+}
+@media(min-width:2200px){
+  #dashboardPlugyMount{
+    height:min(76vh,840px)!important;min-height:650px!important;width:min(100%,1100px)!important
+  }
+  .slide-plugy-zone{
+    min-height:650px!important;height:min(76vh,840px)!important;width:min(100%,1100px)!important;justify-self:center!important
+  }
+  .plugy-follower{width:min(900px,46vw)!important;height:min(820px,74vh)!important;right:-5vw!important;bottom:-6vh!important}
+}
