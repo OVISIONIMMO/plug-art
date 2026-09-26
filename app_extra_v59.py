@@ -3057,7 +3057,9 @@ def _v127_runtime_smoke():
       ('GET','/api/v156/bureau/files'),
       ('POST','/api/v156/bureau/files'),
       ('GET','/api/v156/ideas'),
-      ('POST','/api/v156/ideas')
+      ('POST','/api/v156/ideas'),
+      ('GET','/api/v163/diagnostics'),
+      ('GET','/api/v163/status')
     }
     active=set()
     for route in app.router.routes:
