@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f7f7f8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>PLUGY — Assistant PLUG ART</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/plugy_v161.css?v=161.20260926.1">
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
+</head>
+<body>
+<header class="plugy-top">
+  <a href="/" class="plugy-back">← PLUG ART</a>
+  <div class="plugy-top-status"><i></i><span id="topState">Prêt</span></div>
+  <button id="clearChat" class="ghost-btn">Effacer</button>
+</header>
+
+<main>
+  <section class="plugy-hero" id="plugyHero">
+    <div class="energy-field">
+      <span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span>
+      <span class="ring r1"></span><span class="ring r2"></span>
+    </div>
+    <div class="plugy-model-wrap" id="plugyModelWrap">
+      <model-viewer id="plugyStandaloneModel"
+        src="/assets/plugy-v113-premium.glb?v=161.20260926.1"
+        loading="eager"
+        interaction-prompt="none"
+        camera-controls
+        disable-pan
+        disable-zoom
+        environment-image="neutral"
+        tone-mapping="neutral"
+        exposure=".70"
+        shadow-intensity="0"
+        shadow-softness="1"
+        camera-orbit="0deg 76deg 3.38m"
+        field-of-view="30deg" animation-crossfade-duration="80"
+        alt="PLUGY">
+      </model-viewer>
+      <div class="plugy-live-state" id="plugyLiveState"><i></i><span>Prêt</span></div>
+    </div>
+    <div class="plugy-intro">
+      <small>PLUGY</small>
+      <h1>Parle-moi.</h1>
+      <p>Écris, parle, organise, crée ou demande-moi simplement quoi faire ensuite.</p>
+      <div class="hero-actions">
+        <button id="heroVoice" class="hero-main">◉ Parler</button>
+        <button id="goChat" class="hero-secondary">Ouvrir la conversation ↓</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="plugy-chat-section" id="chatSection">
+    <div class="chat-shell">
+      <div class="chat-head">
+        <div><small>CONVERSATION</small><strong>PLUGY</strong></div>
+        <div class="chat-mode">
+          <button class="active" data-mode="fast">Rapide</button>
+          <button data-mode="deep">Approfondi</button>
+        </div>
+      </div>
+      <div class="chat-scroll" id="chatScroll">
+        <div class="chat-message assistant">
+          <div class="avatar">P</div>
+          <div class="message-copy">Je suis prêt. Tu peux me parler normalement, comme ici dans ChatGPT.</div>
+        </div>
+      </div>
+      <div class="suggestions" id="suggestions">
+        <button>Quelles sont mes priorités ?</button>
+        <button>Montre-moi les meilleurs Open Calls</button>
+        <button>Aide-moi à préparer un post</button>
+      </div>
+      <form class="composer" id="plugyStandaloneForm">
+        <button type="button" class="composer-icon" id="voiceButton" aria-label="Parler">◉</button>
+        <textarea id="plugyStandaloneInput" rows="1" placeholder="Demande quelque chose à PLUGY…"></textarea>
+        <button type="submit" class="send-btn" aria-label="Envoyer">↑</button>
+      </form>
+      <div class="composer-foot"><span id="composerHint">Entrée pour envoyer · Maj+Entrée pour une ligne</span><button id="voiceReplyToggle" type="button" class="voice-reply active">Voix activée</button></div>
+    </div>
+  </section>
+</main>
+
+<script defer src="/static/plugy_v161.js?v=161.20260926.1"></script>
+</body>
+</html>
