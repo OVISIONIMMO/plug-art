@@ -7,16 +7,16 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='160.0'
+app.version='161.0'
 BASE=Path(__file__).resolve().parent
-DASH=BASE/'static'/'plugart_v160.html'
-PLUGY_PAGE=BASE/'static'/'plugy_v130.html'
+DASH=BASE/'static'/'plugart_v161.html'
+PLUGY_PAGE=BASE/'static'/'plugy_v161.html'
 GLB=BASE/'static'/'PLUGY_final_animated.glb'
 RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-premium','profile':'runtime-fallback'}
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='160.20260926.1'
+VERSION='161.20260926.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -375,7 +375,7 @@ def _rig_plugy_v139(raw:bytes):
         openS=[(1,.01,1)];closed=(1,1,1)
         replace_anim('Blink',[0,.07,.14,.23],[(left_eye,'scale',[openS[0],closed,closed,openS[0]],'VEC3'),(right_eye,'scale',[openS[0],closed,closed,openS[0]],'VEC3')])
         replace_anim('Wink',[0,.08,.18,.30],[(left_eye,'scale',[openS[0],closed,closed,openS[0]],'VEC3'),(right_eye,'scale',[openS[0],openS[0],openS[0],openS[0]],'VEC3')])
-        replace_anim('Wave',[0,.18,.38,.58,.82,1.08],[(right_node,'rotation',[q(0),q(-.48),q(-.18),q(-.52),q(-.12),q(0)],'VEC4'),(left_node,'rotation',[q(0),q(.08),q(.02),q(.07),q(.02),q(0)],'VEC4')])
+        replace_anim('Wave',[0,.18,.38,.58,.82,1.08],[(right_node,'rotation',[q(0),q(-.24),q(-.10),q(-.27),q(-.06),q(0)],'VEC4'),(left_node,'rotation',[q(0),q(.04),q(.01),q(.035),q(.01),q(0)],'VEC4')])
         append_channels('Speak',[0,.14,.28,.42,.56,.70,.88],[(left_node,'rotation',[q(0),q(.12),q(.04),q(.16),q(.03),q(.10),q(0)],'VEC4'),(right_node,'rotation',[q(0),q(-.10),q(-.03),q(-.14),q(-.02),q(-.09),q(0)],'VEC4')])
         append_channels('Think',[0,.45,1.0,1.55],[(left_node,'rotation',[q(0),q(-.10),q(-.16),q(0)],'VEC4'),(right_node,'rotation',[q(0),q(.06),q(.11),q(0)],'VEC4'),(left_eye,'scale',[openS[0],(1,.18,1),(1,.10,1),openS[0]],'VEC3'),(right_eye,'scale',[openS[0],(1,.10,1),(1,.18,1),openS[0]],'VEC3')])
         append_channels('Happy',[0,.20,.42,.72],[(left_node,'rotation',[q(0),q(.28),q(.12),q(0)],'VEC4'),(right_node,'rotation',[q(0),q(-.28),q(-.12),q(0)],'VEC4')])
@@ -404,7 +404,7 @@ def _upgrade_plugy_motion_v143(raw:bytes):
             else:extras_chunks.append((kind,chunk))
         if not isinstance(doc,dict):return raw,False
         asset=doc.setdefault('asset',{'version':'2.0'});ax=asset.setdefault('extras',{})
-        if ax.get('plugyMotion')=='autonomous-eyes-arms-v143':return raw,False
+        if ax.get('plugyMotion')=='autonomous-eyes-arms-v161':return raw,False
         nodes=doc.get('nodes') or []
         by_name={str(n.get('name')):i for i,n in enumerate(nodes) if isinstance(n,dict)}
         left=by_name.get('PLUGY_LeftArmNode');right=by_name.get('PLUGY_RightArmNode')
@@ -439,18 +439,18 @@ def _upgrade_plugy_motion_v143(raw:bytes):
         replace('Wink',[0,.07,.15,.27],[(leye,'scale',[O,C,C,O],'VEC3'),(reye,'scale',[O,O,O,O],'VEC3')])
         replace('SoftEyes',[0,.22,.55,.86],[(leye,'scale',[O,H,S,O],'VEC3'),(reye,'scale',[O,H,S,O],'VEC3')])
         replace('EyeThink',[0,.28,.64,1.0],[(leye,'scale',[O,S,H,O],'VEC3'),(reye,'scale',[O,H,S,O],'VEC3')])
-        replace('ArmHello',[0,.16,.34,.52,.72,.96],[(right,'rotation',[q(0),q(-.58),q(-.25),q(-.62),q(-.20),q(0)],'VEC4'),(left,'rotation',[q(0),q(.05),q(.02),q(.04),q(.01),q(0)],'VEC4')])
-        replace('ArmExplain',[0,.24,.52,.82,1.12],[(left,'rotation',[q(0),q(.24),q(.12),q(.30),q(0)],'VEC4'),(right,'rotation',[q(0),q(-.16),q(-.28),q(-.12),q(0)],'VEC4')])
-        replace('ArmShrug',[0,.24,.52,.82],[(left,'rotation',[q(0),q(.34),q(.22),q(0)],'VEC4'),(right,'rotation',[q(0),q(-.34),q(-.22),q(0)],'VEC4')])
-        replace('ArmStretch',[0,.30,.68,1.05],[(left,'rotation',[q(0),q(.48),q(.30),q(0)],'VEC4'),(right,'rotation',[q(0),q(-.48),q(-.30),q(0)],'VEC4')])
-        replace('ArmThink',[0,.32,.72,1.12],[(left,'rotation',[q(0),q(-.18),q(-.26),q(0)],'VEC4'),(right,'rotation',[q(0),q(.08),q(.14),q(0)],'VEC4'),(leye,'scale',[O,S,H,O],'VEC3'),(reye,'scale',[O,H,S,O],'VEC3')])
-        doc['buffers'][0]['byteLength']=len(blob);ax['plugyMotion']='autonomous-eyes-arms-v143'
+        replace('ArmHello',[0,.16,.34,.52,.72,.96],[(right,'rotation',[q(0),q(-.28),q(-.14),q(-.31),q(-.10),q(0)],'VEC4'),(left,'rotation',[q(0),q(.05),q(.02),q(.04),q(.01),q(0)],'VEC4')])
+        replace('ArmExplain',[0,.24,.52,.82,1.12],[(left,'rotation',[q(0),q(.16),q(.08),q(.18),q(0)],'VEC4'),(right,'rotation',[q(0),q(-.10),q(-.16),q(-.07),q(0)],'VEC4')])
+        replace('ArmShrug',[0,.24,.52,.82],[(left,'rotation',[q(0),q(.18),q(.12),q(0)],'VEC4'),(right,'rotation',[q(0),q(-.18),q(-.12),q(0)],'VEC4')])
+        replace('ArmStretch',[0,.30,.68,1.05],[(left,'rotation',[q(0),q(.22),q(.14),q(0)],'VEC4'),(right,'rotation',[q(0),q(-.22),q(-.14),q(0)],'VEC4')])
+        replace('ArmThink',[0,.32,.72,1.12],[(left,'rotation',[q(0),q(-.10),q(-.14),q(0)],'VEC4'),(right,'rotation',[q(0),q(.05),q(.09),q(0)],'VEC4'),(leye,'scale',[O,S,H,O],'VEC3'),(reye,'scale',[O,H,S,O],'VEC3')])
+        doc['buffers'][0]['byteLength']=len(blob);ax['plugyMotion']='autonomous-eyes-arms-v161'
         asset['generator']=str(asset.get('generator',''))+' + PLUGY V143 AutonomousEyesArms'
         j=_v106_pad4(json.dumps(doc,separators=(',',':')).encode('utf-8'),b' ');b=_v106_pad4(bytes(blob),bytes((0,)))
         chunks=[(b'JSON',j),(bytes((66,73,78,0)),b)]+extras_chunks;total=12+sum(8+len(c) for _,c in chunks)
         out=bytearray(struct.pack('<4sII',b'glTF',version,total))
         for kind,chunk in chunks:out.extend(struct.pack('<I4s',len(chunk),kind));out.extend(chunk)
-        print('PLUGY_V143_MOTION_READY clips=9 eyes=interactive arms=independent',flush=True)
+        print('PLUGY_V161_MOTION_READY clips=9 eyes=interactive arms=independent',flush=True)
         return bytes(out),True
     except Exception as exc:
         print(f'PLUGY_V143_MOTION_ERROR {type(exc).__name__}: {str(exc)[:220]}',flush=True);return raw,False
@@ -579,7 +579,7 @@ def plugy_v106_realistic_asset():
 @app.get('/api/v106/plugy-realistic/status')
 def plugy_v106_realistic_status():
     ready=REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>10000
-    return {'ok':True,'ready':ready,'bytes':REALISTIC_PLUGY.stat().st_size if ready else 0,'asset':'/assets/plugy-v113-premium.glb','profile':'autonomous-eyes-arms-v143'}
+    return {'ok':True,'ready':ready,'bytes':REALISTIC_PLUGY.stat().st_size if ready else 0,'asset':'/assets/plugy-v113-premium.glb','profile':'autonomous-eyes-arms-v161'}
 
 for route in list(app.router.routes):
     route_path=getattr(route,'path',None)
@@ -596,14 +596,15 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'160.0',
-      'ui':'plug-art-v160-stable-recovery',
+      'version':'161.0',
+      'ui':'plug-art-v161-immersive-workspace',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
       'migration_backup_ready':backup_ready
     }
 
+@app.get('/api/v161/ui-manifest')
 @app.get('/api/v160/ui-manifest')
 @app.get('/api/v159/ui-manifest')
 @app.get('/api/v158/ui-manifest')
@@ -637,17 +638,17 @@ def health_v124():
 @app.get('/api/v128/ui-manifest')
 def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
-    js_path=BASE/'static'/'plugart_v107.js'
-    css_path=BASE/'static'/'plugart_v122_slide.css'
-    expected='160.20260926.1'
+    js_path=BASE/'static'/'plugart_v161.js'
+    css_path=BASE/'static'/'plugart_v160_slide.css'
+    expected='161.20260926.1'
     return {
-      'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v130.js').exists() and (BASE/'static'/'plugy_v130.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
-      'version':'160.0',
-      'ui':'plug-art-v160-stable-recovery',
+      'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v161.js').exists() and (BASE/'static'/'plugy_v161.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
+      'version':'161.0',
+      'ui':'plug-art-v161-immersive-workspace',
       'asset_version':expected,
-      'html_has_js':f'plugart_v107.js?v={expected}' in html,
-      'html_has_slide_css':f'plugart_v122_slide.css?v={expected}' in html,
-      'html_has_sidebar_version':'V160' in html,
+      'html_has_js':f'plugart_v161.js?v={expected}' in html,
+      'html_has_slide_css':f'plugart_v160_slide.css?v={expected}' in html,
+      'html_has_sidebar_version':'V161' in html,
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
@@ -667,7 +668,7 @@ def plugy_page_v130(request:Request):
     headers={
       'Cache-Control':'no-store, max-age=0',
       'ETag':etag,
-      'X-Plug-Art-Version':'160.0',
+      'X-Plug-Art-Version':'161.0',
       'X-Plug-Art-UI':'plugy-v130-standalone'
     }
     return HTMLResponse(html,headers=headers)
@@ -680,8 +681,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'no-store, max-age=0',
       'ETag':etag,
-      'X-Plug-Art-Version':'160.0',
-      'X-Plug-Art-UI':'plug-art-v160-stable-recovery'
+      'X-Plug-Art-Version':'161.0',
+      'X-Plug-Art-UI':'plug-art-v161-immersive-workspace'
     }
     return HTMLResponse(html,headers=headers)
 
@@ -1226,6 +1227,73 @@ def artist_work_delete_v86(aid:int,wid:int):
         raise HTTPException(404,'Œuvre introuvable')
     return {'ok':True}
 
+
+
+# V161 artist workspace: profile, CRM bridge, and tailored exhibition suggestions.
+def _v161_blocked_opportunity(row):
+    txt=' '.join(str((row or {}).get(k) or '') for k in ('title','type','summary','eligibility','radar_reason')).lower()
+    return bool(re.search(r'\b(competition|contest|concours|award|awards|prize|prix|récompense|recompense|trophy)\b',txt,re.I))
+
+def _v161_artist_suggestions(aid:int,limit:int=8):
+    artist=core.one('select * from artists where id=?',(aid,))
+    if not artist:return []
+    tags=[]
+    try:tags=json.loads(artist.get('tags') or '[]')
+    except Exception:pass
+    profile=' '.join([str(artist.get('discipline') or ''),str(artist.get('city') or ''),str(artist.get('country') or ''),' '.join(map(str,tags))]).lower()
+    is_photo=bool(re.search(r'photo|photograph|image|lens|camera',profile,re.I))
+    pool=core.rows("""select * from opportunities where status in ('open','rolling')
+                      order by coalesce(radar_score,score,0) desc,
+                      case when deadline is null then 1 else 0 end,deadline limit 100""")
+    scored=[]
+    for o in pool:
+        if _v161_blocked_opportunity(o):continue
+        text=' '.join(str(o.get(k) or '') for k in ('title','type','summary','eligibility','city','country')).lower()
+        score=int(o.get('radar_score') or o.get('score') or 0)
+        if is_photo:
+            if re.search(r'photo|photograph|image|visual art|arts visuels|mixed media',text,re.I):score+=25
+            else:score-=8
+        for token in re.findall(r'[a-zà-ÿ]{4,}',profile):
+            if token in text:score+=3
+        scored.append((score,o))
+    scored.sort(key=lambda x:x[0],reverse=True)
+    return [o for _,o in scored[:max(1,min(limit,12))]]
+
+@app.get('/api/v161/artists/{aid}/profile')
+def artist_profile_v161(aid:int):
+    artist=core.one('select * from artists where id=?',(aid,))
+    if not artist:raise HTTPException(404,'Artiste introuvable')
+    artist=_artist_out_v86(artist)
+    works=core.rows('select * from artist_works where artist_id=? order by id desc limit 18',(aid,))
+    contact=None
+    email=str(artist.get('email') or '').strip()
+    insta=str(artist.get('instagram') or '').strip()
+    if email:contact=core.one('select * from crm_leads where lower(email)=lower(?) order by id desc limit 1',(email,))
+    if not contact and insta:contact=core.one('select * from crm_leads where lower(instagram)=lower(?) order by id desc limit 1',(insta,))
+    if not contact:contact=core.one("select * from crm_leads where kind='Artiste' and lower(coalesce(organization,name,''))=lower(?) order by id desc limit 1",(artist.get('name') or '',))
+    return {'ok':True,'artist':artist,'works':works,'contact':contact,'suggestions':_v161_artist_suggestions(aid,8)}
+
+@app.post('/api/v161/artists/{aid}/contact')
+def artist_contact_v161(aid:int):
+    artist=core.one('select * from artists where id=?',(aid,))
+    if not artist:raise HTTPException(404,'Artiste introuvable')
+    email=str(artist.get('email') or '').strip();insta=str(artist.get('instagram') or '').strip()
+    lead=None
+    if email:lead=core.one('select * from crm_leads where lower(email)=lower(?) order by id desc limit 1',(email,))
+    if not lead and insta:lead=core.one('select * from crm_leads where lower(instagram)=lower(?) order by id desc limit 1',(insta,))
+    if not lead:lead=core.one("select * from crm_leads where kind='Artiste' and lower(coalesce(organization,name,''))=lower(?) order by id desc limit 1",(artist.get('name') or '',))
+    if lead:return {'ok':True,'existing':True,'lead':lead}
+    now=_now_v85()
+    c=core.conn()
+    cur=c.execute("""insert into crm_leads(name,organization,kind,city,country,email,instagram,website,status,priority,next_action,next_date,last_contact,notes,created_at,updated_at)
+                     values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                  (artist.get('real_name') or artist.get('name') or '',artist.get('name') or '','Artiste',
+                   artist.get('city') or '',artist.get('country') or '',email,insta,artist.get('website') or '',
+                   'lead','normal','Découvrir le travail et identifier une opportunité','','',
+                   'Créé depuis la fiche artiste PLUG ART · discipline : '+str(artist.get('discipline') or ''),now,now))
+    c.commit();lid=cur.lastrowid;c.close()
+    _crm_history_v86(lid,'Création','Fiche contact créée depuis le profil artiste')
+    return {'ok':True,'existing':False,'lead':core.one('select * from crm_leads where id=?',(lid,))}
 
 # V87 Instagram bridge. Uses Meta Graph API with Facebook Login for Instagram professional accounts.
 SOCIAL_RENDER_DIR=Path(os.getenv('PLUGART_SOCIAL_RENDER_DIR',str(Path(os.getenv('PLUGART_DB','/data/plugart.db')).parent/'instagram-renders')))
@@ -2752,6 +2820,7 @@ def ideas_delete_v156(idea_id:int):
     if not cur.rowcount:raise HTTPException(404,'Idée introuvable')
     return {'ok':True}
 
+@app.get('/api/v161/status')
 @app.get('/api/v160/status')
 @app.get('/api/v159/status')
 @app.get('/api/v158/status')
@@ -2759,7 +2828,7 @@ def ideas_delete_v156(idea_id:int):
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'160.0','ui':'plug-art-v160-stable-recovery',
+      'ok':True,'version':'161.0','ui':'plug-art-v161-immersive-workspace',
       'plugy':'frameless-static-round-gaze-no-blink',
       'creation':'open-call-production-workflow',
       'bureau':'documents-packages-templates-pdf-hub',
@@ -2828,8 +2897,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'160.0',
-      'ui':'plug-art-v160-stable-recovery',
+      'version':'161.0',
+      'ui':'plug-art-v161-immersive-workspace',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -2856,7 +2925,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V160_READY ui=stable_recovery frontend=154_baseline assets=uncached_v160 plugy=standalone_shortcut backend=current",flush=True)
+print("PLUG_ART_V161_READY ui=immersive_workspace plugy=expanded_stage_safe_arms creation=live_preview visual=chat_to_bureau radar=photo_hospitality_no_contests artists=profile_crm_suggestions
 
 def _v127_runtime_smoke():
     required_routes={
