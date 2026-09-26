@@ -1,10 +1,10 @@
 (function(){
 'use strict';
-const VERSION='166.20260926.2';
+const VERSION='167.20260926.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,projectMode:'millenaire',projectFiles:[],ideas:[],ideaProject:'',leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,voiceOutput:localStorage.getItem('plugart:plugy-voice')!=='0',recognition:null,plugyBusy:false,creationMode:'carousel',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:'',history:[]},canvasLayer:null,canvasTool:'templates',studioGuides:true,studioSafe:true,studioSnap:true};
+const state={view:'dashboard',radarV167Mode:'opencalls',eventsV167:[],eventsV167Loading:false,pdfProjectsV167:[],activePdfProjectV167:null,bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,projectMode:'millenaire',projectFiles:[],ideas:[],ideaProject:'',leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,voiceOutput:localStorage.getItem('plugart:plugy-voice')!=='0',recognition:null,plugyBusy:false,creationMode:'carousel',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:'',history:[]},canvasLayer:null,canvasTool:'templates',studioGuides:true,studioSafe:true,studioSnap:true};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -99,11 +99,11 @@ function ensureCreationCssV163(){
 function ensureRouteRuntime(id){
   if(routeRuntimeReady.has(id))return;
   if(id==='agenda')installAgenda();
-  if(id==='radar'){installRadarPresets();installMobileRadarControls()}
+  if(id==='radar'){installRadarPresets();installMobileRadarControls();installRadarV167()}
   if(id==='opencalls')installOpenWorkflowFilters();
-  if(id==='creation'){ensureCreationCssV163().catch(()=>{});installCreationModes();installCreationV161();setTimeout(()=>{installCreationV162();installCreationV166()},0);}
-  if(id==='bureau'){installBureauWorkspace();ensureBureauBridge();installProjectWorkspaceV163()}
-  if(id==='ideas')installIdeasV163();
+  if(id==='creation'){ensureCreationCssV163().catch(()=>{});installCreationModes();installCreationV161();setTimeout(()=>{installCreationV162();installCreationV166();installCreationV167()},0);}
+  if(id==='bureau'){installBureauWorkspace();ensureBureauBridge();installProjectWorkspaceV163();installBureauV167()}
+  if(id==='ideas'){installIdeasV163();installIdeasV167();}
   if(id==='network')installArtistV161();
   routeRuntimeReady.add(id);
 }
@@ -144,11 +144,11 @@ async function ensureViewData(id,force=false){
 
 function renderRouteView(id=state.view){
   if(id==='dashboard')return renderDashboard();
-  if(id==='radar')return renderRadar();
+  if(id==='radar'){renderRadar();if(state.radarV167Mode==='events')loadEventsV167(false);return}
   if(id==='opencalls')return renderOpenCalls();
   if(id==='creation'){renderContentSources();fillCreationSources();renderDraftPicker();if(typeof refreshQuickSources==='function')refreshQuickSources();return}
-  if(id==='bureau'){installBureauWorkspace();installProjectWorkspaceV163();setBureauMode(state.bureauMode||'documents');return}
-  if(id==='ideas'){renderIdeasV163();return}
+  if(id==='bureau'){installBureauWorkspace();installProjectWorkspaceV163();installBureauV167();setBureauMode(state.bureauMode||'documents');return}
+  if(id==='ideas'){renderIdeasV163();installIdeasV167();return}
   if(id==='prospection')return renderLeads();
   if(id==='agenda')return renderAgenda();
   if(id==='network')return renderArtists();
@@ -2789,7 +2789,7 @@ function installMobileStudioDock(){
 
 
 function setStudioZoom(value){
-  const z=Math.max(.55,Math.min(1.5,Number(value)||1)),sel=$('#creationZoom');
+  const z=Math.max(.25,Math.min(2,Number(value)||1)),sel=$('#creationZoom');
   if(sel){
     let opt=Array.from(sel.options).find(o=>Number(o.value)===z);
     if(!opt){opt=document.createElement('option');opt.value=String(z);opt.textContent=Math.round(z*100)+'%';sel.appendChild(opt)}
@@ -2802,7 +2802,7 @@ function fitStudioCanvas(){
   const frame=$('.studio-canvas-frame'),canvas=$('#carouselCanvas');if(!frame||!canvas)return;
   const fw=Math.max(260,frame.clientWidth-32),fh=Math.max(360,Math.min(frame.clientHeight||720,innerHeight-245));
   const ratio=state.carousel.format==='1:1'?1:state.carousel.format==='9:16'?(16/9):(5/4);
-  const idealWidth=Math.max(260,Math.min(fw,fh/ratio,680)),z=Math.max(.45,Math.min(1.25,idealWidth/620));
+  const cap=innerWidth>=2200?1280:innerWidth>=1680?1080:innerWidth>=1440?940:680,idealWidth=Math.max(260,Math.min(fw,fh/ratio,cap)),z=Math.max(.25,Math.min(2,idealWidth/620));
   setStudioZoom(z);
 }
 function activeSlideBackground(color){
@@ -2842,7 +2842,7 @@ function installCreationModes(){
   const mount=$('#creationModeMount'),carouselMount=$('#carouselMount'),visualMount=$('#visualMount');if(!mount||!carouselMount||!visualMount)return;
 
   const bar=document.createElement('div');bar.id='creationModeBar';bar.className='creation-mode-bar studio-switcher';
-  bar.innerHTML='<div class="studio-switcher-main"><button class="active" data-create-mode="text">Texte</button><button data-create-mode="carousel">Mise en page</button><button data-create-mode="visual">Visuel</button></div><div class="studio-switcher-tools"><button id="creationUndo" title="Annuler">↶</button><button id="creationRedo" title="Rétablir">↷</button><select id="creationZoom" title="Zoom aperçu"><option value="0.6">60%</option><option value="0.75">75%</option><option value="0.9">90%</option><option value="1" selected>100%</option><option value="1.1">110%</option><option value="1.25">125%</option><option value="1.4">140%</option></select><select id="draftPicker"><option value="">Brouillons</option></select><button id="draftRecover" hidden>Récupérer</button><button id="draftSave">Enregistrer</button><button id="draftDelete" title="Supprimer">×</button></div>';
+  bar.innerHTML='<div class="studio-switcher-main"><button class="active" data-create-mode="text">Texte</button><button data-create-mode="carousel">Mise en page</button><button data-create-mode="visual">Visuel</button></div><div class="studio-switcher-tools"><button id="creationUndo" title="Annuler">↶</button><button id="creationRedo" title="Rétablir">↷</button><select id="creationZoom" title="Zoom aperçu"><option value="0.25">25%</option><option value="0.5">50%</option><option value="0.75">75%</option><option value="0.9">90%</option><option value="1" selected>100%</option><option value="1.1">110%</option><option value="1.25">125%</option><option value="1.5">150%</option><option value="1.75">175%</option><option value="2">200%</option></select><select id="draftPicker"><option value="">Brouillons</option></select><button id="draftRecover" hidden>Récupérer</button><button id="draftSave">Enregistrer</button><button id="draftDelete" title="Supprimer">×</button></div>';
   mount.appendChild(bar);
 
   const quick=document.createElement('section');quick.id='creationQuickFlow';quick.className='creation-quick-flow';
@@ -4053,7 +4053,7 @@ function addCreationSymbolV166(symbol){
 }
 function applyCreationBackgroundV166(color){
   ensureCreationSlideV166();activeSlideBackground(color);
-  $('[data-v166-bg]').forEach(b=>b.classList.toggle('active',b.dataset.v166Bg===color));
+  $$('[data-v166-bg]').forEach(b=>b.classList.toggle('active',b.dataset.v166Bg===color));
 }
 function renderOpportunityMediaV166(){
   const box=$('#studioOpportunityMediaV166');if(!box)return;
@@ -4064,11 +4064,11 @@ function renderOpportunityMediaV166(){
     const src='/api/v166/opportunities/'+encodeURIComponent(id)+'/media/'+i;
     return '<article><button class="official-media-preview-v166" data-v166-media-bg="'+i+'"><img src="'+src+'" alt="" loading="lazy" decoding="async"><span>Fond</span></button><div><small>'+esc(m.source||'Source officielle')+'</small><button data-v166-media-element="'+i+'">＋ Élément</button></div></article>';
   }).join('')+'</div>';
-  $('[data-v166-media-bg]',box).forEach(b=>b.onclick=()=>{
+  $$('[data-v166-media-bg]',box).forEach(b=>b.onclick=()=>{
     const src='/api/v166/opportunities/'+encodeURIComponent(id)+'/media/'+b.dataset.v166MediaBg;
     applySlideVisual(src,'Visuel officiel');renderOpportunityMediaV166();
   });
-  $('[data-v166-media-element]',box).forEach(b=>b.onclick=()=>{
+  $$('[data-v166-media-element]',box).forEach(b=>b.onclick=()=>{
     const src='/api/v166/opportunities/'+encodeURIComponent(id)+'/media/'+b.dataset.v166MediaElement;
     ensureCreationSlideV166();addCanvasLayer('image',{src,w:66,h:44,x:17,y:18,radius:12,opacity:1});
   });
@@ -4124,15 +4124,15 @@ function installCreationV166(){
     colorPanel.prepend(solids);
   }
 
-  $('[data-v166-action]').forEach(b=>b.onclick=()=>{
+  $$('[data-v166-action]').forEach(b=>b.onclick=()=>{
     const a=b.dataset.v166Action;
     if(a==='text'){ensureCreationSlideV166();addCanvasLayer('text',{text:'Nouveau titre',size:42,w:72,h:16});openStudioRailPane('text')}
     if(a==='image'){$('#canvasImageUpload')?.click();openStudioRailPane('images')}
     if(a==='elements')openStudioRailPane('elements');
     if(a==='official'){openStudioRailPane('images');loadOpportunityMediaV166($('#carouselSource')?.value||$('#quickContentSource')?.value||'',false)}
   });
-  $('[data-v166-bg]').forEach(b=>b.onclick=()=>applyCreationBackgroundV166(b.dataset.v166Bg));
-  $('[data-v166-symbol]').forEach(b=>b.onclick=()=>addCreationSymbolV166(b.dataset.v166Symbol));
+  $$('[data-v166-bg]').forEach(b=>b.onclick=()=>applyCreationBackgroundV166(b.dataset.v166Bg));
+  $$('[data-v166-symbol]').forEach(b=>b.onclick=()=>addCreationSymbolV166(b.dataset.v166Symbol));
   $('#creationFitV166')?.addEventListener('click',fitStudioCanvas);
   $('#creationAiV166')?.addEventListener('click',()=>{openPlugy('Aide-moi à améliorer le visuel actuellement ouvert dans le Labo Création : hiérarchie, composition, couleur et impact.');playMotion('ArmExplain')});
 
