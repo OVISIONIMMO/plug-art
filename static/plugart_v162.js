@@ -4367,7 +4367,7 @@ async function createIdeaV163(project=''){
     if(state.view!=='ideas')route('ideas');else renderIdeasV163();
   }catch{
     const payload={title:clean(title),body,project:project||state.ideaProject||'',stage:'explore',color:['violet','cyan','rose','orange'][Math.floor(Math.random()*4)],pos_x:14+Math.random()*56,pos_y:10+Math.random()*52};
-    const local={...payload,id:-Date.now(),_pending:true,created_at:new Date().toISOString(),updated_at:new Date().toISOString()};state.ideas.unshift(local);ideasCacheWriteV167(state.ideas);await queueIdeaOpV167({kind:'create',payload});setIdeasSyncStateV167('À synchroniser','offline');renderIdeasV163();toast('Idée enregistrée hors ligne');
+    const local={...payload,id:-Date.now(),_pending:true,created_at:new Date().toISOString(),updated_at:new Date().toISOString()};state.ideas.unshift(local);ideasCacheWriteV167(state.ideas);await queueIdeaOpV167({kind:'create',localId:local.id,payload});setIdeasSyncStateV167('À synchroniser','offline');renderIdeasV163();toast('Idée enregistrée hors ligne');
   }
 }
 async function editIdeaV163(id){
@@ -4378,11 +4378,11 @@ async function editIdeaV163(id){
   try{
     const saved=await api('/api/v156/ideas/'+id,{method:'PATCH',body:JSON.stringify({title:clean(title),body,project:clean(project).toLowerCase()})});
     Object.assign(i,saved);renderIdeasV163();toast('Idée mise à jour');
-  }catch{Object.assign(i,{title:clean(title),body,project:clean(project).toLowerCase(),_pending:true,updated_at:new Date().toISOString()});ideasCacheWriteV167(state.ideas);await queueIdeaOpV167({kind:'patch',id,payload:{title:clean(title),body,project:clean(project).toLowerCase()}});setIdeasSyncStateV167('À synchroniser','offline');renderIdeasV163();toast('Modification enregistrée hors ligne')}
+  }catch{const patch={title:clean(title),body,project:clean(project).toLowerCase()};Object.assign(i,{...patch,_pending:true,updated_at:new Date().toISOString()});ideasCacheWriteV167(state.ideas);if(id<0)await patchQueuedIdeaCreateV167(id,patch);else await queueIdeaOpV167({kind:'patch',id,payload:patch});setIdeasSyncStateV167('À synchroniser','offline');renderIdeasV163();toast('Modification enregistrée hors ligne')}
 }
 async function deleteIdeaV163(id){
   if(!confirm('Supprimer cette idée ?'))return;
-  try{await api('/api/v156/ideas/'+id,{method:'DELETE'});state.ideas=state.ideas.filter(x=>Number(x.id)!==Number(id));ideasCacheWriteV167(state.ideas);renderIdeasV163();toast('Idée supprimée')}catch{state.ideas=state.ideas.filter(x=>Number(x.id)!==Number(id));ideasCacheWriteV167(state.ideas);if(id>0)await queueIdeaOpV167({kind:'delete',id});setIdeasSyncStateV167('À synchroniser','offline');renderIdeasV163();toast('Suppression enregistrée hors ligne')}
+  try{await api('/api/v156/ideas/'+id,{method:'DELETE'});state.ideas=state.ideas.filter(x=>Number(x.id)!==Number(id));ideasCacheWriteV167(state.ideas);renderIdeasV163();toast('Idée supprimée')}catch{state.ideas=state.ideas.filter(x=>Number(x.id)!==Number(id));ideasCacheWriteV167(state.ideas);if(id<0)await dropQueuedIdeaCreateV167(id);else await queueIdeaOpV167({kind:'delete',id});setIdeasSyncStateV167('À synchroniser','offline');renderIdeasV163();toast('Suppression enregistrée hors ligne')}
 }
 function bindIdeaDragV163(card){
   const handle=card.querySelector('.idea-drag-v163');if(!handle)return;
@@ -4716,6 +4716,8 @@ function ideasQueueDbV167(){
 }
 async function queueIdeaOpV167(op){try{const db=await ideasQueueDbV167();await new Promise((resolve,reject)=>{const tx=db.transaction('ideaQueue','readwrite');tx.objectStore('ideaQueue').add({...op,created_at:Date.now()});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}catch{}}
 async function readIdeaQueueV167(){try{const db=await ideasQueueDbV167();const rows=await new Promise((resolve,reject)=>{const r=db.transaction('ideaQueue','readonly').objectStore('ideaQueue').getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error)});db.close();return rows}catch{return[]}}
+async function patchQueuedIdeaCreateV167(localId,patch){try{const db=await ideasQueueDbV167();await new Promise((resolve,reject)=>{const tx=db.transaction('ideaQueue','readwrite'),s=tx.objectStore('ideaQueue'),r=s.getAll();r.onsuccess=()=>{const hit=(r.result||[]).find(x=>x.kind==='create'&&Number(x.localId)===Number(localId));if(hit){hit.payload={...(hit.payload||{}),...(patch||{})};s.put(hit)}};tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close();return true}catch{return false}}
+async function dropQueuedIdeaCreateV167(localId){try{const db=await ideasQueueDbV167();await new Promise((resolve,reject)=>{const tx=db.transaction('ideaQueue','readwrite'),s=tx.objectStore('ideaQueue'),r=s.getAll();r.onsuccess=()=>{(r.result||[]).filter(x=>x.kind==='create'&&Number(x.localId)===Number(localId)).forEach(x=>s.delete(x.qid))};tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close();return true}catch{return false}}
 async function clearIdeaQueueV167(ids){try{const db=await ideasQueueDbV167();await new Promise((resolve,reject)=>{const tx=db.transaction('ideaQueue','readwrite'),s=tx.objectStore('ideaQueue');ids.forEach(id=>s.delete(id));tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}catch{}}
 async function flushIdeasV167(){
   const health=await api('/api/v167/ideas/health',{noMemCache:true,timeout:5000}).catch(()=>null);if(!health?.ok||!health.writable)return false;
