@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='166.1'
+app.version='167.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -679,8 +679,8 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'166.1',
-      'ui':'plug-art-v166-1-tablet-layout',
+      'version':'167.0',
+      'ui':'plug-art-v167-workspace',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
@@ -727,11 +727,11 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='166.20260926.2'
+    expected='167.20260926.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'166.1',
-      'ui':'plug-art-v166-1-tablet-layout',
+      'version':'167.0',
+      'ui':'plug-art-v167-workspace',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
       'html_has_slide_css': bool(js_path.exists() and 'plugart_v160_slide.css?v=' in js_path.read_text(encoding='utf-8')),
@@ -3484,6 +3484,76 @@ def canva_config_v167():
     return {'enabled':bool(url),'starter_url':url,'mode':'bridge','fallback':'export-pack'}
 
 
+
+# ================= V167 · RESILIENT IDEAS / QA =================
+_v167i=core.conn()
+_v167i.executescript("""
+CREATE TABLE IF NOT EXISTS idea_links(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_idea_id INTEGER NOT NULL,
+  to_idea_id INTEGER NOT NULL,
+  created_at TEXT DEFAULT '',
+  UNIQUE(from_idea_id,to_idea_id)
+);
+""")
+_v167i.commit();_v167i.close()
+
+@app.get('/api/v167/ideas/health')
+def ideas_health_v167():
+    try:
+        count=(core.one('select count(*) count from idea_cloud') or {}).get('count',0)
+        db=core.conn()
+        db.execute('savepoint v167_health')
+        db.execute('create temp table if not exists _v167_health(x text)')
+        db.execute('insert into _v167_health(x) values(?)',(secrets.token_hex(4),))
+        db.execute('rollback to v167_health');db.execute('release v167_health');db.close()
+        return {'ok':True,'db':'ok','count':count,'writable':True}
+    except Exception as exc:
+        return {'ok':False,'db':type(exc).__name__,'count':0,'writable':False}
+
+@app.get('/api/v167/ideas/{idea_id}/links')
+def idea_links_v167(idea_id:int):
+    return core.rows("""select l.id,l.from_idea_id,l.to_idea_id,i.title to_title
+                        from idea_links l left join idea_cloud i on i.id=l.to_idea_id
+                        where l.from_idea_id=? order by l.id""",(idea_id,))
+
+@app.post('/api/v167/ideas/{idea_id}/links')
+def idea_link_create_v167(idea_id:int,body:dict):
+    to_id=int((body or {}).get('to_idea_id') or 0)
+    if not core.one('select id from idea_cloud where id=?',(idea_id,)) or not core.one('select id from idea_cloud where id=?',(to_id,)):
+        raise HTTPException(404,'Idée introuvable')
+    if idea_id==to_id:raise HTTPException(400,'Une idée ne peut pas se relier à elle-même')
+    _v165_db_write(lambda db: db.execute('insert or ignore into idea_links(from_idea_id,to_idea_id,created_at) values(?,?,?)',(idea_id,to_id,_now_v85())))
+    return {'ok':True,'links':idea_links_v167(idea_id)}
+
+@app.post('/api/v167/ideas/{idea_id}/to-bureau')
+def idea_to_bureau_v167(idea_id:int):
+    idea=core.one('select * from idea_cloud where id=?',(idea_id,))
+    if not idea:raise HTTPException(404,'Idée introuvable')
+    return bureau_create_v107({'title':idea.get('title') or 'Idée','body':idea.get('body') or '','folder':'Projets',
+      'tags':idea.get('tags') or '','source_type':'idea','source_id':str(idea_id)})
+
+@app.post('/api/v167/ideas/{idea_id}/to-pdf')
+def idea_to_pdf_v167(idea_id:int):
+    idea=core.one('select * from idea_cloud where id=?',(idea_id,))
+    if not idea:raise HTTPException(404,'Idée introuvable')
+    return pdf_project_create_v167({'title':idea.get('title') or 'Concept PLUG ART','project_type':'concept',
+      'metadata':{'source_type':'idea','source_id':idea_id,'project':idea.get('project')},
+      'pages':[{'content':{'kicker':'CONCEPT','title':idea.get('title') or 'Idée','body':idea.get('body') or '','image':idea.get('image_url') or ''}}]})
+
+@app.get('/api/v167/qa/manifest')
+def qa_manifest_v167():
+    required=[
+      ('GET','/api/v167/events'),('POST','/api/v167/events/search'),
+      ('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),
+      ('POST','/api/v167/pdf-projects'),('GET','/api/v167/canva/config')
+    ]
+    active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
+    return {'ok':all(x in active for x in required),
+      'required':[m+' '+p for m,p in required],
+      'missing':[m+' '+p for m,p in required if (m,p) not in active]}
+
+
 @app.get('/api/v163/diagnostics')
 def diagnostics_v163():
     started=time.perf_counter()
@@ -3505,7 +3575,7 @@ def diagnostics_v163():
     critical=[
       ('GET','/api/health'),('GET','/api/v124/dashboard-bootstrap'),('POST','/api/v125/plugy/stream'),
       ('POST','/api/v162/plugy/speech'),('GET','/api/v156/bureau/files'),('GET','/api/v156/ideas'),('POST','/api/v164/projects/library/seed'),
-      ('GET','/api/v86/crm'),('POST','/api/radar/run')
+      ('GET','/api/v86/crm'),('POST','/api/radar/run'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects')
     ]
     missing=[f'{m} {p}' for m,p in critical if (m,p) not in active]
     checks['routes']={'ok':not missing,'missing':missing}
@@ -3524,7 +3594,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'166.1','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'167.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -3538,7 +3608,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'166.1','ui':'plug-art-v166-1-tablet-layout',
+      'ok':True,'version':'167.0','ui':'plug-art-v167-workspace',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -3607,8 +3677,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'166.1',
-      'ui':'plug-art-v166-1-tablet-layout',
+      'version':'167.0',
+      'ui':'plug-art-v167-workspace',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -3635,7 +3705,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V166_1_READY ui=tablet_safe_dashboard plugy=responsive_full_body creation=live_canvas",flush=True)
+print("PLUG_ART_V167_READY creation=wide_editor radar=vernissages office=pdf_workspace ideas=sync_safe plugy=ultrawide_premium qa=interactive",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
@@ -3665,7 +3735,7 @@ def _v127_runtime_smoke():
       ('POST','/api/v156/ideas'),
       ('POST','/api/v164/projects/library/seed'),('GET','/api/v164/projects/library'),
       ('GET','/api/v163/diagnostics'),
-      ('GET','/api/v163/status')
+      ('GET','/api/v163/status'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('POST','/api/v167/pdf-projects'),('GET','/api/v167/qa/manifest')
     }
     active=set()
     for route in app.router.routes:
@@ -3678,7 +3748,7 @@ def _v127_runtime_smoke():
     required_tables=[
       'opportunities','artists','crm_leads','crm_history','bureau_documents',
       'bureau_templates','application_packages','opportunity_workspace','content_drafts',
-      'bureau_files','idea_cloud'
+      'bureau_files','idea_cloud','art_events','pdf_projects','pdf_pages','idea_links'
     ]
     table_missing=[]
     db_ok=False
