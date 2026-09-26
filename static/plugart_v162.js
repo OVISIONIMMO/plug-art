@@ -4105,4 +4105,95 @@ async function generateProjectPdfV163(project){
     doc.save(filename);toast('PDF projet généré et rangé dans Bureau');renderProjectWorkspaceV163(project);
   }catch(e){console.warn(e);toast('Génération PDF indisponible')}finally{if(button){button.disabled=false;button.textContent=old}}
 }
+
+
+/* ================= V163 IDEA CLOUD ================= */
+function installIdeasV163(){
+  const refresh=$('#ideasRefresh');
+  if(refresh?.dataset.bound==='1')return;
+  if(refresh){refresh.dataset.bound='1';refresh.onclick=()=>loadIdeasV163(true)}
+  $('#ideasNew')?.addEventListener('click',()=>createIdeaV163(state.ideaProject||''));
+  $('#ideasProjectFilter')?.addEventListener('change',e=>{state.ideaProject=e.target.value||'';renderIdeasV163()});
+  $$('[data-idea-project]').forEach(b=>b.onclick=()=>{state.ideaProject=b.dataset.ideaProject||'';if($('#ideasProjectFilter'))$('#ideasProjectFilter').value=state.ideaProject;renderIdeasV163()});
+  $('#ideasToBureau')?.addEventListener('click',()=>{state.bureauMode='projects';route('bureau')});
+  $('#ideasPlugy')?.addEventListener('click',()=>openPlugy('Analyse mon Nuage à idées'+(state.ideaProject?' pour le projet '+projectLabelV163(state.ideaProject):'')+'. Regroupe les idées proches, fais ressortir les plus prometteuses et propose trois actions concrètes.'));
+  loadIdeasV163(false);
+}
+async function loadIdeasV163(force=false){
+  const cloud=$('#ideaCloudV163');if(cloud&&!state.ideas.length)cloud.innerHTML='<div class="idea-loading-v163"><i></i><span>Chargement des idées…</span></div>';
+  try{
+    const rows=await api('/api/v156/ideas',{cacheTtl:5000,noMemCache:force});
+    state.ideas=Array.isArray(rows)?rows:[];
+    renderIdeasV163();
+  }catch(e){
+    if(!state.ideas.length&&cloud)cloud.innerHTML='<div class="empty">Nuage momentanément indisponible.</div>';
+  }
+}
+function renderIdeasV163(){
+  const cloud=$('#ideaCloudV163');if(!cloud)return;
+  const project=state.ideaProject||$('#ideasProjectFilter')?.value||'';
+  if($('#ideasProjectFilter'))$('#ideasProjectFilter').value=project;
+  $$('[data-idea-project]').forEach(b=>b.classList.toggle('active',(b.dataset.ideaProject||'')===project));
+  const rows=(state.ideas||[]).filter(i=>!project||(i.project||'')===project);
+  if(!rows.length){cloud.innerHTML='<div class="idea-empty-v163"><b>✦</b><strong>Aucune idée ici</strong><span>Crée une première idée ou change de projet.</span><button id="ideaEmptyNewV163">＋ Nouvelle idée</button></div>';$('#ideaEmptyNewV163').onclick=()=>createIdeaV163(project);return}
+  cloud.innerHTML=rows.map((i,idx)=>{
+    const px=Number(i.pos_x),py=Number(i.pos_y),x=Number.isFinite(px)?px:12+(idx%4)*22,y=Number.isFinite(py)?py:10+Math.floor(idx/4)*23;
+    return '<article class="idea-card-v163 tone-'+esc(i.color||'violet')+'" data-idea-id="'+i.id+'" style="left:'+Math.max(2,Math.min(82,x))+'%;top:'+Math.max(2,Math.min(78,y))+'%">'+
+      '<button class="idea-drag-v163" aria-label="Déplacer">⋮⋮</button>'+
+      '<small>'+esc(i.project?projectLabelV163(i.project):'IDÉE LIBRE')+'</small>'+
+      '<h3>'+esc(i.title||'Idée')+'</h3>'+
+      '<p>'+esc((i.body||'').slice(0,220))+'</p>'+
+      '<div class="idea-tags-v163">'+String(i.tags||'').split(',').map(x=>clean(x)).filter(Boolean).slice(0,4).map(t=>'<span>'+esc(t)+'</span>').join('')+'</div>'+
+      '<footer><span>'+esc(i.stage||'explore')+'</span><button data-idea-plugy="'+i.id+'">✦</button><button data-idea-edit="'+i.id+'">Éditer</button><button data-idea-delete="'+i.id+'">×</button></footer>'+
+    '</article>';
+  }).join('');
+  $$('[data-idea-edit]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();editIdeaV163(Number(b.dataset.ideaEdit))});
+  $$('[data-idea-delete]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();deleteIdeaV163(Number(b.dataset.ideaDelete))});
+  $$('[data-idea-plugy]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();const i=state.ideas.find(x=>Number(x.id)===Number(b.dataset.ideaPlugy));if(i)openPlugy('Développe cette idée : '+i.title+'. '+(i.body||'')+' Donne-moi une version plus structurée, des usages possibles et la prochaine action concrète.')});
+  $$('.idea-card-v163',cloud).forEach(bindIdeaDragV163);
+}
+async function createIdeaV163(project=''){
+  const title=prompt('Titre de l’idée');if(!clean(title))return;
+  const body=prompt('Développe l’idée en quelques lignes','')||'';
+  try{
+    const i=await api('/api/v156/ideas',{method:'POST',body:JSON.stringify({
+      title:clean(title),body,project:project||state.ideaProject||'',stage:'explore',
+      color:['violet','cyan','rose','orange'][Math.floor(Math.random()*4)],
+      pos_x:14+Math.random()*56,pos_y:10+Math.random()*52
+    })});
+    state.ideas.unshift(i);state.ideaProject=project||state.ideaProject||'';
+    toast('Idée ajoutée');
+    if(state.view!=='ideas')route('ideas');else renderIdeasV163();
+  }catch{toast('Création impossible')}
+}
+async function editIdeaV163(id){
+  const i=state.ideas.find(x=>Number(x.id)===Number(id));if(!i)return;
+  const title=prompt('Titre',i.title||'');if(title===null)return;
+  const body=prompt('Développement',i.body||'');if(body===null)return;
+  const project=prompt('Projet : aubervilliers, millenaire, gennevilliers, chanteraines ou vide',i.project||'');if(project===null)return;
+  try{
+    const saved=await api('/api/v156/ideas/'+id,{method:'PATCH',body:JSON.stringify({title:clean(title),body,project:clean(project).toLowerCase()})});
+    Object.assign(i,saved);renderIdeasV163();toast('Idée mise à jour');
+  }catch{toast('Mise à jour impossible')}
+}
+async function deleteIdeaV163(id){
+  if(!confirm('Supprimer cette idée ?'))return;
+  try{await api('/api/v156/ideas/'+id,{method:'DELETE'});state.ideas=state.ideas.filter(x=>Number(x.id)!==Number(id));renderIdeasV163();toast('Idée supprimée')}catch{toast('Suppression impossible')}
+}
+function bindIdeaDragV163(card){
+  const handle=card.querySelector('.idea-drag-v163');if(!handle)return;
+  let active=false,rect=null;
+  handle.onpointerdown=e=>{active=true;rect=$('#ideaCloudV163').getBoundingClientRect();handle.setPointerCapture?.(e.pointerId);card.classList.add('dragging');e.preventDefault()};
+  handle.onpointermove=e=>{
+    if(!active||!rect)return;
+    const x=Math.max(1,Math.min(84,(e.clientX-rect.left)/Math.max(1,rect.width)*100));
+    const y=Math.max(1,Math.min(80,(e.clientY-rect.top)/Math.max(1,rect.height)*100));
+    card.style.left=x+'%';card.style.top=y+'%';
+  };
+  handle.onpointerup=async()=>{
+    if(!active)return;active=false;card.classList.remove('dragging');
+    const id=Number(card.dataset.ideaId),x=parseFloat(card.style.left),y=parseFloat(card.style.top),idea=state.ideas.find(v=>Number(v.id)===id);
+    if(idea){idea.pos_x=x;idea.pos_y=y;api('/api/v156/ideas/'+id,{method:'PATCH',body:JSON.stringify({pos_x:x,pos_y:y})}).catch(()=>{})}
+  };
+}
 })();
