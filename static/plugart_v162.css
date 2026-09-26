@@ -3898,3 +3898,22 @@ body[data-view="creation"] .creation-studio-shell{max-width:none!important;width
 #view-creation .creation-actions-v167 #creationBlankV168{
   background:#111318;color:#fff;border-color:#111318
 }
+
+
+/* ================= V168 · rich PDF studio ================= */
+.pdf-rich-v168{margin-top:12px;padding:10px;border:1px solid #e2e4e9;border-radius:14px;background:#fafafd}
+.pdf-rich-v168 label{margin-top:8px!important}
+.pdf-add-elements-v168{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:8px 0}
+.pdf-add-elements-v168 button{border:1px solid #dfe1e6;background:#fff;border-radius:9px;min-height:34px;font-size:6.5px;font-weight:850}
+#pdfElementsV168{display:grid;gap:5px;max-height:220px;overflow:auto}
+.pdf-element-row-v168{display:grid;grid-template-columns:1fr 28px;gap:5px}
+.pdf-element-row-v168>button{border:1px solid #e2e3e8;background:#fff;border-radius:9px;min-height:36px}
+.pdf-element-row-v168>button:first-child{display:grid;grid-template-columns:26px 1fr;align-items:center;text-align:left;padding:5px 7px}
+.pdf-element-row-v168 b{font-size:13px;color:#7657ff}.pdf-element-row-v168 span{font-size:7px;color:#5d6069;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdf-element-row-v168>button:last-child{font-size:12px;color:#989ba4}
+.pdf-import-card-v168{border:1px solid #e5e6ea;border-radius:12px;background:#fafbfc;padding:5px;display:grid;gap:5px}
+.pdf-import-card-v168>button:first-child{border:0;background:transparent;display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:center;text-align:left;padding:4px}
+.pdf-import-card-v168>button:first-child i{width:34px;height:42px;border-radius:6px;background:#ebe8f9;display:grid;place-items:center;font-size:6px;font-style:normal;font-weight:900;color:#6553bd}
+.pdf-import-card-v168>button:first-child strong,.pdf-import-card-v168>button:first-child small{display:block}.pdf-import-card-v168>button:first-child strong{font-size:8px}.pdf-import-card-v168>button:first-child small{font-size:6px;color:#92959f;margin-top:3px}
+.pdf-edit-import-v168{border:0;background:#111318;color:#fff;border-radius:8px;min-height:30px;font-size:6.5px;font-weight:850}
+#pdfFallbackV167{background:#525659!important}
