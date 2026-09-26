@@ -2168,7 +2168,7 @@ function setCreationPreviewZoom(){
   const canvas=$('#carouselCanvas'),frame=$('.studio-canvas-frame');
   if(canvas&&frame&&state.creationMode==='carousel'){
     const maxW=Math.max(260,frame.clientWidth-30),target=Math.max(260,Math.min(maxW,620*scale));
-    canvas.style.transform='none';canvas.style.width=target+'px';canvas.style.maxWidth='none';
+    canvas.style.transform='none';canvas.style.setProperty('width',target+'px','important');canvas.style.setProperty('max-width','none','important');
   }
   const visual=$('#visualImage');if(visual&&state.creationMode==='visual'){visual.style.transform='none';visual.style.width='100%'}
   const textPanel=$('#textCreationPanel');if(textPanel)textPanel.style.transform='none';
