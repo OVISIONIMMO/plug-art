@@ -4,3 +4,4 @@ requests>=2.31
 numpy>=1.26
 trimesh>=4.0
 scipy>=1.14
+reportlab>=4.2
