@@ -6,19 +6,25 @@ const mv=$('#plugyStandaloneModel'),chat=$('#chatScroll'),input=$('#plugyStandal
 
 function clean(v){return String(v??'').replace(/\s+/g,' ').trim()}
 function standaloneDistance(){
-  const companion=$('#plugyModelWrap')?.classList.contains('companion-mode-v162');
+  const companion=$('#plugyModelWrap')?.classList.contains('companion-mode-v162'),w=innerWidth||1200,h=innerHeight||900;
   if(companion){
-    if(innerWidth<=520)return '4.90';
-    if(innerWidth<=900)return '4.72';
-    return '4.60';
+    if(w<=520)return '4.90';
+    if(w<=900)return '4.72';
+    if(w>=2200)return '3.30';
+    if(w>=1440)return '3.75';
+    return '4.35';
   }
-  if(innerWidth<=390)return '4.98';
-  if(innerWidth<=780)return '4.74';
-  return '4.50';
+  if(w<=390)return '4.98';
+  if(w<=780)return '4.74';
+  if(w<=1180)return h<900?'5.10':'4.85';
+  if(w>=2200)return '3.05';
+  if(w>=1440)return '3.55';
+  return '4.10';
 }
 function resetStandaloneFraming(){
   if(!mv)return;
-  try{mv.setAttribute('camera-target','0m 0m 0m');mv.setAttribute('camera-orbit','0deg 79deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'40deg':'38deg')}catch{}
+  const w=innerWidth||1200,fov=w<=780?'40deg':w<=1180?'39deg':w>=2200?'34deg':w>=1440?'35deg':'37deg';
+  try{mv.setAttribute('camera-target','0m 0m 0m');mv.setAttribute('camera-orbit','0deg 79deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',fov)}catch{}
 }
 function setState(name,label){
   if(['blink','doubleblink','wink','softeyes','eyethink'].includes(String(name||'').toLowerCase()))name='idle';
