@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='163.20260926.1';
+const VERSION='1631.20260926.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -86,12 +86,22 @@ const viewDataFamilies={
 };
 function requiredFamilies(id){return viewDataFamilies[id]||[]}
 const routeRuntimeReady=new Set();
+let creationCssPromiseV163=null;
+function ensureCreationCssV163(){
+  if(document.querySelector('link[data-creation-css-v163]'))return Promise.resolve(true);
+  if(creationCssPromiseV163)return creationCssPromiseV163;
+  creationCssPromiseV163=new Promise((resolve,reject)=>{
+    const l=document.createElement('link');l.rel='stylesheet';l.href='/static/plugart_v160_slide.css?v='+VERSION;l.dataset.creationCssV163='1';
+    l.onload=()=>resolve(true);l.onerror=()=>{creationCssPromiseV163=null;reject(new Error('Style Création indisponible'))};document.head.appendChild(l);
+  });
+  return creationCssPromiseV163;
+}
 function ensureRouteRuntime(id){
   if(routeRuntimeReady.has(id))return;
   if(id==='agenda')installAgenda();
   if(id==='radar'){installRadarPresets();installMobileRadarControls()}
   if(id==='opencalls')installOpenWorkflowFilters();
-  if(id==='creation'){installCreationModes();installCreationV161();setTimeout(installCreationV162,0);}
+  if(id==='creation'){ensureCreationCssV163().catch(()=>{});installCreationModes();installCreationV161();setTimeout(installCreationV162,0);}
   if(id==='bureau'){installBureauWorkspace();ensureBureauBridge();installProjectWorkspaceV163()}
   if(id==='ideas')installIdeasV163();
   if(id==='network')installArtistV161();
@@ -148,6 +158,7 @@ function renderRouteView(id=state.view){
 
 function route(id,push=true){
   if(!viewMeta[id])id='dashboard';
+  document.body.classList.add('route-switching');requestAnimationFrame(()=>requestAnimationFrame(()=>document.body.classList.remove('route-switching')));
   ensureRouteRuntime(id);
   state.view=id;document.body.dataset.view=id;
   $$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+id));
