@@ -720,3 +720,18 @@ body[data-plugy-state="charge"] #plugyStandaloneModel{
   .plugy-model-wrap.companion-mode-v162{width:520px!important;height:470px!important;min-height:470px!important}
   .plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{width:520px!important;height:470px!important;min-height:470px!important}
 }
+
+
+/* ================= PLUGY V168 · calmer standalone framing ================= */
+@media(min-width:1440px){
+  .plugy-model-wrap{min-height:68svh!important;height:70svh!important;overflow:visible!important}
+  #plugyStandaloneModel{width:min(58vw,780px)!important;height:min(72svh,760px)!important;max-width:none!important;overflow:visible!important}
+  .plugy-model-wrap.companion-mode-v162{width:340px!important;height:315px!important;min-height:315px!important}
+  .plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{width:340px!important;height:315px!important;min-height:315px!important}
+}
+@media(min-width:2200px){
+  .plugy-model-wrap{min-height:72svh!important;height:74svh!important}
+  #plugyStandaloneModel{width:min(62vw,900px)!important;height:min(76svh,820px)!important}
+  .plugy-model-wrap.companion-mode-v162{width:390px!important;height:355px!important;min-height:355px!important}
+  .plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{width:390px!important;height:355px!important;min-height:355px!important}
+}
