@@ -1060,7 +1060,7 @@ function installBureauWorkspace(){
   if(!view||!toolbar||!layout)return;
   layout.id='bureauDocumentsMode';
   const bar=document.createElement('div');bar.id='bureauModeBar';bar.className='bureau-mode-bar';
-  bar.innerHTML='<button class="active" data-bureau-mode="documents">Documents</button><button data-bureau-mode="packages">Dossiers</button><button data-bureau-mode="templates">Modèles</button><button class="hub-mode-tab" data-bureau-mode="hub">HUB</button><span></span><button id="bureauQuickNewPackage">＋ Dossier</button><button id="bureauQuickNewTemplate">＋ Modèle</button>';
+  bar.innerHTML='<button class="active" data-bureau-mode="documents">Documents</button><button data-bureau-mode="projects">Projets & PDF</button><button data-bureau-mode="packages">Dossiers</button><button data-bureau-mode="templates">Modèles</button><button class="hub-mode-tab" data-bureau-mode="hub">HUB</button><span></span><button id="bureauQuickNewPackage">＋ Dossier</button><button id="bureauQuickNewTemplate">＋ Modèle</button>';
   toolbar.insertAdjacentElement('afterend',bar);
 
   const folders=document.createElement('div');folders.id='bureauFolderBar';folders.className='bureau-folder-bar';
@@ -1111,25 +1111,38 @@ function installBureauWorkspace(){
 function setBureauMode(mode){
   state.bureauMode=mode;
   $$('[data-bureau-mode]').forEach(b=>b.classList.toggle('active',b.dataset.bureauMode===mode));
-  const docs=$('#bureauDocumentsMode'),packages=$('#bureauPackagesMode'),templates=$('#bureauTemplatesMode'),hub=$('#bureauHubMode');
+  const docs=$('#bureauDocumentsMode'),projects=$('#bureauProjectsMode'),packages=$('#bureauPackagesMode'),templates=$('#bureauTemplatesMode'),hub=$('#bureauHubMode');
   if(docs)docs.style.display=mode==='documents'?'grid':'none';
+  projects?.classList.toggle('active',mode==='projects');
   packages?.classList.toggle('active',mode==='packages');
   templates?.classList.toggle('active',mode==='templates');hub?.classList.toggle('active',mode==='hub');
   if($('#bureauNew'))$('#bureauNew').style.display=mode==='documents'?'':'none';
   if(mode==='documents'){renderBureauFolders();renderBureau()}
+  if(mode==='projects')renderProjectWorkspaceV163(state.projectMode||'millenaire');
   if(mode==='packages')renderBureauPackages();
   if(mode==='templates')renderBureauTemplates();
   if(mode==='hub')renderHubWorkspace();
   renderPlugyActions();
 }
 const HUB_PROJECTS={
-  millenaire:{title:'PLUG ART HUB · Le Millénaire',eyebrow:'CENTRE COMMERCIAL · AUBERVILLIERS',summary:'Transformer des cellules vacantes en destination culturelle active, avec une galerie publique côté canal et un HUB de production dans une seconde cellule.',areas:['Galerie des Docks','Terrasse canal','Ateliers individuels','Coworking','Studio image & contenu','Plug Talk','Atelier collectif'],documents:[['Dossier Projet Le Millénaire','33 pages'],['Dossier final écosystème 2026','11 pages']]},
-  aubervilliers:{title:'PLUG ART HUB · Aubervilliers',eyebrow:'BÂTIMENT INDUSTRIEL · PIERRE CURIE',summary:'Un HUB artistique dans une enveloppe industrielle, organisé entre galerie, expérimentation, ateliers, bureau et production de contenus.',areas:['Galerie industrielle','Salle expérimentation','Ateliers artistes','Bureau / coordination','Studio contenu','Circulation / accueil'],documents:[['Dossier complet Aubervilliers 2026','38 pages']]}
+  millenaire:{title:'PLUG ART HUB · Le Millénaire',short:'Le Millénaire',eyebrow:'CENTRE COMMERCIAL · AUBERVILLIERS',summary:'Transformer des cellules vacantes en destination culturelle active, avec une galerie publique côté canal et un HUB de production dans une seconde cellule.',areas:['Galerie des Docks','Terrasse canal','Ateliers individuels','Coworking','Studio image & contenu','Plug Talk','Atelier collectif'],documents:[['Dossier Projet Le Millénaire','33 pages'],['Dossier final écosystème 2026','11 pages']],visualKey:'millenaire_gallery'},
+  aubervilliers:{title:'PLUG ART HUB · Aubervilliers',short:'Aubervilliers',eyebrow:'BÂTIMENT INDUSTRIEL · PIERRE CURIE',summary:'Un HUB artistique dans une enveloppe industrielle, organisé entre galerie, expérimentation, ateliers, bureau et production de contenus.',areas:['Galerie industrielle','Salle expérimentation','Ateliers artistes','Bureau / coordination','Studio contenu','Circulation / accueil'],documents:[['Dossier complet Aubervilliers 2026','38 pages']],visualKey:'aubervilliers_workshop'},
+  gennevilliers:{title:'PLUG ART HUB · Gennevilliers',short:'Gennevilliers',eyebrow:'TRÉSORS DE BANLIEUES · GENNEVILLIERS',summary:'Déployer PLUG ART comme lieu de production, d’exposition et de médiation artistique en lien avec l’écosystème culturel déjà présent sur le site.',areas:['Exposition','Ateliers','Grande production','Photo / portfolio','Médiation','Talks & réseau'],documents:[],visualKey:''},
+  chanteraines:{title:'PLUG ART · Chanteraines',short:'Chanteraines',eyebrow:'SCHÉMA DIRECTEUR · 2026',summary:'Structurer un projet artistique à l’échelle du site avec programmation, usages, partenaires et trajectoire de déploiement.',areas:['Programmation','Événements','Ateliers','Partenariats','Médiation','Production'],documents:[],visualKey:''}
 };
-function hubImage(key='millenaire_gallery'){
-  return window.PLUG_HUB_ASSETS?.[key]||'';
+let hubAssetsPromiseV163=null;
+function ensureHubAssetsV163(){
+  if(window.PLUG_HUB_ASSETS)return Promise.resolve(window.PLUG_HUB_ASSETS);
+  if(hubAssetsPromiseV163)return hubAssetsPromiseV163;
+  hubAssetsPromiseV163=new Promise((resolve,reject)=>{
+    const s=document.createElement('script');s.src='/static/hub_v160_assets.js?v='+VERSION;s.defer=true;
+    s.onload=()=>resolve(window.PLUG_HUB_ASSETS||{});s.onerror=()=>{hubAssetsPromiseV163=null;reject(new Error('Visuels HUB indisponibles'))};document.head.appendChild(s);
+  });
+  return hubAssetsPromiseV163;
 }
+function hubImage(key='millenaire_gallery'){return window.PLUG_HUB_ASSETS?.[key]||'';}
 function renderHubWorkspace(project='millenaire'){
+  if(!window.PLUG_HUB_ASSETS){ensureHubAssetsV163().then(()=>{if(state.bureauMode==='hub')renderHubWorkspace(project)}).catch(()=>{});}
   const img=hubImage('millenaire_gallery'),visual=$('#hubMillenaireVisual');if(visual&&img){visual.style.backgroundImage='url("'+img+'")';visual.classList.add('has-image')}
   const aub=$('.hub-project-card.aubervilliers .hub-project-visual'),aubImg=hubImage('aubervilliers_workshop');if(aub&&aubImg){aub.style.backgroundImage='url("'+aubImg+'")';aub.classList.add('has-image')}
   $$('[data-hub-project]').forEach(b=>b.onclick=()=>renderHubProjectDetail(b.dataset.hubProject));
