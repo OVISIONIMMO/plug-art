@@ -624,3 +624,40 @@ body[data-plugy-state="listen"] #plugyStandaloneModel{transition:filter .22s eas
   #plugyStandaloneModel{min-height:340px!important}
   .plugy-intro h1{font-size:52px!important;letter-spacing:-2.5px!important}
 }
+
+
+/* ================= PLUGY V164 · full-body calm workspace ================= */
+.plugy-hero{min-height:96svh!important}
+.plugy-model-wrap{
+  width:min(62vw,820px)!important;
+  height:min(84svh,820px)!important;
+  min-height:610px!important;
+  padding:5svh 4vw!important;
+  overflow:visible!important;contain:none!important;clip-path:none!important
+}
+#plugyStandaloneModel{
+  width:100%!important;height:100%!important;min-height:590px!important;
+  overflow:visible!important;object-fit:contain!important;clip-path:none!important
+}
+.plugy-companion-v162{overflow:visible!important}
+.plugy-companion-mount-v162{display:grid!important;place-items:center!important;overflow:visible!important}
+.plugy-model-wrap.companion-mode-v162{
+  width:300px!important;height:410px!important;min-height:410px!important;
+  padding:14px!important;overflow:visible!important
+}
+.plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{
+  width:300px!important;height:410px!important;min-height:410px!important
+}
+.chat-shell{contain:layout style}
+.chat-scroll{overscroll-behavior:contain;scrollbar-gutter:stable}
+@media(max-width:900px){
+  .plugy-hero{min-height:92svh!important}
+  .plugy-model-wrap{width:100%!important;height:56svh!important;min-height:420px!important;padding:18px!important}
+  #plugyStandaloneModel{height:100%!important;min-height:400px!important}
+  .plugy-model-wrap.companion-mode-v162{width:215px!important;height:195px!important;min-height:195px!important;padding:0!important}
+  .plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{width:215px!important;height:195px!important;min-height:195px!important}
+}
+@media(max-width:520px){
+  .plugy-model-wrap{height:52svh!important;min-height:385px!important}
+  #plugyStandaloneModel{min-height:365px!important}
+}
