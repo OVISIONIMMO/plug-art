@@ -705,21 +705,21 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='163.20260926.1'
+    expected='1631.20260926.1'
     return {
-      'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
+      'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
       'version':'163.0',
       'ui':'plug-art-v163-fast-project-workspace',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
-      'html_has_slide_css':f'plugart_v160_slide.css?v={expected}' in html,
-      'html_has_sidebar_version':'V162' in html,
+      'html_has_slide_css': bool(js_path.exists() and 'plugart_v160_slide.css?v=' in js_path.read_text(encoding='utf-8')),
+      'html_has_sidebar_version':'V163' in html,
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
         'premium-cockpit','free-canvas-editor','pro-canvas-toolbar','layer-inspector','quick-type-scales','plug-art-color-palette','image-upload','marketing-template-library','manual-carousel-editor','drag-reorder','undo-redo','preview-zoom','fit-canvas',
         'ios-first-content-studio','mobile-bottom-sheet-tools','granular-typography-controls','french-voice-output','full-body-mini-plugy','glass-navigation','floating-actions','spatial-dashboard','liquid-editorial-ui','non-card-create-scene','creation-path-launcher','unified-content-studio','canva-like-layer-inspector','typography-scale-controls','expanded-color-system','organic-plugy-gaze','persistent-plugy-mini','contained-mini-plugy-framing','calm-eye-blink','low-glare-plugy','thinking-energy-state','reflectionless-plugy','creation-control-audit','glb-baked-reflectionless-materials','rare-large-view-eye-blink','static-miniature-eyes','procedural-arm-rig','interactive-arm-reactions','nonrepeating-motion-engine','guided-radar-content-flow','creation-fallback-generation','editorial-procedural-visuals','ai-visual-variants','studio-binding-fix','parallel-image-variants','resilient-plugy-stream','plugy-voice-output','leaflet-map','map-direct-access','city-map-fallback',
-        'hub-workspace','hub-real-project-previews','hub-pdf-export','organized-bureau',
+        'hub-workspace','hub-real-project-previews','hub-pdf-export','organized-bureau','project-pdf-desk','library-project-catalog','project-pdf-generation','visible-idea-cloud','draggable-project-ideas',
         'standalone-plugy','watch-responsive','plugy-refined-finish','chat-style-conversation',
         'instagram-priority-access','instagram-social-studio','marketing-visual-generator','expanded-local-radar','streaming-assistant','lean-bootstrap'
       ]
@@ -2944,7 +2944,7 @@ def status_v156():
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
       'ideas':'visible-project-linked-draggable-cloud',
-      'hub_projects':['aubervilliers','millenaire','gennevilliers']
+      'hub_projects':['aubervilliers','millenaire','gennevilliers','chanteraines']
     }
 
 
