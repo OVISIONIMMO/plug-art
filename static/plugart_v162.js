@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='168.20260927.2';
+const VERSION='168.20260927.3';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -4462,6 +4462,14 @@ function installRadarV167(){
   const tabs=document.createElement('nav');tabs.id='radarModeV167';tabs.className='radar-mode-v167';
   tabs.innerHTML='<button class="active" data-radar-v167="opencalls">Open Calls</button><button data-radar-v167="events">Vernissages</button><button data-radar-v167="places">Lieux</button><button data-radar-v167="favorites">Favoris</button>';
   toolbar.insertAdjacentElement('afterend',tabs);
+  if(!$('#radarLiveV168')){
+    const live=document.createElement('div');live.id='radarLiveV168';live.className='radar-live-v168';
+    live.innerHTML='<span><i></i><b>Veille automatique</b><small id="radarLiveStatusV168">Initialisation…</small></span><button id="radarRefreshEventsV168">Vernissages maintenant</button><button id="radarRefreshOppsV168">Scan web élargi</button>';
+    tabs.insertAdjacentElement('afterend',live);
+    $('#radarRefreshEventsV168').onclick=()=>refreshRadarLiveV168('events');
+    $('#radarRefreshOppsV168').onclick=()=>refreshRadarLiveV168('opportunities');
+    refreshRadarStatusV168();
+  }
   const panel=document.createElement('section');panel.id='radarEventsV167';panel.className='radar-events-v167';
   panel.innerHTML=
     '<div class="event-search-v167">'+
@@ -4492,12 +4500,35 @@ function installRadarV167(){
   panel.dataset.range='week';
   setRadarModeV167(state.radarV167Mode||'opencalls');
 }
+
+async function refreshRadarStatusV168(){
+  const el=$('#radarLiveStatusV168');if(!el)return;
+  try{
+    const s=await api('/api/v168/radar/refresh-status',{noMemCache:true,timeout:8000});
+    const e=s?.events,o=s?.opportunities,r=s?.running||[];
+    const fmt=row=>row?.updated_at?new Date(row.updated_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'jamais';
+    el.textContent='Vernissages '+fmt(e)+' · Open Calls '+fmt(o)+(r.length?' · scan en cours':'');
+  }catch{el.textContent='veille disponible au prochain rafraîchissement'}
+}
+async function refreshRadarLiveV168(kind){
+  const btn=kind==='events'?$('#radarRefreshEventsV168'):$('#radarRefreshOppsV168');if(!btn||btn.disabled)return;
+  const old=btn.textContent;btn.disabled=true;btn.textContent=kind==='events'?'Recherche Paris…':'Scan Europe…';
+  try{
+    const out=await api(kind==='events'?'/api/v168/events/refresh':'/api/v168/opportunities/refresh',{method:'POST',timeout:90000,body:JSON.stringify({force:true})});
+    if(kind==='events'){state.eventsV167=Array.isArray(out.items)?out.items:[];renderEventsV167();setRadarModeV167('events')}
+    else{state.dataLoaded.opportunities=false;await ensureDataFamily('opportunities',true);renderRadar()}
+    toast((out.found||0)+' résultat'+((out.found||0)>1?'s':'')+' actualisé'+((out.found||0)>1?'s':''));
+    refreshRadarStatusV168();
+  }catch(e){toast('Actualisation Radar impossible : '+clean(e.message||'erreur'))}
+  finally{btn.disabled=false;btn.textContent=old}
+}
+
 function setRadarModeV167(mode){
   state.radarV167Mode=mode==='events'?'events':'opencalls';
   $('#radarOpenCallsV167')?.classList.toggle('v167-hidden',state.radarV167Mode==='events');
   $('#radarEventsV167')?.classList.toggle('active',state.radarV167Mode==='events');
   $$('[data-radar-v167]').forEach(b=>b.classList.toggle('active',b.dataset.radarV167===state.radarV167Mode));
-  if(state.radarV167Mode==='events')loadEventsV167(false);
+  if(state.radarV167Mode==='events'){loadEventsV167(false);refreshRadarStatusV168()}
 }
 function eventRangeV167(){
   const range=$('#radarEventsV167')?.dataset.range||'week',now=new Date(),start=v167Today(),end=v167AddDays(7);
