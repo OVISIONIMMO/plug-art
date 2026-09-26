@@ -705,3 +705,18 @@ body[data-plugy-state="charge"] #plugyStandaloneModel{
   .plugy-model-wrap.companion-mode-v162{width:280px!important;height:255px!important;min-height:255px!important}
   .plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{width:280px!important;height:255px!important;min-height:255px!important}
 }
+
+
+/* ================= PLUGY V167 · ultrawide standalone ================= */
+@media(min-width:1440px){
+  .plugy-model-wrap{min-height:76svh!important;height:78svh!important;overflow:visible!important}
+  #plugyStandaloneModel{width:min(72vw,980px)!important;height:min(82svh,900px)!important;max-width:none!important;overflow:visible!important}
+  .plugy-model-wrap.companion-mode-v162{width:420px!important;height:380px!important;min-height:380px!important}
+  .plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{width:420px!important;height:380px!important;min-height:380px!important}
+}
+@media(min-width:2200px){
+  .plugy-model-wrap{min-height:82svh!important;height:84svh!important}
+  #plugyStandaloneModel{width:min(78vw,1260px)!important;height:min(88svh,1020px)!important}
+  .plugy-model-wrap.companion-mode-v162{width:520px!important;height:470px!important;min-height:470px!important}
+  .plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{width:520px!important;height:470px!important;min-height:470px!important}
+}
