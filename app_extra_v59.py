@@ -8,7 +8,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='167.0'
+app.version='168.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -17,7 +17,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='167.20260926.1'
+VERSION='168.20260927.3'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -680,8 +680,8 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'167.0',
-      'ui':'plug-art-v167-workspace',
+      'version':'168.0',
+      'ui':'plug-art-v168-rich-workspace',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
@@ -728,11 +728,11 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='167.20260926.1'
+    expected='168.20260927.3'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'167.0',
-      'ui':'plug-art-v167-workspace',
+      'version':'168.0',
+      'ui':'plug-art-v168-rich-workspace',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
       'html_has_slide_css': bool(js_path.exists() and 'plugart_v160_slide.css?v=' in js_path.read_text(encoding='utf-8')),
@@ -3194,7 +3194,7 @@ def _v167_event_search_ai(body):
     parsed=_v167_extract_json(_v167_output_text(rr.json()))
     events=parsed.get('events') if isinstance(parsed,dict) else parsed
     if not isinstance(events,list):events=[]
-    print("PLUG_ART_V167_EVENT_SEARCH cities="+','.join(cities)+" found="+str(len(events))+" elapsed_ms="+str(int((time.time()-started)*1000)),flush=True)
+    print("PLUG_ART_V168_EVENT_SEARCH cities="+','.join(cities)+" found="+str(len(events))+" elapsed_ms="+str(int((time.time()-started)*1000)),flush=True)
     return events
 
 @app.get('/api/v167/events')
@@ -3759,7 +3759,9 @@ def qa_manifest_v167():
     required=[
       ('GET','/api/v167/events'),('POST','/api/v167/events/search'),
       ('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),
-      ('POST','/api/v167/pdf-projects'),('GET','/api/v167/canva/config')
+      ('POST','/api/v167/pdf-projects'),('GET','/api/v167/canva/config'),
+      ('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),
+      ('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
     ]
     active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
     return {'ok':all(x in active for x in required),
@@ -3788,7 +3790,7 @@ def diagnostics_v163():
     critical=[
       ('GET','/api/health'),('GET','/api/v124/dashboard-bootstrap'),('POST','/api/v125/plugy/stream'),
       ('POST','/api/v162/plugy/speech'),('GET','/api/v156/bureau/files'),('GET','/api/v156/ideas'),('POST','/api/v164/projects/library/seed'),
-      ('GET','/api/v86/crm'),('POST','/api/radar/run'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects')
+      ('GET','/api/v86/crm'),('POST','/api/radar/run'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/pdf-projects/from-file/{file_id}')
     ]
     missing=[f'{m} {p}' for m,p in critical if (m,p) not in active]
     checks['routes']={'ok':not missing,'missing':missing}
@@ -3807,7 +3809,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'167.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'168.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -3821,7 +3823,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'167.0','ui':'plug-art-v167-workspace',
+      'ok':True,'version':'168.0','ui':'plug-art-v168-rich-workspace',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -3890,8 +3892,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'167.0',
-      'ui':'plug-art-v167-workspace',
+      'version':'168.0',
+      'ui':'plug-art-v168-rich-workspace',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -3918,7 +3920,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V167_READY creation=wide_editor radar=vernissages office=pdf_workspace ideas=sync_safe plugy=ultrawide_premium qa=interactive",flush=True)
+print("PLUG_ART_V168_READY plugy=non_obstructive creation=blank_canvas pdf=rich_editable radar=live_auto qa=interactive",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
@@ -3948,7 +3950,7 @@ def _v127_runtime_smoke():
       ('POST','/api/v156/ideas'),
       ('POST','/api/v164/projects/library/seed'),('GET','/api/v164/projects/library'),
       ('GET','/api/v163/diagnostics'),
-      ('GET','/api/v163/status'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('POST','/api/v167/pdf-projects'),('GET','/api/v167/qa/manifest')
+      ('GET','/api/v163/status'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('POST','/api/v167/pdf-projects'),('GET','/api/v167/qa/manifest'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
     }
     active=set()
     for route in app.router.routes:
@@ -3961,7 +3963,7 @@ def _v127_runtime_smoke():
     required_tables=[
       'opportunities','artists','crm_leads','crm_history','bureau_documents',
       'bureau_templates','application_packages','opportunity_workspace','content_drafts',
-      'bureau_files','idea_cloud','art_events','pdf_projects','pdf_pages','idea_links'
+      'bureau_files','idea_cloud','art_events','pdf_projects','pdf_pages','idea_links','radar_refresh_state'
     ]
     table_missing=[]
     db_ok=False
@@ -4229,7 +4231,9 @@ def qa_manifest_v167():
     required=[
       ('GET','/api/v167/events'),('POST','/api/v167/events/search'),
       ('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),
-      ('POST','/api/v167/pdf-projects'),('GET','/api/v167/canva/config')
+      ('POST','/api/v167/pdf-projects'),('GET','/api/v167/canva/config'),
+      ('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),
+      ('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
     ]
     active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
     return {'ok':all(x in active for x in required),
@@ -4258,7 +4262,7 @@ def diagnostics_v163():
     critical=[
       ('GET','/api/health'),('GET','/api/v124/dashboard-bootstrap'),('POST','/api/v125/plugy/stream'),
       ('POST','/api/v162/plugy/speech'),('GET','/api/v156/bureau/files'),('GET','/api/v156/ideas'),('POST','/api/v164/projects/library/seed'),
-      ('GET','/api/v86/crm'),('POST','/api/radar/run'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects')
+      ('GET','/api/v86/crm'),('POST','/api/radar/run'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/pdf-projects/from-file/{file_id}')
     ]
     missing=[f'{m} {p}' for m,p in critical if (m,p) not in active]
     checks['routes']={'ok':not missing,'missing':missing}
@@ -4277,7 +4281,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'167.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'168.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -4291,7 +4295,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'167.0','ui':'plug-art-v167-workspace',
+      'ok':True,'version':'168.0','ui':'plug-art-v168-rich-workspace',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4360,8 +4364,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'167.0',
-      'ui':'plug-art-v167-workspace',
+      'version':'168.0',
+      'ui':'plug-art-v168-rich-workspace',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -4388,7 +4392,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V167_READY creation=wide_editor radar=vernissages office=pdf_workspace ideas=sync_safe plugy=ultrawide_premium qa=interactive",flush=True)
+print("PLUG_ART_V168_READY plugy=non_obstructive creation=blank_canvas pdf=rich_editable radar=live_auto qa=interactive",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
@@ -4418,7 +4422,7 @@ def _v127_runtime_smoke():
       ('POST','/api/v156/ideas'),
       ('POST','/api/v164/projects/library/seed'),('GET','/api/v164/projects/library'),
       ('GET','/api/v163/diagnostics'),
-      ('GET','/api/v163/status'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('POST','/api/v167/pdf-projects'),('GET','/api/v167/qa/manifest')
+      ('GET','/api/v163/status'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('POST','/api/v167/pdf-projects'),('GET','/api/v167/qa/manifest'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
     }
     active=set()
     for route in app.router.routes:
@@ -4431,7 +4435,7 @@ def _v127_runtime_smoke():
     required_tables=[
       'opportunities','artists','crm_leads','crm_history','bureau_documents',
       'bureau_templates','application_packages','opportunity_workspace','content_drafts',
-      'bureau_files','idea_cloud','art_events','pdf_projects','pdf_pages','idea_links'
+      'bureau_files','idea_cloud','art_events','pdf_projects','pdf_pages','idea_links','radar_refresh_state'
     ]
     table_missing=[]
     db_ok=False
