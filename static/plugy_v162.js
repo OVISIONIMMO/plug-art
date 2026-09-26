@@ -8,17 +8,17 @@ function clean(v){return String(v??'').replace(/\s+/g,' ').trim()}
 function standaloneDistance(){
   const companion=$('#plugyModelWrap')?.classList.contains('companion-mode-v162');
   if(companion){
-    if(innerWidth<=520)return '6.85';
-    if(innerWidth<=900)return '6.65';
-    return '6.45';
+    if(innerWidth<=520)return '4.90';
+    if(innerWidth<=900)return '4.72';
+    return '4.60';
   }
-  if(innerWidth<=390)return '6.95';
-  if(innerWidth<=780)return '6.65';
-  return '6.30';
+  if(innerWidth<=390)return '4.98';
+  if(innerWidth<=780)return '4.74';
+  return '4.50';
 }
 function resetStandaloneFraming(){
   if(!mv)return;
-  try{mv.setAttribute('camera-target','0m 0m 0m');mv.setAttribute('camera-orbit','0deg 79deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'44deg':'42deg')}catch{}
+  try{mv.setAttribute('camera-target','0m 0m 0m');mv.setAttribute('camera-orbit','0deg 79deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'40deg':'38deg')}catch{}
 }
 function setState(name,label){
   if(['blink','doubleblink','wink','softeyes','eyethink'].includes(String(name||'').toLowerCase()))name='idle';
@@ -37,13 +37,15 @@ function setState(name,label){
 function tuneMaterials(){
   try{
     (mv?.model?.materials||[]).forEach(mat=>{
-      try{mat.pbrMetallicRoughness?.setMetallicFactor?.(0)}catch{}
-      try{mat.pbrMetallicRoughness?.setRoughnessFactor?.(1)}catch{}
-      try{mat.clearcoat?.setClearcoatFactor?.(0)}catch{}
-      try{mat.clearcoat?.setClearcoatRoughnessFactor?.(1)}catch{}
-      try{mat.specular?.setSpecularFactor?.(0)}catch{}
+      const name=String(mat?.name||'').toLowerCase(),isMetal=/(metal|chrome|prong|pin|antenna|steel|silver)/.test(name),isFace=/(glass|screen|visor|face|black|display|eye)/.test(name),isBody=!isMetal&&!isFace;
+      try{mat.pbrMetallicRoughness?.setMetallicFactor?.(isMetal?.72:(isBody?.06:0))}catch{}
+      try{mat.pbrMetallicRoughness?.setRoughnessFactor?.(isMetal?.34:(isFace?.58:.42))}catch{}
+      try{mat.clearcoat?.setClearcoatFactor?.(isMetal?.18:(isBody?.34:.12))}catch{}
+      try{mat.clearcoat?.setClearcoatRoughnessFactor?.(isMetal?.38:(isBody?.48:.64))}catch{}
+      try{mat.specular?.setSpecularFactor?.(isMetal?.58:(isBody?.28:.16))}catch{}
+      try{mat.iridescence?.setIridescenceFactor?.(isBody?.055:0)}catch{}
     });
-    mv.setAttribute('exposure','.70');mv.setAttribute('shadow-intensity','0');mv.setAttribute('shadow-softness','1');
+    mv.setAttribute('exposure','.78');mv.setAttribute('shadow-intensity','.16');mv.setAttribute('shadow-softness','.92');mv.dataset.finish='pearl-premium-v166';
   }catch{}
 }
 function saveHistory(){try{localStorage.setItem(STORAGE,JSON.stringify(state.history.slice(-30)))}catch{}}
