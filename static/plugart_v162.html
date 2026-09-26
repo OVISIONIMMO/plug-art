@@ -11,8 +11,8 @@
 <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"></noscript>
 <meta name="description" content="PLUG ART Workspace — Radar, Open Calls, création, Bureau, prospection et PLUGY.">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-<link rel="preload" href="/static/plugart_v162.js?v=1631.20260926.1" as="script">
-<link rel="stylesheet" href="/static/plugart_v162.css?v=1631.20260926.1">
+<link rel="preload" href="/static/plugart_v162.js?v=164.20260926.1" as="script">
+<link rel="stylesheet" href="/static/plugart_v162.css?v=164.20260926.1">
 <script id="plugart-v160-diag">
 (function(){
   function send(data){
@@ -70,20 +70,21 @@
       </button>
       <a class="plugy-full-link" href="/plugy">Plein écran ↗</a>
     </div>
-    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small id="sidebarVersion">V163</small></div>
+    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small id="sidebarVersion">V164</small></div>
   </aside>
 
   <main class="workspace">
     <header class="topbar">
       <div class="top-title">
         <small id="pageEyebrow">WORKSPACE</small>
-        <div class="top-title-line"><h1 id="pageTitle">Dashboard</h1><span class="build-pill" id="buildPill">V163</span></div>
+        <div class="top-title-line"><h1 id="pageTitle">Dashboard</h1><span class="build-pill" id="buildPill">V164</span></div>
       </div>
       <button class="global-search" id="globalSearch"><span>⌕</span><strong>Rechercher dans PLUG ART</strong><kbd>⌘ K</kbd></button>
       <div class="top-actions">
         <button class="icon-btn" id="refreshData" title="Actualiser">↻</button>
         <button class="map-access-btn" data-route="map" title="Carte des opportunités">⌖ Map</button>
         <button class="instagram-access-btn" data-route="social" title="Instagram">◎ Instagram</button>
+        <button class="ideas-access-btn" id="topIdeasV164" title="Nuage à idées">✦ Idées</button>
         <button class="primary-btn" id="newAction">＋ Nouveau</button>
         <button class="plugy-btn" id="topPlugy"><i></i> PLUGY</button>
         <a class="plugy-solo-v160" href="/plugy" title="Ouvrir PLUGY seule"><span>⌁</span><strong>PLUGY seule</strong><b>↗</b></a>
@@ -100,6 +101,8 @@
             <button data-route="creation"><b>✦</b><strong>Créer un contenu</strong><span>Studio de contenu + PLUGY</span></button>
             <button data-route="social"><b>◎</b><strong>Instagram</strong><span>Feed, création et publication</span></button>
             <button data-route="bureau"><b>▤</b><strong>Ouvrir le Bureau</strong><span>Écrire, réécrire, structurer</span></button>
+            <button id="dashboardProjectsV164"><b>▤</b><strong>Projets & PDF</strong><span>Dossiers, PDF et visuels par projet</span></button>
+            <button id="dashboardIdeasV164"><b>✦</b><strong>Nuage à idées</strong><span>Organiser, relier et développer les idées</span></button>
             <a class="quick-plugy-v160" href="/plugy"><b>⌁</b><strong>PLUGY seule</strong><span>Assistant plein écran</span></a>
             <button data-route="prospection"><b>◎</b><strong>Ajouter un contact</strong><span>Suivre une démarche ou relance</span></button>
           </div>
@@ -249,7 +252,7 @@
           <button data-idea-project="chanteraines">Chanteraines</button>
           <div class="idea-sidebar-actions-v163"><button id="ideasToBureau">▤ Ouvrir les projets</button><button id="ideasPlugy">✦ Développer avec PLUGY</button></div>
         </aside>
-        <section class="idea-cloud-v163 panel" id="ideaCloudV163"><div class="empty">Chargement du nuage…</div></section>
+        <section class="idea-cloud-v163 panel" id="ideaCloudV164"><div class="empty">Chargement du nuage…</div></section>
       </div>
     </section>
 
@@ -338,7 +341,7 @@
   </div>
   <div class="plugy-stage">
     <div class="plugy-energy e1"></div><div class="plugy-energy e2"></div>
-    <model-viewer id="plugyModel" loading="eager" src="/assets/plugy-v113-premium.glb?v=1631.20260926.1" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity="0" shadow-softness="1" exposure=".70" animation-crossfade-duration="80" camera-target="0m 0m 0m" camera-orbit="0deg 78deg 8.25m" field-of-view="48deg" alt="PLUGY"></model-viewer>
+    <model-viewer id="plugyModel" loading="eager" src="/assets/plugy-v113-premium.glb?v=164.20260926.1" interaction-prompt="none" camera-controls disable-pan disable-zoom environment-image="neutral" tone-mapping="neutral" shadow-intensity="0" shadow-softness="1" exposure=".70" animation-crossfade-duration="80" camera-target="0m 0m 0m" camera-orbit="0deg 79deg 9.45m" field-of-view="50deg" alt="PLUGY"></model-viewer>
     <div class="plugy-state" id="plugyState"><i></i><span>Prêt</span></div>
   </div>
   <div class="plugy-context" id="plugyContext">Contexte : Dashboard</div>
@@ -367,6 +370,6 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<script defer src="/static/plugart_v162.js?v=1631.20260926.1"></script>
+<script defer src="/static/plugart_v162.js?v=164.20260926.1"></script>
 </body>
 </html>
