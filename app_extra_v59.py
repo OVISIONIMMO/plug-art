@@ -3290,6 +3290,200 @@ def event_to_agenda_v167(event_id:int):
     return {'ok':True,'agenda_item':{'kind':'vernissage','source_id':event_id,'title':e.get('title'),'date':e.get('starts_at'),'venue':e.get('venue_name'),'city':e.get('city'),'source_url':e.get('source_url')}}
 
 
+
+# ================= V167 · EDITABLE PDF WORKSPACE =================
+_v167p=core.conn()
+_v167p.executescript("""
+CREATE TABLE IF NOT EXISTS pdf_projects(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL DEFAULT 'Sans titre',
+  project_type TEXT DEFAULT 'dossier_projet',
+  cover_image TEXT DEFAULT '',
+  theme_json TEXT DEFAULT '{}',
+  metadata_json TEXT DEFAULT '{}',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS pdf_pages(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id INTEGER NOT NULL,
+  page_index INTEGER NOT NULL DEFAULT 0,
+  page_type TEXT DEFAULT 'content',
+  content_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT '',
+  FOREIGN KEY(project_id) REFERENCES pdf_projects(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_pdf_pages_project ON pdf_pages(project_id,page_index);
+""")
+_v167p.commit();_v167p.close()
+
+def _v167_pdf_project_out(row,with_pages=False):
+    if not row:return None
+    x=dict(row);x['theme']=_v167_json(x.pop('theme_json','{}'),{});x['metadata']=_v167_json(x.pop('metadata_json','{}'),{})
+    if with_pages:
+        pages=[]
+        for r in core.rows('select * from pdf_pages where project_id=? order by page_index,id',(x['id'],)):
+            p=dict(r);p['content']=_v167_json(p.pop('content_json','{}'),{});pages.append(p)
+        x['pages']=pages
+    return x
+
+@app.get('/api/v167/pdf-projects')
+def pdf_projects_list_v167():
+    return [_v167_pdf_project_out(x) for x in core.rows('select * from pdf_projects order by updated_at desc,id desc')]
+
+@app.post('/api/v167/pdf-projects')
+def pdf_project_create_v167(body:dict):
+    body=body or {};now=_now_v85()
+    title=str(body.get('title') or 'Nouveau dossier').strip()[:240] or 'Nouveau dossier'
+    typ=str(body.get('project_type') or 'dossier_projet').strip()[:80]
+    theme=json.dumps(body.get('theme') if isinstance(body.get('theme'),dict) else {},ensure_ascii=False)
+    meta=json.dumps(body.get('metadata') if isinstance(body.get('metadata'),dict) else {},ensure_ascii=False)
+    cover=str(body.get('cover_image') or '')[:2400]
+    pid=_v165_db_write(lambda db: db.execute('insert into pdf_projects(title,project_type,cover_image,theme_json,metadata_json,created_at,updated_at) values(?,?,?,?,?,?,?)',(title,typ,cover,theme,meta,now,now)).lastrowid)
+    pages=body.get('pages') if isinstance(body.get('pages'),list) else []
+    for i,p in enumerate(pages[:80]):
+        content=p.get('content') if isinstance(p,dict) and isinstance(p.get('content'),dict) else (p if isinstance(p,dict) else {})
+        _v165_db_write(lambda db,i=i,p=p,content=content: db.execute('insert into pdf_pages(project_id,page_index,page_type,content_json,created_at,updated_at) values(?,?,?,?,?,?)',(pid,i,str((p or {}).get('page_type') or 'content')[:80],json.dumps(content,ensure_ascii=False),now,now)))
+    return _v167_pdf_project_out(core.one('select * from pdf_projects where id=?',(pid,)),True)
+
+@app.get('/api/v167/pdf-projects/{project_id}')
+def pdf_project_get_v167(project_id:int):
+    row=core.one('select * from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    return _v167_pdf_project_out(row,True)
+
+@app.patch('/api/v167/pdf-projects/{project_id}')
+def pdf_project_update_v167(project_id:int,body:dict):
+    if not core.one('select id from pdf_projects where id=?',(project_id,)):raise HTTPException(404,'Projet PDF introuvable')
+    body=body or {};data={}
+    if 'title' in body:data['title']=str(body.get('title') or 'Sans titre')[:240]
+    if 'project_type' in body:data['project_type']=str(body.get('project_type') or '')[:80]
+    if 'cover_image' in body:data['cover_image']=str(body.get('cover_image') or '')[:2400]
+    if 'theme' in body:data['theme_json']=json.dumps(body.get('theme') if isinstance(body.get('theme'),dict) else {},ensure_ascii=False)
+    if 'metadata' in body:data['metadata_json']=json.dumps(body.get('metadata') if isinstance(body.get('metadata'),dict) else {},ensure_ascii=False)
+    if data:
+        data['updated_at']=_now_v85();sets=','.join(k+'=?' for k in data)
+        _v165_db_write(lambda db: db.execute('update pdf_projects set '+sets+' where id=?',(*data.values(),project_id)))
+    return pdf_project_get_v167(project_id)
+
+@app.delete('/api/v167/pdf-projects/{project_id}')
+def pdf_project_delete_v167(project_id:int):
+    row=core.one('select id from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    def _write(db):
+        db.execute('delete from pdf_pages where project_id=?',(project_id,))
+        return db.execute('delete from pdf_projects where id=?',(project_id,)).rowcount
+    _v165_db_write(_write);return {'ok':True}
+
+@app.post('/api/v167/pdf-projects/{project_id}/pages')
+def pdf_page_create_v167(project_id:int,body:dict):
+    if not core.one('select id from pdf_projects where id=?',(project_id,)):raise HTTPException(404,'Projet PDF introuvable')
+    body=body or {};now=_now_v85()
+    next_row=core.one('select coalesce(max(page_index),-1)+1 n from pdf_pages where project_id=?',(project_id,)) or {}
+    idx=int(body.get('page_index') if body.get('page_index') is not None else next_row.get('n',0))
+    content=body.get('content') if isinstance(body.get('content'),dict) else {}
+    _v165_db_write(lambda db: db.execute('insert into pdf_pages(project_id,page_index,page_type,content_json,created_at,updated_at) values(?,?,?,?,?,?)',(project_id,idx,str(body.get('page_type') or 'content')[:80],json.dumps(content,ensure_ascii=False),now,now)))
+    _v165_db_write(lambda db: db.execute('update pdf_projects set updated_at=? where id=?',(now,project_id)))
+    return pdf_project_get_v167(project_id)
+
+@app.patch('/api/v167/pdf-pages/{page_id}')
+def pdf_page_update_v167(page_id:int,body:dict):
+    row=core.one('select * from pdf_pages where id=?',(page_id,))
+    if not row:raise HTTPException(404,'Page PDF introuvable')
+    body=body or {};data={}
+    if 'page_index' in body:data['page_index']=int(body.get('page_index') or 0)
+    if 'page_type' in body:data['page_type']=str(body.get('page_type') or 'content')[:80]
+    if 'content' in body:data['content_json']=json.dumps(body.get('content') if isinstance(body.get('content'),dict) else {},ensure_ascii=False)
+    if data:
+        data['updated_at']=_now_v85();sets=','.join(k+'=?' for k in data)
+        _v165_db_write(lambda db: db.execute('update pdf_pages set '+sets+' where id=?',(*data.values(),page_id)))
+        _v165_db_write(lambda db: db.execute('update pdf_projects set updated_at=? where id=?',(_now_v85(),row['project_id'])))
+    return pdf_project_get_v167(int(row['project_id']))
+
+@app.delete('/api/v167/pdf-pages/{page_id}')
+def pdf_page_delete_v167(page_id:int):
+    row=core.one('select project_id from pdf_pages where id=?',(page_id,))
+    if not row:raise HTTPException(404,'Page PDF introuvable')
+    _v165_db_write(lambda db: db.execute('delete from pdf_pages where id=?',(page_id,)))
+    return pdf_project_get_v167(int(row['project_id']))
+
+def _v167_pdf_path(project_id):
+    root=Path('/data/generated_pdfs') if Path('/data').exists() else BASE/'generated_pdfs'
+    root.mkdir(parents=True,exist_ok=True)
+    return root/('plugart_project_'+str(int(project_id))+'.pdf')
+
+def _v167_render_pdf(project_id):
+    project=pdf_project_get_v167(project_id)
+    try:
+        from reportlab.pdfgen import canvas as rl_canvas
+        from reportlab.lib.pagesizes import A4,landscape
+        from reportlab.lib.utils import ImageReader
+    except Exception as exc:
+        raise HTTPException(503,'Moteur PDF indisponible') from exc
+    meta=project.get('metadata') or {};fmt=str(meta.get('format') or 'A4 portrait').lower()
+    pagesize=landscape(A4) if 'paysage' in fmt or 'landscape' in fmt else A4
+    out=_v167_pdf_path(project_id);cv=rl_canvas.Canvas(str(out),pagesize=pagesize);W,H=pagesize
+    pages=project.get('pages') or [{'content':{'title':project.get('title'),'body':''}}]
+    for page in pages:
+        content=page.get('content') or {};bg=str(content.get('background') or '#FFFFFF')
+        try:
+            hx=bg.lstrip('#');rgb=tuple(int(hx[i:i+2],16)/255 for i in (0,2,4)) if len(hx)==6 else (1,1,1)
+            cv.setFillColorRGB(*rgb);cv.rect(0,0,W,H,fill=1,stroke=0)
+        except Exception:pass
+        image_url=str(content.get('image') or '')
+        if image_url.startswith(('http://','https://')):
+            try:
+                rr=requests.get(image_url,timeout=8,headers={'User-Agent':'Mozilla/5.0 PLUGART-PDF/167'})
+                if rr.ok:cv.drawImage(ImageReader(io.BytesIO(rr.content)),0,H*.43,W,H*.57,mask='auto',preserveAspectRatio=True,anchor='c')
+            except Exception:pass
+        title=str(content.get('title') or project.get('title') or '')[:500]
+        kicker=str(content.get('kicker') or '')[:240]
+        body=str(content.get('body') or content.get('text') or '')[:12000]
+        if kicker:
+            cv.setFont('Helvetica-Bold',10);cv.setFillColorRGB(.42,.36,.72);cv.drawString(42,H-52,kicker.upper()[:80])
+        cv.setFillColorRGB(.07,.075,.09);cv.setFont('Helvetica-Bold',26);y=H-88
+        for chunk in re.findall(r'.{1,42}(?:\s+|$)',title)[:4]:
+            cv.drawString(42,y,chunk.strip());y-=31
+        cv.setFont('Helvetica',11);cv.setFillColorRGB(.28,.29,.33);y-=10
+        for para in body.splitlines():
+            if y<52:break
+            chunks=re.findall(r'.{1,90}(?:\s+|$)',para) or ['']
+            for chunk in chunks:
+                cv.drawString(42,y,chunk.strip());y-=15
+                if y<52:break
+            y-=5
+        cv.setFont('Helvetica',7);cv.setFillColorRGB(.55,.56,.60);cv.drawRightString(W-32,24,'PLUG ART · V167')
+        cv.showPage()
+    cv.save();return out
+
+@app.post('/api/v167/pdf-projects/{project_id}/export')
+def pdf_project_export_v167(project_id:int):
+    path=_v167_render_pdf(project_id)
+    return {'ok':True,'project_id':project_id,'preview_url':'/api/v167/pdf-projects/'+str(project_id)+'/preview.pdf','bytes':path.stat().st_size}
+
+@app.get('/api/v167/pdf-projects/{project_id}/preview.pdf')
+def pdf_project_preview_v167(project_id:int):
+    path=_v167_pdf_path(project_id);row=core.one('select title from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    if not path.exists():path=_v167_render_pdf(project_id)
+    safe=re.sub(r'[^A-Za-z0-9À-ÿ._ -]+','_',str(row.get('title') or 'PLUG_ART'))+'.pdf'
+    return FileResponse(path,media_type='application/pdf',filename=safe,content_disposition_type='inline')
+
+@app.post('/api/v167/pdf-projects/from-bureau/{doc_id}')
+def pdf_project_from_bureau_v167(doc_id:int):
+    doc=core.one('select * from bureau_documents where id=?',(doc_id,))
+    if not doc:raise HTTPException(404,'Document Bureau introuvable')
+    return pdf_project_create_v167({'title':doc.get('title') or 'Dossier PLUG ART','project_type':'bureau',
+      'metadata':{'source_type':'bureau','source_id':doc_id},
+      'pages':[{'page_type':'content','content':{'kicker':doc.get('folder') or 'PLUG ART','title':doc.get('title') or 'Document','body':doc.get('body') or ''}}]})
+
+@app.get('/api/v167/canva/config')
+def canva_config_v167():
+    url=os.getenv('CANVA_STARTER_URL','').strip()
+    return {'enabled':bool(url),'starter_url':url,'mode':'bridge','fallback':'export-pack'}
+
+
 @app.get('/api/v163/diagnostics')
 def diagnostics_v163():
     started=time.perf_counter()
