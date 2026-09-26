@@ -4023,15 +4023,15 @@ syncRuntimeVersionBadge();
 const PROJECT_LIBRARY_V163={
   aubervilliers:{
     pdfs:[
-      {name:'PLUG_ART_HUB_Aubervilliers_Dossier_Complet_2026.pdf',ref:'libfile_47ab2ab160cc8191bb96640c4597c07c',size:2650479},
-      {name:'PLUG_ART_HUB_Aubervilliers_V3_Visuel_Detaille.pdf',ref:'libfile_e967a3d79cdc8191b6c3984b45f70c37',size:4904302},
-      {name:'PLUGART_Dossier_Nouvelle_Direction_Aubervilliers_2026_FINAL.pdf',ref:'libfile_dde468b530988191b16a9bc546531b26',size:2569346},
+      {name:'PLUG_ART_HUB_Aubervilliers_Dossier_Complet_2026.pdf',ref:'file_00000000a81881fd8556140dfdcbab31',size:2650479},
+      {name:'PLUG_ART_HUB_Aubervilliers_V3_Visuel_Detaille.pdf',ref:'file_000000003ad481f49f7051d9b9965f6d',size:4904302},
+      {name:'PLUGART_Dossier_Nouvelle_Direction_Aubervilliers_2026_FINAL.pdf',ref:'file_000000003d1081fdb9eb65b5a1539e78',size:2569346},
       {name:'PLUG_ART_HUB_01_Aubervilliers.pdf',ref:'libfile_b89373537de081919dff7028d8f88711',size:965806},
       {name:'PLUG_ART_HUB_Benchmark_Strategie_Aubervilliers.pdf',ref:'libfile_737d476e93fc81918e7ad993388b7c34',size:55062}
     ],
     visuals:[
-      {name:'Présentation Plug Art Hub Aubervilliers.png',ref:'libfile_847abb71c8dc8191aa0d80d3b9f9ffb0'},
-      {name:'Dossier créatif Plug Art Hub 01.png',ref:'libfile_57e6687950cc8191b1fdd87e43ba4362'}
+      {name:'Présentation Plug Art Hub Aubervilliers.png',ref:'file_00000000dca481f48be4af2a316edb39'},
+      {name:'Dossier créatif Plug Art Hub 01.png',ref:'file_000000003eac81f4a843776c4b754029'}
     ]
   },
   millenaire:{
@@ -4039,7 +4039,10 @@ const PROJECT_LIBRARY_V163={
       {name:'PLUG_ART_Millenaire_Dossier_25_Visuels.pdf',ref:'libfile_18265295c07081919affa444cef29444',size:86386002},
       {name:'PLUG_ART_Le_Millenaire_Vision_2027_Premium.pdf',ref:'libfile_21b773be684c8191ab8bb7bcaf2cc856',size:1702176},
       {name:'PLUG_ART_Le_Millenaire_Plan_3D_Investisseurs.pdf',ref:'libfile_1c5eee179da48191b3a6b171643d8e79',size:1533084},
-      {name:'PLUG_ART_HUB_Dossier_Projet_Le_Millenaire.pdf',ref:'libfile_b3fc339210848191884df93ae84d12e0',size:7330684},
+      {name:'PLUG_ART_HUB_Dossier_Projet_Le_Millenaire.pdf',ref:'file_00000000b38481f5870b1d4f2c37543c',size:7330684},
+      {name:'PLUGART_HUB_Le_Millenaire_Dossier_VISUEL_2026.pdf',ref:'file_00000000401881f4a2e96aa4ccbf052c',size:0},
+      {name:'PLUG_ART_HUB_DOSSIER_FINAL_ECOSYSTEME_2026.pdf',ref:'file_000000004eec81f4bff07f4fe23923f4',size:0},
+      {name:'PLUGART_HUB_Dossier_Demarchage_Le_Millenaire_2026.pdf',ref:'file_000000007d8481fd896aeecf248c05f3',size:0},
       {name:'PLUG_ART_HUB_Millenaire_Dossier_Complet.pdf',ref:'libfile_58f2252358b08191b72a2ddb49eb8b45',size:129652},
       {name:'PLUG_ART_Guide_Strategique_Association_Millenaire_2026.pdf',ref:'libfile_6cefbc9e3370819194249036a84dbf4c',size:584320}
     ],
@@ -4049,12 +4052,12 @@ const PROJECT_LIBRARY_V163={
     pdfs:[],
     visuals:[
       {name:'PLUG ART HUB, réemploi artistique à Gennevilliers.png',ref:'libfile_d1383cc0d4ac8191b9ff1d8ef8e3e802'},
-      {name:'Planche architecturale du Plug Art Hub.png',ref:'libfile_5eedd19dfe988191a94d4fa14fc18848'},
-      {name:'Galerie et ateliers du PLUG ART HUB.png',ref:'libfile_ae90d25facc08191990a6a18ea5919eb'}
+      {name:'Planche architecturale du Plug Art Hub.png',ref:'file_00000000844c81f4858233d636c0d04c'},
+      {name:'Galerie et ateliers du PLUG ART HUB.png',ref:'file_00000000f01081f49d8210b7d5497073'}
     ]
   },
   chanteraines:{
-    pdfs:[{name:'PLUG_ART_Chanteraines_Schema_Directeur_2026.pdf',ref:'libfile_5603ae65810c8191827ea7e49773fe09',size:364821}],
+    pdfs:[{name:'PLUG_ART_Chanteraines_Schema_Directeur_2026.pdf',ref:'file_000000003df081f4995b4ec60c9126c2',size:364821}],
     visuals:[]
   }
 };
