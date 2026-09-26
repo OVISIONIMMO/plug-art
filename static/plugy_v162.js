@@ -8,17 +8,17 @@ function clean(v){return String(v??'').replace(/\s+/g,' ').trim()}
 function standaloneDistance(){
   const companion=$('#plugyModelWrap')?.classList.contains('companion-mode-v162');
   if(companion){
-    if(innerWidth<=520)return '9.10';
-    if(innerWidth<=900)return '9.00';
-    return '8.90';
+    if(innerWidth<=520)return '6.85';
+    if(innerWidth<=900)return '6.65';
+    return '6.45';
   }
-  if(innerWidth<=390)return '10.00';
-  if(innerWidth<=780)return '9.75';
-  return '9.45';
+  if(innerWidth<=390)return '6.95';
+  if(innerWidth<=780)return '6.65';
+  return '6.30';
 }
 function resetStandaloneFraming(){
   if(!mv)return;
-  try{mv.setAttribute('camera-target','0m 0m 0m');mv.setAttribute('camera-orbit','0deg 79deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'52deg':'50deg')}catch{}
+  try{mv.setAttribute('camera-target','0m 0m 0m');mv.setAttribute('camera-orbit','0deg 79deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'44deg':'42deg')}catch{}
 }
 function setState(name,label){
   if(['blink','doubleblink','wink','softeyes','eyethink'].includes(String(name||'').toLowerCase()))name='idle';
