@@ -6,13 +6,19 @@ const mv=$('#plugyStandaloneModel'),chat=$('#chatScroll'),input=$('#plugyStandal
 
 function clean(v){return String(v??'').replace(/\s+/g,' ').trim()}
 function standaloneDistance(){
-  if(innerWidth<=390)return '8.55';
-  if(innerWidth<=780)return '8.15';
-  return '7.85';
+  const companion=$('#plugyModelWrap')?.classList.contains('companion-mode-v162');
+  if(companion){
+    if(innerWidth<=520)return '9.10';
+    if(innerWidth<=900)return '9.00';
+    return '8.90';
+  }
+  if(innerWidth<=390)return '10.00';
+  if(innerWidth<=780)return '9.75';
+  return '9.45';
 }
 function resetStandaloneFraming(){
   if(!mv)return;
-  try{mv.setAttribute('camera-target','0m 0m 0m');mv.setAttribute('camera-orbit','0deg 78deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'50deg':'48deg')}catch{}
+  try{mv.setAttribute('camera-target','0m 0m 0m');mv.setAttribute('camera-orbit','0deg 79deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'52deg':'50deg')}catch{}
 }
 function setState(name,label){
   if(['blink','doubleblink','wink','softeyes','eyethink'].includes(String(name||'').toLowerCase()))name='idle';
@@ -238,9 +244,9 @@ let standaloneRoamV161=0;
 function roamStandaloneV161(){
   clearTimeout(standaloneRoamV161);
   const wrap=$('#plugyModelWrap');if(!wrap)return;
-  const mobile=innerWidth<780,range=Math.min(mobile?24:innerWidth*.055,mobile?24:78);
+  const mobile=innerWidth<780,range=Math.min(mobile?14:innerWidth*.035,mobile?14:48);
   wrap.style.setProperty('--plugy-standalone-x',((Math.random()-.62)*range).toFixed(0)+'px');
-  wrap.style.setProperty('--plugy-standalone-y',((Math.random()-.5)*(mobile?12:26)).toFixed(0)+'px');
+  wrap.style.setProperty('--plugy-standalone-y',((Math.random()-.5)*(mobile?8:16)).toFixed(0)+'px');
   if(!state.listening&&!state.busy)setState(Math.random()>.55?'softturn':'curious','Prêt');
   standaloneRoamV161=setTimeout(roamStandaloneV161,6200+Math.random()*5200);
 }
