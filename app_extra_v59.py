@@ -7,7 +7,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='162.3'
+app.version='163.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -16,7 +16,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='1623.20260926.1'
+VERSION='163.20260926.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -658,14 +658,15 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'162.3',
-      'ui':'plug-art-v162-creation-plugy',
+      'version':'163.0',
+      'ui':'plug-art-v163-fast-project-workspace',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
       'migration_backup_ready':backup_ready
     }
 
+@app.get('/api/v163/ui-manifest')
 @app.get('/api/v1623/ui-manifest')
 @app.get('/api/v162/ui-manifest')
 @app.get('/api/v161/ui-manifest')
@@ -704,11 +705,11 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='1623.20260926.1'
+    expected='163.20260926.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
-      'version':'162.3',
-      'ui':'plug-art-v162-creation-plugy',
+      'version':'163.0',
+      'ui':'plug-art-v163-fast-project-workspace',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
       'html_has_slide_css':f'plugart_v160_slide.css?v={expected}' in html,
@@ -732,7 +733,7 @@ def plugy_page_v130(request:Request):
     headers={
       'Cache-Control':'no-store, max-age=0',
       'ETag':etag,
-      'X-Plug-Art-Version':'162.3',
+      'X-Plug-Art-Version':'163.0',
       'X-Plug-Art-UI':'plugy-v130-standalone'
     }
     return HTMLResponse(html,headers=headers)
@@ -745,8 +746,8 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'no-store, max-age=0',
       'ETag':etag,
-      'X-Plug-Art-Version':'162.3',
-      'X-Plug-Art-UI':'plug-art-v162-creation-plugy'
+      'X-Plug-Art-Version':'163.0',
+      'X-Plug-Art-UI':'plug-art-v163-fast-project-workspace'
     }
     return HTMLResponse(html,headers=headers)
 
@@ -782,7 +783,7 @@ async def v85_headers(request:Request,call_next):
     elif p.startswith('/static/') and any(p.endswith(ext) for ext in ('.css','.js','.glb','.png','.jpg','.jpeg','.webp','.svg','.webmanifest')):
         response.headers['Cache-Control']='public, max-age=31536000, immutable'
     elif p in ('/api/v102/bootstrap','/api/v124/dashboard-bootstrap'):
-        response.headers['Cache-Control']='private, max-age=5, stale-while-revalidate=20'
+        response.headers['Cache-Control']='private, max-age=15, stale-while-revalidate=60'
     elif p.startswith('/api/'):
         response.headers.setdefault('Cache-Control','no-store')
     response.headers.setdefault('Vary','Accept-Encoding')
@@ -2884,6 +2885,44 @@ def ideas_delete_v156(idea_id:int):
     if not cur.rowcount:raise HTTPException(404,'Idée introuvable')
     return {'ok':True}
 
+
+@app.get('/api/v163/diagnostics')
+def diagnostics_v163():
+    started=time.perf_counter()
+    checks={}
+    try:
+        db=core.conn()
+        row=db.execute('pragma quick_check').fetchone()
+        checks['database']={'ok':bool(row and str(row[0]).lower()=='ok'),'detail':str(row[0] if row else 'unknown')}
+        db.close()
+    except Exception as exc:
+        checks['database']={'ok':False,'detail':type(exc).__name__}
+    static_required=[
+      BASE/'static'/'plugart_v162.html',BASE/'static'/'plugart_v162.js',BASE/'static'/'plugart_v162.css',
+      BASE/'static'/'plugy_v162.html',BASE/'static'/'plugy_v162.js',BASE/'static'/'plugy_v162.css'
+    ]
+    checks['static']={'ok':all(p.exists() and p.stat().st_size>0 for p in static_required),'files':len(static_required)}
+    checks['plugy_model']={'ok':bool(REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>1000),'bytes':REALISTIC_PLUGY.stat().st_size if REALISTIC_PLUGY.exists() else 0}
+    active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
+    critical=[
+      ('GET','/api/health'),('GET','/api/v124/dashboard-bootstrap'),('POST','/api/v125/plugy/stream'),
+      ('POST','/api/v162/plugy/speech'),('GET','/api/v156/bureau/files'),('GET','/api/v156/ideas'),
+      ('GET','/api/v86/crm'),('POST','/api/radar/run')
+    ]
+    missing=[f'{m} {p}' for m,p in critical if (m,p) not in active]
+    checks['routes']={'ok':not missing,'missing':missing}
+    checks['openai']={'configured':bool(os.getenv('OPENAI_API_KEY','').strip())}
+    checks['meta']={'configured':bool(os.getenv('META_APP_ID','').strip() and os.getenv('META_APP_SECRET','').strip())}
+    checks['railway']={'domain_configured':bool(os.getenv('RAILWAY_PUBLIC_DOMAIN','').strip())}
+    try:
+        t=time.perf_counter();payload=dashboard_bootstrap_v124();raw=json.dumps(payload,ensure_ascii=False,separators=(',',':')).encode('utf-8')
+        checks['bootstrap']={'ok':True,'ms':round((time.perf_counter()-t)*1000,1),'bytes':len(raw),'opportunities':len(payload.get('opportunities') or [])}
+    except Exception as exc:
+        checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
+    ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
+    return {'ok':ok,'version':'163.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+
+@app.get('/api/v163/status')
 @app.get('/api/v1623/status')
 @app.get('/api/v162/status')
 @app.get('/api/v161/status')
@@ -2894,11 +2933,11 @@ def ideas_delete_v156(idea_id:int):
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'162.3','ui':'plug-art-v162-creation-plugy',
-      'plugy':'frameless-static-round-gaze-no-blink',
-      'creation':'open-call-production-workflow',
-      'bureau':'documents-packages-templates-pdf-hub',
-      'ideas':'cloud-workspace',
+      'ok':True,'version':'163.0','ui':'plug-art-v163-fast-project-workspace',
+      'plugy':'full-body-safe-frame-sticky-natural-voice',
+      'creation':'live-editor-fast-lazy-assets',
+      'bureau':'documents-projects-pdf-library-packages-templates-hub',
+      'ideas':'visible-project-linked-draggable-cloud',
       'hub_projects':['aubervilliers','millenaire','gennevilliers']
     }
 
@@ -2963,8 +3002,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'162.3',
-      'ui':'plug-art-v162-creation-plugy',
+      'version':'163.0',
+      'ui':'plug-art-v163-fast-project-workspace',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -2991,7 +3030,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V1623_READY ui=creation_preview_typography plugy=full_body_safe_frame eyes=clean_round generation=variants opportunity_to_publication=direct",flush=True)
+print("PLUG_ART_V163_READY ui=fast_project_workspace plugy=full_body_dezoom lazy=studio_hub ideas=visible pdf=project_generation cache=memory_session",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
