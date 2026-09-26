@@ -8,22 +8,22 @@ function clean(v){return String(v??'').replace(/\s+/g,' ').trim()}
 function standaloneDistance(){
   const companion=$('#plugyModelWrap')?.classList.contains('companion-mode-v162'),w=innerWidth||1200,h=innerHeight||900;
   if(companion){
-    if(w<=520)return '4.90';
-    if(w<=900)return '4.72';
-    if(w>=2200)return '3.30';
-    if(w>=1440)return '3.75';
-    return '4.35';
+    if(w<=520)return '5.05';
+    if(w<=900)return '4.92';
+    if(w>=2200)return '4.70';
+    if(w>=1440)return '4.50';
+    return '4.55';
   }
-  if(w<=390)return '4.98';
-  if(w<=780)return '4.74';
-  if(w<=1180)return h<900?'5.10':'4.85';
-  if(w>=2200)return '3.05';
-  if(w>=1440)return '3.55';
-  return '4.10';
+  if(w<=390)return '5.15';
+  if(w<=780)return '5.00';
+  if(w<=1180)return h<900?'5.40':'5.18';
+  if(w>=2200)return '4.40';
+  if(w>=1440)return '4.20';
+  return '4.35';
 }
 function resetStandaloneFraming(){
   if(!mv)return;
-  const w=innerWidth||1200,fov=w<=780?'40deg':w<=1180?'39deg':w>=2200?'34deg':w>=1440?'35deg':'37deg';
+  const w=innerWidth||1200,fov=w<=780?'41deg':w<=1180?'40deg':w>=2200?'37deg':w>=1440?'38deg':'38deg';
   try{mv.setAttribute('camera-target','0m 0m 0m');mv.setAttribute('camera-orbit','0deg 79deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',fov)}catch{}
 }
 function setState(name,label){
