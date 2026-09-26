@@ -33,12 +33,19 @@ DISCOVERY_SOURCES=[
  ('Région Île-de-France — Aides & appels','https://www.iledefrance.fr/aides-et-appels-a-projets',88),
  ('Multitude 93 — Actualités','https://multitude.seinesaintdenis.fr/actualite/',91),
  ('Multitude 93 — Agenda','https://multitude.seinesaintdenis.fr/agenda-multitude/',80),
- ('Sortir à Paris — Expositions','https://www.sortiraparis.com/arts-culture/exposition',70)
+ ('Sortir à Paris — Expositions','https://www.sortiraparis.com/arts-culture/exposition',70),
+ ('VAA OpenSpaces — Partner Venues','https://visual-artists.org/vaa-openspaces/openspaces-2026-partner-venues/',86),
+ ('CFF — Photography Program','https://centrumforfotografi.se/en/program/',86),
+ ('CFF — Photography','https://centrumforfotografi.se/en/',82)
 ]
-LINK_HINTS=('opportun','open-call','open_call','opencall','call-for','appel','candid','exhibition','exposition','expo','artist','artiste','collective','collectif','emerging','emergent','residen','culture','programmation','agenda','lieu','galerie','gallery','pop-up','popup')
+LINK_HINTS=('opportun','open-call','open_call','opencall','call-for','appel','candid','exhibition','exposition','expo','artist','artiste','collective','collectif','emerging','emergent','residen','culture','programmation','agenda','lieu','galerie','gallery','pop-up','popup','photograph','photographie','photographer','photographe','hotel','hôtel','restaurant','cafe','café','hospitality','venue')
 BAD_LINK_HINTS=('login','register','privacy','terms','contact','about','newsletter','facebook','instagram','cookie','press','shop')
-POSITIVE_LINK_HINTS=('open call','appel à candid','appel a candid','appel à projets','appel a projets','exhibition','exposition','collective','collectif','emerging','émergent','emergent','painting','peinture','photography','photographie','visual art','arts visuels','artist opportunity','art contemporain','galerie','gallery','programmation culturelle','résidence','residence','lieu culturel','tiers-lieu')
-NEGATIVE_LINK_HINTS=('competition','contest','concours','award','prize','prix','job','workshop','formation','webinar')
+POSITIVE_LINK_HINTS=('open call','appel à candid','appel a candid','appel à projets','appel a projets','exhibition','exposition','collective','collectif','emerging','émergent','emergent','painting','peinture','photography','photographie','photographer','photographe','visual art','arts visuels','artist opportunity','art contemporain','galerie','gallery','programmation culturelle','résidence','residence','lieu culturel','tiers-lieu','hotel exhibition','hôtel','restaurant','café','cafe','hospitality','partner venue')
+NEGATIVE_LINK_HINTS=('competition','contest','concours','award','awards','prize','prix','récompense','recompense','trophy','job','workshop','formation','webinar')
+BLOCKED_OPPORTUNITY_HINTS=('competition','contest','concours','award','awards','prize','prix artistique','prix photo','récompense','recompense','trophy')
+def blocked_opportunity_text(text):
+ low=norm(text).lower()
+ return any(re.search(r'\\b'+re.escape(k)+r'\\b',low,re.I) for k in BLOCKED_OPPORTUNITY_HINTS)
 EUROPE_WORDS=('france','italy','italie','spain','espagne','portugal','belgium','belgique','netherlands','pays-bas','united kingdom','royaume-uni','germany','allemagne','austria','autriche','switzerland','suisse')
 PARIS_WORDS=('paris','aubervilliers','saint-denis','pantin','montreuil','93','seine-saint-denis')
 
@@ -128,6 +135,7 @@ def infer_fee(text):
 
 def score_opp(o):
  today=date.today();score=30;why=[];text=' '.join(str(o.get(k) or '') for k in ['title','type','summary','accessibility','eligibility']).lower();fee=money_fee(o.get('fee'))
+ if blocked_opportunity_text(text):return 0,'exclue',None,'concours/prix/récompense exclu'
  if fee==0:score+=20;why.append('gratuit')
  elif fee is not None and fee<=50:score+=14;why.append('coût très faible')
  elif fee is not None and fee<=150:score+=8;why.append('coût accessible')
@@ -169,7 +177,13 @@ def score_candidate(x):
 
 def rescore_all(c):
  for r in c.execute('select * from opportunities').fetchall():
-  o=dict(r);s,p,d,w=score_opp(o);c.execute('update opportunities set radar_score=?,score=?,priority=?,days_left=?,radar_reason=? where id=?',(s,s,p,d,w,o['id']))
+  o=dict(r);s,p,d,w=score_opp(o)
+  new_status='excluded' if p=='exclue' and o.get('status') in ('open','rolling') else o.get('status')
+  c.execute('update opportunities set radar_score=?,score=?,priority=?,days_left=?,radar_reason=?,status=? where id=?',(s,s,p,d,w,new_status,o['id']))
+ for r in c.execute("select id,title,summary,raw_excerpt from radar_candidates where state='new'").fetchall():
+  x=dict(r)
+  if blocked_opportunity_text(' '.join(str(x.get(k) or '') for k in ('title','summary','raw_excerpt'))):
+   c.execute("update radar_candidates set state='rejected',reason='concours/prix/récompense exclu' where id=?",(x['id'],))
 
 class LinkParser(HTMLParser):
  def __init__(self):super().__init__();self.links=[];self.href=None;self.parts=[];self.title_parts=[];self.in_title=False
@@ -197,7 +211,7 @@ def link_signal(url,label=''):
 def valid_candidate_link(base,href,label):
  if not href or href.startswith(('#','mailto:','javascript:')):return False
  u=urljoin(base,href);low=(u+' '+(label or '')).lower()
- if urlparse(u).scheme not in ('http','https') or domain(u)!=domain(base) or any(b in low for b in BAD_LINK_HINTS):return False
+ if urlparse(u).scheme not in ('http','https') or domain(u)!=domain(base) or any(b in low for b in BAD_LINK_HINTS) or blocked_opportunity_text(low):return False
  return any(h in low for h in LINK_HINTS) and link_signal(u,label)>-12
 
 def extract_detail(url,fallback_title=''):
@@ -233,6 +247,7 @@ def discover_sources(max_details=18):
     if c.execute('select 1 from opportunities where source_url=?',(u,)).fetchone() or c.execute('select 1 from radar_candidates where source_url=?',(u,)).fetchone():continue
     try:
      d=extract_detail(u,label)
+     if blocked_opportunity_text(' '.join([d.get('title') or '',d.get('summary') or '',d.get('raw_excerpt') or ''])):continue
      if len(d['title'])<7 or d['title'].lower() in ('opportunities','open calls','calls for artists'):continue
      fp=candidate_fingerprint(u,d['title']);item={**d,'source_url':u,'source_name':src['name'],'source_page':src['url'],'reliability':rel};score,reason=score_candidate(item)
      if score<38 and signal<8:continue
@@ -329,6 +344,8 @@ def promote_candidate(cid:int):
  c=conn();r=c.execute('select * from radar_candidates where id=?',(cid,)).fetchone()
  if not r:c.close();raise HTTPException(404)
  x=dict(r)
+ if blocked_opportunity_text(' '.join(str(x.get(k) or '') for k in ('title','summary','raw_excerpt'))):
+  c.execute("update radar_candidates set state='rejected',reason='concours/prix/récompense exclu' where id=?",(cid,));c.commit();c.close();raise HTTPException(409,'Concours/prix exclus du Radar')
  if x['state']=='promoted':c.close();return {'ok':True,'already':True}
  if x.get('deadline'):
   try:
