@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='162.20260926.1';
+const VERSION='1623.20260926.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -272,14 +272,18 @@ function ensurePlugyFollower(){
 function plugyFollowerStage(){return ensurePlugyFollower()}
 function plugyFramingFor(target){
   const follower=$('#plugyFollower');
-  if(target&&follower&&target===follower)return{orbit:'0deg 75deg 5.15m',fov:'40deg'};
-  if(target&&target===plugyDashboardStage())return{orbit:'0deg 76deg 3.42m',fov:'28deg'};
-  return{orbit:'0deg 76deg 3.08m',fov:'27deg'};
+  if(target&&follower&&target===follower)return{orbit:'0deg 78deg 6.10m',fov:'43deg'};
+  if(target&&target===plugyDashboardStage())return{orbit:'0deg 78deg 6.35m',fov:'44deg'};
+  return{orbit:'0deg 78deg 6.05m',fov:'43deg'};
 }
 function applyPlugyFraming(target){
   const mv=$('#plugyModel');if(!mv)return;
   const f=plugyFramingFor(target||mv.parentElement);
-  try{mv.setAttribute('camera-orbit',f.orbit);mv.setAttribute('field-of-view',f.fov)}catch{}
+  try{
+    mv.setAttribute('camera-target','0m 0m 0m');
+    mv.setAttribute('camera-orbit',f.orbit);
+    mv.setAttribute('field-of-view',f.fov);
+  }catch{}
 }
 function movePlugyModel(target){
   const mv=$('#plugyModel');if(!mv||!target)return;
@@ -2799,7 +2803,16 @@ function installCreationModes(){
       '<div class="studio-bg-swatches"><button data-bg-swatch="#f4f3ef" style="--sw:#f4f3ef"></button><button data-bg-swatch="#efeaff" style="--sw:#efeaff"></button><button data-bg-swatch="#e8f8fa" style="--sw:#e8f8fa"></button><button data-bg-swatch="#fff0f6" style="--sw:#fff0f6"></button><button data-bg-swatch="#171820" style="--sw:#171820"></button></div>'+
       '<label>Alignement<select id="slideAlign"><option value="left">Gauche</option><option value="center">Centre</option></select></label>'+
       '<div class="studio-color-swatches" aria-label="Couleur accent"><button data-accent-swatch="black" style="--sw:#111318"></button><button data-accent-swatch="violet" style="--sw:#735cff"></button><button data-accent-swatch="cyan" style="--sw:#45cbd7"></button><button data-accent-swatch="pink" style="--sw:#e96cae"></button><button data-accent-swatch="orange" style="--sw:#f2944b"></button><button data-accent-swatch="green" style="--sw:#55b982"></button></div>'+
-      '<div class="studio-scale-section"><small>TYPOGRAPHIE</small>'+
+      '<div class="studio-type-pro-v163">'+
+      '<label>Police<select id="slideFontFamily"><option value="Space">Space Grotesk</option><option value="Inter">Inter</option><option value="System">Système</option><option value="Serif">Serif</option><option value="Mono">Mono</option></select></label>'+
+      '<label>Graisse<select id="slideFontWeight"><option value="400">Regular</option><option value="500">Medium</option><option value="600">Semi Bold</option><option value="700">Bold</option><option value="800">Extra Bold</option><option value="900">Black</option></select></label>'+
+      '<label>Taille titre <output id="slideTitlePxOut">46 px</output><input id="slideTitlePx" type="range" min="24" max="92" value="46"></label>'+
+      '<label>Taille texte <output id="slideBodyPxOut">15 px</output><input id="slideBodyPx" type="range" min="10" max="34" value="15"></label>'+
+      '<label>Taille label <output id="slideLabelPxOut">11 px</output><input id="slideLabelPx" type="range" min="8" max="24" value="11"></label>'+
+      '<label>Taille CTA <output id="slideCtaPxOut">12 px</output><input id="slideCtaPx" type="range" min="9" max="28" value="12"></label>'+
+      '<label>Interligne <output id="slideLineHeightOut">1.08×</output><input id="slideLineHeight" type="range" min="0.9" max="1.8" step="0.02" value="1.08"></label>'+
+      '<label>Espacement lettres <output id="slideLetterSpacingOut">-0.4 px</output><input id="slideLetterSpacing" type="range" min="-2" max="6" step="0.1" value="-0.4"></label>'+
+      '</div>'+'<div class="studio-scale-section"><small>TYPOGRAPHIE</small>'+
       '<label>Échelle générale <output id="slideFontScaleOut">100%</output><input id="slideFontScale" type="range" min="80" max="135" value="100"></label>'+
       '<label>Titre <output id="slideTitleScaleOut">100%</output><input id="slideTitleScale" type="range" min="65" max="165" value="100"></label>'+
       '<label>Texte <output id="slideBodyScaleOut">100%</output><input id="slideBodyScale" type="range" min="65" max="155" value="100"></label>'+
@@ -2832,9 +2845,9 @@ function installCreationModes(){
       '<div class="studio-stage-head"><div><small>GÉNÉRATEUR</small><strong>Visuel de campagne</strong></div><span>PLUG ART IMAGE</span></div>'+
       '<label>Cas d’usage<select id="visualUseCase"><option value="campaign">Campagne</option><option value="event">Événement</option><option value="artist">Portrait artiste</option><option value="story">Story</option><option value="partnership">Partenariat</option><option value="launch">Lancement</option></select></label>'+
       '<label>Prompt<textarea id="visualPrompt" rows="9" placeholder="Décris l’image, l’ambiance, le sujet, la composition…"></textarea></label>'+
-      '<div class="visual-settings-row"><label>Direction<select id="visualStyle"><option value="editorial">Éditorial premium</option><option value="gallery">Galerie / culturel</option><option value="art">Art contemporain</option><option value="photo">Photographique</option></select></label><label>Format<select id="visualRatio"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label></div>'+
+      '<div class="visual-settings-row"><label>Direction<select id="visualStyle"><option value="editorial">Éditorial premium</option><option value="gallery">Galerie / culturel</option><option value="art">Art contemporain</option><option value="photo">Photographique</option></select></label><label>Format<select id="visualRatio"><option value="4:5">Portrait 4:5</option><option value="1:1">Carré 1:1</option><option value="9:16">Story 9:16</option></select></label><label>Qualité<select id="visualQuality"><option value="medium">Rapide</option><option value="high">Haute</option></select></label></div>'+
       '<div class="visual-prompt-tools"><button data-visual-help="art-direction">✦ Direction artistique</button><button data-visual-help="marketing">✦ Plus marketing</button><button data-visual-help="premium">✦ Plus premium</button></div>'+
-      '<button class="primary-btn wide visual-generate-main" id="visualGenerate">✦ Générer le visuel</button>'+
+      '<div class="visual-generate-row-v163"><button class="primary-btn visual-generate-main" id="visualGenerate">✦ Générer le visuel</button><button class="secondary-btn" id="visualGenerateVariantsV163">3 variantes</button></div>'+
     '</section>'+
     '<section class="visual-preview panel"><div class="visual-preview-head"><small>APERÇU</small><div><button id="visualDownload">Télécharger</button><button id="visualToBureau">Bureau</button></div></div><div id="visualImage"><span>Choisis une direction ou écris ton prompt.</span></div></section>';
   visualMount.appendChild(visual);
@@ -2854,8 +2867,9 @@ function installCreationModes(){
   $('#carouselFormat').onchange=e=>{state.carousel.format=e.target.value;renderCarousel()};
   ['slideKicker','slideTitle','slideBody','slideCta'].forEach(id=>$('#'+id).addEventListener('input',syncActiveSlideEdit));
   ['slideLayout','slideAccent','slideAlign','slideBackground'].forEach(id=>$('#'+id)?.addEventListener('change',updateSlideDesignFromControls));
-  ['slideFontScale','slideTitleScale','slideBodyScale','slideLabelScale','slideCtaScale','slideSpacing','slideImageOpacity','slideImageUrl'].forEach(id=>$('#'+id)?.addEventListener('input',updateSlideDesignFromControls));
-  $$$('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));$$('[data-accent-swatch]').forEach(b=>b.onclick=()=>{if($('#slideAccent'))$('#slideAccent').value=b.dataset.accentSwatch;updateSlideDesignFromControls()});$$('[data-bg-swatch]').forEach(b=>b.onclick=()=>{if($('#slideBackground'))$('#slideBackground').value=b.dataset.bgSwatch;updateSlideDesignFromControls()});
+  ['slideFontScale','slideTitleScale','slideBodyScale','slideLabelScale','slideCtaScale','slideSpacing','slideImageOpacity','slideImageUrl','slideTitlePx','slideBodyPx','slideLabelPx','slideCtaPx','slideLineHeight','slideLetterSpacing'].forEach(id=>$('#'+id)?.addEventListener('input',updateSlideDesignFromControls));
+  ['slideFontFamily','slideFontWeight'].forEach(id=>$('#'+id)?.addEventListener('change',updateSlideDesignFromControls));
+  $('[data-slide-preset]').forEach(b=>b.onclick=()=>setSlideDesignPreset(b.dataset.slidePreset));$$('[data-accent-swatch]').forEach(b=>b.onclick=()=>{if($('#slideAccent'))$('#slideAccent').value=b.dataset.accentSwatch;updateSlideDesignFromControls()});$$('[data-bg-swatch]').forEach(b=>b.onclick=()=>{if($('#slideBackground'))$('#slideBackground').value=b.dataset.bgSwatch;updateSlideDesignFromControls()});
   $$('[data-slide-help]').forEach(b=>b.onclick=()=>assistSlideDesign(b.dataset.slideHelp));
   $$('[data-marketing-template]').forEach(b=>b.onclick=()=>applyMarketingTemplate(b.dataset.marketingTemplate));
   $$('[data-studio-tool]').forEach(b=>b.onclick=()=>setStudioTool(b.dataset.studioTool));
@@ -2872,7 +2886,7 @@ function installCreationModes(){
   $$('[data-canvas-action]').forEach(b=>b.onclick=()=>runCanvasAction(b.dataset.canvasAction));installStudioKeyboard();renderStudioCanvasAids();
 
   const visualPreview=$('#visualImage')?.parentElement;if(visualPreview&&!$('#visualHistory')){const vh=document.createElement('div');vh.id='visualHistory';vh.className='visual-history';visualPreview.appendChild(vh);renderVisualHistory()}
-  $('#visualGenerate').onclick=generateVisual;$('#visualDownload').onclick=downloadVisual;$('#visualToBureau').onclick=visualToBureau;
+  $('#visualGenerate').onclick=generateVisual;$('#visualGenerateVariantsV163')?.addEventListener('click',generateVisualVariantsV163);$('#visualDownload').onclick=downloadVisual;$('#visualToBureau').onclick=visualToBureau;
   $$('[data-visual-preset]').forEach(b=>b.onclick=()=>applyVisualPreset(b.dataset.visualPreset));
   $('#visualUseCase').onchange=e=>applyVisualPreset(e.target.value);
   $$('[data-visual-help]').forEach(b=>b.onclick=()=>improveVisualPrompt(b.dataset.visualHelp));
@@ -3065,8 +3079,8 @@ async function generateCarousel(){
   state.carousel.active=0;state.carousel.format=$('#carouselFormat').value||'4:5';renderCarousel();scheduleDraftAutosave();if(source)persistWorkflow(source.id,{workflow_status:'drafting',next_action:'Finaliser le carrousel'}).catch(()=>{});playMotion('Happy');btn.disabled=false;btn.textContent=old;
 }
 function slideDesign(s){
-  if(!s)return{theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,titleScale:100,bodyScale:100,labelScale:100,ctaScale:100,spacing:100,imageOpacity:64,radius:26,backgroundColor:'#f4f3ef',pattern:'orbit'};
-  s.design={theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,titleScale:100,bodyScale:100,labelScale:100,ctaScale:100,spacing:100,imageOpacity:64,radius:26,backgroundColor:'#f4f3ef',pattern:'orbit',...(s.design||{})};
+  if(!s)return{theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,titleScale:100,bodyScale:100,labelScale:100,ctaScale:100,spacing:100,imageOpacity:64,radius:26,backgroundColor:'#f4f3ef',pattern:'orbit',fontFamily:'Space',fontWeight:700,titlePx:46,bodyPx:15,labelPx:11,ctaPx:12,lineHeight:1.08,letterSpacing:-0.4};
+  s.design={theme:'ultra',layout:'editorial',accent:'black',align:'left',fontScale:100,titleScale:100,bodyScale:100,labelScale:100,ctaScale:100,spacing:100,imageOpacity:64,radius:26,backgroundColor:'#f4f3ef',pattern:'orbit',fontFamily:'Space',fontWeight:700,titlePx:46,bodyPx:15,labelPx:11,ctaPx:12,lineHeight:1.08,letterSpacing:-0.4,...(s.design||{})};
   return s.design;
 }
 function slideAccentColor(name){return({black:'#111318',violet:'#735cff',cyan:'#45cbd7',pink:'#e96cae',blue:'#4b7cff',orange:'#f2944b',green:'#55b982'})[name]||'#111318'}
@@ -3086,6 +3100,9 @@ function updateSlideDesignFromControls(){
   const s=state.carousel.slides[state.carousel.active];if(!s)return;
   const d=slideDesign(s);d.layout=$('#slideLayout')?.value||d.layout;d.accent=$('#slideAccent')?.value||d.accent;d.align=$('#slideAlign')?.value||d.align;
   d.backgroundColor=$('#slideBackground')?.value||d.backgroundColor;d.fontScale=Number($('#slideFontScale')?.value||d.fontScale);d.titleScale=Number($('#slideTitleScale')?.value||d.titleScale);d.bodyScale=Number($('#slideBodyScale')?.value||d.bodyScale);d.labelScale=Number($('#slideLabelScale')?.value||d.labelScale);d.ctaScale=Number($('#slideCtaScale')?.value||d.ctaScale);d.spacing=Number($('#slideSpacing')?.value||d.spacing);d.imageOpacity=Number($('#slideImageOpacity')?.value||d.imageOpacity);
+  d.fontFamily=$('#slideFontFamily')?.value||d.fontFamily;d.fontWeight=Number($('#slideFontWeight')?.value||d.fontWeight);
+  d.titlePx=Number($('#slideTitlePx')?.value||d.titlePx);d.bodyPx=Number($('#slideBodyPx')?.value||d.bodyPx);d.labelPx=Number($('#slideLabelPx')?.value||d.labelPx);d.ctaPx=Number($('#slideCtaPx')?.value||d.ctaPx);
+  d.lineHeight=Number($('#slideLineHeight')?.value||d.lineHeight);d.letterSpacing=Number($('#slideLetterSpacing')?.value||d.letterSpacing);
   const url=String($('#slideImageUrl')?.value||'').trim();if(url!==String(s.image||''))s.image=url;
   renderCarousel();scheduleDraftAutosave();
 }
@@ -3131,12 +3148,27 @@ function renderCarousel(){
   });
   $('#carouselKicker').textContent=s.kicker||'PLUG ART';$('#carouselTitle').textContent=s.title||'Ton carrousel apparaîtra ici';$('#carouselBody').textContent=s.body||'Choisis une source ou écris un brief.';$('#carouselCta').textContent=s.cta||'Découvrir →';
   const img=$('#carouselImage');img.style.backgroundImage=s.image?'url("'+String(s.image).replace(/"/g,'%22')+'")':'none';img.style.opacity=String(Math.max(0,Math.min(100,Number(d.imageOpacity||0)))/100);img.dataset.pattern=s.image?'':(d.pattern||'orbit');img.classList.toggle('procedural',!s.image);
-  const canvas=$('#carouselCanvas');canvas.style.aspectRatio=state.carousel.format==='1:1'?'1/1':state.carousel.format==='9:16'?'9/16':'4/5';canvas.dataset.theme=d.theme||'ultra';canvas.dataset.layout=d.layout||'editorial';canvas.dataset.align=d.align||'left';canvas.style.setProperty('--slide-accent',slideAccentColor(d.accent));const globalScale=Number(d.fontScale||100)/100;canvas.style.setProperty('--slide-font-scale',String(globalScale));canvas.style.setProperty('--slide-title-size',(46*globalScale*Number(d.titleScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-body-size',(15*globalScale*Number(d.bodyScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-label-size',(11*globalScale*Number(d.labelScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-cta-size',(12*globalScale*Number(d.ctaScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-copy-gap',(14*Number(d.spacing||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-radius',(d.radius||26)+'px');canvas.style.background=d.backgroundColor||'#f4f3ef';
+  const canvas=$('#carouselCanvas');canvas.style.aspectRatio=state.carousel.format==='1:1'?'1/1':state.carousel.format==='9:16'?'9/16':'4/5';canvas.dataset.theme=d.theme||'ultra';canvas.dataset.layout=d.layout||'editorial';canvas.dataset.align=d.align||'left';canvas.style.setProperty('--slide-accent',slideAccentColor(d.accent));
+  const globalScale=Number(d.fontScale||100)/100;
+  const familyMap={Space:'"Space Grotesk",sans-serif',Inter:'Inter,sans-serif',System:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',Serif:'Georgia,serif',Mono:'ui-monospace,SFMono-Regular,Menlo,monospace'};
+  canvas.style.setProperty('--slide-font-family',familyMap[d.fontFamily]||familyMap.Space);
+  canvas.style.setProperty('--slide-font-weight',String(d.fontWeight||700));
+  canvas.style.setProperty('--slide-line-height',String(d.lineHeight||1.08));
+  canvas.style.setProperty('--slide-letter-spacing',Number(d.letterSpacing||0)+'px');
+  canvas.style.setProperty('--slide-font-scale',String(globalScale));
+  canvas.style.setProperty('--slide-title-size',(Number(d.titlePx||46)*globalScale*Number(d.titleScale||100)/100).toFixed(2)+'px');
+  canvas.style.setProperty('--slide-body-size',(Number(d.bodyPx||15)*globalScale*Number(d.bodyScale||100)/100).toFixed(2)+'px');
+  canvas.style.setProperty('--slide-label-size',(Number(d.labelPx||11)*globalScale*Number(d.labelScale||100)/100).toFixed(2)+'px');
+  canvas.style.setProperty('--slide-cta-size',(Number(d.ctaPx||12)*globalScale*Number(d.ctaScale||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-copy-gap',(14*Number(d.spacing||100)/100).toFixed(2)+'px');canvas.style.setProperty('--slide-radius',(d.radius||26)+'px');canvas.style.background=d.backgroundColor||'#f4f3ef';
   $('#slideKicker').value=s.kicker||'';$('#slideTitle').value=s.title||'';$('#slideBody').value=s.body||'';$('#slideCta').value=s.cta||'';
   if($('#slideLayout'))$('#slideLayout').value=d.layout;if($('#slideAccent'))$('#slideAccent').value=d.accent;if($('#slideAlign'))$('#slideAlign').value=d.align;if($('#slideBackground'))$('#slideBackground').value=d.backgroundColor||'#f4f3ef';
   if($('#slideFontScale'))$('#slideFontScale').value=d.fontScale;if($('#slideFontScaleOut'))$('#slideFontScaleOut').textContent=d.fontScale+'%';[['Title',d.titleScale],['Body',d.bodyScale],['Label',d.labelScale],['Cta',d.ctaScale],['Spacing',d.spacing]].forEach(([k,v])=>{const el=$('#slide'+k+'Scale'),out=$('#slide'+k+'ScaleOut');if(el)el.value=v;if(out)out.textContent=v+'%'});if($('#slideSpacing'))$('#slideSpacing').value=d.spacing;if($('#slideSpacingOut'))$('#slideSpacingOut').textContent=d.spacing+'%';
   if($('#slideImageOpacity'))$('#slideImageOpacity').value=d.imageOpacity;if($('#slideImageOpacityOut'))$('#slideImageOpacityOut').textContent=d.imageOpacity+'%';
   if($('#slideImageUrl'))$('#slideImageUrl').value=s.image||'';
+  if($('#slideFontFamily'))$('#slideFontFamily').value=d.fontFamily||'Space';if($('#slideFontWeight'))$('#slideFontWeight').value=String(d.fontWeight||700);
+  [['TitlePx',d.titlePx,' px'],['BodyPx',d.bodyPx,' px'],['LabelPx',d.labelPx,' px'],['CtaPx',d.ctaPx,' px']].forEach(([k,v,u])=>{const el=$('#slide'+k),out=$('#slide'+k+'Out');if(el)el.value=v;if(out)out.textContent=v+u});
+  if($('#slideLineHeight'))$('#slideLineHeight').value=d.lineHeight;if($('#slideLineHeightOut'))$('#slideLineHeightOut').textContent=Number(d.lineHeight||1.08).toFixed(2)+'×';
+  if($('#slideLetterSpacing'))$('#slideLetterSpacing').value=d.letterSpacing;if($('#slideLetterSpacingOut'))$('#slideLetterSpacingOut').textContent=Number(d.letterSpacing||0).toFixed(1)+' px';
   $$('[data-slide-preset]').forEach(b=>b.classList.toggle('active',b.dataset.slidePreset===d.theme));
   $$('[data-stage-pattern]').forEach(b=>b.classList.toggle('active',!s.image&&b.dataset.stagePattern===d.pattern));
   renderCanvasLayers();renderStudioImages();
@@ -3150,7 +3182,7 @@ async function generateCarouselImage(index){
   const s=state.carousel.slides[index];if(!s)return toast('Génère d’abord les slides');
   const source=opportunityById($('#carouselSource').value),ratio=state.carousel.format||'4:5',btn=$('#carouselGenerateImage'),old=btn.textContent;btn.disabled=true;btn.textContent='Image…';
   const prompt=clean((s.image_prompt||'Key visual éditorial contemporain pour '+s.title+'. '+s.body)+' Univers PLUG ART, campagne culturelle, composition graphique, lignes, formes, matière, espace négatif. Le visuel doit fonctionner sans photographie d’exposition. Aucun texte lisible, aucun logo, aucun watermark.'+(source?' Contexte : '+source.title+'.':''));
-  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt,style:'editorial',ratio,quality:'medium'})});if(r.url){s.image=r.url;const d=slideDesign(s);if(d.layout==='minimal')d.layout='editorial';d.imageOpacity=Math.max(82,Number(d.imageOpacity||0));state.visual.url=r.url;state.visual.history=state.visual.history||[];state.visual.history.unshift({url:r.url,label:'Slide '+(index+1)});renderCarousel();scheduleDraftAutosave();toast('Visuel généré et affiché')}}catch(e){console.error('[Image Studio]',e);toast('Image : '+String(e?.message||'génération indisponible').replace(/^\{"detail":"?|"?\}$/g,'').slice(0,150))}finally{btn.disabled=false;btn.textContent=old}
+  try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt,style:'editorial',ratio,quality:$('#visualQuality')?.value||'medium'})});if(r.url){s.image=r.url;const d=slideDesign(s);if(d.layout==='minimal')d.layout='editorial';d.imageOpacity=Math.max(82,Number(d.imageOpacity||0));state.visual.url=r.url;state.visual.history=state.visual.history||[];state.visual.history.unshift({url:r.url,label:'Slide '+(index+1)});renderCarousel();scheduleDraftAutosave();toast('Visuel généré et affiché')}}catch(e){console.error('[Image Studio]',e);toast('Image : '+String(e?.message||'génération indisponible').replace(/^\{"detail":"?|"?\}$/g,'').slice(0,150))}finally{btn.disabled=false;btn.textContent=old}
 }
 async function generateAllCarouselImages(){
   if(!state.carousel.slides.length)return toast('Génère d’abord les slides');const b=$('#carouselGenerateAll'),old=b.textContent;b.disabled=true;
@@ -3397,6 +3429,18 @@ async function generateVisual(){
   const prompt=clean($('#visualPrompt').value);if(!prompt)return toast('Ajoute un prompt');const b=$('#visualGenerate'),old=b.textContent,usecase=$('#visualUseCase')?.value||'campaign',preset=VISUAL_PRESETS[usecase];b.disabled=true;b.textContent='Génération…';playMotion('Think',true);
   const productionPrompt=prompt+' '+(preset?.prompt||'')+' Direction PLUG ART : image marketing contemporaine, premium, crédible, composition forte. Aucun texte lisible, aucun logo, aucun watermark.';
   try{const r=await api('/api/v32/content/image',{method:'POST',body:JSON.stringify({prompt:productionPrompt,style:$('#visualStyle').value||preset?.style||'editorial',ratio:$('#visualRatio').value||preset?.ratio||'4:5',quality:'medium'})});if(r.url){const history=state.visual.history||[];history.unshift({url:r.url,label:(preset?.label||'Visuel')+' · '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})});state.visual={url:r.url,prompt,history:history.slice(0,18)};scheduleDraftAutosave();$('#visualImage').style.backgroundImage='url("'+r.url.replace(/"/g,'%22')+'")';$('#visualImage').innerHTML='';renderStudioImages();renderVisualHistory();playMotion('Happy')}}catch(e){console.error('[Visual Studio]',e);toast('Visuel : '+String(e?.message||'génération indisponible').replace(/^\{"detail":"?|"?\}$/g,'').slice(0,150))}finally{b.disabled=false;b.textContent=old}
+}
+async function generateVisualVariantsV163(){
+  const prompt=clean($('#visualPrompt')?.value);if(!prompt)return toast('Ajoute un prompt');
+  const b=$('#visualGenerateVariantsV163');if(!b||b.disabled)return;
+  b.disabled=true;const old=b.textContent;b.textContent='Génération…';playMotion('Think',true);
+  const usecase=$('#visualUseCase')?.value||'campaign',preset=VISUAL_PRESETS[usecase],ratio=$('#visualRatio')?.value||preset?.ratio||'4:5',quality=$('#visualQuality')?.value||'medium',style=$('#visualStyle')?.value||preset?.style||'editorial';
+  const dirs=['composition très épurée avec espace négatif','composition graphique plus audacieuse et sculpturale','composition éditoriale premium avec profondeur et matière'];
+  const jobs=dirs.map((dir,i)=>api('/api/v32/content/image',{method:'POST',timeout:120000,body:JSON.stringify({prompt:prompt+' '+(preset?.prompt||'')+' '+dir+'. Aucun texte lisible, aucun logo, aucun watermark.',style,ratio,quality})}).then(r=>r?.url?{url:r.url,label:'Variante '+(i+1)+' · '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}:null));
+  const settled=await Promise.allSettled(jobs),made=settled.filter(x=>x.status==='fulfilled'&&x.value).map(x=>x.value);
+  if(made.length){state.visual.history=state.visual.history||[];made.forEach(x=>state.visual.history.unshift(x));state.visual.url=made[0].url;state.visual.prompt=prompt;$('#visualImage').style.backgroundImage='url("'+made[0].url.replace(/"/g,'%22')+'")';$('#visualImage').innerHTML='';renderStudioImages();renderVisualHistory();toast(made.length+' variantes prêtes');playMotion('Happy')}
+  else toast('Variantes indisponibles');
+  b.disabled=false;b.textContent=old;
 }
 async function visualToBureau(){
   if(!state.visual.url)return toast('Génère d’abord un visuel');try{const n=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:'Visuel PLUG ART',body:'Prompt : '+state.visual.prompt+'\n\nVisuel : '+state.visual.url,folder:'Contenus',tags:'visuel, image, PLUG ART'})});state.bureau.unshift(n);toast('Visuel envoyé au Bureau')}catch{toast('Enregistrement impossible')}
@@ -3828,7 +3872,7 @@ async function openArtistProfileV161(aid){
 async function createArtistContactV161(aid,reopen=false){try{const r=await api('/api/v161/artists/'+aid+'/contact',{method:'POST',body:'{}'});if(r.lead&&!state.leads.some(x=>Number(x.id)===Number(r.lead.id)))state.leads.unshift(r.lead);state.dataLoaded.leads=true;toast(r.existing?'Contact déjà présent':'Fiche contact créée');if(reopen)openArtistProfileV161(aid)}catch{toast('Création du contact impossible')}}
 function openArtistEditorV161(){const name=prompt('Nom de l’artiste');if(!clean(name))return;const discipline=prompt('Discipline (ex. Photographie, Peinture)','Arts visuels')||'Arts visuels';api('/api/v86/artists',{method:'POST',body:JSON.stringify({name:clean(name),discipline:clean(discipline),tags:[]})}).then(a=>{state.bootstrap.artists=state.bootstrap.artists||[];state.bootstrap.artists.push(a);renderArtists();openArtistProfileV161(a.id)}).catch(()=>toast('Ajout artiste impossible'))}
 let plugyRoamV161Timer=0;
-function schedulePlugyRoamV161(){clearTimeout(plugyRoamV161Timer);const f=$('#plugyFollower');if(!f||!f.classList.contains('visible'))return;const mobile=innerWidth<760,max=Math.min(mobile?70:Math.max(120,innerWidth*.28),360),x=mobile?(-Math.random()*max*.55):(-Math.random()*max),y=(Math.random()-.5)*(mobile?36:72);f.style.setProperty('--plugy-roam-x',x.toFixed(0)+'px');f.style.setProperty('--plugy-roam-y',y.toFixed(0)+'px');const mv=$('#plugyModel');if(mv){mv.setAttribute('camera-orbit','0deg 76deg '+(mobile?'5.35':'5.15')+'m');mv.setAttribute('field-of-view',mobile?'42deg':'40deg')}const motion=choosePlugyMotion(['Travel','SoftTurn','Attentive','Curious']);if(motion)playMotion(motion);plugyRoamV161Timer=setTimeout(schedulePlugyRoamV161,6800+Math.random()*5200)}
+function schedulePlugyRoamV161(){clearTimeout(plugyRoamV161Timer);const f=$('#plugyFollower');if(!f||!f.classList.contains('visible'))return;const mobile=innerWidth<760,max=Math.min(mobile?70:Math.max(120,innerWidth*.28),360),x=mobile?(-Math.random()*max*.55):(-Math.random()*max),y=(Math.random()-.5)*(mobile?36:72);f.style.setProperty('--plugy-roam-x',x.toFixed(0)+'px');f.style.setProperty('--plugy-roam-y',y.toFixed(0)+'px');const mv=$('#plugyModel');if(mv){mv.setAttribute('camera-orbit','0deg 76deg '+(mobile?'6.55':'6.10')+'m');mv.setAttribute('field-of-view',mobile?'45deg':'43deg')}const motion=choosePlugyMotion(['Travel','SoftTurn','Attentive','Curious']);if(motion)playMotion(motion);plugyRoamV161Timer=setTimeout(schedulePlugyRoamV161,6800+Math.random()*5200)}
 const v161PlugyObserver=new MutationObserver(()=>{const f=$('#plugyFollower');if(f?.classList.contains('visible'))schedulePlugyRoamV161();else clearTimeout(plugyRoamV161Timer)});v161PlugyObserver.observe(document.body,{attributes:true,subtree:true,attributeFilter:['class','data-view']});addEventListener('resize',()=>{const f=$('#plugyFollower');if(f?.classList.contains('visible'))schedulePlugyRoamV161()},{passive:true});
 
 /* ---------------- V162 PREVIEW + OPPORTUNITY PUBLICATION ---------------- */
