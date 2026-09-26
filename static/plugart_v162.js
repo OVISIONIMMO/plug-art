@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='168.20260927.1';
+const VERSION='168.20260927.2';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -4658,7 +4658,9 @@ function installBureauV167(){
   panel.innerHTML=
     '<aside class="pdf-projects-v167"><div class="pdf-project-actions-v167"><button id="pdfNewV167">＋ Nouveau PDF</button><button id="pdfFromDocV167">Depuis le document</button></div><div id="pdfProjectListV167"></div><div class="pdf-imported-title-v167">PDF importés</div><div id="pdfImportedListV167"></div></aside>'+
     '<section class="pdf-reader-v167"><div class="pdf-reader-toolbar-v167"><button id="pdfPrevV167">←</button><span id="pdfPageInfoV167">Page 0 / 0</span><button id="pdfNextV167">→</button><button id="pdfZoomOutV167">−</button><span id="pdfZoomInfoV167">100%</span><button id="pdfZoomInV167">＋</button><button id="pdfFitV167">Ajuster</button><button id="pdfFullscreenV167">⛶</button></div><div class="pdf-canvas-wrap-v167" id="pdfCanvasWrapV167"><canvas id="pdfCanvasV167"></canvas><iframe id="pdfFallbackV167" title="Lecteur PDF" hidden></iframe></div></section>'+
-    '<aside class="pdf-inspector-v167"><div class="v167-library-head"><small>PROJET PDF</small><strong id="pdfInspectorTitleV167">Aucun projet</strong></div><label>Titre<input id="pdfTitleV167"></label><label>Type<select id="pdfTypeV167"><option value="dossier_projet">Dossier projet</option><option value="dossier_artistique">Dossier artistique</option><option value="candidature">Candidature</option><option value="presentation">Présentation</option></select></label><label>Page<textarea id="pdfPageBodyV167" rows="12" placeholder="Texte de la page active…"></textarea></label><div class="pdf-inspector-actions-v167"><button id="pdfAddPageV167">＋ Page</button><button id="pdfSaveV167">Enregistrer</button><button id="pdfExportV167">Générer PDF</button><button id="pdfCanvaV167">Canva ↗</button></div></aside>';
+    '<aside class="pdf-inspector-v167"><div class="v167-library-head"><small>PROJET PDF</small><strong id="pdfInspectorTitleV167">Aucun projet</strong></div><label>Titre<input id="pdfTitleV167"></label><label>Type<select id="pdfTypeV167"><option value="dossier_projet">Dossier projet</option><option value="dossier_artistique">Dossier artistique</option><option value="candidature">Candidature</option><option value="presentation">Présentation</option><option value="pdf_import">PDF importé éditable</option></select></label>'+
+    '<div class="pdf-rich-v168"><div class="v167-library-head"><small>DESIGN DE PAGE</small><strong>Composition</strong></div><label>Modèle<select id="pdfTemplateV168"><option value="">Libre</option><option value="cover">Couverture image</option><option value="editorial">Éditorial</option><option value="split">Split 50/50</option><option value="gallery">Galerie</option><option value="statement">Statement</option></select></label><label>Fond<input type="color" id="pdfBgV168" value="#ffffff"></label><div class="pdf-add-elements-v168"><button data-pdf-add-v168="title">Titre</button><button data-pdf-add-v168="text">Texte</button><button data-pdf-add-v168="image">Image</button><button data-pdf-add-v168="rect">Rectangle</button><button data-pdf-add-v168="circle">Cercle</button><button data-pdf-add-v168="line">Ligne</button></div><div id="pdfElementsV168"></div></div>'+
+    '<label>Texte rapide<textarea id="pdfPageBodyV167" rows="7" placeholder="Texte principal de la page…"></textarea></label><div class="pdf-inspector-actions-v167"><button id="pdfAddPageV167">＋ Page</button><button id="pdfSaveV167">Enregistrer</button><button id="pdfExportV167">Générer PDF</button><button id="pdfCanvaV167">Canva ↗</button></div></aside>';
   view.appendChild(panel);
   $('#pdfNewV167').onclick=createPdfProjectV167;$('#pdfFromDocV167').onclick=createPdfFromBureauV167;
   $('#pdfPrevV167').onclick=()=>{if(pdfPageV167>1){pdfPageV167--;renderPdfPageV167()}};
@@ -4668,6 +4670,9 @@ function installBureauV167(){
   $('#pdfFitV167').onclick=()=>{pdfZoomV167=1;renderPdfPageV167(true)};
   $('#pdfFullscreenV167').onclick=()=>$('#pdfCanvasWrapV167')?.requestFullscreen?.();
   $('#pdfAddPageV167').onclick=addPdfPageV167;$('#pdfSaveV167').onclick=savePdfProjectV167;$('#pdfExportV167').onclick=exportPdfProjectV167;$('#pdfCanvaV167').onclick=openCanvaBridgeV167;
+  $('#pdfTemplateV168').onchange=e=>applyPdfTemplateV168(e.target.value);
+  $('#pdfBgV168').oninput=e=>{const page=pdfActivePageV168();if(page){page.content={...(page.content||{}),background:e.target.value};renderPdfElementsV168()}};
+  $('[data-pdf-add-v168]').forEach(b=>b.onclick=()=>addPdfElementV168(b.dataset.pdfAddV168));
 }
 async function loadPdfProjectsV167(force=false){
   if(!$('#bureauPdfV167'))return;
@@ -4679,13 +4684,14 @@ async function loadPdfProjectsV167(force=false){
 function renderPdfProjectsV167(files=[]){
   const list=$('#pdfProjectListV167'),imports=$('#pdfImportedListV167');if(!list)return;
   list.innerHTML=state.pdfProjectsV167.map(p=>'<button data-pdf-project-v167="'+p.id+'" class="'+(Number(state.activePdfProjectV167?.id)===Number(p.id)?'active':'')+'"><i>PDF</i><span><strong>'+esc(p.title)+'</strong><small>'+esc(p.project_type||'Projet')+'</small></span></button>').join('')||'<div class="empty">Aucun projet PDF.</div>';
-  imports.innerHTML=(files||[]).map(p=>'<button data-pdf-file-v167="'+p.id+'"><i>↗</i><span><strong>'+esc(p.name||p.original_name||'PDF')+'</strong><small>'+esc(p.project||p.folder||'Importé')+'</small></span></button>').join('')||'<div class="empty">Aucun PDF importé.</div>';
-  $$('[data-pdf-project-v167]',list).forEach(b=>b.onclick=()=>openPdfProjectV167(Number(b.dataset.pdfProjectV167)));
-  $$('[data-pdf-file-v167]',imports).forEach(b=>b.onclick=()=>openPdfUrlV167('/api/v156/bureau/files/'+b.dataset.pdfFileV167+'/content',null));
+  imports.innerHTML=(files||[]).map(p=>'<article class="pdf-import-card-v168"><button data-pdf-file-v167="'+p.id+'"><i>PDF</i><span><strong>'+esc(p.name||p.original_name||'PDF')+'</strong><small>'+esc(p.project||p.folder||'Importé')+'</small></span></button><button class="pdf-edit-import-v168" data-pdf-edit-file-v168="'+p.id+'">Rendre éditable</button></article>').join('')||'<div class="empty">Aucun PDF importé.</div>';
+  $('[data-pdf-project-v167]',list).forEach(b=>b.onclick=()=>openPdfProjectV167(Number(b.dataset.pdfProjectV167)));
+  $('[data-pdf-file-v167]',imports).forEach(b=>b.onclick=()=>openPdfUrlV167('/api/v156/bureau/files/'+b.dataset.pdfFileV167+'/content',null));
+  $('[data-pdf-edit-file-v168]',imports).forEach(b=>b.onclick=()=>makeImportedPdfEditableV168(Number(b.dataset.pdfEditFileV168)));
 }
 async function createPdfProjectV167(){
   try{
-    const p=await api('/api/v167/pdf-projects',{method:'POST',body:JSON.stringify({title:'Nouveau dossier PLUG ART',project_type:'dossier_projet',metadata:{format:'A4 portrait'},pages:[{content:{kicker:'PLUG ART',title:'Nouveau dossier',body:'Commence à structurer ton projet ici.',background:'#FFFFFF'}}]})});
+    const p=await api('/api/v167/pdf-projects',{method:'POST',body:JSON.stringify({title:'Nouveau dossier PLUG ART',project_type:'dossier_projet',metadata:{format:'A4 portrait'},pages:[{content:{background:'#FFFFFF',elements:[{type:'text',text:'Nouveau dossier',x:8,y:10,w:84,h:16,fontSize:34,weight:'bold',color:'#111318'},{type:'text',text:'Commence à composer librement : texte, images, formes et accents.',x:8,y:28,w:70,h:14,fontSize:13,color:'#555963'}]}}]})});
     state.pdfProjectsV167.unshift(p);await openPdfProjectV167(p.id);toast('Projet PDF créé');
   }catch{toast('Création PDF impossible')}
 }
@@ -4697,35 +4703,88 @@ async function openPdfProjectV167(id){
   try{
     const p=await api('/api/v167/pdf-projects/'+id,{noMemCache:true});state.activePdfProjectV167=p;
     $('#pdfInspectorTitleV167').textContent=p.title;$('#pdfTitleV167').value=p.title||'';$('#pdfTypeV167').value=p.project_type||'dossier_projet';
-    const page=p.pages?.[0];$('#pdfPageBodyV167').value=page?.content?.body||page?.content?.text||'';
+    pdfPageV167=1;const page=p.pages?.[0];$('#pdfPageBodyV167').value=page?.content?.body||page?.content?.text||'';renderPdfElementsV168();
     renderPdfProjectsV167(await api('/api/v156/bureau/files').catch(()=>[]));
     await api('/api/v167/pdf-projects/'+id+'/export',{method:'POST',body:'{}'});openPdfUrlV167('/api/v167/pdf-projects/'+id+'/preview.pdf',p);
   }catch(e){toast('Ouverture du projet PDF impossible')}
 }
 async function openPdfUrlV167(url,project){
   pdfPageV167=1;pdfZoomV167=1;const iframe=$('#pdfFallbackV167'),canvas=$('#pdfCanvasV167');
+  if(!project){
+    pdfDocV167=null;if(canvas)canvas.hidden=true;if(iframe){iframe.hidden=false;iframe.src=url+'#toolbar=1&navpanes=1&view=FitH'}$('#pdfPageInfoV167').textContent='PDF importé · lecteur direct';$('#pdfZoomInfoV167').textContent='natif';return;
+  }
   try{
     const pdfjs=await loadPdfJsV167();pdfDocV167=await pdfjs.getDocument({url}).promise;if(iframe)iframe.hidden=true;if(canvas)canvas.hidden=false;renderPdfPageV167(true);
-  }catch(e){pdfDocV167=null;if(canvas)canvas.hidden=true;if(iframe){iframe.hidden=false;iframe.src=url}$('#pdfPageInfoV167').textContent='Lecteur navigateur'}
+  }catch(e){pdfDocV167=null;if(canvas)canvas.hidden=true;if(iframe){iframe.hidden=false;iframe.src=url+'#toolbar=1&navpanes=1&view=FitH'}$('#pdfPageInfoV167').textContent='Lecteur direct'}
 }
 async function renderPdfPageV167(fit=false){
   if(!pdfDocV167)return;const page=await pdfDocV167.getPage(pdfPageV167),wrap=$('#pdfCanvasWrapV167'),canvas=$('#pdfCanvasV167');if(!canvas)return;
   const base=page.getViewport({scale:1}),maxW=Math.max(320,(wrap?.clientWidth||800)-48),maxH=Math.max(480,(wrap?.clientHeight||900)-48);
   const fitScale=Math.min(maxW/base.width,maxH/base.height),scale=(fit?fitScale:fitScale*pdfZoomV167),vp=page.getViewport({scale});
   const ctx=canvas.getContext('2d');canvas.width=Math.round(vp.width*devicePixelRatio);canvas.height=Math.round(vp.height*devicePixelRatio);canvas.style.width=vp.width+'px';canvas.style.height=vp.height+'px';ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-  await page.render({canvasContext:ctx,viewport:vp}).promise;$('#pdfPageInfoV167').textContent='Page '+pdfPageV167+' / '+pdfDocV167.numPages;$('#pdfZoomInfoV167').textContent=Math.round(pdfZoomV167*100)+'%';
+  await page.render({canvasContext:ctx,viewport:vp}).promise;$('#pdfPageInfoV167').textContent='Page '+pdfPageV167+' / '+pdfDocV167.numPages;$('#pdfZoomInfoV167').textContent=Math.round(pdfZoomV167*100)+'%';renderPdfElementsV168();
 }
+
+function pdfActivePageV168(){
+  const p=state.activePdfProjectV167;if(!p?.pages?.length)return null;
+  return p.pages[Math.max(0,Math.min(p.pages.length-1,pdfPageV167-1))]||p.pages[0];
+}
+function pdfElementsV168(){
+  const page=pdfActivePageV168();if(!page)return[];
+  page.content=page.content||{};if(!Array.isArray(page.content.elements))page.content.elements=[];return page.content.elements;
+}
+function renderPdfElementsV168(){
+  const page=pdfActivePageV168(),box=$('#pdfElementsV168');if(!page||!box)return;
+  const content=page.content||{};if($('#pdfBgV168'))$('#pdfBgV168').value=content.background||'#ffffff';
+  const els=pdfElementsV168();
+  box.innerHTML=els.map((e,i)=>'<div class="pdf-element-row-v168"><button data-pdf-element-v168="'+i+'"><b>'+(e.type==='image'?'▧':e.type==='text'?'Aa':e.type==='circle'?'○':e.type==='line'?'—':'□')+'</b><span>'+esc(e.type==='text'?(e.text||'Texte').slice(0,30):e.type)+'</span></button><button data-pdf-remove-v168="'+i+'">×</button></div>').join('')||'<div class="empty">Page libre · ajoute du texte, une image ou une forme.</div>';
+  $('[data-pdf-element-v168]',box).forEach(b=>b.onclick=()=>editPdfElementV168(Number(b.dataset.pdfElementV168)));
+  $('[data-pdf-remove-v168]',box).forEach(b=>b.onclick=()=>{els.splice(Number(b.dataset.pdfRemoveV168),1);renderPdfElementsV168()});
+}
+function addPdfElementV168(type){
+  const els=pdfElementsV168();if(!state.activePdfProjectV167)return toast('Ouvre un projet PDF');
+  if(type==='title')els.push({type:'text',text:'Nouveau titre',x:8,y:9,w:84,h:16,fontSize:34,weight:'bold',color:'#111318'});
+  if(type==='text')els.push({type:'text',text:'Ajoute ton texte ici.',x:8,y:30,w:70,h:20,fontSize:13,weight:'normal',color:'#4f525b',lineHeight:1.3});
+  if(type==='image'){const src=prompt('URL de l’image à intégrer :','');if(!src)return;els.push({type:'image',src,x:8,y:12,w:84,h:45,crop:'cover',position:'center'})}
+  if(type==='rect')els.push({type:'rect',x:8,y:70,w:36,h:14,fill:'#7657ff',radius:2,opacity:.95});
+  if(type==='circle')els.push({type:'circle',x:72,y:8,w:18,h:13,fill:'#45cbd7',opacity:.75});
+  if(type==='line')els.push({type:'line',x:8,y:62,w:84,h:2,stroke:'#111318',thickness:1.5,opacity:.35});
+  renderPdfElementsV168();
+}
+function editPdfElementV168(index){
+  const e=pdfElementsV168()[index];if(!e)return;
+  if(e.type==='text'){const txt=prompt('Texte :',e.text||'');if(txt!==null)e.text=txt;const size=prompt('Taille de police :',String(e.fontSize||18));if(size!==null&&Number(size))e.fontSize=Number(size)}
+  else if(e.type==='image'){const src=prompt('URL image :',e.src||'');if(src!==null)e.src=src;const pos=prompt('Recadrage : center, top, bottom, left, right',e.position||'center');if(pos)e.position=pos}
+  else{const fill=prompt('Couleur hexadécimale :',e.fill||e.stroke||'#7657ff');if(fill){if(e.type==='line')e.stroke=fill;else e.fill=fill}}
+  renderPdfElementsV168();
+}
+function applyPdfTemplateV168(name){
+  const page=pdfActivePageV168();if(!page||!name)return;const c=page.content=page.content||{};const title=$('#pdfTitleV167')?.value||state.activePdfProjectV167?.title||'PLUG ART';
+  const img=c.background_image||'';
+  const presets={
+    cover:[{type:'rect',x:0,y:0,w:100,h:100,fill:'#111318'},{type:'text',text:title,x:8,y:62,w:84,h:22,fontSize:42,weight:'bold',color:'#ffffff'},{type:'text',text:'DOSSIER · PLUG ART',x:8,y:88,w:50,h:5,fontSize:9,weight:'bold',color:'#b9b2ff'}],
+    editorial:[{type:'rect',x:7,y:8,w:2,h:84,fill:'#7657ff'},{type:'text',text:title,x:13,y:10,w:76,h:20,fontSize:34,weight:'bold',color:'#111318'},{type:'text',text:'Texte éditorial à développer.',x:13,y:36,w:68,h:28,fontSize:13,color:'#555963',lineHeight:1.35}],
+    split:[{type:'rect',x:0,y:0,w:47,h:100,fill:'#efeaff'},{type:'text',text:title,x:53,y:12,w:39,h:24,fontSize:30,weight:'bold',color:'#111318'},{type:'text',text:'Texte, données ou récit du projet.',x:53,y:44,w:37,h:30,fontSize:12,color:'#555963'}],
+    gallery:[{type:'text',text:title,x:7,y:7,w:86,h:12,fontSize:28,weight:'bold',color:'#111318'},{type:'rect',x:7,y:23,w:41,h:30,fill:'#f0edf9'},{type:'rect',x:52,y:23,w:41,h:30,fill:'#e9f6f7'},{type:'rect',x:7,y:57,w:86,h:30,fill:'#f5f3ef'}],
+    statement:[{type:'text',text:'STATEMENT',x:8,y:9,w:84,h:6,fontSize:9,weight:'bold',color:'#7657ff'},{type:'text',text:title,x:8,y:19,w:84,h:18,fontSize:36,weight:'bold',color:'#111318'},{type:'text',text:'Développe ici une page très lisible, pensée comme un manifeste ou un texte de présentation.',x:8,y:46,w:72,h:32,fontSize:14,color:'#3f424a',lineHeight:1.4}]
+  };
+  c.elements=(presets[name]||[]).map(x=>({...x}));if(img)c.background_image=img;renderPdfElementsV168();toast('Modèle de page appliqué');
+}
+async function makeImportedPdfEditableV168(fileId){
+  try{const p=await api('/api/v168/pdf-projects/from-file/'+fileId,{method:'POST',timeout:30000,body:'{}'});state.pdfProjectsV167.unshift(p);state.activePdfProjectV167=p;await openPdfProjectV167(p.id);toast('PDF importé converti en version éditable')}catch(e){toast('Conversion du PDF impossible')}
+}
+
 async function savePdfProjectV167(){
   const p=state.activePdfProjectV167;if(!p)return toast('Aucun projet PDF');
   try{
     await api('/api/v167/pdf-projects/'+p.id,{method:'PATCH',body:JSON.stringify({title:$('#pdfTitleV167').value,project_type:$('#pdfTypeV167').value})});
-    const page=p.pages?.[0];if(page)await api('/api/v167/pdf-pages/'+page.id,{method:'PATCH',body:JSON.stringify({content:{...(page.content||{}),title:$('#pdfTitleV167').value,body:$('#pdfPageBodyV167').value}})});
+    const page=pdfActivePageV168();if(page){page.content={...(page.content||{}),body:$('#pdfPageBodyV167').value,background:$('#pdfBgV168')?.value||page.content?.background||'#FFFFFF'};await api('/api/v167/pdf-pages/'+page.id,{method:'PATCH',body:JSON.stringify({content:page.content})})}
     toast('Projet PDF enregistré');await openPdfProjectV167(p.id);
   }catch{toast('Enregistrement PDF impossible')}
 }
 async function addPdfPageV167(){
   const p=state.activePdfProjectV167;if(!p)return toast('Crée un projet PDF');
-  try{await api('/api/v167/pdf-projects/'+p.id+'/pages',{method:'POST',body:JSON.stringify({page_type:'content',content:{kicker:'PLUG ART',title:'Nouvelle page',body:'',background:'#FFFFFF'}})});await openPdfProjectV167(p.id);toast('Page ajoutée')}catch{toast('Ajout de page impossible')}
+  try{await api('/api/v167/pdf-projects/'+p.id+'/pages',{method:'POST',body:JSON.stringify({page_type:'content',content:{background:'#FFFFFF',elements:[]}})});await openPdfProjectV167(p.id);state.activePdfProjectV167.pages&&(pdfPageV167=state.activePdfProjectV167.pages.length);renderPdfElementsV168();toast('Page vierge ajoutée')}catch{toast('Ajout de page impossible')}
 }
 async function exportPdfProjectV167(){
   const p=state.activePdfProjectV167;if(!p)return toast('Aucun projet PDF');
