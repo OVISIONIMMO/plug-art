@@ -677,13 +677,11 @@ def root_v102(request:Request):
     digest=hashlib.sha256(html.encode('utf-8')).hexdigest()[:20]
     etag='"plugart-'+digest+'"'
     headers={
-      'Cache-Control':'private, no-cache, must-revalidate',
+      'Cache-Control':'no-store, max-age=0',
       'ETag':etag,
       'X-Plug-Art-Version':'159.0',
       'X-Plug-Art-UI':'plug-art-v159-responsive-router'
     }
-    if request.headers.get('if-none-match')==etag:
-        return Response(status_code=304,headers=headers)
     return HTMLResponse(html,headers=headers)
 
 @app.post('/api/v159/client-report',include_in_schema=False)
