@@ -6,13 +6,13 @@ const mv=$('#plugyStandaloneModel'),chat=$('#chatScroll'),input=$('#plugyStandal
 
 function clean(v){return String(v??'').replace(/\s+/g,' ').trim()}
 function standaloneDistance(){
-  if(innerWidth<=390)return '7.10';
-  if(innerWidth<=780)return '6.80';
-  return '6.45';
+  if(innerWidth<=390)return '8.55';
+  if(innerWidth<=780)return '8.15';
+  return '7.85';
 }
 function resetStandaloneFraming(){
   if(!mv)return;
-  try{mv.setAttribute('camera-target','0m 0m 0m');mv.setAttribute('camera-orbit','0deg 78deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'46deg':'44deg')}catch{}
+  try{mv.setAttribute('camera-target','0m 0m 0m');mv.setAttribute('camera-orbit','0deg 78deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',innerWidth<=780?'50deg':'48deg')}catch{}
 }
 function setState(name,label){
   if(['blink','doubleblink','wink','softeyes','eyethink'].includes(String(name||'').toLowerCase()))name='idle';
@@ -238,9 +238,9 @@ let standaloneRoamV161=0;
 function roamStandaloneV161(){
   clearTimeout(standaloneRoamV161);
   const wrap=$('#plugyModelWrap');if(!wrap)return;
-  const mobile=innerWidth<780,range=Math.min(mobile?55:innerWidth*.12,mobile?55:170);
+  const mobile=innerWidth<780,range=Math.min(mobile?24:innerWidth*.055,mobile?24:78);
   wrap.style.setProperty('--plugy-standalone-x',((Math.random()-.62)*range).toFixed(0)+'px');
-  wrap.style.setProperty('--plugy-standalone-y',((Math.random()-.5)*(mobile?22:48)).toFixed(0)+'px');
+  wrap.style.setProperty('--plugy-standalone-y',((Math.random()-.5)*(mobile?12:26)).toFixed(0)+'px');
   if(!state.listening&&!state.busy)setState(Math.random()>.55?'softturn':'curious','Prêt');
   standaloneRoamV161=setTimeout(roamStandaloneV161,6200+Math.random()*5200);
 }
@@ -254,10 +254,14 @@ function syncPlugyCompanionV162(){
   if(!hero||!wrap||!mount)return;
   const shouldDock=hero.getBoundingClientRect().bottom<Math.min(300,innerHeight*.34);
   if(shouldDock&&!plugyCompanionModeV162){
-    mount.appendChild(wrap);wrap.classList.add('companion-mode-v162');plugyCompanionModeV162=true;resetStandaloneFraming();
+    plugyCompanionModeV162=true;wrap.classList.add('companion-transition-v163');
+    mount.appendChild(wrap);wrap.classList.add('companion-mode-v162');
+    requestAnimationFrame(()=>{resetStandaloneFraming();wrap.classList.remove('companion-transition-v163')});
   }else if(!shouldDock&&plugyCompanionModeV162){
+    plugyCompanionModeV162=false;wrap.classList.add('companion-transition-v163');
     if(intro)hero.insertBefore(wrap,intro);else hero.appendChild(wrap);
-    wrap.classList.remove('companion-mode-v162');plugyCompanionModeV162=false;resetStandaloneFraming();
+    wrap.classList.remove('companion-mode-v162');
+    requestAnimationFrame(()=>{resetStandaloneFraming();wrap.classList.remove('companion-transition-v163')});
   }
 }
 function syncCompanionStateV162(){
