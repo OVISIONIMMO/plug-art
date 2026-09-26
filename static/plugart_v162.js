@@ -4320,10 +4320,10 @@ async function loadIdeasV163(force=false){
   const cloud=$('#ideaCloudV164');if(cloud&&!state.ideas.length)cloud.innerHTML='<div class="idea-loading-v163"><i></i><span>Chargement des idées…</span></div>';
   try{
     const rows=await api('/api/v156/ideas',{cacheTtl:5000,noMemCache:force});
-    state.ideas=Array.isArray(rows)?rows:[];
+    state.ideas=Array.isArray(rows)?rows:[];ideasCacheWriteV167(state.ideas);setIdeasSyncStateV167('Synchronisé','ok');
     renderIdeasV163();
   }catch(e){
-    if(!state.ideas.length&&cloud)cloud.innerHTML='<div class="empty">Nuage momentanément indisponible.</div>';
+    const cached=ideasCacheReadV167();if(cached.length){state.ideas=cached;setIdeasSyncStateV167('Mode hors ligne · '+cached.length+' idée'+(cached.length>1?'s':''),'offline');renderIdeasV163()}else if(!state.ideas.length&&cloud)cloud.innerHTML='<div class="idea-empty-v163"><b>✦</b><strong>Nuage hors ligne</strong><span>Tu peux quand même créer une idée : elle sera synchronisée automatiquement.</span><button id="ideaOfflineNewV167">＋ Nouvelle idée</button></div>';$('#ideaOfflineNewV167')?.addEventListener('click',()=>createIdeaV163(project));
   }
 }
 function renderIdeasV163(){
@@ -4341,13 +4341,17 @@ function renderIdeasV163(){
       '<h3>'+esc(i.title||'Idée')+'</h3>'+
       '<p>'+esc((i.body||'').slice(0,220))+'</p>'+
       '<div class="idea-tags-v163">'+String(i.tags||'').split(',').map(x=>clean(x)).filter(Boolean).slice(0,4).map(t=>'<span>'+esc(t)+'</span>').join('')+'</div>'+
-      '<footer><span>'+esc(i.stage||'explore')+'</span><button data-idea-plugy="'+i.id+'">✦</button><button data-idea-edit="'+i.id+'">Éditer</button><button data-idea-delete="'+i.id+'">×</button></footer>'+
+      '<footer><span>'+esc(i.stage||'explore')+'</span><button data-idea-plugy="'+i.id+'">✦</button><button data-idea-create-v167="'+i.id+'">Créer</button><button data-idea-bureau-v167="'+i.id+'">Bureau</button><button data-idea-pdf-v167="'+i.id+'">PDF</button><button data-idea-link-v167="'+i.id+'">Lier</button><button data-idea-edit="'+i.id+'">Éditer</button><button data-idea-delete="'+i.id+'">×</button></footer>'+
     '</article>';
   }).join('');
   $$('[data-idea-edit]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();editIdeaV163(Number(b.dataset.ideaEdit))});
   $$('[data-idea-delete]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();deleteIdeaV163(Number(b.dataset.ideaDelete))});
-  $$('[data-idea-plugy]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();const i=state.ideas.find(x=>Number(x.id)===Number(b.dataset.ideaPlugy));if(i)openPlugy('Développe cette idée : '+i.title+'. '+(i.body||'')+' Donne-moi une version plus structurée, des usages possibles et la prochaine action concrète.')});
-  $$('.idea-card-v163',cloud).forEach(bindIdeaDragV163);
+  $('[data-idea-plugy]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();const i=state.ideas.find(x=>Number(x.id)===Number(b.dataset.ideaPlugy));if(i)openPlugy('Développe cette idée : '+i.title+'. '+(i.body||'')+' Donne-moi une version plus structurée, des usages possibles et la prochaine action concrète.')});
+  $('[data-idea-create-v167]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();ideaToCreationV167(Number(b.dataset.ideaCreateV167))});
+  $('[data-idea-bureau-v167]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();ideaToBureauV167(Number(b.dataset.ideaBureauV167))});
+  $('[data-idea-pdf-v167]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();ideaToPdfV167(Number(b.dataset.ideaPdfV167))});
+  $('[data-idea-link-v167]',cloud).forEach(b=>b.onclick=e=>{e.stopPropagation();linkIdeaV167(Number(b.dataset.ideaLinkV167))});
+  $('.idea-card-v163',cloud).forEach(bindIdeaDragV163);
 }
 async function createIdeaV163(project=''){
   const title=prompt('Titre de l’idée');if(!clean(title))return;
@@ -4361,7 +4365,10 @@ async function createIdeaV163(project=''){
     state.ideas.unshift(i);state.ideaProject=project||state.ideaProject||'';
     toast('Idée ajoutée');
     if(state.view!=='ideas')route('ideas');else renderIdeasV163();
-  }catch{toast('Création impossible')}
+  }catch{
+    const payload={title:clean(title),body,project:project||state.ideaProject||'',stage:'explore',color:['violet','cyan','rose','orange'][Math.floor(Math.random()*4)],pos_x:14+Math.random()*56,pos_y:10+Math.random()*52};
+    const local={...payload,id:-Date.now(),_pending:true,created_at:new Date().toISOString(),updated_at:new Date().toISOString()};state.ideas.unshift(local);ideasCacheWriteV167(state.ideas);await queueIdeaOpV167({kind:'create',payload});setIdeasSyncStateV167('À synchroniser','offline');renderIdeasV163();toast('Idée enregistrée hors ligne');
+  }
 }
 async function editIdeaV163(id){
   const i=state.ideas.find(x=>Number(x.id)===Number(id));if(!i)return;
@@ -4371,11 +4378,11 @@ async function editIdeaV163(id){
   try{
     const saved=await api('/api/v156/ideas/'+id,{method:'PATCH',body:JSON.stringify({title:clean(title),body,project:clean(project).toLowerCase()})});
     Object.assign(i,saved);renderIdeasV163();toast('Idée mise à jour');
-  }catch{toast('Mise à jour impossible')}
+  }catch{Object.assign(i,{title:clean(title),body,project:clean(project).toLowerCase(),_pending:true,updated_at:new Date().toISOString()});ideasCacheWriteV167(state.ideas);await queueIdeaOpV167({kind:'patch',id,payload:{title:clean(title),body,project:clean(project).toLowerCase()}});setIdeasSyncStateV167('À synchroniser','offline');renderIdeasV163();toast('Modification enregistrée hors ligne')}
 }
 async function deleteIdeaV163(id){
   if(!confirm('Supprimer cette idée ?'))return;
-  try{await api('/api/v156/ideas/'+id,{method:'DELETE'});state.ideas=state.ideas.filter(x=>Number(x.id)!==Number(id));renderIdeasV163();toast('Idée supprimée')}catch{toast('Suppression impossible')}
+  try{await api('/api/v156/ideas/'+id,{method:'DELETE'});state.ideas=state.ideas.filter(x=>Number(x.id)!==Number(id));ideasCacheWriteV167(state.ideas);renderIdeasV163();toast('Idée supprimée')}catch{state.ideas=state.ideas.filter(x=>Number(x.id)!==Number(id));ideasCacheWriteV167(state.ideas);if(id>0)await queueIdeaOpV167({kind:'delete',id});setIdeasSyncStateV167('À synchroniser','offline');renderIdeasV163();toast('Suppression enregistrée hors ligne')}
 }
 function bindIdeaDragV163(card){
   const handle=card.querySelector('.idea-drag-v163');if(!handle)return;
@@ -4390,7 +4397,7 @@ function bindIdeaDragV163(card){
   handle.onpointerup=async()=>{
     if(!active)return;active=false;card.classList.remove('dragging');
     const id=Number(card.dataset.ideaId),x=parseFloat(card.style.left),y=parseFloat(card.style.top),idea=state.ideas.find(v=>Number(v.id)===id);
-    if(idea){idea.pos_x=x;idea.pos_y=y;api('/api/v156/ideas/'+id,{method:'PATCH',body:JSON.stringify({pos_x:x,pos_y:y})}).catch(()=>{})}
+    if(idea){idea.pos_x=x;idea.pos_y=y;ideasCacheWriteV167(state.ideas);api('/api/v156/ideas/'+id,{method:'PATCH',body:JSON.stringify({pos_x:x,pos_y:y})}).catch(()=>{if(id>0)queueIdeaOpV167({kind:'patch',id,payload:{pos_x:x,pos_y:y}});setIdeasSyncStateV167('À synchroniser','offline')})}
   };
 }
 
