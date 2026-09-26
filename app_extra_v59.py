@@ -3481,7 +3481,7 @@ def pdf_project_from_bureau_v167(doc_id:int):
 
 @app.get('/api/v167/canva/config')
 def canva_config_v167():
-    default_url='https://canva.link/v9prjedeyqy323l'
+    default_url='https://www.canva.com/d/jzqydvXDq9GRdlC'
     url=os.getenv('CANVA_STARTER_URL',default_url).strip() or default_url
     return {'enabled':True,'starter_url':url,'mode':'bridge','fallback':'export-pack','template':'PLUG ART Open Call · 5 slides'}
 
