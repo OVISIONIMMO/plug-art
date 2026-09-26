@@ -2968,6 +2968,19 @@ def projects_library_seed_v164(body:dict={}):
 def projects_library_v164():
     return {'ok':True,'projects':_V164_PROJECT_LIBRARY}
 
+
+def _v164_seed_project_library_startup():
+    try:
+        result=projects_library_seed_v164({})
+        print(
+          f"PLUG_ART_V164_LIBRARY_SEEDED created={result.get('created',0)} existing={result.get('existing',0)} projects={len(result.get('projects') or [])}",
+          flush=True
+        )
+    except Exception as exc:
+        print(f"PLUG_ART_V164_LIBRARY_SEED_ERROR {type(exc).__name__}: {str(exc)[:240]}",flush=True)
+
+threading.Thread(target=_v164_seed_project_library_startup,daemon=True).start()
+
 @app.get('/api/v163/diagnostics')
 def diagnostics_v163():
     started=time.perf_counter()
