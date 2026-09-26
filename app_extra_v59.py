@@ -2892,15 +2892,15 @@ _V164_PROJECT_LIBRARY={
   'aubervilliers':{
     'label':'Aubervilliers',
     'pdfs':[
-      ('PLUG_ART_HUB_Aubervilliers_Dossier_Complet_2026.pdf','libfile_47ab2ab160cc8191bb96640c4597c07c',2650479),
-      ('PLUG_ART_HUB_Aubervilliers_V3_Visuel_Detaille.pdf','libfile_e967a3d79cdc8191b6c3984b45f70c37',4904302),
-      ('PLUGART_Dossier_Nouvelle_Direction_Aubervilliers_2026_FINAL.pdf','libfile_dde468b530988191b16a9bc546531b26',2569346),
+      ('PLUG_ART_HUB_Aubervilliers_Dossier_Complet_2026.pdf','file_00000000a81881fd8556140dfdcbab31',2650479),
+      ('PLUG_ART_HUB_Aubervilliers_V3_Visuel_Detaille.pdf','file_000000003ad481f49f7051d9b9965f6d',4904302),
+      ('PLUGART_Dossier_Nouvelle_Direction_Aubervilliers_2026_FINAL.pdf','file_000000003d1081fdb9eb65b5a1539e78',2569346),
       ('PLUG_ART_HUB_01_Aubervilliers.pdf','libfile_b89373537de081919dff7028d8f88711',965806),
       ('PLUG_ART_HUB_Benchmark_Strategie_Aubervilliers.pdf','libfile_737d476e93fc81918e7ad993388b7c34',55062)
     ],
     'visuals':[
-      ('Présentation Plug Art Hub Aubervilliers.png','libfile_847abb71c8dc8191aa0d80d3b9f9ffb0'),
-      ('Dossier créatif Plug Art Hub 01.png','libfile_57e6687950cc8191b1fdd87e43ba4362')
+      ('Présentation Plug Art Hub Aubervilliers.png','file_00000000dca481f48be4af2a316edb39'),
+      ('Dossier créatif Plug Art Hub 01.png','file_000000003eac81f4a843776c4b754029')
     ]
   },
   'millenaire':{
@@ -2909,7 +2909,10 @@ _V164_PROJECT_LIBRARY={
       ('PLUG_ART_Millenaire_Dossier_25_Visuels.pdf','libfile_18265295c07081919affa444cef29444',86386002),
       ('PLUG_ART_Le_Millenaire_Vision_2027_Premium.pdf','libfile_21b773be684c8191ab8bb7bcaf2cc856',1702176),
       ('PLUG_ART_Le_Millenaire_Plan_3D_Investisseurs.pdf','libfile_1c5eee179da48191b3a6b171643d8e79',1533084),
-      ('PLUG_ART_HUB_Dossier_Projet_Le_Millenaire.pdf','libfile_b3fc339210848191884df93ae84d12e0',7330684),
+      ('PLUG_ART_HUB_Dossier_Projet_Le_Millenaire.pdf','file_00000000b38481f5870b1d4f2c37543c',7330684),
+      ('PLUGART_HUB_Le_Millenaire_Dossier_VISUEL_2026.pdf','file_00000000401881f4a2e96aa4ccbf052c',0),
+      ('PLUG_ART_HUB_DOSSIER_FINAL_ECOSYSTEME_2026.pdf','file_000000004eec81f4bff07f4fe23923f4',0),
+      ('PLUGART_HUB_Dossier_Demarchage_Le_Millenaire_2026.pdf','file_000000007d8481fd896aeecf248c05f3',0),
       ('PLUG_ART_HUB_Millenaire_Dossier_Complet.pdf','libfile_58f2252358b08191b72a2ddb49eb8b45',129652),
       ('PLUG_ART_Guide_Strategique_Association_Millenaire_2026.pdf','libfile_6cefbc9e3370819194249036a84dbf4c',584320)
     ],
@@ -2920,13 +2923,13 @@ _V164_PROJECT_LIBRARY={
     'pdfs':[],
     'visuals':[
       ('PLUG ART HUB, réemploi artistique à Gennevilliers.png','libfile_d1383cc0d4ac8191b9ff1d8ef8e3e802'),
-      ('Planche architecturale du Plug Art Hub.png','libfile_5eedd19dfe988191a94d4fa14fc18848'),
-      ('Galerie et ateliers du PLUG ART HUB.png','libfile_ae90d25facc08191990a6a18ea5919eb')
+      ('Planche architecturale du Plug Art Hub.png','file_00000000844c81f4858233d636c0d04c'),
+      ('Galerie et ateliers du PLUG ART HUB.png','file_00000000f01081f49d8210b7d5497073')
     ]
   },
   'chanteraines':{
     'label':'Chanteraines',
-    'pdfs':[('PLUG_ART_Chanteraines_Schema_Directeur_2026.pdf','libfile_5603ae65810c8191827ea7e49773fe09',364821)],
+    'pdfs':[('PLUG_ART_Chanteraines_Schema_Directeur_2026.pdf','file_000000003df081f4995b4ec60c9126c2',364821)],
     'visuals':[]
   }
 }
@@ -2945,7 +2948,7 @@ def projects_library_seed_v164(body:dict={}):
           for item in items:
             name=str(item[0]);ref=str(item[1]);size=int(item[2]) if len(item)>2 else 0
             source_type='chatgpt_library_'+kind.lower()
-            hit=db.execute('select id from bureau_documents where source_type=? and source_id=? limit 1',(source_type,ref[:120])).fetchone()
+            hit=db.execute('select id from bureau_documents where (source_type=? and source_id=?) or (title=? and folder=?) limit 1',(source_type,ref[:120],name.rsplit('.',1)[0],folder)).fetchone()
             if hit:
               existing.append(int(hit[0]));continue
             body_text=(
