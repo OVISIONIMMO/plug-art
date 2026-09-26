@@ -23,10 +23,6 @@
   }
   window.addEventListener('error',function(e){send({type:'error',message:String(e.message||''),source:String(e.filename||''),line:e.lineno||0,col:e.colno||0})});
   window.addEventListener('unhandledrejection',function(e){send({type:'rejection',message:String((e.reason&&e.reason.message)||e.reason||'')})});
-  document.addEventListener('click',function(e){
-    var b=e.target&&e.target.closest?e.target.closest('[data-route],#topPlugy,.plugy-solo-v160,.quick-plugy-v160'):null;
-    if(b)send({type:'click',route:b.getAttribute('data-route')||b.getAttribute('href')||b.id||'',view:document.body&&document.body.getAttribute('data-view')||''});
-  },true);
 })();
 </script>
 </head>
