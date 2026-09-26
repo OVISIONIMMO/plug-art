@@ -7,16 +7,16 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='159.0'
+app.version='160.0'
 BASE=Path(__file__).resolve().parent
-DASH=BASE/'static'/'plugart_v107.html'
+DASH=BASE/'static'/'plugart_v160.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v130.html'
 GLB=BASE/'static'/'PLUGY_final_animated.glb'
 RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-premium','profile':'runtime-fallback'}
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='159.20260926.1'
+VERSION='160.20260926.1'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -596,14 +596,15 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'159.0',
-      'ui':'plug-art-v159-responsive-router',
+      'version':'160.0',
+      'ui':'plug-art-v160-stable-recovery',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
       'migration_backup_ready':backup_ready
     }
 
+@app.get('/api/v160/ui-manifest')
 @app.get('/api/v159/ui-manifest')
 @app.get('/api/v158/ui-manifest')
 @app.get('/api/v157/ui-manifest')
@@ -638,15 +639,15 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v107.js'
     css_path=BASE/'static'/'plugart_v122_slide.css'
-    expected='159.20260926.1'
+    expected='160.20260926.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v130.js').exists() and (BASE/'static'/'plugy_v130.css').exists() and (BASE/'static'/'hub_v132_assets.js').exists()),
-      'version':'159.0',
-      'ui':'plug-art-v159-responsive-router',
+      'version':'160.0',
+      'ui':'plug-art-v160-stable-recovery',
       'asset_version':expected,
       'html_has_js':f'plugart_v107.js?v={expected}' in html,
       'html_has_slide_css':f'plugart_v122_slide.css?v={expected}' in html,
-      'html_has_sidebar_version':'V159' in html,
+      'html_has_sidebar_version':'V160' in html,
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
@@ -666,7 +667,7 @@ def plugy_page_v130(request:Request):
     headers={
       'Cache-Control':'no-store, max-age=0',
       'ETag':etag,
-      'X-Plug-Art-Version':'159.0',
+      'X-Plug-Art-Version':'160.0',
       'X-Plug-Art-UI':'plugy-v130-standalone'
     }
     return HTMLResponse(html,headers=headers)
@@ -679,11 +680,12 @@ def root_v102(request:Request):
     headers={
       'Cache-Control':'no-store, max-age=0',
       'ETag':etag,
-      'X-Plug-Art-Version':'159.0',
-      'X-Plug-Art-UI':'plug-art-v159-responsive-router'
+      'X-Plug-Art-Version':'160.0',
+      'X-Plug-Art-UI':'plug-art-v160-stable-recovery'
     }
     return HTMLResponse(html,headers=headers)
 
+@app.post('/api/v160/client-report',include_in_schema=False)
 @app.post('/api/v159/client-report',include_in_schema=False)
 async def client_report_v159(request:Request):
     try:
@@ -2750,13 +2752,14 @@ def ideas_delete_v156(idea_id:int):
     if not cur.rowcount:raise HTTPException(404,'Idée introuvable')
     return {'ok':True}
 
+@app.get('/api/v160/status')
 @app.get('/api/v159/status')
 @app.get('/api/v158/status')
 @app.get('/api/v157/status')
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'159.0','ui':'plug-art-v159-responsive-router',
+      'ok':True,'version':'160.0','ui':'plug-art-v160-stable-recovery',
       'plugy':'frameless-static-round-gaze-no-blink',
       'creation':'open-call-production-workflow',
       'bureau':'documents-packages-templates-pdf-hub',
@@ -2825,8 +2828,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'159.0',
-      'ui':'plug-art-v159-responsive-router',
+      'version':'160.0',
+      'ui':'plug-art-v160-stable-recovery',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -2853,7 +2856,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V159_READY ui=responsive_router cache=no_store diagnostics=client_report plugy=single_observer creation=open_call_pro bureau=pdf_navigation hub=gennevilliers ideas=drag_bridge",flush=True)
+print("PLUG_ART_V160_READY ui=stable_recovery frontend=154_baseline assets=uncached_v160 plugy=standalone_shortcut backend=current",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
