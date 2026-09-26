@@ -674,3 +674,34 @@ body[data-plugy-state="listen"] #plugyStandaloneModel{transition:filter .22s eas
   .plugy-model-wrap.companion-mode-v162{width:250px!important;height:230px!important;min-height:230px!important}
   .plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{width:250px!important;height:230px!important;min-height:230px!important}
 }
+
+
+/* ================= PLUGY V166 · stronger presence + fluid companion ================= */
+.plugy-model-wrap{
+  min-height:70svh!important;
+  overflow:visible!important;
+  transition:transform .72s cubic-bezier(.2,.82,.2,1),width .55s ease,height .55s ease!important
+}
+#plugyStandaloneModel{
+  width:min(68vw,790px)!important;
+  height:min(78svh,790px)!important;
+  max-width:none!important;
+  filter:drop-shadow(0 30px 42px rgba(38,34,64,.14)) saturate(1.02) contrast(1.01)!important
+}
+.plugy-model-wrap.companion-mode-v162{
+  width:360px!important;height:330px!important;min-height:330px!important;
+  transition:transform .7s cubic-bezier(.2,.82,.2,1),width .55s ease,height .55s ease!important
+}
+.plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{
+  width:360px!important;height:330px!important;min-height:330px!important
+}
+body[data-plugy-state="think"] #plugyStandaloneModel,
+body[data-plugy-state="charge"] #plugyStandaloneModel{
+  filter:drop-shadow(0 36px 48px rgba(96,77,188,.19)) saturate(1.04) contrast(1.01)!important
+}
+@media(max-width:780px){
+  .plugy-model-wrap{min-height:52svh!important;height:54svh!important}
+  #plugyStandaloneModel{width:108vw!important;height:58svh!important}
+  .plugy-model-wrap.companion-mode-v162{width:280px!important;height:255px!important;min-height:255px!important}
+  .plugy-model-wrap.companion-mode-v162 #plugyStandaloneModel{width:280px!important;height:255px!important;min-height:255px!important}
+}
