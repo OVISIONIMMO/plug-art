@@ -4430,6 +4430,8 @@ function bindIdeaDragV163(card){
 
 /* ================= V167 WORKSPACE ================= */
 const CREATION_TEMPLATES_V167=[
+  ['plug-open-call-5','Open Call PLUG'],['plug-exhibition-white','Expo · White'],['plug-vernissage-week','Vernissages'],['plug-atelier-13','Atelier · Paris 13'],
+  ['plug-gallery-photo','Galerie photo'],['plug-editorial-grid','Editorial Grid'],['plug-glass-event','Glass Event'],['plug-poster-cutout','Cutout Poster'],
   ['open-call-clean-white','Clean white'],['open-call-side-rail','Side rail'],['open-call-photo-first','Photo first'],
   ['open-call-gallery-premium','Galerie premium'],['open-call-plug-blue','PLUG blue'],['open-call-editorial','Éditorial'],
   ['open-call-deadline','Deadline'],['open-call-minimal-black','Minimal black'],['open-call-pop','Pop'],['open-call-institutional','Institutionnel']
@@ -4582,6 +4584,14 @@ function renderEventsV167(){
 function v167EventImage(id){return '/api/v167/events/'+encodeURIComponent(id)+'/media/0'}
 function v167ApplyDesign(slide,key='open-call-side-rail'){
   const maps={
+    'plug-open-call-5':{theme:'ultra',layout:'editorial',accent:'violet',backgroundColor:'#ffffff',pattern:'editorial-rail',imageOpacity:86},
+    'plug-exhibition-white':{theme:'ultra',layout:'split',accent:'black',backgroundColor:'#fbfbf9',pattern:'corner-accent',imageOpacity:88},
+    'plug-vernissage-week':{theme:'editorial',layout:'poster',accent:'violet',backgroundColor:'#f3f0ff',pattern:'gradient-mesh',imageOpacity:84},
+    'plug-atelier-13':{theme:'soft',layout:'split',accent:'orange',backgroundColor:'#fff7ef',pattern:'grid-large',imageOpacity:78},
+    'plug-gallery-photo':{theme:'ultra',layout:'poster',accent:'black',backgroundColor:'#ffffff',pattern:'side-ribbon',imageOpacity:96},
+    'plug-editorial-grid':{theme:'editorial',layout:'editorial',accent:'black',backgroundColor:'#f5f4ef',pattern:'cross-grid',imageOpacity:72},
+    'plug-glass-event':{theme:'soft',layout:'poster',accent:'cyan',backgroundColor:'#eef9fb',pattern:'halo',imageOpacity:82},
+    'plug-poster-cutout':{theme:'editorial',layout:'poster',accent:'pink',backgroundColor:'#fff0f6',pattern:'organic',imageOpacity:90},
     'open-call-clean-white':{theme:'ultra',layout:'editorial',accent:'black',backgroundColor:'#ffffff',pattern:'grid-fine',imageOpacity:72},
     'open-call-side-rail':{theme:'editorial',layout:'editorial',accent:'violet',backgroundColor:'#f6f5f1',pattern:'editorial-rail',imageOpacity:82},
     'open-call-photo-first':{theme:'editorial',layout:'poster',accent:'black',backgroundColor:'#f4f3ef',pattern:'corner-accent',imageOpacity:92},
