@@ -4061,3 +4061,18 @@ body[data-view="creation"] .creation-studio-shell{max-width:none!important;width
 #pdfInspectorTitleV167[data-saved="1"]:after{
   content:" · enregistré";font-size:6px;font-weight:700;color:#58a777
 }
+
+
+/* ================= V168.2 · Vernissages discovery ================= */
+.event-discovery-v169{
+  display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid #e4e5e9
+}
+.event-discovery-v169>span{
+  font-size:6px;font-weight:900;letter-spacing:1px;color:#979aa4;margin-right:2px
+}
+.event-discovery-v169 button{
+  border:1px solid #dde0e6;background:#fff;border-radius:999px;padding:7px 9px;
+  font-size:6.4px;font-weight:850;color:#5b5f68;white-space:nowrap
+}
+.event-discovery-v169 button:hover{border-color:#bcb3e8;background:#f9f7ff;color:#5d4bb9}
+#radarRefreshAllV169{background:#111318!important;color:#fff!important;border-color:#111318!important}
