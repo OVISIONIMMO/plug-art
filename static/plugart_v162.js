@@ -4873,7 +4873,7 @@ function renderPdfElementsV168(){
   const els=pdfElementsV168();
   box.innerHTML=els.map((e,i)=>'<div class="pdf-element-row-v168"><button data-pdf-element-v168="'+i+'"><b>'+(e.type==='image'?'▧':e.type==='text'?'Aa':e.type==='circle'?'○':e.type==='line'?'—':'□')+'</b><span>'+esc(e.type==='text'?(e.text||'Texte').slice(0,30):e.type)+'</span></button><button data-pdf-remove-v168="'+i+'">×</button></div>').join('')||'<div class="empty">Page libre · ajoute du texte, une image ou une forme.</div>';
   $$('[data-pdf-element-v168]',box).forEach(b=>b.onclick=()=>editPdfElementV168(Number(b.dataset.pdfElementV168)));
-  $$('[data-pdf-remove-v168]',box).forEach(b=>b.onclick=()=>{els.splice(Number(b.dataset.pdfRemoveV168),1);renderPdfElementsV168()});
+  $('[data-pdf-remove-v168]',box).forEach(b=>b.onclick=()=>{els.splice(Number(b.dataset.pdfRemoveV168),1);pdfSelectedElementV169=null;renderPdfElementsV168();renderPdfLiveV169();schedulePdfAutosaveV169()});
 }
 function addPdfElementV168(type){
   const els=pdfElementsV168();if(!state.activePdfProjectV167)return toast('Ouvre un projet PDF');
@@ -4886,12 +4886,12 @@ function addPdfElementV168(type){
   if(type==='quote')els.push({type:'text',text:'« Une phrase forte pour rythmer le dossier. »',x:10,y:34,w:80,h:20,fontSize:24,weight:'bold',color:'#111318',align:'center',lineHeight:1.15});
   if(type==='circle')els.push({type:'circle',x:72,y:8,w:18,h:13,fill:'#45cbd7',opacity:.75});
   if(type==='line')els.push({type:'line',x:8,y:62,w:84,h:2,stroke:'#111318',thickness:1.5,opacity:.35});
-  renderPdfElementsV168();
+  renderPdfElementsV168();renderPdfLiveV169();schedulePdfAutosaveV169();
 }
 function importPdfImageV168(ev){
   const file=ev.target?.files?.[0];if(!file)return;
   if(file.size>8*1024*1024){toast('Image limitée à 8 Mo');ev.target.value='';return}
-  const reader=new FileReader();reader.onload=()=>{const src=String(reader.result||'');if(!src.startsWith('data:image/'))return;pdfElementsV168().push({type:'image',src,x:8,y:12,w:84,h:45,crop:'cover',position:'center',radius:2});renderPdfElementsV168();toast('Image ajoutée au PDF')};reader.readAsDataURL(file);ev.target.value='';
+  const reader=new FileReader();reader.onload=()=>{const src=String(reader.result||'');if(!src.startsWith('data:image/'))return;pdfElementsV168().push({type:'image',src,x:8,y:12,w:84,h:45,crop:'cover',position:'center',radius:2});renderPdfElementsV168();renderPdfLiveV169();schedulePdfAutosaveV169();toast('Image ajoutée au PDF')};reader.readAsDataURL(file);ev.target.value='';
 }
 function editPdfElementV168(index){
   const e=pdfElementsV168()[index];if(!e)return;
