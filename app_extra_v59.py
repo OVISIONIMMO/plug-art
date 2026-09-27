@@ -8,7 +8,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='168.2'
+app.version='169.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -17,7 +17,19 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='168.20260927.6'
+VERSION='169.20260927.1'
+
+@app.middleware("http")
+async def _v169_performance_headers(request: Request, call_next):
+    response=await call_next(request)
+    path=request.url.path
+    if path.startswith('/static/') or path.startswith('/assets/'):
+        response.headers['Cache-Control']='public,max-age=31536000,immutable'
+    elif path in ('/','/plugy'):
+        response.headers['Cache-Control']='no-cache'
+    response.headers.setdefault('X-Content-Type-Options','nosniff')
+    return response
+
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -3170,7 +3182,7 @@ def _v167_upsert_events(events):
 def _v167_event_search_ai(body):
     key=os.getenv('OPENAI_API_KEY','').strip()
     if not key:raise HTTPException(503,'Recherche web IA non configurée')
-    cities=[str(x).strip() for x in (body.get('cities') or ['Paris']) if str(x).strip()][:12]
+    cities=[str(x).strip() for x in (body.get('cities') or ['Paris','Aubervilliers','Saint-Denis','Pantin','Montreuil','Boulogne-Billancourt','Ivry-sur-Seine','Vincennes']) if str(x).strip()][:12]
     types=[str(x).strip() for x in (body.get('types') or ['vernissage','opening','artist_talk']) if str(x).strip()][:10]
     date_from=str(body.get('date_from') or time.strftime('%Y-%m-%d'))[:10]
     date_to=str(body.get('date_to') or '')[:10]
@@ -3345,6 +3357,12 @@ def _v168_curated_events():
       {'event_type':'gallery_event','title':'Portes ouvertes des ateliers d’artistes de Montreuil','venue_name':'Centre Tignous + ateliers de Montreuil','venue_type':'artist_studios','city':'Montreuil','address':'116 rue de Paris, 93100 Montreuil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'2026-10-11T20:00','artists':[],'disciplines':['arts visuels','peinture','photographie','sculpture','mixed media'],'description':'Plus de 250 ateliers ouvrent leurs portes. Vernissages, expositions, ateliers, concerts et performances. Entrée libre.','image_url':'','source_url':'https://www.montreuil.fr/agenda/journees-portes-ouvertes-des-ateliers-dartistes','source_type':'official_municipal','rsvp_url':'','price_text':'Entrée libre et gratuite','is_free':True,'verified':True},
       {'event_type':'gallery_event','title':'Notre Mère Brûle — Portes ouvertes du Daron Perché','venue_name':'Jardin du Daron Perché','venue_type':'artist_space','city':'Montreuil','address':'74 rue Molière, 93100 Montreuil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'2026-10-11T20:00','artists':[],'disciplines':['land art','installation'],'description':'Exposition de land art, DJ set et portes ouvertes. Entrée libre.','image_url':'','source_url':'https://www.montreuil.fr/agenda/notre-mere-brule-portes-ouvertes-du-daron-perche','source_type':'official_municipal','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
       {'event_type':'vernissage','title':'trànsitos — Fernando Garcia Quintero','venue_name':'Centre Paris Anim’ Annie Fratellini','venue_type':'cultural_center','city':'Paris','address':'36 quai de la Rapée, 75012 Paris','country':'France','starts_at':'2026-10-15T19:00','ends_at':'2026-10-15T21:30','artists':['Fernando Garcia Quintero'],'disciplines':['peinture','art contemporain'],'description':'Vernissage gratuit avec l’artiste autour des thèmes migration, mémoire et déplacement.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-expo-transitos-124363','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+
+      {'event_type':'vernissage','title':'AAA_chan — Les Treize Nuits','venue_name':'Espace Sorbonne 4','venue_type':'gallery','city':'Paris','address':'4 rue de la Sorbonne, 75005 Paris','country':'France','starts_at':'2026-10-01T18:00','ends_at':'2026-10-01T20:30','artists':['AAA_chan'],'disciplines':['peinture','art contemporain'],'description':'Vernissage gratuit de la première exposition parisienne de AAA_chan.','image_url':'','source_url':'https://www.paris.fr/evenements/aaa_chan-exhibition-paris-2026-les-treize-nuits-123126','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'Salon du déstructuralisme figuratif','venue_name':"Serre de l'orangerie — Parc André Citroën",'venue_type':'salon','city':'Paris','address':'16 rue de la Montagne de la Fage, 75015 Paris','country':'France','starts_at':'2026-10-03','ends_at':'','artists':[],'disciplines':['art contemporain','arts visuels'],'description':'Vernissage le 3 octobre, avec présence des artistes. Entrée gratuite.','image_url':'','source_url':'https://www.paris.fr/evenements/participation-au-salon-du-destructuralisme-figuratif-124764','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'Ashkhar — Sonya Orfalian','venue_name':'Maison de la vie associative du 14e','venue_type':'cultural_center','city':'Paris','address':'76 rue Daguerre, 75014 Paris','country':'France','starts_at':'2026-10-06T18:30','ends_at':'2026-10-06T21:30','artists':['Sonya Orfalian'],'disciplines':['peinture','art contemporain'],'description':'Vernissage gratuit de l’exposition Ashkhar en présence de l’artiste.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-de-l-exposition-de-sonya-orfalian-123444','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'Rétrospective Bernard Mandeville','venue_name':'Galerie Athéna — Mairie du 13e','venue_type':'public_gallery','city':'Paris','address':'1 place d’Italie, 75013 Paris','country':'France','starts_at':'2026-10-06T18:00','ends_at':'2026-10-06T21:00','artists':['Bernard Mandeville'],'disciplines':['peinture','collage','lithographie'],'description':'Vernissage de la rétrospective Bernard Mandeville. Entrée libre et gratuite.','image_url':'','source_url':'https://mairie13.paris.fr/pages/exposition-bernard-mandeville-36583','source_type':'official_municipal','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'Faire place au monde','venue_name':'Cité internationale des arts','venue_type':'art_center','city':'Paris','address':'18 rue de l’Hôtel de Ville, 75004 Paris','country':'France','starts_at':'2026-10-07T18:00','ends_at':'2026-10-07T21:00','artists':[],'disciplines':['art contemporain','installation'],'description':'Vernissage gratuit de l’exposition collective Faire place au monde.','image_url':'','source_url':'https://www.paris.fr/evenements/les-voix-se-levent-118181','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
     ]
 
 def _v168_curated_opportunities():
@@ -3355,12 +3373,59 @@ def _v168_curated_opportunities():
       {'title':'Appel à candidature exposition — La Gare Expérimentale','organizer':'La Gare Expérimentale','city':'Paris','country':'France','deadline':'2026-10-31','fee':'Gratuit / à vérifier','eligibility':'Artistes souhaitant proposer une exposition. Présence sur site demandée pendant l’exposition.','summary':'Programmation d’exposition de mars à juin, avec vernissage le mercredi soir.','source_url':'https://garexp.org/agenda/2026-06-29-appel-a-candidature-exposition','source_name':'La Gare Expérimentale','confidence':99},
       {'title':'Appel aux artistes — expositions collectives The Muisca Gallery','organizer':'The Muisca Gallery','city':'Paris','country':'France','deadline':'','fee':'À vérifier','eligibility':'Candidature spontanée ouverte toute l’année selon l’orientation artistique et les expositions programmées.','summary':'Galerie parisienne recherchant de nouveaux talents pour expositions collectives et solo shows.','source_url':'https://www.themuisca.com/appel-aux-artistes','source_name':'The Muisca Gallery','confidence':94},
       {'title':'Appel à candidature — expositions collectives Galerie Mona Lisa','organizer':'Galerie Mona Lisa','city':'Paris','country':'France','deadline':'','fee':'Petite participation — montant à vérifier','eligibility':'Artistes émergents et confirmés : peinture, photographie, sculpture, dessin, etc.','summary':'Expositions collectives à Paris 7e, avec plusieurs dates en octobre, novembre et décembre 2026.','source_url':'https://galerie-monalisa.org/fr/appel-a-candidature/','source_name':'Galerie Mona Lisa','confidence':95},
+      {'title':'ODYSSEY — International Open Call for Artists | Paris','organizer':'Sol de Paris','city':'Paris','country':'France','deadline':'2026-09-30','fee':'Aucun frais indiqué','eligibility':'Artistes de toutes nationalités et tous niveaux de carrière. Peinture, dessin, photographie, sculpture, mixed media, textile, numérique, vidéo et installation.','summary':'Open call international pour une exposition collective physique à Paris, avec publication et promotion des artistes sélectionnés.','source_url':'https://artfond.me/en/opportunities/291-odyssey-international-open-call-for-artists-paris','source_name':'ArtFond / CuratorSpace','confidence':99},
     ]
+
+def _v169_paris_open_data_events(start=None,end=None):
+    start=start or date.today();end=end or (start+timedelta(days=45))
+    endpoint='https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/que-faire-a-paris-/records'
+    where='search(title, "vernissage") OR search(lead_text, "vernissage") OR search(description, "vernissage") OR search(date_description, "vernissage")'
+    try:
+        rr=requests.get(endpoint,params={'where':where,'limit':100,'timezone':'Europe/Paris'},timeout=(4,14),
+          headers={'User-Agent':'PLUGART-Radar/169','Accept':'application/json'})
+        if not rr.ok:raise RuntimeError('Paris Open Data HTTP '+str(rr.status_code))
+        rows=(rr.json() or {}).get('results') or []
+    except Exception as exc:
+        print('PLUG_ART_V169_PARIS_DATA_ERROR '+type(exc).__name__+': '+str(exc)[:180],flush=True)
+        return []
+    found=[];seen=set()
+    for row in rows:
+        if not isinstance(row,dict):continue
+        starts=str(row.get('date_start') or '').strip()
+        day=starts[:10]
+        try:
+            d=date.fromisoformat(day)
+            if d<start or d>end:continue
+        except Exception:continue
+        url=str(row.get('url') or '').strip()
+        title=str(row.get('title') or '').strip()
+        if not url or not title:continue
+        key=(url,starts)
+        if key in seen:continue
+        seen.add(key)
+        raw=' '.join(str(row.get(k) or '') for k in ('lead_text','description','date_description'))
+        plain=re.sub(r'<[^>]+>',' ',raw)
+        plain=re.sub(r'\s+',' ',html_lib.unescape(plain)).strip()
+        free='gratuit' in plain.lower()
+        address=' '.join(x for x in [str(row.get('address_street') or '').strip(),str(row.get('address_zipcode') or '').strip(),str(row.get('address_city') or '').strip()] if x)
+        found.append({
+          'event_type':'vernissage','title':title[:260],'venue_name':str(row.get('address_name') or '')[:220],
+          'venue_type':'cultural_venue','city':str(row.get('address_city') or 'Paris')[:120] or 'Paris',
+          'address':address[:500],'country':'France','starts_at':starts[:25],
+          'ends_at':str(row.get('date_end') or '')[:25],'artists':[],'disciplines':['arts visuels'],
+          'description':plain[:1200],'image_url':str(row.get('cover_url') or '')[:2400],
+          'source_url':url[:2400],'source_type':'paris_open_data','rsvp_url':'',
+          'price_text':'Gratuit' if free else 'À vérifier','is_free':free,'verified':True
+        })
+    print('PLUG_ART_V169_PARIS_DATA found='+str(len(found)),flush=True)
+    return found
 
 def _v168_refresh_events():
     start=date.today();end=start+timedelta(days=16)
     curated=[x for x in _v168_curated_events() if str(x.get('starts_at') or '')[:10]>=start.isoformat()]
     ids=_v167_upsert_events(curated);ai_error=''
+    try:ids+=_v167_upsert_events(_v169_paris_open_data_events(start,end))
+    except Exception as exc:print('PLUG_ART_V169_PARIS_DATA_UPSERT '+str(exc)[:180],flush=True)
     body={
       'cities':['Paris','Aubervilliers','Saint-Denis','Pantin','Montreuil','Boulogne-Billancourt','Ivry-sur-Seine','Vitry-sur-Seine','Neuilly-sur-Marne','Noisy-le-Sec'],
       'date_from':start.isoformat(),'date_to':end.isoformat(),
@@ -3449,6 +3514,23 @@ def _v168_refresh_opportunities():
     except Exception:pass
     ids=list(dict.fromkeys(ids));_v168_set_refresh_state('opportunities_ai',len(ids),ai_error)
     return {'ok':True,'found':len(ids),'fallback':bool(ai_error),'items':core.rows("select * from opportunities where status in ('open','rolling') order by coalesce(radar_score,score,0) desc,deadline limit 100")}
+
+def _v169_seed_verified_floor():
+    try:
+        _v167_upsert_events([x for x in _v168_curated_events() if str(x.get('starts_at') or '')[:10]>=date.today().isoformat()])
+        _v168_upsert_opportunities(_v168_curated_opportunities())
+        print('PLUG_ART_V169_SEED_READY',flush=True)
+    except Exception as exc:
+        print('PLUG_ART_V169_SEED_ERROR '+type(exc).__name__+': '+str(exc)[:180],flush=True)
+
+_v169_seed_verified_floor()
+
+@app.post('/api/v168/radar/refresh-all')
+def radar_refresh_all_v169(body:dict={}):
+    events=_v168_refresh_events()
+    opportunities=_v168_refresh_opportunities()
+    return {'ok':True,'found':int(events.get('found') or 0)+int(opportunities.get('found') or 0),
+      'events':events,'opportunities':opportunities}
 
 def _v168_run_refresh(kind):
     if kind in _v168_refresh_running:return
