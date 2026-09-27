@@ -3975,9 +3975,27 @@ def assets_search_v169(q:str='art',limit:int=32):
             prefix,icon=name.split(':',1)
             if not re.fullmatch(r'[A-Za-z0-9._-]+',prefix) or not re.fullmatch(r'[A-Za-z0-9._-]+',icon):continue
             items.append({'id':name,'name':icon.replace('-',' '),'prefix':prefix,'icon':icon,'url':f'/api/v169/assets/icon/{prefix}/{icon}.svg'})
-        return {'ok':True,'query':query,'items':items}
+        return {'ok':True,'query':query,'icons':[x['id'] for x in items],'items':items}
     except HTTPException:raise
     except Exception as exc:raise HTTPException(502,'Bibliothèque vectorielle indisponible') from exc
+
+
+@app.get('/api/v169/assets/svg')
+def asset_svg_v169(icon:str='',color:str='#111318',download:bool=False):
+    raw=str(icon or '').strip()
+    if ':' not in raw:raise HTTPException(400,'Icône invalide')
+    prefix,name=raw.split(':',1)
+    if not re.fullmatch(r'[A-Za-z0-9._-]+',prefix) or not re.fullmatch(r'[A-Za-z0-9._-]+',name):raise HTTPException(400,'Icône invalide')
+    safe_color=str(color or '#111318').strip()
+    if not re.fullmatch(r'#[0-9A-Fa-f]{6}',safe_color):safe_color='#111318'
+    try:
+        rr=requests.get(f'https://api.iconify.design/{prefix}/{name}.svg',params={'color':safe_color},timeout=12,headers={'User-Agent':'PLUGART/169'})
+        if not rr.ok or len(rr.content)<80:raise HTTPException(404,'Icône introuvable')
+        headers={'Cache-Control':'public,max-age=604800,stale-while-revalidate=604800'}
+        if download:headers['Content-Disposition']=f'attachment; filename="{prefix}-{name}.svg"'
+        return Response(content=rr.content,media_type='image/svg+xml',headers=headers)
+    except HTTPException:raise
+    except Exception:raise HTTPException(404,'Icône introuvable')
 
 @app.get('/api/v169/assets/icon/{prefix}/{icon}.svg')
 def asset_icon_v169(prefix:str,icon:str):
