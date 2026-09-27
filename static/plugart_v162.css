@@ -3933,3 +3933,56 @@ body[data-view="creation"] .creation-studio-shell{max-width:none!important;width
 @media(max-width:820px){
   .radar-live-v168{flex-wrap:wrap}.radar-live-v168>span{width:100%;min-width:0}.radar-live-v168 button{flex:1}
 }
+
+
+/* ================= V168.1 · PLUGY smaller + blank creation + richer PDF ================= */
+.plugy-follower{
+  width:min(300px,22vw)!important;
+  height:min(320px,38vh)!important;
+  right:8px!important;
+  bottom:14px!important;
+  opacity:.94!important;
+}
+.plugy-follower.visible{opacity:.94!important}
+.plugy-follower-status{right:4px!important;bottom:2px!important}
+#dashboardPlugyMount{
+  height:min(42vh,470px)!important;
+  min-height:340px!important;
+  max-width:780px!important;
+}
+.slide-plugy-zone{
+  height:min(44vh,490px)!important;
+  min-height:350px!important;
+  max-width:820px!important;
+}
+@media(min-width:1440px){
+  .plugy-follower{width:min(315px,20vw)!important;height:min(335px,40vh)!important}
+  #dashboardPlugyMount{height:min(46vh,500px)!important;min-height:360px!important;width:min(100%,800px)!important}
+  .slide-plugy-zone{height:min(46vh,510px)!important;min-height:370px!important;width:min(100%,820px)!important}
+}
+@media(min-width:2200px){
+  .plugy-follower{width:min(340px,14vw)!important;height:min(360px,42vh)!important}
+  #dashboardPlugyMount{height:min(50vh,560px)!important;min-height:400px!important;width:min(100%,860px)!important}
+  .slide-plugy-zone{height:min(50vh,570px)!important;min-height:410px!important;width:min(100%,880px)!important}
+}
+@media(max-width:820px){
+  .plugy-follower{width:42vw!important;height:27vh!important;max-height:245px!important;right:4px!important}
+}
+#view-creation #carouselCanvas.blank-v168 .canvas-layers:empty:after{display:none!important}
+#view-creation #carouselCanvas.blank-v168{
+  background:#fff!important;
+  background-image:none!important;
+}
+#view-creation #carouselCanvas.blank-v168:before,
+#view-creation #carouselCanvas.blank-v168:after{display:none!important}
+#view-creation #carouselCanvas.blank-v168 .safe-area,
+#view-creation #carouselCanvas.blank-v168 .studio-guide,
+#view-creation #carouselCanvas.blank-v168 [data-guide]{display:none!important}
+
+.pdf-import-actions-v168{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.pdf-import-actions-v168 button{
+  border:1px solid #dfe1e6;background:#fff;border-radius:8px;min-height:30px;
+  font-size:6.5px;font-weight:850;color:#555963
+}
+.pdf-import-actions-v168 .pdf-edit-import-v168{background:#111318;color:#fff;border-color:#111318}
+.pdf-add-elements-v168{grid-template-columns:repeat(3,minmax(0,1fr))!important}
