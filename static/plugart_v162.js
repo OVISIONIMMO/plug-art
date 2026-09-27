@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='168.20260927.4';
+const VERSION='168.20260927.5';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -4507,7 +4507,9 @@ async function refreshRadarStatusV168(){
     const s=await api('/api/v168/radar/refresh-status',{noMemCache:true,timeout:8000});
     const e=s?.events,o=s?.opportunities,r=s?.running||[];
     const fmt=row=>row?.updated_at?new Date(row.updated_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'jamais';
-    el.textContent='Vernissages '+fmt(e)+' · Open Calls '+fmt(o)+(r.length?' · scan en cours':'');
+    const fallback=!!(e?.last_error||o?.last_error);
+    el.textContent='Vernissages '+fmt(e)+' ('+(e?.last_count||0)+') · Open Calls '+fmt(o)+' ('+(o?.last_count||0)+')'+(r.length?' · scan en cours':fallback?' · données vérifiées + cache':'');
+    el.dataset.mode=fallback?'fallback':r.length?'running':'live';
   }catch{el.textContent='veille disponible au prochain rafraîchissement'}
 }
 async function refreshRadarLiveV168(kind){
@@ -4517,7 +4519,8 @@ async function refreshRadarLiveV168(kind){
     const out=await api(kind==='events'?'/api/v168/events/refresh':'/api/v168/opportunities/refresh',{method:'POST',timeout:90000,body:JSON.stringify({force:true})});
     if(kind==='events'){state.eventsV167=Array.isArray(out.items)?out.items:[];renderEventsV167();setRadarModeV167('events')}
     else{state.dataLoaded.opportunities=false;await ensureDataFamily('opportunities',true);renderRadar()}
-    toast((out.found||0)+' résultat'+((out.found||0)>1?'s':'')+' actualisé'+((out.found||0)>1?'s':''));
+    const count=Number(out.total??out.found??0),suffix=out.cached?' · données vérifiées/cache':'';
+    toast(count+' résultat'+(count>1?'s':'')+' disponible'+(count>1?'s':'')+suffix);
     refreshRadarStatusV168();
   }catch(e){toast('Actualisation Radar impossible : '+clean(e.message||'erreur'))}
   finally{btn.disabled=false;btn.textContent=old}
