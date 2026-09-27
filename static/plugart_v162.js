@@ -4664,6 +4664,16 @@ function toggleCreationFullscreenV167(){
   const stage=$('#carouselCreationPanel .studio-stage');if(!stage)return;
   if(document.fullscreenElement)document.exitFullscreen?.();else stage.requestFullscreen?.();
 }
+async function searchAssetsV169(){
+  const box=$('#assetResultsV169'),q=clean($('#assetSearchV169')?.value);if(!box||!q)return;
+  box.innerHTML='<div class="event-loading-v167"><i></i><span>Recherche des assets…</span></div>';
+  try{
+    const out=await api('/api/v169/assets/icons?q='+encodeURIComponent(q),{noMemCache:true,timeout:15000});
+    const items=Array.isArray(out.items)?out.items:[];
+    box.innerHTML=items.map(x=>'<button data-v169-asset="'+esc(x.url)+'" title="'+esc(x.id)+'"><img src="'+esc(x.url)+'" alt=""><span>'+esc(x.id.split(':').pop())+'</span></button>').join('')||'<div class="empty">Aucun asset.</div>';
+    $('[data-v169-asset]',box).forEach(b=>b.onclick=()=>addCanvasLayer('image',{src:b.dataset.v169Asset,w:18,h:18,radius:0,boxShadow:'0 10px 24px rgba(28,29,42,.10)'}));
+  }catch(e){box.innerHTML='<div class="empty">Recherche d’assets indisponible.</div>'}
+}
 function installCreationV167(){
   const view=$('#view-creation'),panel=$('#carouselCreationPanel');if(!view||!panel||$('#creationLibraryV167'))return;
   view.classList.add('creation-v167-view');panel.classList.add('creation-v167');
@@ -4672,8 +4682,10 @@ function installCreationV167(){
     section.innerHTML='<div class="v167-library-head"><small>DA PLUG ART</small><strong>Templates sociaux</strong></div>'+
       '<div class="v167-template-grid">'+CREATION_TEMPLATES_V167.map(x=>'<button data-v167-template="'+x[0]+'"><i class="tpl-'+x[0]+'"></i><span>'+x[1]+'</span></button>').join('')+'</div>'+
       '<div class="v167-library-head"><small>MOTIFS</small><strong>Habillage</strong></div><div class="v167-pattern-grid">'+CREATION_PATTERNS_V167.map(x=>'<button data-v167-pattern="'+x[0]+'"><i data-pattern="'+x[0]+'"></i><span>'+x[1]+'</span></button>').join('')+'</div>'+
-      '<div class="v167-library-head"><small>SYMBOLES</small><strong>Éléments rapides</strong></div><div class="v167-symbol-grid">'+CREATION_SYMBOLS_V167.map(x=>'<button data-v167-symbol="'+esc(x)+'">'+esc(x)+'</button>').join('')+'</div>'+
-      '<button class="v167-open-call-pack" id="openCallPackV167">✦ Générer Open Call · 5 slides</button>';
+      '<div class="v167-library-head"><small>ÉLÉMENTS PRO</small><strong>Relief & matière</strong></div><div class="v169-pro-elements">'+CREATION_PRO_ELEMENTS_V169.map(x=>'<button data-v169-pro-element="'+x.id+'"><i class="pro-el-'+x.id+'"></i><span>'+x.label+'</span></button>').join('')+'</div>'+
+      '<div class="v167-library-head"><small>ICÔNES & ASSETS</small><strong>Recherche</strong></div><div class="v169-asset-search"><input id="assetSearchV169" placeholder="flèche, art, gallery, calendar…"><button id="assetSearchBtnV169">Rechercher</button></div><div id="assetResultsV169" class="v169-asset-results"></div>'+
+      '<div class="v167-library-head"><small>SIGNES</small><strong>Typographiques</strong></div><div class="v167-symbol-grid">'+CREATION_SYMBOLS_V167.map(x=>'<button data-v167-symbol="'+esc(x)+'">'+esc(x)+'</button>').join('')+'</div>'+
+      '<button class="v167-open-call-pack" id="openCallPackV167">Créer Open Call · 5 slides</button>';
     lib.prepend(section);
   }
   const toolbar=$('#creationTopToolsV166')||$('#studioProToolbar');if(toolbar&&!$('#creationFullscreenV167')){
@@ -4682,7 +4694,9 @@ function installCreationV167(){
   }
   $$('[data-v167-template]').forEach(b=>b.onclick=()=>applyCreationTemplateV167(b.dataset.v167Template));
   $$('[data-v167-pattern]').forEach(b=>b.onclick=()=>applyCreationPatternV167(b.dataset.v167Pattern));
-  $$('[data-v167-symbol]').forEach(b=>b.onclick=()=>addCanvasLayer('text',{text:b.dataset.v167Symbol,size:48,weight:700,w:18,h:14,color:'#7657ff',align:'center'}));
+  $('[data-v167-symbol]').forEach(b=>b.onclick=()=>addCanvasLayer('text',{text:b.dataset.v167Symbol,size:48,weight:700,w:18,h:14,color:'#7657ff',align:'center'}));
+  $('[data-v169-pro-element]').forEach(b=>b.onclick=()=>{const item=CREATION_PRO_ELEMENTS_V169.find(x=>x.id===b.dataset.v169ProElement);if(item)addCanvasLayer('shape',{...item.props,x:28,y:24})});
+  $('#assetSearchBtnV169')?.addEventListener('click',searchAssetsV169);$('#assetSearchV169')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchAssetsV169()}});
   $('#openCallPackV167')?.addEventListener('click',()=>generateOpenCallPackV167());
   $('#creationBlankV168')?.addEventListener('click',()=>{if(state.carousel.slides.length&&state.carousel.slides.some(s=>!s.blank&&(s.title||s.body||s.image||(s.layers||[]).length))&&!confirm('Créer un nouveau canvas vierge ?'))return;createBlankCanvasV168(true);toast('Canvas vierge prêt')});
   $('#creationFitV167')?.addEventListener('click',fitStudioCanvas);
