@@ -17,7 +17,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='168.20260927.4'
+VERSION='168.20260927.5'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -728,7 +728,7 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='168.20260927.4'
+    expected='168.20260927.5'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
       'version':'168.0',
@@ -3313,6 +3313,47 @@ _v168r.commit();_v168r.close()
 _v168_refresh_lock=threading.Lock()
 _v168_refresh_running=set()
 
+_V168_EVENT_FALLBACK=[
+ {'event_type':'vernissage','title':'Écris-moi ! — Camille de Cussac','venue_name':'Artazart','venue_type':'gallery','city':'Paris','address':'83 quai de Valmy, 75010 Paris','country':'France','starts_at':'2026-10-01T18:00','ends_at':'2026-10-01T19:30','artists':['Camille de Cussac'],'disciplines':['illustration','art contemporain'],'description':'Vernissage officiel de l’exposition Écris-moi !','source_url':'https://www.paris.fr/evenements/vernissage-de-l-exposition-de-camille-de-cussac-ecris-moi-124594','source_type':'official','price_text':'Gratuit','is_free':True,'verified':True},
+ {'event_type':'vernissage','title':'AAA_chan Exhibition Paris 2026 — Les Treize Nuits','venue_name':'Espace Sorbonne 4','venue_type':'gallery','city':'Paris','address':'4 rue de la Sorbonne, 75005 Paris','country':'France','starts_at':'2026-10-01T18:00','ends_at':'2026-10-01T20:30','artists':['AAA_chan'],'disciplines':['peinture','art contemporain'],'description':'Vernissage de la première exposition parisienne de AAA_chan.','source_url':'https://www.paris.fr/evenements/aaa_chan-exhibition-paris-2026-les-treize-nuits-123126','source_type':'official','price_text':'Gratuit','is_free':True,'verified':True},
+ {'event_type':'vernissage','title':'Akkitham — Galerie AB','venue_name':'Galerie AB - Agnès Aittouares','venue_type':'gallery','city':'Paris','address':'5 rue Jacques Callot, 75006 Paris','country':'France','starts_at':'2026-10-01T18:00','ends_at':'','artists':['Narayanan Akkitham'],'disciplines':['peinture','art contemporain'],'description':'Vernissage officiel de l’exposition consacrée à Narayanan Akkitham.','source_url':'https://www.paris.fr/evenements/exposition-a-la-galerie-ab-akkitham-117258','source_type':'official','price_text':'Gratuit','is_free':True,'verified':True},
+ {'event_type':'vernissage','title':'Rencontres photographiques du 10e — soirée de lancement','venue_name':'Mairie du 10e','venue_type':'city_hall','city':'Paris','address':'72 rue du Faubourg Saint-Martin, 75010 Paris','country':'France','starts_at':'2026-10-02T18:45','ends_at':'2026-10-02T21:00','artists':['8 lauréats 2025'],'disciplines':['photographie'],'description':'Lancement et vernissage de l’exposition collective des Rencontres photographiques du 10e.','source_url':'https://mairie10.paris.fr/pages/zoom-sur-la-11e-edition-des-rencontres-photographiques-du-10e-32387','source_type':'official','price_text':'Gratuit','is_free':True,'verified':True},
+ {'event_type':'vernissage','title':'Endemic — Patricia Erbelding','venue_name':'Galerie Marie-Claude Duchosal','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-02T18:00','ends_at':'2026-10-02T20:30','artists':['Patricia Erbelding'],'disciplines':['peinture'],'description':'Vernissage officiel de l’exposition Endemic.','source_url':'https://www.paris.fr/evenements/patricia-erbelding-endemic-123826','source_type':'official','price_text':'','is_free':False,'verified':True},
+ {'event_type':'vernissage','title':'Couloirs irréguliers','venue_name':'Maison de la Conversation','venue_type':'cultural_venue','city':'Paris','address':'10 rue Maurice Grimaud, 75018 Paris','country':'France','starts_at':'2026-10-02T19:30','ends_at':'2026-10-02T21:30','artists':[],'disciplines':['peinture','art engagé'],'description':'Exposition artistique engagée autour des parcours migratoires et de l’exil.','source_url':'https://www.paris.fr/evenements/exposition-couloirs-irreguliers-124028','source_type':'official','rsvp_url':'https://www.eventbrite.fr/','price_text':'Gratuit · réservation','is_free':True,'verified':True},
+ {'event_type':'vernissage','title':'Salon du déstructuralisme figuratif','venue_name':'Serre de l’orangerie — Parc André Citroën','venue_type':'salon','city':'Paris','address':'16 rue de la Montagne de la Fage, 75015 Paris','country':'France','starts_at':'2026-10-03','ends_at':'','artists':['Dandy Diwangkara','Seni7Plus'],'disciplines':['art contemporain','papier'],'description':'Les artistes sont annoncés présents le 3 octobre pour le vernissage. Heure à vérifier sur la source.','source_url':'https://www.paris.fr/evenements/participation-au-salon-du-destructuralisme-figuratif-124764','source_type':'official','price_text':'Gratuit','is_free':True,'verified':True},
+ {'event_type':'vernissage','title':'Rencontres photographiques du 10e — Point Éphémère','venue_name':'Point Éphémère','venue_type':'cultural_venue','city':'Paris','address':'200 quai de Valmy, 75010 Paris','country':'France','starts_at':'2026-10-03T20:00','ends_at':'','artists':['Lys Arango','Lalo de Almeida','Federico Rìos Escobar'],'disciplines':['photographie'],'description':'Vernissage dans le cadre des Rencontres photographiques du 10e.','source_url':'https://mairie10.paris.fr/pages/zoom-sur-la-11e-edition-des-rencontres-photographiques-du-10e-32387','source_type':'official','price_text':'Gratuit','is_free':True,'verified':True},
+ {'event_type':'vernissage','title':'Ce qui demeure — Pascal Pichon','venue_name':'Galerie Les Montparnos','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-08T18:30','ends_at':'','artists':['Pascal Pichon'],'disciplines':['peinture'],'description':'Vernissage en présence du peintre et de l’équipe de la galerie.','source_url':'https://www.paris.fr/evenements/exposition-pascal-pichon-ce-qui-demeure-123702','source_type':'official','price_text':'','is_free':False,'verified':True}
+]
+
+_V168_OPPORTUNITY_FALLBACK=[
+ {'title':'Candidature permanente — The Muisca Gallery','organizer':'The Muisca Gallery','city':'Paris','country':'France','deadline':'','fee':'À vérifier','eligibility':'Artistes français et internationaux selon les expositions. Candidature ouverte toute l’année.','summary':'Expositions collectives et solo shows à Paris ; Evolutions Fluides et Bizarr’Art annoncées en octobre 2026.','source_url':'https://www.themuisca.com/appel-aux-artistes','source_name':'The Muisca Gallery','confidence':96},
+ {'title':'Expositions collectives — Galerie Mona Lisa','organizer':'Galerie Mona Lisa','city':'Paris','country':'France','deadline':'','fee':'Petite participation · montant à vérifier','eligibility':'Artistes émergents et confirmés ; peinture, photographie, sculpture, dessin.','summary':'Expositions collectives prévues notamment du 19 au 24 octobre, du 26 au 31 octobre, du 22 au 28 novembre et du 30 novembre au 5 décembre 2026.','source_url':'https://galerie-monalisa.org/fr/appel-a-candidature/','source_name':'Galerie Mona Lisa','confidence':96},
+ {'title':'Believing the Image — Paris, October 2026','organizer':'Zhen Yi Gallery','city':'Paris','country':'France','deadline':'2026-09-30','fee':'€230 si sélectionné','eligibility':'Artistes émergents et mid-career ; photographie et pratiques photo-based ; international.','summary':'Exposition physique à Paris autour de la photographie, de la réalité et de la croyance dans l’image.','source_url':'https://www.curatorspace.com/opportunities/detail/open-call-believing-the-image--paris-october---photography/11068?active=submit','source_name':'CuratorSpace / Zhen Yi Gallery','confidence':94},
+ {'title':'Shaping the View — Paris, October 2026','organizer':'Zhen Yi Gallery','city':'Paris','country':'France','deadline':'2026-10-04','fee':'€200 si sélectionné','eligibility':'Artistes internationaux ; tous médias ; livraison de l’œuvre à organiser.','summary':'Exposition physique dans le Marais autour des conditions qui influencent notre manière de voir et d’interpréter les œuvres.','source_url':'https://www.curatorspace.com/opportunities/detail/shaping-the-view/11139?active=submit','source_name':'CuratorSpace / Zhen Yi Gallery','confidence':94},
+ {'title':'CONNECTION — Emerging artists exhibition','organizer':'Full Circle','city':'Bruxelles','country':'Belgique','deadline':'2026-10-25','fee':'À vérifier','eligibility':'Artistes émergents n’ayant pas encore eu l’occasion d’exposer largement ; plusieurs médias.','summary':'Exposition du 20 au 30 novembre 2026 à Full Circle, Ixelles, autour du thème Connection.','source_url':'https://members.fullcircle.eu/artexhibition','source_name':'Full Circle','confidence':92},
+ {'title':'A New World — Call For Artists','organizer':'Boomer Gallery','city':'London','country':'United Kingdom','deadline':'2026-10-03','fee':'Participation · montant à vérifier','eligibility':'Peinture, sculpture, photographie, installation, print, textile, illustration, digital et autres médias.','summary':'Exposition physique à Tower Bridge du 9 au 14 octobre 2026 ; impression et encadrement possibles pour certains formats.','source_url':'https://www.curatorspace.com/opportunities/detail/a-new-world--call-for-artists/11136','source_name':'CuratorSpace / Boomer Gallery','confidence':88},
+ {'title':'Art Emergence — Biennale internationale des jeunes artistes','organizer':'Artagon / CENTQUATRE-PARIS','city':'Paris','country':'France','deadline':'2026-09-27','fee':'À vérifier','eligibility':'Éligibilité spécifique liée aux jeunes diplômé·es des écoles françaises et européennes : vérifier impérativement les conditions avant candidature.','summary':'Biennale dédiée à la jeune création contemporaine, exposition du 20 mars au 18 avril 2027.','source_url':'https://www.104.fr/appels-a-artistes/art-emergence','source_name':'CENTQUATRE-PARIS','confidence':98}
+]
+
+def _v168_seed_verified_fallbacks():
+    event_ids=_v167_upsert_events(_V168_EVENT_FALLBACK)
+    opp_ids=_v168_upsert_opportunities(_V168_OPPORTUNITY_FALLBACK)
+    print('PLUG_ART_V168_FALLBACK_SEEDED events='+str(len(event_ids))+' opportunities='+str(len(opp_ids)),flush=True)
+    return event_ids,opp_ids
+
+def _v168_event_items_window(start,end):
+    return [_v167_event_out(x) for x in core.rows("""select * from art_events
+      where status='active' and substr(starts_at,1,10)>=? and substr(starts_at,1,10)<=?
+      order by starts_at asc,id desc limit 250""",(start.isoformat(),end.isoformat()))]
+
+def _v168_opportunity_items():
+    return core.rows("""select * from opportunities
+      where status in ('open','rolling') and (deadline is null or deadline='' or deadline>=?)
+      order by coalesce(radar_score,score,0) desc,deadline limit 100""",(date.today().isoformat(),))
+
+def _v168_is_rate_limit(exc):
+    return isinstance(exc,HTTPException) and ('429' in str(getattr(exc,'detail','')) or '429' in str(exc))
+
 def _v168_refresh_state(key):
     return core.one('select * from radar_refresh_state where key=?',(key,)) or {'key':key,'last_run_epoch':0,'last_count':0,'last_error':'','updated_at':''}
 
@@ -3337,9 +3378,18 @@ def _v168_refresh_events():
       'types':['vernissage','opening','artist_talk','finissage','preview','nocturne','rencontre_artiste','lancement_exposition'],
       'q':"Paris et proche banlieue. Inclure galeries, collectifs, centres d'art, mairies, hôtels de ville, écoles, fondations, tiers-lieux, hôtels et pages Instagram indexables. Chercher notamment #vernissage #vernissageparis #parisart #galerieparis #expositionparis #openingparis."
     }
-    events=_v167_event_search_ai(body);ids=_v167_upsert_events(events)
-    _v168_set_refresh_state('events',len(ids),'')
-    return {'ok':True,'found':len(ids),'items':events_list_v167(date_from=start.isoformat(),date_to=end.isoformat())}
+    try:
+        events=_v167_event_search_ai(body);ids=_v167_upsert_events(events)
+        items=_v168_event_items_window(start,end)
+        _v168_set_refresh_state('events',len(items),'')
+        return {'ok':True,'found':len(ids),'total':len(items),'cached':False,'items':items}
+    except Exception as exc:
+        seeded,_=_v168_seed_verified_fallbacks()
+        items=_v168_event_items_window(start,end)
+        error=('rate_limit_429' if _v168_is_rate_limit(exc) else type(exc).__name__)+': '+str(exc)[:220]
+        _v168_set_refresh_state('events',len(items),error)
+        print('PLUG_ART_V168_EVENT_FALLBACK count='+str(len(items))+' reason='+error[:160],flush=True)
+        return {'ok':True,'found':0,'total':len(items),'cached':True,'fallback':True,'warning':error,'items':items}
 
 def _v168_extract_opportunities(raw):
     parsed=_v167_extract_json(raw)
@@ -3405,11 +3455,17 @@ def _v168_upsert_opportunities(items):
     return saved
 
 def _v168_refresh_opportunities():
-    items=_v168_search_opportunities_ai();ids=_v168_upsert_opportunities(items)
-    _v168_set_refresh_state('opportunities_ai',len(ids),'')
+    try:
+        items=_v168_search_opportunities_ai();ids=_v168_upsert_opportunities(items);warning=''
+    except Exception as exc:
+        _,seeded=_v168_seed_verified_fallbacks();ids=[];warning=('rate_limit_429' if _v168_is_rate_limit(exc) else type(exc).__name__)+': '+str(exc)[:220]
+        print('PLUG_ART_V168_OPPORTUNITY_FALLBACK seeded='+str(len(seeded))+' reason='+warning[:160],flush=True)
     try:core.run_full_radar()
-    except Exception:pass
-    return {'ok':True,'found':len(ids),'items':core.rows("select * from opportunities where status in ('open','rolling') order by coalesce(radar_score,score,0) desc,deadline limit 80")}
+    except Exception as exc:
+        warning=(warning+' | ' if warning else '')+'classic:'+type(exc).__name__
+    current=_v168_opportunity_items()
+    _v168_set_refresh_state('opportunities_ai',len(current),warning)
+    return {'ok':True,'found':len(ids),'total':len(current),'cached':bool(warning),'fallback':bool(warning),'warning':warning,'items':current}
 
 def _v168_run_refresh(kind):
     if kind in _v168_refresh_running:return
@@ -3420,7 +3476,9 @@ def _v168_run_refresh(kind):
         if kind=='events':_v168_refresh_events()
         elif kind=='opportunities':_v168_refresh_opportunities()
     except Exception as exc:
-        _v168_set_refresh_state('events' if kind=='events' else 'opportunities_ai',0,type(exc).__name__+': '+str(exc))
+        key='events' if kind=='events' else 'opportunities_ai'
+        current=len(_v168_event_items_window(date.today(),date.today()+timedelta(days=16))) if kind=='events' else len(_v168_opportunity_items())
+        _v168_set_refresh_state(key,current,type(exc).__name__+': '+str(exc))
         print('PLUG_ART_V168_REFRESH_ERROR kind='+kind+' error='+type(exc).__name__+':'+str(exc)[:240],flush=True)
     finally:_v168_refresh_running.discard(kind)
 
@@ -3446,10 +3504,19 @@ def _v168_live_radar_loop():
     time.sleep(max(10,int(os.getenv('PLUGART_V168_START_DELAY_SECONDS','30'))))
     while True:
         try:
-            if _v168_should_refresh('events',float(os.getenv('PLUGART_EVENT_INTERVAL_HOURS','4'))):_v168_run_refresh('events')
-            if _v168_should_refresh('opportunities_ai',float(os.getenv('PLUGART_OPPORTUNITY_AI_INTERVAL_HOURS','12'))):_v168_run_refresh('opportunities')
+            event_due=_v168_should_refresh('events',float(os.getenv('PLUGART_EVENT_INTERVAL_HOURS','4')))
+            opp_due=_v168_should_refresh('opportunities_ai',float(os.getenv('PLUGART_OPPORTUNITY_AI_INTERVAL_HOURS','12')))
+            if event_due:_v168_run_refresh('events')
+            if opp_due:
+                if event_due:time.sleep(max(30,int(os.getenv('PLUGART_RADAR_STAGGER_SECONDS','120'))))
+                _v168_run_refresh('opportunities')
         except Exception as exc:print('PLUG_ART_V168_LOOP_ERROR '+str(exc)[:240],flush=True)
         time.sleep(900)
+
+try:
+    _v168_seed_verified_fallbacks()
+except Exception as exc:
+    print('PLUG_ART_V168_FALLBACK_SEED_ERROR '+type(exc).__name__+':'+str(exc)[:180],flush=True)
 
 if os.getenv('PLUGART_EVENT_AUTORADAR','1')=='1':
     threading.Thread(target=_v168_live_radar_loop,name='plugart-v168-live-radar',daemon=True).start()
