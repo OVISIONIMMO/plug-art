@@ -4425,3 +4425,58 @@ body[data-view="dashboard"] #dashboardPlugyMount #plugyModel{
   outline:2px solid #7657ff!important;
   outline-offset:3px!important
 }
+
+
+/* ================= PLUG ART V169.4 · global density + resilient media ================= */
+@media(min-width:1180px){
+  @supports (zoom:1){
+    .app-shell{
+      zoom:.97;
+      width:103.0928vw;
+      height:103.0928dvh;
+    }
+  }
+  :root{--ui-font-scale:.97;--sidebar:228px}
+  .workspace{padding-left:21px;padding-right:21px}
+  .topbar{height:78px}
+}
+img[data-image-v171="1"]{
+  transition:opacity .16s ease,filter .16s ease;
+  background:linear-gradient(135deg,#f1f2f5,#eceaf7,#eef7f8);
+}
+img[data-image-v171="1"]:not(.img-ready-v171){
+  opacity:.16;
+  filter:saturate(.7);
+}
+img[data-image-v171="1"].img-ready-v171{
+  opacity:1;
+  filter:none;
+}
+img.img-failed-v171{display:none!important}
+.opp-media,.open-media,.priority-thumb,.artist-visual-v161,.artist-profile-hero-v161,
+.artist-works-v161 article,.artist-suggestions-v161 article,.ig-media-visual,
+.official-media-preview-v166,.event-visual-v167,.v161-generated-thumb,
+.v169-element-grid button{
+  position:relative;
+}
+.media-failed-v171{
+  background:
+    radial-gradient(circle at 25% 20%,rgba(118,87,255,.14),transparent 36%),
+    radial-gradient(circle at 78% 70%,rgba(87,220,230,.12),transparent 34%),
+    #f1f2f5!important;
+}
+.media-failed-v171:after{
+  content:"VISUEL";
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  color:#9699a5;
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:1.15px;
+  pointer-events:none;
+}
+.event-visual-v167.media-failed-v171:after,
+.opp-media.media-failed-v171:after,
+.open-media.media-failed-v171:after{content:"IMAGE EN COURS"}
