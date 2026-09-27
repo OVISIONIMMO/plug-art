@@ -3332,6 +3332,7 @@ _v168r.execute("""CREATE TABLE IF NOT EXISTS radar_refresh_state(
 _v168r.commit();_v168r.close()
 
 _v168_refresh_lock=threading.Lock()
+_v168_serial_refresh_lock=threading.RLock()
 _v168_refresh_running=set()
 
 def _v168_refresh_state(key):
