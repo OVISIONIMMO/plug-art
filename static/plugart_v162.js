@@ -1082,8 +1082,8 @@ function renderOpenCalls(){
 }
 ['radarSearch','radarCountry','radarScore','radarType'].forEach(id=>$('#'+id)?.addEventListener(id==='radarSearch'?'input':'change',renderRadar));
 ['openSearch','openCountry','openStatus'].forEach(id=>$('#'+id)?.addEventListener(id==='openSearch'?'input':'change',renderOpenCalls));
-$('#radarRefresh')?.addEventListener('click',loadAll);
-$('#radarRun')?.addEventListener('click',async e=>{const b=e.currentTarget,old=b.textContent;b.disabled=true;b.textContent='Recherche…';try{await api('/api/radar/run',{method:'POST'});await loadAll();toast('Radar actualisé')}catch(err){toast('Radar indisponible')}finally{b.disabled=false;b.textContent=old}});
+$('#radarRefresh')?.addEventListener('click',async()=>{try{const out=await api('/api/v168/radar/refresh-all',{method:'POST',timeout:95000,body:JSON.stringify({force:true})});state.eventsV167=Array.isArray(out?.events?.items)?out.events.items:state.eventsV167;await loadAll();renderRadar();renderEventsV167();refreshRadarStatusV168();toast('Open Calls et vernissages actualisés')}catch{await loadAll();toast('Données locales actualisées')}});
+$('#radarRun')?.addEventListener('click',async e=>{const b=e.currentTarget,old=b.textContent;b.disabled=true;b.textContent='Open Calls + vernissages…';try{const out=await api('/api/v168/radar/refresh-all',{method:'POST',timeout:95000,body:JSON.stringify({force:true})});state.eventsV167=Array.isArray(out?.events?.items)?out.events.items:state.eventsV167;await loadAll();renderRadar();if($('#eventGridV167'))renderEventsV167();refreshRadarStatusV168();toast((out.found||0)+' résultats Radar actualisés')}catch(err){toast('Radar indisponible : '+clean(err.message||'erreur'))}finally{b.disabled=false;b.textContent=old}});
 
 function renderContentSources(){
   const sel=$('#contentSource'),cur=sel.value,opps=state.bootstrap?.opportunities||[];sel.innerHTML='<option value="">Brief libre</option>'+opps.slice(0,80).map(o=>'<option value="'+o.id+'">'+esc(o.title)+'</option>').join('');if(cur)sel.value=cur;
@@ -4487,8 +4487,9 @@ function installRadarV167(){
   toolbar.insertAdjacentElement('afterend',tabs);
   if(!$('#radarLiveV168')){
     const live=document.createElement('div');live.id='radarLiveV168';live.className='radar-live-v168';
-    live.innerHTML='<span><i></i><b>Veille automatique</b><small id="radarLiveStatusV168">Initialisation…</small></span><button id="radarRefreshEventsV168">Vernissages maintenant</button><button id="radarRefreshOppsV168">Scan web élargi</button>';
+    live.innerHTML='<span><i></i><b>Veille artistique</b><small id="radarLiveStatusV168">Initialisation…</small></span><button id="radarRefreshAllV169">Actualiser tout</button><button id="radarRefreshEventsV168">Vernissages maintenant</button><button id="radarRefreshOppsV168">Open Calls élargis</button>';
     tabs.insertAdjacentElement('afterend',live);
+    $('#radarRefreshAllV169').onclick=()=>refreshRadarLiveV168('all');
     $('#radarRefreshEventsV168').onclick=()=>refreshRadarLiveV168('events');
     $('#radarRefreshOppsV168').onclick=()=>refreshRadarLiveV168('opportunities');
     refreshRadarStatusV168();
@@ -4500,6 +4501,7 @@ function installRadarV167(){
       '<label>Type<select id="eventTypeV167"><option value="">Tous</option><option value="vernissage">Vernissage</option><option value="opening">Opening</option><option value="artist_talk">Artist talk</option><option value="finissage">Finissage</option><option value="nocturne">Nocturne</option></select></label>'+
       '<button class="primary-btn" id="eventSearchWebV167">◉ Rechercher sur le web</button></div>'+
       '<div class="event-ranges-v167"><button data-event-range="today">Aujourd’hui</button><button class="active" data-event-range="week">Cette semaine</button><button data-event-range="weekend">Ce week-end</button><button data-event-range="month">Ce mois</button><label><input type="checkbox" id="eventFreeV167"> Gratuit</label><label><input type="checkbox" id="eventRsvpV167"> RSVP</label><label><input type="checkbox" id="eventVerifiedV167"> Vérifié</label><span></span><button class="event-week-content-v167" id="eventWeekContentV167">✦ Créer les vernissages de la semaine</button></div>'+
+      '<div class="event-discovery-v169"><span>RECHERCHE RAPIDE</span><button data-event-discovery="paris">Paris galeries</button><button data-event-discovery="93">93 / banlieue</button><button data-event-discovery="collectifs">Collectifs</button><button data-event-discovery="municipal">Mairies / centres</button><button data-event-discovery="social">Instagram / réseaux indexés</button><button data-event-discovery="free">Gratuits</button></div>'+
     '</div>'+
     '<div class="event-head-v167"><div><small>AGENDA ARTISTIQUE</small><strong id="eventCountV167">0 événement</strong></div><button id="eventRefreshV167">Actualiser</button></div>'+
     '<div class="event-grid-v167" id="eventGridV167"><div class="empty">Ouvre le Radar Vernissages pour charger les événements.</div></div>';
@@ -4511,8 +4513,21 @@ function installRadarV167(){
     setRadarModeV167(m);
   });
   $$('[data-event-range]',panel).forEach(b=>b.onclick=()=>{$$('[data-event-range]',panel).forEach(x=>x.classList.toggle('active',x===b));panel.dataset.range=b.dataset.eventRange;loadEventsV167(true)});
+  $$('[data-event-discovery]',panel).forEach(b=>b.onclick=()=>{
+    const k=b.dataset.eventDiscovery,q=$('#eventQueryV167'),city=$('#eventCityV167');
+    const presets={
+      paris:{city:'Paris',q:'galerie vernissage opening exposition'},
+      '93':{city:'Montreuil, Pantin, Saint-Denis, Aubervilliers, Bobigny, Romainville',q:'vernissage ateliers collectif art contemporain'},
+      collectifs:{city:'Paris, Montreuil, Pantin, Saint-Denis',q:'collectif artistes vernissage exposition'},
+      municipal:{city:'Paris, Montreuil, Saint-Denis, Aubervilliers',q:'mairie hôtel de ville centre culturel vernissage'},
+      social:{city:'Paris, Montreuil, Pantin, Saint-Denis',q:'#vernissage #vernissageparis #parisart #galerieparis #expositionparis Instagram'},
+      free:{city:'Paris, Montreuil, Pantin, Saint-Denis',q:'vernissage gratuit entrée libre'}
+    }[k]||{city:'Paris',q:''};
+    if(city)city.value=presets.city;if(q)q.value=presets.q;if(k==='free'&&$('#eventFreeV167'))$('#eventFreeV167').checked=true;
+    searchEventsV167();
+  });
   $('#eventSearchWebV167').onclick=searchEventsV167;
-  $('#eventRefreshV167').onclick=()=>loadEventsV167(true);
+  $('#eventRefreshV167').onclick=()=>refreshRadarLiveV168('all');
   $('#eventWeekContentV167').onclick=generateWeeklyVernissagesV167;
   $('#eventQueryV167').oninput=()=>{clearTimeout(loadEventsV167.t);loadEventsV167.t=setTimeout(()=>loadEventsV167(true),260)};
   $('#eventCityV167').onchange=()=>loadEventsV167(true);
@@ -4534,11 +4549,14 @@ async function refreshRadarStatusV168(){
   }catch{el.textContent='veille disponible au prochain rafraîchissement'}
 }
 async function refreshRadarLiveV168(kind){
-  const btn=kind==='events'?$('#radarRefreshEventsV168'):$('#radarRefreshOppsV168');if(!btn||btn.disabled)return;
-  const old=btn.textContent;btn.disabled=true;btn.textContent=kind==='events'?'Recherche Paris…':'Scan Europe…';
+  const btn=kind==='all'?$('#radarRefreshAllV169'):kind==='events'?$('#radarRefreshEventsV168'):$('#radarRefreshOppsV168');if(!btn||btn.disabled)return;
+  const old=btn.textContent;btn.disabled=true;btn.textContent=kind==='all'?'Actualisation complète…':kind==='events'?'Recherche Paris + 93…':'Scan Open Calls…';
   try{
-    const out=await api(kind==='events'?'/api/v168/events/refresh':'/api/v168/opportunities/refresh',{method:'POST',timeout:90000,body:JSON.stringify({force:true})});
-    if(kind==='events'){state.eventsV167=Array.isArray(out.items)?out.items:[];renderEventsV167();setRadarModeV167('events')}
+    const path=kind==='all'?'/api/v168/radar/refresh-all':kind==='events'?'/api/v168/events/refresh':'/api/v168/opportunities/refresh';
+    const out=await api(path,{method:'POST',timeout:95000,body:JSON.stringify({force:true})});
+    if(kind==='all'){
+      state.eventsV167=Array.isArray(out?.events?.items)?out.events.items:[];state.dataLoaded.opportunities=false;await ensureDataFamily('opportunities',true);renderRadar();renderEventsV167();
+    }else if(kind==='events'){state.eventsV167=Array.isArray(out.items)?out.items:[];renderEventsV167();setRadarModeV167('events')}
     else{state.dataLoaded.opportunities=false;await ensureDataFamily('opportunities',true);renderRadar()}
     toast((out.found||0)+' résultat'+((out.found||0)>1?'s':'')+' actualisé'+((out.found||0)>1?'s':''));
     refreshRadarStatusV168();
