@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='168.20260927.5';
+const VERSION='168.20260927.6';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -3263,7 +3263,7 @@ function deleteCarouselSlideManual(){
 
 function renderCarousel(){
   const slides=state.carousel.slides,s=slides[state.carousel.active]||{},d=slideDesign(s);$('#carouselCounter').textContent=slides.length+' slide'+(slides.length>1?'s':'');
-  $('#carouselSlides').innerHTML=slides.map((x,i)=>'<button class="carousel-slide-thumb '+(i===state.carousel.active?'active':'')+'" draggable="true" data-carousel-slide="'+i+'"><b>'+esc(x.kicker||'PLUG ART')+'</b><span>'+esc((x.title||'Sans titre').slice(0,50))+'</span></button>').join('')||'<div class="empty">Aucune slide.</div>';
+  $('#carouselSlides').innerHTML=slides.map((x,i)=>{const dx=slideDesign(x),bg=dx.backgroundColor||'#f4f3ef',img=x.image?'background-image:url(&quot;'+esc(String(x.image).replace(/"/g,'%22'))+'&quot;);':'';return '<button class="carousel-slide-thumb '+(i===state.carousel.active?'active':'')+'" draggable="true" data-carousel-slide="'+i+'" style="--thumb-bg:'+esc(bg)+'"><i class="slide-thumb-preview" style="'+img+'"><em>'+(i+1)+'</em><small>'+esc(x.kicker||'PLUG ART')+'</small><strong>'+esc((x.title||'Sans titre').slice(0,34))+'</strong></i><span>Slide '+(i+1)+'</span></button>'}).join('')||'<div class="empty">Aucune slide.</div>';
   $$('[data-carousel-slide]').forEach(b=>{
     b.onclick=()=>{state.carousel.active=Number(b.dataset.carouselSlide);renderCarousel()};
     b.ondragstart=e=>{e.dataTransfer.setData('text/plain',b.dataset.carouselSlide);e.dataTransfer.effectAllowed='move';b.classList.add('dragging')};
