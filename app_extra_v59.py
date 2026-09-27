@@ -3516,6 +3516,14 @@ def radar_refresh_all_v168(body:dict={}):
     return {'ok':True,'found':int(events.get('found') or 0)+int(opportunities.get('found') or 0),
       'events':events,'opportunities':opportunities}
 
+# Seed reliable current data immediately so Radar is populated before the background refresh starts.
+try:
+    _v168_seed_event_ids=_v167_upsert_events([x for x in _v168_curated_events() if str(x.get('starts_at') or '')[:10]>=date.today().isoformat()])
+    _v168_seed_opp_ids=_v168_upsert_opportunities(_v168_curated_opportunities())
+    print('PLUG_ART_V1683_SEED events='+str(len(_v168_seed_event_ids))+' opportunities='+str(len(_v168_seed_opp_ids)),flush=True)
+except Exception as _v168_seed_exc:
+    print('PLUG_ART_V1683_SEED_ERROR '+type(_v168_seed_exc).__name__+':'+str(_v168_seed_exc)[:180],flush=True)
+
 def _v168_live_radar_loop():
     time.sleep(max(20,int(os.getenv('PLUGART_V168_START_DELAY_SECONDS','90'))))
     while True:
