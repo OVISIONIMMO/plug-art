@@ -3945,7 +3945,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'168.2','ui':'plug-art-v168-rich-workspace',
+      'ok':True,'version':'168.2','ui':'plug-art-v168-2-creative-workspace',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4015,7 +4015,7 @@ def status_v90():
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
       'version':'168.2',
-      'ui':'plug-art-v168-rich-workspace',
+      'ui':'plug-art-v168-2-creative-workspace',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
