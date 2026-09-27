@@ -4818,13 +4818,17 @@ async function insertCreativeAssetV169_1(id){
     addCanvasLayer('image',{src,w:22,h:22,radius:0});toast('Élément ajouté');
   }catch{toast('Impossible d’insérer cet élément')}
 }
+function templateMiniV1692(key,label){
+  const dark=/night|chrome|kinetic|experimental/.test(key),photo=/photo|gallery|vernissage|exhibition|atelier/.test(key),split=/split|grid|architecture|architect|map/.test(key);
+  return '<div class="template-mini-v1692 '+(dark?'dark ':'')+(photo?'photo ':'')+(split?'split ':'')+'"><i></i><b></b><span></span><em></em></div><small>'+esc(label)+'</small>';
+}
 function installCreationV167(){
   const view=$('#view-creation'),panel=$('#carouselCreationPanel');if(!view||!panel||$('#creationLibraryV167'))return;
   view.classList.add('creation-v167-view');panel.classList.add('creation-v167');
   const lib=panel.querySelector('.studio-library');if(lib){
     const section=document.createElement('section');section.id='creationLibraryV167';section.className='creation-library-v167';
     section.innerHTML='<div class="v167-library-head"><small>DA PLUG ART</small><strong>Templates sociaux</strong></div>'+
-      '<div class="v167-template-grid">'+CREATION_TEMPLATES_V167.map(x=>'<button data-v167-template="'+x[0]+'"><i class="tpl-'+x[0]+'"></i><span>'+x[1]+'</span></button>').join('')+'</div>'+
+      '<div class="v167-template-grid">'+CREATION_TEMPLATES_V167.map(x=>'<button data-v167-template="'+x[0]+'" title="'+esc(x[1])+'">'+templateMiniV1692(x[0],x[1])+'</button>').join('')+'</div>'+
       '<div class="v167-library-head"><small>MOTIFS</small><strong>Habillage</strong></div><div class="v167-pattern-grid">'+CREATION_PATTERNS_V167.map(x=>'<button data-v167-pattern="'+x[0]+'"><i data-pattern="'+x[0]+'"></i><span>'+x[1]+'</span></button>').join('')+'</div>'+
       '<div class="v167-library-head"><small>ÉLÉMENTS PREMIUM</small><strong>Relief · verre · chrome</strong></div><div class="v169-element-grid">'+PREMIUM_ELEMENTS_V169.map((x,i)=>'<button data-v169-element="'+i+'" title="'+esc(x[1])+'"><img src="'+premiumElementDataV169(x[2])+'" alt=""><span>'+esc(x[1])+'</span></button>').join('')+'</div>'+ 
       '<div class="v169-asset-search"><div class="v167-library-head"><small>BIBLIOTHÈQUE VECTORIELLE</small><strong>Rechercher un élément</strong></div><div><input id="creativeAssetQueryV1691" placeholder="cadre, flèche, galerie, étoile…"><button id="creativeAssetSearchV1691">Rechercher</button></div><section id="creativeAssetResultsV1691"></section></div>'+
@@ -4869,7 +4873,7 @@ function installBureauV167(){
     '<aside class="pdf-projects-v167"><div class="pdf-project-actions-v167"><button id="pdfNewV167">＋ Nouveau PDF</button><button id="pdfFromDocV167">Depuis le document</button></div><div id="pdfProjectListV167"></div><div class="pdf-imported-title-v167">PDF importés</div><div id="pdfImportedListV167"></div></aside>'+
     '<section class="pdf-reader-v167"><div class="pdf-reader-toolbar-v167"><button id="pdfPrevV167">←</button><span id="pdfPageInfoV167">Page 0 / 0</span><button id="pdfNextV167">→</button><button id="pdfZoomOutV167">−</button><span id="pdfZoomInfoV167">100%</span><button id="pdfZoomInV167">＋</button><button id="pdfFitV167">Ajuster</button><button id="pdfFullscreenV167">⛶</button></div><div id="pdfPageStripV169" class="pdf-page-strip-v169"></div><div class="pdf-canvas-wrap-v167" id="pdfCanvasWrapV167"><canvas id="pdfCanvasV167"></canvas><iframe id="pdfFallbackV167" title="Lecteur PDF" hidden></iframe></div></section>'+
     '<aside class="pdf-inspector-v167"><div class="v167-library-head"><small>PROJET PDF</small><strong id="pdfInspectorTitleV167">Aucun projet</strong></div><label>Titre<input id="pdfTitleV167"></label><label>Type<select id="pdfTypeV167"><option value="dossier_projet">Dossier projet</option><option value="dossier_artistique">Dossier artistique</option><option value="candidature">Candidature</option><option value="presentation">Présentation</option><option value="pdf_import">PDF importé éditable</option></select></label>'+
-    '<div class="pdf-rich-v168"><div class="v167-library-head"><small>DESIGN DE PAGE</small><strong>Composition</strong></div><label>Modèle<select id="pdfTemplateV168"><option value="">Libre</option><option value="cover">Couverture image</option><option value="editorial">Éditorial</option><option value="split">Split 50/50</option><option value="gallery">Galerie</option><option value="statement">Statement</option><option value="fullphoto">Photo plein cadre</option><option value="moodboard">Moodboard</option><option value="timeline">Timeline</option><option value="manifesto">Manifesto</option><option value="projectmap">Carte projet</option><option value="datacards">Fiches / chiffres</option><option value="quotehero">Citation hero</option></select></label><label>Fond<input type="color" id="pdfBgV168" value="#ffffff"></label><div class="pdf-add-elements-v168"><button data-pdf-add-v168="title">Titre</button><button data-pdf-add-v168="text">Texte</button><button data-pdf-add-v168="image-upload">Photo</button><button data-pdf-add-v168="rect">Bloc</button><button data-pdf-add-v168="circle">Cercle</button><button data-pdf-add-v168="line">Ligne</button><button data-pdf-add-v168="band">Bandeau</button><button data-pdf-add-v168="quote">Citation</button><button data-pdf-add-v168="image">Image URL</button></div><input id="pdfImageUploadV168" type="file" accept="image/png,image/jpeg,image/webp" hidden><div id="pdfElementsV168"></div><div id="pdfElementInspectorV1691" class="pdf-element-inspector-v1691"></div></div>'+
+    '<div class="pdf-rich-v168"><div class="v167-library-head"><small>DESIGN DE PAGE</small><strong>Composition</strong></div><div id="pdfTemplateGalleryV1692" class="pdf-template-gallery-v1692"></div><label>Modèle<select id="pdfTemplateV168"><option value="">Libre</option><option value="cover">Couverture image</option><option value="editorial">Éditorial</option><option value="split">Split 50/50</option><option value="gallery">Galerie</option><option value="statement">Statement</option><option value="fullphoto">Photo plein cadre</option><option value="moodboard">Moodboard</option><option value="timeline">Timeline</option><option value="manifesto">Manifesto</option><option value="projectmap">Carte projet</option><option value="datacards">Fiches / chiffres</option><option value="quotehero">Citation hero</option><option value="portfolio">Portfolio</option><option value="presskit">Press kit</option><option value="exhibition">Expo / vernissage</option><option value="workshop">Atelier</option><option value="photoessay">Photo essay</option><option value="sponsors">Partenaires</option><option value="programme">Programme</option><option value="minimalgrid">Grid minimal</option></select></label><label>Fond<input type="color" id="pdfBgV168" value="#ffffff"></label><div class="pdf-add-elements-v168"><button data-pdf-add-v168="title">Titre</button><button data-pdf-add-v168="text">Texte</button><button data-pdf-add-v168="image-upload">Photo</button><button data-pdf-add-v168="rect">Bloc</button><button data-pdf-add-v168="circle">Cercle</button><button data-pdf-add-v168="line">Ligne</button><button data-pdf-add-v168="band">Bandeau</button><button data-pdf-add-v168="quote">Citation</button><button data-pdf-add-v168="image">Image URL</button></div><input id="pdfImageUploadV168" type="file" accept="image/png,image/jpeg,image/webp" hidden><div id="pdfElementsV168"></div><div id="pdfElementInspectorV1691" class="pdf-element-inspector-v1691"></div></div>'+
     '<label>Texte rapide<textarea id="pdfPageBodyV167" rows="7" placeholder="Texte principal de la page…"></textarea></label><div class="pdf-inspector-actions-v167"><button id="pdfAddPageV167">＋ Page</button><button id="pdfSaveV167">Enregistrer</button><button id="pdfExportV167">Générer PDF</button><button id="pdfCanvaV167">Canva ↗</button></div></aside>';
   view.appendChild(panel);
   $('#pdfNewV167').onclick=createPdfProjectV167;$('#pdfFromDocV167').onclick=createPdfFromBureauV167;
@@ -4881,6 +4885,7 @@ function installBureauV167(){
   $('#pdfFullscreenV167').onclick=()=>$('#pdfCanvasWrapV167')?.requestFullscreen?.();
   $('#pdfAddPageV167').onclick=addPdfPageV167;$('#pdfSaveV167').onclick=savePdfProjectV167;$('#pdfExportV167').onclick=exportPdfProjectV167;$('#pdfCanvaV167').onclick=openCanvaBridgeV167;
   $('#pdfTemplateV168').onchange=e=>applyPdfTemplateV168(e.target.value);
+  renderPdfTemplateGalleryV1692();
   $('#pdfBgV168').oninput=e=>{const page=pdfActivePageV168();if(page){page.content={...(page.content||{}),background:e.target.value};renderPdfElementsV168();schedulePdfAutoSaveV169()}};
   $$('[data-pdf-add-v168]').forEach(b=>b.onclick=()=>addPdfElementV168(b.dataset.pdfAddV168));
   $('#pdfImageUploadV168')?.addEventListener('change',importPdfImageV168);
@@ -4939,13 +4944,28 @@ async function renderPdfPageV167(fit=false){
 }
 
 
+function pdfPageThumbV1692(page,index){
+  const c=page?.content||{},els=Array.isArray(c.elements)?c.elements:[],bg=c.background||'#fff';
+  const marks=els.slice(0,8).map(e=>'<i class="'+esc(e.type||'rect')+'" style="left:'+Number(e.x||0)+'%;top:'+Number(e.y||0)+'%;width:'+Math.max(4,Number(e.w||12))+'%;height:'+Math.max(3,Number(e.h||8))+'%;background:'+(e.type==='text'?'#20222a':esc(e.fill||e.stroke||'#7657ff'))+'"></i>').join('');
+  return '<div class="pdf-thumb-page-v1692" style="background:'+esc(bg)+'">'+marks+'</div>';
+}
 function renderPdfPageStripV169(){
   const box=$('#pdfPageStripV169');if(!box)return;
   const pages=state.activePdfProjectV167?.pages||[];
   if(!pages.length){box.innerHTML='';return}
-  box.innerHTML=pages.map((p,i)=>'<button data-pdf-page-v169="'+(i+1)+'" class="'+(pdfPageV167===i+1?'active':'')+'"><em>'+(i+1)+'</em><span>'+esc(p.page_type||'Page')+'</span></button>').join('');
-  $$('[data-pdf-page-v169]',box).forEach(b=>b.onclick=()=>{pdfPageV167=Number(b.dataset.pdfPageV169);renderPdfElementsV168();renderPdfPageStripV169()});
+  box.innerHTML=pages.map((p,i)=>'<article class="pdf-page-card-v1692 '+(pdfPageV167===i+1?'active':'')+'"><button data-pdf-page-v169="'+(i+1)+'">'+pdfPageThumbV1692(p,i)+'<span><em>'+(i+1)+'</em>'+esc(p.page_type||'Page')+'</span></button><div><button data-pdf-page-copy-v1692="'+(i+1)+'" title="Dupliquer">⧉</button><button data-pdf-page-delete-v1692="'+(i+1)+'" title="Supprimer">×</button></div></article>').join('');
+  $('[data-pdf-page-v169]',box).forEach(b=>b.onclick=()=>{pdfPageV167=Number(b.dataset.pdfPageV169);renderPdfElementsV168();renderPdfPageStripV169()});
+  $('[data-pdf-page-copy-v1692]',box).forEach(b=>b.onclick=()=>duplicatePdfPageV1692(Number(b.dataset.pdfPageCopyV1692)));
+  $('[data-pdf-page-delete-v1692]',box).forEach(b=>b.onclick=()=>deletePdfPageV1692(Number(b.dataset.pdfPageDeleteV1692)));
   $('#pdfPageInfoV167').textContent='Page '+pdfPageV167+' / '+pages.length;
+}
+async function duplicatePdfPageV1692(pageNo){
+  const p=state.activePdfProjectV167,page=p?.pages?.[Math.max(0,pageNo-1)];if(!p||!page)return;
+  try{await api('/api/v167/pdf-projects/'+p.id+'/pages',{method:'POST',body:JSON.stringify({page_type:page.page_type||'content',content:JSON.parse(JSON.stringify(page.content||{}))})});const fresh=await api('/api/v167/pdf-projects/'+p.id,{noMemCache:true});state.activePdfProjectV167=fresh;pdfPageV167=fresh.pages.length;renderPdfElementsV168();renderPdfPageStripV169();toast('Page dupliquée')}catch{toast('Duplication impossible')}
+}
+async function deletePdfPageV1692(pageNo){
+  const p=state.activePdfProjectV167,page=p?.pages?.[Math.max(0,pageNo-1)];if(!p||!page)return;if((p.pages||[]).length<=1)return toast('Garde au moins une page');
+  try{await api('/api/v167/pdf-pages/'+page.id,{method:'DELETE'});const fresh=await api('/api/v167/pdf-projects/'+p.id,{noMemCache:true});state.activePdfProjectV167=fresh;pdfPageV167=Math.max(1,Math.min(pageNo,fresh.pages.length));renderPdfElementsV168();renderPdfPageStripV169();toast('Page supprimée')}catch{toast('Suppression impossible')}
 }
 let pdfAutoSaveTimerV169=null;
 function schedulePdfAutoSaveV169(){
@@ -4968,12 +4988,12 @@ function renderPdfLivePageV169(){
   live.style.backgroundSize='cover';live.style.backgroundPosition='center';
   live.innerHTML=els.map((e,i)=>{
     const st='left:'+Number(e.x||0)+'%;top:'+Number(e.y||0)+'%;width:'+Number(e.w||20)+'%;height:'+Number(e.h||10)+'%;opacity:'+(e.opacity??1)+';transform:rotate('+Number(e.rotation||0)+'deg);';
-    if(e.type==='image')return '<div class="pdf-live-el-v169 image" data-pdf-live-el="'+i+'" style="'+st+'"><img src="'+esc(e.src||'')+'" style="object-position:'+esc(e.position||'center')+'"></div>';
-    if(e.type==='text')return '<div class="pdf-live-el-v169 text" data-pdf-live-el="'+i+'" style="'+st+'color:'+esc(e.color||'#111318')+';font-size:clamp(8px,'+(Number(e.fontSize||18)/7)+'vw,42px);font-weight:'+(e.weight==='bold'?800:500)+';text-align:'+esc(e.align||'left')+';line-height:'+(e.lineHeight||1.2)+'">'+esc(e.text||'')+'</div>';
-    if(e.type==='line')return '<div class="pdf-live-el-v169 line" data-pdf-live-el="'+i+'" style="'+st+';background:'+esc(e.stroke||'#111318')+'"></div>';
-    return '<div class="pdf-live-el-v169 shape '+esc(e.type)+'" data-pdf-live-el="'+i+'" style="'+st+';background:'+esc(e.fill||'#7657ff')+';border-radius:'+(e.type==='circle'?'50%':Number(e.radius||0)+'px')+'"></div>';
+    if(e.type==='image')return '<div class="pdf-live-el-v169 image" data-pdf-live-el="'+i+'" style="'+st+'"><img src="'+esc(e.src||'')+'" style="object-position:'+esc(e.position||'center')+'"><i class="pdf-resize-handle-v1692"></i></div>';
+    if(e.type==='text')return '<div class="pdf-live-el-v169 text" data-pdf-live-el="'+i+'" style="'+st+'color:'+esc(e.color||'#111318')+';font-size:clamp(8px,'+(Number(e.fontSize||18)/7)+'vw,42px);font-weight:'+(e.weight==='bold'?800:500)+';text-align:'+esc(e.align||'left')+';line-height:'+(e.lineHeight||1.2)+'">'+esc(e.text||'')+'<i class="pdf-resize-handle-v1692"></i></div>';
+    if(e.type==='line')return '<div class="pdf-live-el-v169 line" data-pdf-live-el="'+i+'" style="'+st+';background:'+esc(e.stroke||'#111318')+'"><i class="pdf-resize-handle-v1692"></i></div>';
+    return '<div class="pdf-live-el-v169 shape '+esc(e.type)+'" data-pdf-live-el="'+i+'" style="'+st+';background:'+esc(e.fill||'#7657ff')+';border-radius:'+(e.type==='circle'?'50%':Number(e.radius||0)+'px')+'"><i class="pdf-resize-handle-v1692"></i></div>';
   }).join('');
-  $$('[data-pdf-live-el]',live).forEach(bindPdfLiveDragV169);
+  $('[data-pdf-live-el]',live).forEach(el=>{bindPdfLiveDragV169(el);bindPdfLiveResizeV1692(el)});
 }
 function bindPdfLiveDragV169(el){
   el.onpointerdown=e=>{
@@ -4984,6 +5004,10 @@ function bindPdfLiveDragV169(el){
     const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);renderPdfElementsV168();schedulePdfAutoSaveV169()};
     el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
   };
+}
+function bindPdfLiveResizeV1692(el){
+  const h=el.querySelector('.pdf-resize-handle-v1692');if(!h)return;
+  h.onpointerdown=e=>{e.stopPropagation();e.preventDefault();const idx=Number(el.dataset.pdfLiveEl),obj=pdfElementsV168()[idx],live=$('#pdfLivePageV169');if(!obj||!live)return;pdfSelectedElementV169_1=idx;renderPdfElementInspectorV169_1();const r=live.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ow=Number(obj.w||20),oh=Number(obj.h||10);h.setPointerCapture?.(e.pointerId);const move=ev=>{obj.w=Math.max(3,Math.min(100-Number(obj.x||0),ow+(ev.clientX-sx)/r.width*100));obj.h=Math.max(2,Math.min(100-Number(obj.y||0),oh+(ev.clientY-sy)/r.height*100));el.style.width=obj.w+'%';el.style.height=obj.h+'%'};const up=()=>{h.removeEventListener('pointermove',move);h.removeEventListener('pointerup',up);h.removeEventListener('pointercancel',up);renderPdfElementsV168();schedulePdfAutoSaveV169()};h.addEventListener('pointermove',move);h.addEventListener('pointerup',up);h.addEventListener('pointercancel',up)}
 }
 function pdfActivePageV168(){
   const p=state.activePdfProjectV167;if(!p?.pages?.length)return null;
@@ -5048,6 +5072,17 @@ function editPdfElementV168(index){
   else{const fill=prompt('Couleur hexadécimale :',e.fill||e.stroke||'#7657ff');if(fill){if(e.type==='line')e.stroke=fill;else e.fill=fill}}
   renderPdfElementsV168();schedulePdfAutoSaveV169();
 }
+const PDF_TEMPLATES_V1692=[
+ ['cover','Cover noir'],['editorial','Éditorial'],['split','Split'],['gallery','Galerie'],['statement','Statement'],['fullphoto','Plein cadre'],
+ ['moodboard','Moodboard'],['timeline','Timeline'],['manifesto','Manifesto'],['projectmap','Carte projet'],['datacards','Fiches'],['quotehero','Citation'],
+ ['portfolio','Portfolio'],['presskit','Press kit'],['exhibition','Expo / vernissage'],['workshop','Atelier'],['photoessay','Photo essay'],['sponsors','Partenaires'],
+ ['programme','Programme'],['minimalgrid','Grid minimal']
+];
+function renderPdfTemplateGalleryV1692(){
+  const box=$('#pdfTemplateGalleryV1692');if(!box)return;
+  box.innerHTML=PDF_TEMPLATES_V1692.map(x=>'<button data-pdf-template-v1692="'+x[0]+'" title="'+esc(x[1])+'"><i class="pdf-template-mini-v1692 '+x[0]+'"><b></b><span></span><em></em></i><small>'+esc(x[1])+'</small></button>').join('');
+  $('[data-pdf-template-v1692]',box).forEach(b=>b.onclick=()=>{$('#pdfTemplateV168').value=b.dataset.pdfTemplateV1692;applyPdfTemplateV168(b.dataset.pdfTemplateV1692)});
+}
 function applyPdfTemplateV168(name){
   const page=pdfActivePageV168();if(!page||!name)return;const c=page.content=page.content||{};const title=$('#pdfTitleV167')?.value||state.activePdfProjectV167?.title||'PLUG ART';
   const img=c.background_image||'';
@@ -5063,7 +5098,15 @@ function applyPdfTemplateV168(name){
     manifesto:[{type:'rect',x:0,y:0,w:100,h:18,fill:'#111318'},{type:'text',text:'MANIFESTO',x:7,y:5,w:86,h:8,fontSize:14,weight:'bold',color:'#ffffff'},{type:'text',text:title,x:7,y:28,w:86,h:22,fontSize:46,weight:'bold',color:'#111318'},{type:'text',text:'Une idée forte. Une position claire. Un texte court qui tient la page.',x:7,y:62,w:72,h:25,fontSize:18,color:'#3f424a'}],
     projectmap:[{type:'rect',x:5,y:7,w:90,h:58,fill:'#eef1f4'},{type:'circle',x:22,y:22,w:11,h:8,fill:'#7657ff'},{type:'circle',x:58,y:37,w:11,h:8,fill:'#45cbd7'},{type:'circle',x:72,y:18,w:11,h:8,fill:'#e96cae'},{type:'text',text:title,x:7,y:72,w:80,h:14,fontSize:30,weight:'bold',color:'#111318'}],
     datacards:[{type:'text',text:title,x:7,y:7,w:86,h:14,fontSize:30,weight:'bold',color:'#111318'},{type:'rect',x:7,y:28,w:40,h:27,fill:'#efeaff',radius:8},{type:'rect',x:53,y:28,w:40,h:27,fill:'#e8f8fa',radius:8},{type:'rect',x:7,y:61,w:40,h:27,fill:'#fff0f6',radius:8},{type:'rect',x:53,y:61,w:40,h:27,fill:'#f4f3ef',radius:8}],
-    quotehero:[{type:'text',text:'“',x:6,y:4,w:18,h:22,fontSize:78,weight:'bold',color:'#7657ff'},{type:'text',text:'Une phrase qui peut porter toute une page.',x:15,y:27,w:74,h:33,fontSize:31,weight:'bold',color:'#111318',align:'center'},{type:'line',x:30,y:72,w:40,h:2,stroke:'#111318',opacity:.25}]
+    quotehero:[{type:'text',text:'“',x:6,y:4,w:18,h:22,fontSize:78,weight:'bold',color:'#7657ff'},{type:'text',text:'Une phrase qui peut porter toute une page.',x:15,y:27,w:74,h:33,fontSize:31,weight:'bold',color:'#111318',align:'center'},{type:'line',x:30,y:72,w:40,h:2,stroke:'#111318',opacity:.25}],
+    portfolio:[{type:'text',text:title,x:6,y:5,w:88,h:10,fontSize:26,weight:'bold',color:'#111318'},{type:'rect',x:6,y:19,w:42,h:34,fill:'#edeaf7'},{type:'rect',x:52,y:19,w:42,h:34,fill:'#e9f6f7'},{type:'rect',x:6,y:57,w:28,h:36,fill:'#f8efe7'},{type:'rect',x:37,y:57,w:28,h:36,fill:'#f0edf8'},{type:'rect',x:68,y:57,w:26,h:36,fill:'#edf2f5'}],
+    presskit:[{type:'rect',x:0,y:0,w:100,h:20,fill:'#111318'},{type:'text',text:'PRESS KIT',x:7,y:5,w:30,h:7,fontSize:13,weight:'bold',color:'#ffffff'},{type:'text',text:title,x:7,y:28,w:70,h:18,fontSize:38,weight:'bold',color:'#111318'},{type:'rect',x:72,y:26,w:21,h:27,fill:'#efeaff',radius:8},{type:'text',text:'Bio · projet · contacts · visuels',x:7,y:60,w:55,h:20,fontSize:14,color:'#4f525b'}],
+    exhibition:[{type:'rect',x:0,y:0,w:100,h:100,fill:'#f5f1e8'},{type:'text',text:'VERNISSAGE',x:7,y:7,w:35,h:5,fontSize:10,weight:'bold',color:'#7657ff'},{type:'text',text:title,x:7,y:17,w:72,h:20,fontSize:40,weight:'bold',color:'#111318'},{type:'rect',x:7,y:45,w:86,h:35,fill:'#ded9ec'},{type:'text',text:'DATE · LIEU · ARTISTES',x:7,y:86,w:55,h:7,fontSize:10,weight:'bold',color:'#111318'}],
+    workshop:[{type:'text',text:'ATELIER',x:7,y:7,w:28,h:6,fontSize:11,weight:'bold',color:'#e96cae'},{type:'text',text:title,x:7,y:18,w:72,h:19,fontSize:38,weight:'bold',color:'#111318'},{type:'circle',x:72,y:7,w:20,h:15,fill:'#efeaff'},{type:'rect',x:7,y:46,w:54,h:40,fill:'#fff0f6',radius:10},{type:'rect',x:65,y:46,w:28,h:18,fill:'#e8f8fa',radius:10},{type:'rect',x:65,y:68,w:28,h:18,fill:'#f4f3ef',radius:10}],
+    photoessay:[{type:'rect',x:0,y:0,w:100,h:62,fill:'#111318'},{type:'text',text:title,x:7,y:68,w:86,h:15,fontSize:32,weight:'bold',color:'#111318'},{type:'text',text:'Photographies · récit · contexte',x:7,y:86,w:70,h:6,fontSize:10,color:'#666b74'}],
+    sponsors:[{type:'text',text:'PARTENAIRES',x:7,y:7,w:40,h:7,fontSize:12,weight:'bold',color:'#111318'},{type:'rect',x:7,y:22,w:25,h:18,fill:'#f0edf8',radius:8},{type:'rect',x:38,y:22,w:25,h:18,fill:'#e8f8fa',radius:8},{type:'rect',x:69,y:22,w:24,h:18,fill:'#fff0f6',radius:8},{type:'rect',x:7,y:47,w:40,h:34,fill:'#f4f3ef',radius:8},{type:'text',text:'Financement · soutien · production',x:53,y:50,w:38,h:25,fontSize:18,weight:'bold',color:'#111318'}],
+    programme:[{type:'text',text:'PROGRAMME',x:7,y:7,w:40,h:7,fontSize:12,weight:'bold',color:'#7657ff'},{type:'text',text:title,x:7,y:19,w:80,h:14,fontSize:32,weight:'bold',color:'#111318'},{type:'line',x:7,y:39,w:86,h:2,stroke:'#111318',opacity:.18},{type:'text',text:'18:00 · Ouverture\n19:00 · Talk\n20:00 · Performance\n21:00 · Rencontre',x:7,y:48,w:70,h:34,fontSize:16,color:'#3f424a',lineHeight:1.55}],
+    minimalgrid:[{type:'text',text:title,x:7,y:7,w:86,h:14,fontSize:30,weight:'bold',color:'#111318'},{type:'line',x:7,y:25,w:86,h:2,stroke:'#111318',opacity:.2},{type:'rect',x:7,y:34,w:27,h:52,fill:'#f3f0e8'},{type:'rect',x:37,y:34,w:27,h:52,fill:'#e9f6f7'},{type:'rect',x:67,y:34,w:26,h:52,fill:'#efeaff'}]
   };
   c.elements=(presets[name]||[]).map(x=>({...x}));if(img)c.background_image=img;renderPdfElementsV168();schedulePdfAutoSaveV169();toast('Modèle de page appliqué');
 }
