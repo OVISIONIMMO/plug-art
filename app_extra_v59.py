@@ -8,7 +8,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='168.0'
+app.version='168.1'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -17,7 +17,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='168.20260927.4'
+VERSION='168.20260927.5'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -680,8 +680,8 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'168.0',
-      'ui':'plug-art-v168-rich-workspace',
+      'version':'168.1',
+      'ui':'plug-art-v168-1-polish',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
@@ -728,10 +728,10 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='168.20260927.4'
+    expected='168.20260927.5'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'168.0',
+      'version':'168.1',
       'ui':'plug-art-v168-rich-workspace',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
@@ -3200,7 +3200,7 @@ def _v167_event_search_ai(body):
 @app.get('/api/v167/events')
 def events_list_v167(q:str='',city:str='',date_from:str='',date_to:str='',event_type:str='',free:bool=False,rsvp:bool=False,venue:str='',verified:bool=False,favorite:bool=False):
     try:
-        if _v168_should_refresh('events',float(os.getenv('PLUGART_EVENT_INTERVAL_HOURS','4'))):_v168_start_refresh('events')
+        if _v168_should_refresh('events',float(os.getenv('PLUGART_EVENT_INTERVAL_HOURS','6'))):_v168_start_refresh('events')
     except Exception:pass
     sql="select * from art_events where status='active'";params=[]
     if q:sql+=" and lower(title||' '||venue_name||' '||description||' '||city) like ?";params.append('%'+q.lower()+'%')
@@ -3329,17 +3329,42 @@ def _v168_should_refresh(key,hours):
     row=_v168_refresh_state(key)
     return time.time()-float(row.get('last_run_epoch') or 0)>=max(.25,float(hours))*3600
 
+
+def _v168_curated_events():
+    # Verified public sources used as a resilient floor when AI web search is rate-limited.
+    return [
+      {'event_type':'vernissage','title':'Jardins Amers — Anne Robin','venue_name':'Galerie du Génie de la Bastille','venue_type':'gallery','city':'Paris','address':'126 rue de Charonne, 75011 Paris','country':'France','starts_at':'2026-09-29T18:00','ends_at':'','artists':['Anne Robin'],'disciplines':['peinture'],'description':'Vernissage de l’exposition Jardins Amers.','image_url':'','source_url':'https://oam.io/expositions/jardins-amers','source_type':'official_listing','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'Sérendipités — Valérie Queruau Lamerie','venue_name':'galerie paul*13','venue_type':'gallery','city':'Paris','address':'Paris 17e','country':'France','starts_at':'2026-10-01T18:00','ends_at':'','artists':['Valérie Queruau Lamerie'],'disciplines':['sculpture'],'description':'Vernissage de l’exposition Sérendipités.','image_url':'','source_url':'https://www.leparisien.fr/etudiant/sortir/paris/eve-serendipites/','source_type':'press_listing','rsvp_url':'','price_text':'','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'Endemic — Patricia Erbelding','venue_name':'Galerie Marie-Claude Duchosal','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-02T18:00','ends_at':'2026-10-02T20:30','artists':['Patricia Erbelding'],'disciplines':['peinture'],'description':'Vernissage de l’exposition Endemic.','image_url':'','source_url':'https://www.paris.fr/evenements/patricia-erbelding-endemic-123826','source_type':'official_city','rsvp_url':'','price_text':'','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'TOHIONA — La Petite Soirée','venue_name':'Elysia Gallery','venue_type':'gallery','city':'Paris','address':'13 rue d’Ormesson, 75004 Paris','country':'France','starts_at':'2026-10-02T18:00','ends_at':'2026-10-02T21:00','artists':['Naohito Watanabe / TOHIONA'],'disciplines':['art contemporain','performance'],'description':'Vernissage privé, exposition et rencontre avec l’artiste.','image_url':'','source_url':'https://luma.com/rvb1fkq6','source_type':'event_platform','rsvp_url':'https://luma.com/rvb1fkq6','price_text':'Sur inscription','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'Salon du déstructuralisme figuratif','venue_name':'Serre de l’Orangerie — Parc André Citroën','venue_type':'salon','city':'Paris','address':'16 rue de la Montagne de la Fage, 75015 Paris','country':'France','starts_at':'2026-10-03T18:00','ends_at':'','artists':[],'disciplines':['peinture','photographie','sculpture','mixed media'],'description':'Vernissage du Salon de déstructuralisme figuratif.','image_url':'','source_url':'https://www.paris.fr/evenements/participation-au-salon-du-destructuralisme-figuratif-124764','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+    ]
+
+def _v168_curated_opportunities():
+    return [
+      {'title':'Open Call: Believing the Image — Paris, October 2026','organizer':'Zhen Yi Gallery','city':'Paris','country':'France','deadline':'2026-09-30','fee':'€230 si sélectionné','eligibility':'Artistes émergents et mid-career, photographie et mixed media photo. International.','summary':'Exposition physique à Paris autour de la photographie, de la réalité et de la croyance dans l’image.','source_url':'https://www.curatorspace.com/opportunities/detail/open-call-believing-the-image--paris-october---photography/11068?active=submit','source_name':'CuratorSpace','confidence':96},
+      {'title':'ODYSSEY — International Open Call for Artists | Paris','organizer':'Sol de Paris / Karine CHAI','city':'Paris','country':'France','deadline':'2026-09-30','fee':'200€ si sélectionné','eligibility':'Tous niveaux de carrière, international. Peinture, dessin, photographie, sculpture, mixed media, textile, digital, vidéo, installation.','summary':'Exposition collective physique à Paris autour du voyage, de la migration, de l’identité, de la mémoire et de la transformation.','source_url':'https://www.curatorspace.com/opportunities/detail/odyssey--international-open-call-for-artists--paris/11030','source_name':'CuratorSpace','confidence':98},
+      {'title':'Open Call: Shaping the View — Paris, October 2026','organizer':'Zhen Yi Gallery','city':'Paris','country':'France','deadline':'2026-10-04','fee':'€200 si sélectionné','eligibility':'Artistes internationaux, tous médias dont peinture, photographie, sculpture, installation, mixed media.','summary':'Exposition physique dans le Marais autour du cadrage, de la perception, de la visibilité et du point de vue.','source_url':'https://www.curatorspace.com/opportunities/detail/shaping-the-view/11139','source_name':'CuratorSpace','confidence':98},
+      {'title':'Appel à candidature exposition — La Gare Expérimentale','organizer':'La Gare Expérimentale','city':'Paris','country':'France','deadline':'2026-10-31','fee':'Gratuit / à vérifier','eligibility':'Artistes souhaitant proposer une exposition. Présence sur site demandée pendant l’exposition.','summary':'Candidature pour la programmation d’exposition de mars à juin, avec vernissage le mercredi soir.','source_url':'https://garexp.org/agenda/2026-06-29-appel-a-candidature-exposition','source_name':'La Gare Expérimentale','confidence':97},
+    ]
+
 def _v168_refresh_events():
     start=date.today();end=start+timedelta(days=16)
+    curated=[x for x in _v168_curated_events() if str(x.get('starts_at') or '')[:10]>=start.isoformat()]
+    ids=_v167_upsert_events(curated);ai_error=''
     body={
-      'cities':['Paris','Aubervilliers','Saint-Denis','Pantin','Montreuil','Boulogne-Billancourt','Ivry-sur-Seine','Vitry-sur-Seine'],
+      'cities':['Paris','Aubervilliers','Saint-Denis','Pantin','Montreuil','Boulogne-Billancourt','Ivry-sur-Seine','Vitry-sur-Seine','Neuilly-sur-Marne','Noisy-le-Sec'],
       'date_from':start.isoformat(),'date_to':end.isoformat(),
       'types':['vernissage','opening','artist_talk','finissage','preview','nocturne','rencontre_artiste','lancement_exposition'],
-      'q':"Paris et proche banlieue. Inclure galeries, collectifs, centres d'art, mairies, hôtels de ville, écoles, fondations, tiers-lieux, hôtels et pages Instagram indexables. Chercher notamment #vernissage #vernissageparis #parisart #galerieparis #expositionparis #openingparis."
+      'q':"Paris et Île-de-France. Inclure galeries, collectifs, centres d'art, mairies, hôtels de ville, écoles d'art, fondations, tiers-lieux, hôtels, salons, ateliers collectifs et pages Instagram publiquement indexables. Requêtes utiles: #vernissage #vernissageparis #vernissageidf #parisart #galerieparis #expositionparis #openingparis #artcontemporainparis. Vérifier aussi les agendas Ville de Paris, OAM, L'Officiel des spectacles, Slash Paris, sites de galeries et plateformes d'événements."
     }
-    events=_v167_event_search_ai(body);ids=_v167_upsert_events(events)
-    _v168_set_refresh_state('events',len(ids),'')
-    return {'ok':True,'found':len(ids),'items':events_list_v167(date_from=start.isoformat(),date_to=end.isoformat())}
+    try:
+        events=_v167_event_search_ai(body);ids+=_v167_upsert_events(events)
+    except Exception as exc:
+        ai_error=type(exc).__name__+': '+str(exc)
+        print('PLUG_ART_V1681_EVENTS_FALLBACK '+ai_error[:180],flush=True)
+    ids=list(dict.fromkeys(ids));_v168_set_refresh_state('events',len(ids),ai_error)
+    return {'ok':True,'found':len(ids),'fallback':bool(ai_error),'items':events_list_v167(date_from=start.isoformat(),date_to=end.isoformat())}
 
 def _v168_extract_opportunities(raw):
     parsed=_v167_extract_json(raw)
@@ -3405,11 +3430,16 @@ def _v168_upsert_opportunities(items):
     return saved
 
 def _v168_refresh_opportunities():
-    items=_v168_search_opportunities_ai();ids=_v168_upsert_opportunities(items)
-    _v168_set_refresh_state('opportunities_ai',len(ids),'')
+    ids=_v168_upsert_opportunities(_v168_curated_opportunities());ai_error=''
+    try:
+        items=_v168_search_opportunities_ai();ids+=_v168_upsert_opportunities(items)
+    except Exception as exc:
+        ai_error=type(exc).__name__+': '+str(exc)
+        print('PLUG_ART_V1681_OPPS_FALLBACK '+ai_error[:180],flush=True)
     try:core.run_full_radar()
     except Exception:pass
-    return {'ok':True,'found':len(ids),'items':core.rows("select * from opportunities where status in ('open','rolling') order by coalesce(radar_score,score,0) desc,deadline limit 80")}
+    ids=list(dict.fromkeys(ids));_v168_set_refresh_state('opportunities_ai',len(ids),ai_error)
+    return {'ok':True,'found':len(ids),'fallback':bool(ai_error),'items':core.rows("select * from opportunities where status in ('open','rolling') order by coalesce(radar_score,score,0) desc,deadline limit 100")}
 
 def _v168_run_refresh(kind):
     if kind in _v168_refresh_running:return
@@ -3443,11 +3473,11 @@ def opportunities_refresh_v168(body:dict={}):
     return {'ok':True,'started':_v168_start_refresh('opportunities')}
 
 def _v168_live_radar_loop():
-    time.sleep(max(10,int(os.getenv('PLUGART_V168_START_DELAY_SECONDS','30'))))
+    time.sleep(max(20,int(os.getenv('PLUGART_V168_START_DELAY_SECONDS','90'))))
     while True:
         try:
             if _v168_should_refresh('events',float(os.getenv('PLUGART_EVENT_INTERVAL_HOURS','4'))):_v168_run_refresh('events')
-            if _v168_should_refresh('opportunities_ai',float(os.getenv('PLUGART_OPPORTUNITY_AI_INTERVAL_HOURS','12'))):_v168_run_refresh('opportunities')
+            if _v168_should_refresh('opportunities_ai',float(os.getenv('PLUGART_OPPORTUNITY_AI_INTERVAL_HOURS','18'))):_v168_run_refresh('opportunities')
         except Exception as exc:print('PLUG_ART_V168_LOOP_ERROR '+str(exc)[:240],flush=True)
         time.sleep(900)
 
@@ -3628,6 +3658,11 @@ def _v168_color(value,default=(0,0,0)):
 def _v168_image_bytes(ref):
     ref=str(ref or '').strip()
     if not ref:return b''
+    if ref.startswith('data:image/') and ';base64,' in ref:
+        try:
+            raw=base64.b64decode(ref.split(',',1)[1],validate=True)
+            return raw if len(raw)<=8*1024*1024 else b''
+        except Exception:return b''
     m=re.match(r'^/api/v168/bureau/files/(\d+)/page/(\d+)\.png$',ref)
     if m:
         try:return _v168_raster_pdf_page(int(m.group(1)),int(m.group(2))).read_bytes()
@@ -3893,7 +3928,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'168.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'168.1','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -3907,7 +3942,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'168.0','ui':'plug-art-v168-rich-workspace',
+      'ok':True,'version':'168.1','ui':'plug-art-v168-rich-workspace',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -3976,7 +4011,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'168.0',
+      'version':'168.1',
       'ui':'plug-art-v168-rich-workspace',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
@@ -4004,7 +4039,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V168_READY plugy=non_obstructive creation=blank_canvas pdf=rich_editable radar=live_auto qa=interactive",flush=True)
+print("PLUG_ART_V168_1_READY plugy=smaller_non_obstructive creation=true_blank pdf=rich_media_editable radar=resilient_live_sources qa=interactive",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
