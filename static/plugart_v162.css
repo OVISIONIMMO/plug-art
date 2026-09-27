@@ -4361,3 +4361,72 @@ body[data-view="dashboard"] #dashboardPlugyMount #plugyModel{
 @media(max-width:820px){
   .plugy-follower{width:28vw!important;height:18vh!important;max-height:165px!important;opacity:.84!important}
 }
+
+
+/* ================= PLUG ART V169.3 · final usability pass ================= */
+.plugy-follower{
+  width:min(210px,14vw)!important;
+  height:min(228px,27vh)!important;
+  right:10px!important;
+  bottom:10px!important;
+  opacity:.86!important;
+  pointer-events:none!important;
+}
+.plugy-follower #plugyModel,.plugy-follower model-viewer{pointer-events:none!important}
+.plugy-follower-status{pointer-events:auto!important}
+body[data-view="dashboard"] #dashboardPlugyMount{
+  min-height:185px!important;
+  height:clamp(185px,22vh,245px)!important;
+  max-height:245px!important;
+}
+body[data-view="dashboard"] #dashboardPlugyMount #plugyModel{
+  width:min(100%,300px)!important;
+  max-width:300px!important;
+}
+@media(min-width:2200px){
+  .plugy-follower{width:min(225px,9vw)!important;height:min(245px,29vh)!important}
+  body[data-view="dashboard"] #dashboardPlugyMount{height:24vh!important;max-height:265px!important}
+  body[data-view="dashboard"] #dashboardPlugyMount #plugyModel{max-width:320px!important}
+}
+@media(max-width:820px){
+  .plugy-follower{width:29vw!important;height:19vh!important;max-height:175px!important}
+}
+
+/* make the 5-slide storyboard unmistakable */
+#view-creation .storyboard-head-v1691{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  min-height:28px!important
+}
+#view-creation .storyboard-head-v1691 span{
+  font-size:7px!important;font-weight:950!important;letter-spacing:.7px!important;color:#343741!important
+}
+#view-creation .storyboard-track-v1691{
+  grid-auto-flow:column!important;
+  grid-auto-columns:minmax(132px,1fr)!important;
+  grid-template-columns:none!important;
+}
+#view-creation .storyboard-track-v1691 article.active{
+  outline:2px solid #7657ff!important;
+  outline-offset:1px!important;
+}
+#view-creation .story-preview-v1691{width:100%!important}
+#view-creation .story-preview-v1691>i{display:block!important;width:100%!important}
+
+/* PDF editing should read as a live artboard, not a static viewer */
+.pdf-live-page-v169{
+  box-shadow:0 26px 70px rgba(18,20,29,.20)!important;
+  transition:background .12s ease!important
+}
+.pdf-live-el-v169{touch-action:none!important}
+.pdf-element-inspector-v1691 input,
+.pdf-element-inspector-v1691 textarea,
+.pdf-element-inspector-v1691 select{font-size:8px!important}
+.pdf-template-gallery-v1692{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  max-height:330px!important;overflow:auto!important
+}
+
+/* source provenance is visible in Vernissages cards */
+.event-tags-v167 span:last-child{
+  max-width:135px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
