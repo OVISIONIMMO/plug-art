@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='169.20260927.2';
+const VERSION='169.20260927.3';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -351,11 +351,11 @@ function computePlugyCameraV167(target,mode='hero'){
   const w=innerWidth||1200,h=innerHeight||900,r=target?.getBoundingClientRect?.()||{width:w*.5,height:h*.5};
   const short=Number(r.height||0)<350,compact=w<=820,tablet=w>820&&w<=1180,ultrawide=w>=2200,desktop=w>=1440;
   let distance=4.15,fov=37;
-  if(compact){distance=6.55;fov=44}
-  else if(tablet){distance=h<900?6.75:6.50;fov=43}
-  else if(ultrawide){distance=mode==='follower'?6.55:mode==='drawer'?5.95:5.65;fov=41}
-  else if(desktop){distance=mode==='follower'?6.30:mode==='drawer'?5.85:5.55;fov=41}
-  else{distance=mode==='follower'?6.05:5.55;fov=41}
+  if(compact){distance=7.25;fov=45}
+  else if(tablet){distance=h<900?7.55:7.25;fov=44}
+  else if(ultrawide){distance=mode==='follower'?7.45:mode==='drawer'?6.85:6.55;fov=43}
+  else if(desktop){distance=mode==='follower'?7.20:mode==='drawer'?6.70:6.45;fov=43}
+  else{distance=mode==='follower'?6.95:6.40;fov=43}
   if(short)distance+=.45;
   const aspect=(Number(r.width||1)/Math.max(1,Number(r.height||1)));
   if(aspect<.72)distance+=.25;
@@ -3266,13 +3266,18 @@ function deleteCarouselSlideManual(){
 function ensureStoryboardV169_1(){
   const stage=$('#carouselCreationPanel .studio-stage');if(!stage)return null;
   let box=$('#carouselStoryboardV1691');
-  if(!box){box=document.createElement('div');box.id='carouselStoryboardV1691';box.className='carousel-storyboard-v1691';const strip=stage.querySelector('.carousel-strip');if(strip)strip.insertAdjacentElement('afterend',box);else stage.appendChild(box)}
+  if(!box){box=document.createElement('div');box.id='carouselStoryboardV1691';box.className='carousel-storyboard-v1691';const frame=stage.querySelector('.studio-canvas-frame');if(frame)stage.insertBefore(box,frame);else stage.appendChild(box)}
   return box;
 }
 function renderStoryboardV169_1(){
   const box=ensureStoryboardV169_1();if(!box)return;const slides=state.carousel.slides||[];
   box.innerHTML='<div class="storyboard-head-v1691"><span>STORYBOARD · '+slides.length+' SLIDE'+(slides.length>1?'S':'')+'</span><button data-story-add-v1691>＋ Ajouter</button></div><div class="storyboard-track-v1691">'+slides.map((s,i)=>{const d=slideDesign(s),bg=s.image?'background-image:url(&quot;'+esc(s.image).replace(/"/g,'%22')+'&quot;)':'background:'+esc(d.backgroundColor||'#f4f3ef');return '<article class="'+(i===state.carousel.active?'active':'')+'" data-story-slide-v1691="'+i+'"><button class="story-preview-v1691" data-story-open-v1691="'+i+'"><i style="'+bg+'" data-pattern="'+esc(d.pattern||'')+'"></i><b>0'+(i+1)+'</b><span>'+esc((s.title||'Slide '+(i+1)).slice(0,34))+'</span></button><div><button title="Dupliquer" data-story-copy-v1691="'+i+'">⧉</button><button title="Supprimer" data-story-delete-v1691="'+i+'">×</button></div></article>'}).join('')+'</div>';
-  $$('[data-story-open-v1691]',box).forEach(b=>b.onclick=()=>{state.carousel.active=Number(b.dataset.storyOpenV1691);renderCarousel()});
+  $('[data-story-open-v1691]',box).forEach(b=>{
+    b.onclick=()=>{state.carousel.active=Number(b.dataset.storyOpenV1691);renderCarousel()};
+    b.draggable=true;b.ondragstart=e=>{e.dataTransfer.setData('text/plain',b.dataset.storyOpenV1691);e.dataTransfer.effectAllowed='move'};
+    b.ondragover=e=>{e.preventDefault();e.dataTransfer.dropEffect='move'};
+    b.ondrop=e=>{e.preventDefault();const from=Number(e.dataTransfer.getData('text/plain')),to=Number(b.dataset.storyOpenV1691);if(!Number.isFinite(from)||from===to)return;pushCreationHistory();const moved=state.carousel.slides.splice(from,1)[0];state.carousel.slides.splice(to,0,moved);state.carousel.active=to;renderCarousel();scheduleDraftAutosave()};
+  });
   $('[data-story-add-v1691]',box)?.addEventListener('click',addCarouselSlide);
   $$('[data-story-copy-v1691]',box).forEach(b=>b.onclick=()=>{state.carousel.active=Number(b.dataset.storyCopyV1691);duplicateCarouselSlide()});
   $$('[data-story-delete-v1691]',box).forEach(b=>b.onclick=()=>{state.carousel.active=Number(b.dataset.storyDeleteV1691);deleteCarouselSlideManual()});
@@ -3316,9 +3321,14 @@ function renderCarousel(){
   renderCanvasLayers();renderStudioImages();renderStoryboardV169_1();
 }
 
+let slideEditHistoryGuardV1692=false,slideEditThumbTimerV1692=0;
 function syncActiveSlideEdit(){
-  pushCreationHistory();
-  const s=state.carousel.slides[state.carousel.active];if(!s)return;s.kicker=$('#slideKicker').value;s.title=$('#slideTitle').value;s.body=$('#slideBody').value;s.cta=$('#slideCta').value;renderCarousel();
+  const s=state.carousel.slides[state.carousel.active];if(!s)return;
+  if(!slideEditHistoryGuardV1692){pushCreationHistory();slideEditHistoryGuardV1692=true;setTimeout(()=>slideEditHistoryGuardV1692=false,550)}
+  s.kicker=$('#slideKicker').value;s.title=$('#slideTitle').value;s.body=$('#slideBody').value;s.cta=$('#slideCta').value;s.blank=false;
+  $('#carouselKicker').textContent=s.kicker||'';$('#carouselTitle').textContent=s.title||'';$('#carouselBody').textContent=s.body||'';$('#carouselCta').textContent=s.cta||'';
+  clearTimeout(slideEditThumbTimerV1692);slideEditThumbTimerV1692=setTimeout(()=>{const idx=state.carousel.active,thumb=$('[data-carousel-slide="'+idx+'"]'),story=$('[data-story-open-v1691="'+idx+'"]');if(thumb){thumb.querySelector('b')&&(thumb.querySelector('b').textContent=s.kicker||'SLIDE '+(idx+1));thumb.querySelector('strong')&&(thumb.querySelector('strong').textContent=(s.title||'Sans titre').slice(0,38))}if(story){story.querySelector('span')&&(story.querySelector('span').textContent=(s.title||'Slide '+(idx+1)).slice(0,34))}},80);
+  scheduleDraftAutosave();
 }
 async function generateCarouselImage(index){
   const s=state.carousel.slides[index];if(!s)return toast('Génère d’abord les slides');
@@ -4474,7 +4484,8 @@ const CREATION_TEMPLATES_V167=[
   ['plug-art-magazine','Magazine art'],['plug-architecture','Architecture'],['plug-chromatic','Chromatique'],
   ['plug-photo-led','Photo + typo'],['plug-cultural-city','Culture / mairie'],['plug-experimental','Expérimental'],['plug-luxury-gallery','Galerie luxe'],
   ['plug-vernissage-paper','Vernissage papier'],['plug-open-call-kinetic','Open Call kinetic'],['plug-hub-architect','Hub architecture'],['plug-curator-note','Note curatoriale'],
-  ['plug-night-opening','Opening nocturne'],['plug-chrome-poster','Chrome poster'],['plug-photo-contact','Planche photo'],['plug-city-program','Programme culturel']
+  ['plug-night-opening','Opening nocturne'],['plug-chrome-poster','Chrome poster'],['plug-photo-contact','Planche photo'],['plug-city-program','Programme culturel'],
+  ['plug-vernissage-map','Vernissage + map'],['plug-open-call-archive','Open Call archive'],['plug-exhibition-ticket','Ticket expo'],['plug-atelier-workshop','Atelier / workshop'],['plug-gallery-grid','Galerie grid'],['plug-museum-label','Cartel musée']
 ];
 const CREATION_PATTERNS_V167=[
   ['grid-fine','Grille fine'],['grid-large','Grille large'],['dots','Points'],['dots-sparse','Points espacés'],
@@ -4502,7 +4513,14 @@ const PREMIUM_ELEMENTS_V169=[
   ['torn-paper','Torn paper','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 250"><filter id="tp"><feDropShadow dx="0" dy="12" stdDeviation="10" flood-opacity=".16"/></filter><path d="M20 18h320v198l-24 11-23-8-24 13-28-10-28 12-26-12-24 10-25-12-26 11-27-12-26 11-19-12Z" fill="#fff" filter="url(#tp)"/><path d="M42 59h224M42 88h168M42 160h250" stroke="#c8cbd2" stroke-width="8" stroke-linecap="round" opacity=".55"/></svg>'],
   ['neon-orbit','Neon orbit','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280"><defs><radialGradient id="no"><stop stop-color="#fff"/><stop offset=".25" stop-color="#83f5ff"/><stop offset=".58" stop-color="#865cff"/><stop offset="1" stop-color="#ff5fa9"/></radialGradient></defs><circle cx="140" cy="140" r="34" fill="url(#no)"/><ellipse cx="140" cy="140" rx="118" ry="48" fill="none" stroke="#7657ff" stroke-width="10" opacity=".72" transform="rotate(-22 140 140)"/><ellipse cx="140" cy="140" rx="118" ry="48" fill="none" stroke="#5ce8f1" stroke-width="6" opacity=".68" transform="rotate(38 140 140)"/></svg>'],
   ['photo-frame-3d','Photo frame','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 360"><defs><linearGradient id="pf" x1="0" x2="1"><stop stop-color="#111318"/><stop offset=".25" stop-color="#ececf0"/><stop offset=".5" stop-color="#777a84"/><stop offset=".78" stop-color="#fff"/><stop offset="1" stop-color="#14151b"/></linearGradient></defs><rect x="12" y="12" width="276" height="336" rx="18" fill="url(#pf)"/><rect x="32" y="32" width="236" height="296" rx="8" fill="#fff"/></svg>'],
-  ['index-badge','Index badge','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220"><circle cx="110" cy="110" r="96" fill="#111318"/><circle cx="110" cy="110" r="78" fill="none" stroke="#7657ff" stroke-width="4"/><text x="110" y="128" text-anchor="middle" fill="white" font-family="Arial" font-size="62" font-weight="700">01</text></svg>']
+  ['index-badge','Index badge','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220"><circle cx="110" cy="110" r="96" fill="#111318"/><circle cx="110" cy="110" r="78" fill="none" stroke="#7657ff" stroke-width="4"/><text x="110" y="128" text-anchor="middle" fill="white" font-family="Arial" font-size="62" font-weight="700">01</text></svg>'],
+  ['gel-capsule','Gel capsule','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 170"><defs><linearGradient id="gc" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#baf7ff"/><stop offset=".45" stop-color="#8065ff"/><stop offset="1" stop-color="#ff78b8"/></linearGradient><filter id="gs"><feGaussianBlur stdDeviation="8"/></filter></defs><rect x="10" y="10" width="340" height="150" rx="75" fill="url(#gc)"/><ellipse cx="120" cy="52" rx="82" ry="25" fill="#fff" opacity=".48" filter="url(#gs)"/><rect x="10" y="10" width="340" height="150" rx="75" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="4"/></svg>'],
+  ['liquid-sphere','Liquid sphere','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 260"><defs><radialGradient id="ls" cx=".35" cy=".28"><stop stop-color="#fff"/><stop offset=".22" stop-color="#baf7ff"/><stop offset=".56" stop-color="#8769ff"/><stop offset=".82" stop-color="#ff80bf"/><stop offset="1" stop-color="#6f5cff"/></radialGradient></defs><path d="M129 14c55 0 106 37 107 95 2 65-47 130-111 135-58 5-108-44-105-103C23 76 66 14 129 14Z" fill="url(#ls)"/><ellipse cx="91" cy="69" rx="42" ry="24" fill="#fff" opacity=".45"/></svg>'],
+  ['folded-card','Folded card','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 250"><defs><linearGradient id="fc"><stop stop-color="#fff"/><stop offset="1" stop-color="#e8e4f7"/></linearGradient></defs><path d="M20 20h280v185l-42 25H20Z" fill="url(#fc)" stroke="#d8d9e0" stroke-width="3"/><path d="M258 205h42l-42 25Z" fill="#c8bfef"/><path d="M48 68h168M48 99h220M48 130h140" stroke="#111318" stroke-opacity=".22" stroke-width="9" stroke-linecap="round"/></svg>'],
+  ['mesh-star','Mesh star','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 260"><defs><linearGradient id="ms" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6ef0ff"/><stop offset=".48" stop-color="#7657ff"/><stop offset="1" stop-color="#ff69b0"/></linearGradient></defs><path d="M130 8 153 82 229 31 178 107 252 130 178 153 229 229 153 178 130 252 107 178 31 229 82 153 8 130 82 107 31 31 107 82Z" fill="url(#ms)" opacity=".92"/></svg>'],
+  ['photo-window','Photo window','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 280"><defs><linearGradient id="pw" x1="0" x2="1"><stop stop-color="#15171d"/><stop offset=".2" stop-color="#f5f5f8"/><stop offset=".5" stop-color="#9397a4"/><stop offset=".78" stop-color="#fff"/><stop offset="1" stop-color="#171820"/></linearGradient></defs><rect x="12" y="12" width="316" height="256" rx="26" fill="url(#pw)"/><rect x="34" y="34" width="272" height="212" rx="15" fill="#f6f3ef"/><circle cx="284" cy="52" r="10" fill="#7657ff"/></svg>'],
+  ['gradient-tape','Gradient tape','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 110"><defs><linearGradient id="gt"><stop stop-color="#45dbe3"/><stop offset=".5" stop-color="#8a6cff"/><stop offset="1" stop-color="#ff7bb7"/></linearGradient></defs><path d="M20 19 329 5l-10 86L8 104Z" fill="url(#gt)" opacity=".88"/><path d="M46 36h236" stroke="#fff" stroke-opacity=".33" stroke-width="4"/></svg>'],
+  ['gallery-plinth','Gallery plinth','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 310"><defs><linearGradient id="pl" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#dfe1e9"/></linearGradient></defs><path d="M54 90 139 48l87 42-87 43Z" fill="#fff"/><path d="M54 90v143l85 43V133Z" fill="url(#pl)"/><path d="m139 133 87-43v143l-87 43Z" fill="#cfd2dc"/></svg>']
 ];
 function premiumElementDataV169(svg){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)}
 function addPremiumElementV169(index){
@@ -4718,7 +4736,13 @@ function v167ApplyDesign(slide,key='open-call-side-rail'){
     'plug-night-opening':{theme:'night',layout:'poster',accent:'pink',backgroundColor:'#0d0f14',pattern:'sparks',imageOpacity:92,fontFamily:'Space',titlePx:62,fontWeight:900},
     'plug-chrome-poster':{theme:'ultra',layout:'poster',accent:'violet',backgroundColor:'#eceff2',pattern:'rings',imageOpacity:84,fontFamily:'Space',titlePx:56,fontWeight:800},
     'plug-photo-contact':{theme:'editorial',layout:'split',accent:'black',backgroundColor:'#ffffff',pattern:'grid-fine',imageOpacity:100,fontFamily:'Mono',titlePx:42,bodyPx:12},
-    'plug-city-program':{theme:'ultra',layout:'editorial',accent:'blue',backgroundColor:'#edf3fb',pattern:'editorial-rail',imageOpacity:72,fontFamily:'Inter',titlePx:48,fontWeight:800}
+    'plug-city-program':{theme:'ultra',layout:'editorial',accent:'blue',backgroundColor:'#edf3fb',pattern:'editorial-rail',imageOpacity:72,fontFamily:'Inter',titlePx:48,fontWeight:800},
+    'plug-vernissage-map':{theme:'editorial',layout:'split',accent:'violet',backgroundColor:'#f4f1ea',pattern:'grid-fine',imageOpacity:82,fontFamily:'Mono',titlePx:46,fontWeight:800},
+    'plug-open-call-archive':{theme:'editorial',layout:'editorial',accent:'black',backgroundColor:'#f8f6f1',pattern:'paper-grain',imageOpacity:74,fontFamily:'Serif',titlePx:50,fontWeight:700},
+    'plug-exhibition-ticket':{theme:'ultra',layout:'poster',accent:'orange',backgroundColor:'#fff7ec',pattern:'side-ribbon',imageOpacity:86,fontFamily:'Space',titlePx:54,fontWeight:900},
+    'plug-atelier-workshop':{theme:'soft',layout:'split',accent:'pink',backgroundColor:'#fff1f5',pattern:'paint-light',imageOpacity:72,fontFamily:'Inter',titlePx:50,fontWeight:800},
+    'plug-gallery-grid':{theme:'ultra',layout:'split',accent:'black',backgroundColor:'#ffffff',pattern:'grid-large',imageOpacity:100,fontFamily:'Mono',titlePx:42,fontWeight:800},
+    'plug-museum-label':{theme:'editorial',layout:'minimal',accent:'black',backgroundColor:'#f3f0e8',pattern:'corner-accent',imageOpacity:62,fontFamily:'Serif',titlePx:44,fontWeight:700}
   };
   slide.design={...slideDesign(slide),...(maps[key]||maps['open-call-side-rail'])};
   if(key.startsWith('plug-'))applyTemplateDecorV169_1(slide,key);
