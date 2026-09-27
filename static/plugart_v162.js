@@ -350,11 +350,11 @@ function computePlugyCameraV167(target,mode='hero'){
   const w=innerWidth||1200,h=innerHeight||900,r=target?.getBoundingClientRect?.()||{width:w*.5,height:h*.5};
   const short=Number(r.height||0)<350,compact=w<=820,tablet=w>820&&w<=1180,ultrawide=w>=2200,desktop=w>=1440;
   let distance=4.15,fov=37;
-  if(compact){distance=6.05;fov=43}
-  else if(tablet){distance=h<900?6.25:6.05;fov=42}
-  else if(ultrawide){distance=mode==='follower'?5.65:mode==='drawer'?5.20:4.95;fov=39}
-  else if(desktop){distance=mode==='follower'?5.45:mode==='drawer'?5.10:4.85;fov=39}
-  else{distance=mode==='follower'?5.30:4.85;fov=39}
+  if(compact){distance=6.80;fov=44}
+  else if(tablet){distance=h<900?7.05:6.80;fov=43}
+  else if(ultrawide){distance=mode==='follower'?6.45:mode==='drawer'?6.00:5.80;fov=41}
+  else if(desktop){distance=mode==='follower'?6.25:mode==='drawer'?5.90:5.65;fov=41}
+  else{distance=mode==='follower'?6.05:5.60;fov=41}
   if(short)distance+=.45;
   const aspect=(Number(r.width||1)/Math.max(1,Number(r.height||1)));
   if(aspect<.72)distance+=.25;
@@ -4173,7 +4173,7 @@ function installCreationV166(){
 async function syncRuntimeVersionBadge(){
   const pill=$('#buildPill'),side=$('#sidebarVersion');
   const apply=v=>{const label='V'+String(v||'162.3').replace(/^V/i,'');if(pill)pill.textContent=label;if(side)side.textContent=label;document.documentElement.dataset.runtimeVersion=label};
-  apply('168.1');
+  apply('168.2');
   try{
     const r=await fetch('/api/v163/status',{cache:'no-store',headers:{'Accept':'application/json'}});
     if(r.ok){const data=await r.json();if(data?.version)apply(data.version)}
