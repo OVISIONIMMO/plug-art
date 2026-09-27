@@ -3218,11 +3218,17 @@ def events_list_v167(q:str='',city:str='',date_from:str='',date_to:str='',event_
 
 @app.post('/api/v167/events/search')
 def events_search_v167(body:dict):
-    events=_v167_event_search_ai(body or {})
+    body=body or {};fallback=False;error=''
+    try:
+        events=_v167_event_search_ai(body)
+    except Exception as exc:
+        fallback=True;error=type(exc).__name__+': '+str(exc)
+        events=[x for x in _v168_curated_events() if str(x.get('starts_at') or '')[:10]>=str(body.get('date_from') or date.today().isoformat())[:10]]
     ids=_v167_upsert_events(events)
-    if not ids:return {'ok':True,'found':0,'items':events_list_v167()}
+    if not ids:
+        return {'ok':True,'found':0,'fallback':fallback,'error':error,'items':events_list_v167(date_from=str(body.get('date_from') or '')[:10],date_to=str(body.get('date_to') or '')[:10])}
     marks=','.join('?' for _ in ids)
-    return {'ok':True,'found':len(ids),'items':[_v167_event_out(x) for x in core.rows('select * from art_events where id in ('+marks+') order by starts_at',tuple(ids))]}
+    return {'ok':True,'found':len(ids),'fallback':fallback,'error':error,'items':[_v167_event_out(x) for x in core.rows('select * from art_events where id in ('+marks+') order by starts_at',tuple(ids))]}
 
 @app.get('/api/v167/events/{event_id}')
 def event_get_v167(event_id:int):
@@ -3359,7 +3365,7 @@ def _v168_refresh_events():
       'cities':['Paris','Aubervilliers','Saint-Denis','Pantin','Montreuil','Boulogne-Billancourt','Ivry-sur-Seine','Vitry-sur-Seine','Neuilly-sur-Marne','Noisy-le-Sec'],
       'date_from':start.isoformat(),'date_to':end.isoformat(),
       'types':['vernissage','opening','artist_talk','finissage','preview','nocturne','rencontre_artiste','lancement_exposition'],
-      'q':"Paris et Île-de-France. Inclure galeries, collectifs, centres d'art, mairies, hôtels de ville, écoles d'art, fondations, tiers-lieux, hôtels, salons, ateliers collectifs et pages Instagram publiquement indexables. Requêtes utiles: #vernissage #vernissageparis #vernissageidf #parisart #galerieparis #expositionparis #openingparis #artcontemporainparis. Vérifier aussi les agendas Ville de Paris, OAM, L'Officiel des spectacles, Slash Paris, sites de galeries et plateformes d'événements."
+      'q':"Paris et Île-de-France. Inclure galeries, collectifs, centres d'art, mairies, hôtels de ville, écoles d'art, fondations, tiers-lieux, hôtels, salons, ateliers collectifs et pages Instagram et TikTok publiquement indexables. Requêtes utiles: #vernissage #vernissageparis #vernissageidf #parisart #galerieparis #expositionparis #openingparis #artcontemporainparis. Vérifier aussi les agendas Ville de Paris, OAM, L'Officiel des spectacles, Slash Paris, sites de galeries et plateformes d'événements."
     }
     try:
         events=_v167_event_search_ai(body);ids+=_v167_upsert_events(events)
