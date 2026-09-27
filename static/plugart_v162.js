@@ -4763,10 +4763,11 @@ async function eventToCreationV167(id){
   try{
     const p=await api('/api/v167/events/'+id+'/to-content',{method:'POST',body:'{}'}),img=v167EventImage(id);
     state.carousel.slides=[
-      v167ApplyDesign({kicker:'VERNISSAGE',title:p.title||'Vernissage',body:[p.venue,p.city].filter(Boolean).join(' · '),cta:v167FmtDate(p.date),image:img,image_prompt:''},'open-call-photo-first'),
-      v167ApplyDesign({kicker:'RENDEZ-VOUS',title:v167FmtDate(p.date),body:[p.address,p.venue].filter(Boolean).join('\n'),cta:'À noter →',image:img,image_prompt:''},'open-call-side-rail'),
-      v167ApplyDesign({kicker:'LE LIEU',title:p.venue||p.city||'Lieu',body:p.city||'',cta:'Découvrir →',image:img,image_prompt:''},'open-call-gallery-premium'),
-      v167ApplyDesign({kicker:'PLUG ART',title:'À voir cette semaine.',body:'Retrouve les prochains rendez-vous artistiques dans le Radar Vernissages.',cta:'PLUG 🔌',image:'',image_prompt:''},'open-call-clean-white')
+      v167ApplyDesign({kicker:'VERNISSAGE',title:p.title||'Vernissage',body:[p.venue,p.city].filter(Boolean).join(' · '),cta:v167FmtDate(p.date),image:img,image_prompt:''},'plug-vernissage-paper'),
+      v167ApplyDesign({kicker:'RENDEZ-VOUS',title:v167FmtDate(p.date),body:[p.address,p.venue].filter(Boolean).join('\n'),cta:'À noter →',image:img,image_prompt:''},'plug-city-program'),
+      v167ApplyDesign({kicker:'LE LIEU',title:p.venue||p.city||'Lieu',body:[p.address,p.city].filter(Boolean).join(' · '),cta:'Découvrir →',image:img,image_prompt:''},'plug-photo-contact'),
+      v167ApplyDesign({kicker:'INFOS',title:p.price||'Entrée / RSVP',body:[p.price,p.disciplines?.join(' · ')].filter(Boolean).join('\n'),cta:p.sourceUrl?'Source officielle →':'À vérifier →',image:'',image_prompt:''},'plug-museum-label'),
+      v167ApplyDesign({kicker:'PLUG ART',title:'À voir cette semaine.',body:'Retrouve les prochains rendez-vous artistiques dans le Radar Vernissages.',cta:'Enregistre · partage · PLUG 🔌',image:'',image_prompt:''},'plug-night-opening')
     ];state.carousel.active=0;state.carousel.format='4:5';route('creation');setTimeout(()=>{setCreationMode('carousel');renderCarousel();fitStudioCanvas()},60);
   }catch(e){toast('Création depuis ce vernissage impossible')}
 }
@@ -4901,6 +4902,10 @@ function installBureauV167(){
   $$('[data-pdf-add-v168]').forEach(b=>b.onclick=()=>addPdfElementV168(b.dataset.pdfAddV168));
   $('#pdfImageUploadV168')?.addEventListener('change',importPdfImageV168);
   $('#pdfPageBodyV167')?.addEventListener('input',()=>{const page=pdfActivePageV168();if(page){page.content={...(page.content||{}),body:$('#pdfPageBodyV167').value};schedulePdfAutoSaveV169()}});
+  let pdfMetaTimerV1693=0;
+  const savePdfMetaV1693=()=>{clearTimeout(pdfMetaTimerV1693);pdfMetaTimerV1693=setTimeout(async()=>{const p=state.activePdfProjectV167;if(!p)return;const title=$('#pdfTitleV167')?.value||p.title,type=$('#pdfTypeV167')?.value||p.project_type;try{await api('/api/v167/pdf-projects/'+p.id,{method:'PATCH',body:JSON.stringify({title,project_type:type})});p.title=title;p.project_type=type;$('#pdfInspectorTitleV167').textContent=title}catch{}},280)};
+  $('#pdfTitleV167')?.addEventListener('input',savePdfMetaV1693);
+  $('#pdfTypeV167')?.addEventListener('change',savePdfMetaV1693);
 }
 async function loadPdfProjectsV167(force=false){
   if(!$('#bureauPdfV167'))return;
@@ -5074,7 +5079,7 @@ function addPdfElementV168(type){
 function importPdfImageV168(ev){
   const file=ev.target?.files?.[0];if(!file)return;
   if(file.size>8*1024*1024){toast('Image limitée à 8 Mo');ev.target.value='';return}
-  const reader=new FileReader();reader.onload=()=>{const src=String(reader.result||'');if(!src.startsWith('data:image/'))return;pdfElementsV168().push({type:'image',src,x:8,y:12,w:84,h:45,crop:'cover',position:'center',radius:2});renderPdfElementsV168();toast('Image ajoutée au PDF')};reader.readAsDataURL(file);ev.target.value='';
+  const reader=new FileReader();reader.onload=()=>{const src=String(reader.result||'');if(!src.startsWith('data:image/'))return;const els=pdfElementsV168();els.push({type:'image',src,x:8,y:12,w:84,h:45,crop:'cover',position:'center',radius:2});pdfSelectedElementV169_1=els.length-1;renderPdfElementsV168();schedulePdfAutoSaveV169();toast('Image ajoutée au PDF')};reader.readAsDataURL(file);ev.target.value='';
 }
 function editPdfElementV168(index){
   const e=pdfElementsV168()[index];if(!e)return;
