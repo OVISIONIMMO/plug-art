@@ -3529,6 +3529,13 @@ def _v168_upsert_opportunities(items):
             except Exception:pass
     return saved
 
+def _v169_run_legacy_radar_later():
+    time.sleep(8)
+    try:
+        core.run_full_radar()
+    except Exception as exc:
+        print('PLUG_ART_V169_LEGACY_RADAR_ERROR '+type(exc).__name__+': '+str(exc)[:180],flush=True)
+
 def _v168_refresh_opportunities():
     ids=_v168_upsert_opportunities(_v168_curated_opportunities());ai_error=''
     try:
@@ -3536,8 +3543,8 @@ def _v168_refresh_opportunities():
     except Exception as exc:
         ai_error=type(exc).__name__+': '+str(exc)
         print('PLUG_ART_V1681_OPPS_FALLBACK '+ai_error[:180],flush=True)
-    try:core.run_full_radar()
-    except Exception:pass
+    if os.getenv('PLUGART_LEGACY_RADAR_BACKGROUND','1')=='1':
+        threading.Thread(target=_v169_run_legacy_radar_later,name='plugart-v169-legacy-radar',daemon=True).start()
     ids=list(dict.fromkeys(ids));_v168_set_refresh_state('opportunities_ai',len(ids),ai_error)
     return {'ok':True,'found':len(ids),'fallback':bool(ai_error),'items':core.rows("select * from opportunities where status in ('open','rolling') order by coalesce(radar_score,score,0) desc,deadline limit 100")}
 
