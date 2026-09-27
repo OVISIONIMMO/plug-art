@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='169.20260927.3';
+const VERSION='169.20260927.4';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -184,7 +184,7 @@ function route(id,push=true){
   }else renderRouteView(id);
   if(radarEventsAlias)setTimeout(()=>{setRadarModeV167('events');refreshRadarStatusV168()},40);
 }
-$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route);if(b.dataset.radarDirect==='events')setTimeout(()=>{setRadarModeV167('events');refreshRadarStatusV168()},40)}));
+$$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route);if(b.dataset.radarDirect==='events')setTimeout(()=>{setRadarModeV167('events');refreshRadarStatusV168()},40)}));
 window.PLUGART_ROUTE=route;
 
 const ROUTE_PREFETCH_TIMERS_V164=new WeakMap();
@@ -355,9 +355,9 @@ function computePlugyCameraV167(target,mode='hero'){
   let distance=4.15,fov=37;
   if(compact){distance=7.25;fov=45}
   else if(tablet){distance=h<900?7.55:7.25;fov=44}
-  else if(ultrawide){distance=mode==='follower'?7.45:mode==='drawer'?6.85:6.55;fov=43}
-  else if(desktop){distance=mode==='follower'?7.20:mode==='drawer'?6.70:6.45;fov=43}
-  else{distance=mode==='follower'?6.95:6.40;fov=43}
+  else if(ultrawide){distance=mode==='follower'?8.20:mode==='drawer'?7.45:7.10;fov=44}
+  else if(desktop){distance=mode==='follower'?7.90:mode==='drawer'?7.30:7.00;fov=44}
+  else{distance=mode==='follower'?7.55:6.95;fov=44}
   if(short)distance+=.45;
   const aspect=(Number(r.width||1)/Math.max(1,Number(r.height||1)));
   if(aspect<.72)distance+=.25;
@@ -3274,7 +3274,7 @@ function ensureStoryboardV169_1(){
 function renderStoryboardV169_1(){
   const box=ensureStoryboardV169_1();if(!box)return;const slides=state.carousel.slides||[];
   box.innerHTML='<div class="storyboard-head-v1691"><span>STORYBOARD · '+slides.length+' SLIDE'+(slides.length>1?'S':'')+'</span><button data-story-add-v1691>＋ Ajouter</button></div><div class="storyboard-track-v1691">'+slides.map((s,i)=>{const d=slideDesign(s),bg=s.image?'background-image:url(&quot;'+esc(s.image).replace(/"/g,'%22')+'&quot;)':'background:'+esc(d.backgroundColor||'#f4f3ef');return '<article class="'+(i===state.carousel.active?'active':'')+'" data-story-slide-v1691="'+i+'"><button class="story-preview-v1691" data-story-open-v1691="'+i+'"><i style="'+bg+'" data-pattern="'+esc(d.pattern||'')+'"></i><b>0'+(i+1)+'</b><span>'+esc((s.title||'Slide '+(i+1)).slice(0,34))+'</span></button><div><button title="Dupliquer" data-story-copy-v1691="'+i+'">⧉</button><button title="Supprimer" data-story-delete-v1691="'+i+'">×</button></div></article>'}).join('')+'</div>';
-  $('[data-story-open-v1691]',box).forEach(b=>{
+  $$('[data-story-open-v1691]',box).forEach(b=>{
     b.onclick=()=>{state.carousel.active=Number(b.dataset.storyOpenV1691);renderCarousel()};
     b.draggable=true;b.ondragstart=e=>{e.dataTransfer.setData('text/plain',b.dataset.storyOpenV1691);e.dataTransfer.effectAllowed='move'};
     b.ondragover=e=>{e.preventDefault();e.dataTransfer.dropEffect='move'};
@@ -4562,7 +4562,7 @@ function installRadarV167(){
   const panel=document.createElement('section');panel.id='radarEventsV167';panel.className='radar-events-v167';
   panel.innerHTML=
     '<div class="event-search-v167">'+
-      '<div class="event-search-main-v167"><label>Recherche<input id="eventQueryV167" placeholder="Galerie, exposition, artiste…"></label><label>Ville<input id="eventCityV167" value="Paris" placeholder="Paris, Aubervilliers…"></label>'+
+      '<div class="event-search-main-v167"><label>Recherche<input id="eventQueryV167" placeholder="Galerie, exposition, artiste…"></label><label>Ville<input id="eventCityV167" value="" placeholder="Toutes · Paris, Saint-Denis, Montreuil…"></label>'+
       '<label>Type<select id="eventTypeV167"><option value="">Tous</option><option value="vernissage">Vernissage</option><option value="opening">Opening</option><option value="artist_talk">Artist talk</option><option value="finissage">Finissage</option><option value="nocturne">Nocturne</option></select></label>'+
       '<button class="primary-btn" id="eventSearchWebV167">◉ Recherche immédiate</button></div>'+
       '<div class="event-ranges-v167"><button data-event-range="today">Aujourd’hui</button><button class="active" data-event-range="week">Cette semaine</button><button data-event-range="weekend">Ce week-end</button><button data-event-range="month">Ce mois</button><label><input type="checkbox" id="eventFreeV167"> Gratuit</label><label><input type="checkbox" id="eventRsvpV167"> RSVP</label><label><input type="checkbox" id="eventVerifiedV167"> Vérifié</label><span></span><button class="event-week-content-v167" id="eventWeekContentV167">✦ Créer les vernissages de la semaine</button></div>'+
@@ -4582,10 +4582,10 @@ function installRadarV167(){
     const k=b.dataset.eventDiscovery,q=$('#eventQueryV167'),city=$('#eventCityV167');
     const presets={
       paris:{city:'Paris',q:'galerie vernissage opening exposition'},
-      '93':{city:'Montreuil, Pantin, Saint-Denis, Aubervilliers, Bobigny, Romainville',q:'vernissage ateliers collectif art contemporain'},
+      '93':{city:'Saint-Denis, Saint-Ouen-sur-Seine, Montreuil, Pantin, Aubervilliers, Bagnolet, Bobigny, Romainville',q:'vernissage gratuit collectif galerie atelier centre d’art exposition'},
       collectifs:{city:'Paris, Montreuil, Pantin, Saint-Denis',q:'collectif artistes vernissage exposition'},
       municipal:{city:'Paris, Montreuil, Saint-Denis, Aubervilliers',q:'mairie hôtel de ville centre culturel vernissage'},
-      social:{city:'Paris, Montreuil, Pantin, Saint-Denis',q:'#vernissage #vernissageparis #parisart #galerieparis #expositionparis Instagram'},
+      social:{city:'Paris, Saint-Denis, Saint-Ouen-sur-Seine, Montreuil, Pantin, Aubervilliers, Bagnolet',q:'site:instagram.com #vernissage #vernissageparis #vernissage93 #parisart #galerieparis #expositionparis Instagram TikTok'},
       free:{city:'Paris, Montreuil, Pantin, Saint-Denis',q:'vernissage gratuit entrée libre'}
     }[k]||{city:'Paris',q:''};
     if(city)city.value=presets.city;if(q)q.value=presets.q;if(k==='free'&&$('#eventFreeV167'))$('#eventFreeV167').checked=true;
@@ -4956,9 +4956,9 @@ function renderPdfPageStripV169(){
   const pages=state.activePdfProjectV167?.pages||[];
   if(!pages.length){box.innerHTML='';return}
   box.innerHTML=pages.map((p,i)=>'<article class="pdf-page-card-v1692 '+(pdfPageV167===i+1?'active':'')+'"><button data-pdf-page-v169="'+(i+1)+'">'+pdfPageThumbV1692(p,i)+'<span><em>'+(i+1)+'</em>'+esc(p.page_type||'Page')+'</span></button><div><button data-pdf-page-copy-v1692="'+(i+1)+'" title="Dupliquer">⧉</button><button data-pdf-page-delete-v1692="'+(i+1)+'" title="Supprimer">×</button></div></article>').join('');
-  $('[data-pdf-page-v169]',box).forEach(b=>b.onclick=()=>{pdfPageV167=Number(b.dataset.pdfPageV169);renderPdfElementsV168();renderPdfPageStripV169()});
-  $('[data-pdf-page-copy-v1692]',box).forEach(b=>b.onclick=()=>duplicatePdfPageV1692(Number(b.dataset.pdfPageCopyV1692)));
-  $('[data-pdf-page-delete-v1692]',box).forEach(b=>b.onclick=()=>deletePdfPageV1692(Number(b.dataset.pdfPageDeleteV1692)));
+  $$('[data-pdf-page-v169]',box).forEach(b=>b.onclick=()=>{pdfPageV167=Number(b.dataset.pdfPageV169);renderPdfElementsV168();renderPdfPageStripV169()});
+  $$('[data-pdf-page-copy-v1692]',box).forEach(b=>b.onclick=()=>duplicatePdfPageV1692(Number(b.dataset.pdfPageCopyV1692)));
+  $$('[data-pdf-page-delete-v1692]',box).forEach(b=>b.onclick=()=>deletePdfPageV1692(Number(b.dataset.pdfPageDeleteV1692)));
   $('#pdfPageInfoV167').textContent='Page '+pdfPageV167+' / '+pages.length;
 }
 async function duplicatePdfPageV1692(pageNo){
@@ -4995,7 +4995,7 @@ function renderPdfLivePageV169(){
     if(e.type==='line')return '<div class="pdf-live-el-v169 line" data-pdf-live-el="'+i+'" style="'+st+';background:'+esc(e.stroke||'#111318')+'"><i class="pdf-resize-handle-v1692"></i></div>';
     return '<div class="pdf-live-el-v169 shape '+esc(e.type)+'" data-pdf-live-el="'+i+'" style="'+st+';background:'+esc(e.fill||'#7657ff')+';border-radius:'+(e.type==='circle'?'50%':Number(e.radius||0)+'px')+'"><i class="pdf-resize-handle-v1692"></i></div>';
   }).join('');
-  $('[data-pdf-live-el]',live).forEach(el=>{bindPdfLiveDragV169(el);bindPdfLiveResizeV1692(el)});
+  $$('[data-pdf-live-el]',live).forEach(el=>{bindPdfLiveDragV169(el);bindPdfLiveResizeV1692(el)});
 }
 function bindPdfLiveDragV169(el){
   el.onpointerdown=e=>{
@@ -5083,7 +5083,7 @@ const PDF_TEMPLATES_V1692=[
 function renderPdfTemplateGalleryV1692(){
   const box=$('#pdfTemplateGalleryV1692');if(!box)return;
   box.innerHTML=PDF_TEMPLATES_V1692.map(x=>'<button data-pdf-template-v1692="'+x[0]+'" title="'+esc(x[1])+'"><i class="pdf-template-mini-v1692 '+x[0]+'"><b></b><span></span><em></em></i><small>'+esc(x[1])+'</small></button>').join('');
-  $('[data-pdf-template-v1692]',box).forEach(b=>b.onclick=()=>{$('#pdfTemplateV168').value=b.dataset.pdfTemplateV1692;applyPdfTemplateV168(b.dataset.pdfTemplateV1692)});
+  $$('[data-pdf-template-v1692]',box).forEach(b=>b.onclick=()=>{$('#pdfTemplateV168').value=b.dataset.pdfTemplateV1692;applyPdfTemplateV168(b.dataset.pdfTemplateV1692)});
 }
 function applyPdfTemplateV168(name){
   const page=pdfActivePageV168();if(!page||!name)return;const c=page.content=page.content||{};const title=$('#pdfTitleV167')?.value||state.activePdfProjectV167?.title||'PLUG ART';
