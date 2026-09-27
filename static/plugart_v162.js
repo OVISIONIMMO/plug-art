@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='169.20260927.4';
+const VERSION='169.20260927.5';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -3998,7 +3998,15 @@ const CREATION_V161_STYLES=[
 {id:'electric',name:'Electric',sub:'PLUG ART énergie',layout:'poster',theme:'night',accent:'violet',pattern:'ribbon',bg:'#171522',preview:'radial-gradient(circle at 46% 48%,#fff 0 5%,#76dde5 6% 12%,#8d5dec 13% 24%,#e75ea8 25% 33%,#171522 54%)'},
 {id:'photo-frame',name:'Photo Frame',sub:'Photographie',layout:'split',theme:'editorial',accent:'black',pattern:'frame',bg:'#f5f4f0',preview:'linear-gradient(90deg,#242424 0 46%,#f5f4f0 46% 100%)'},
 {id:'hospitality',name:'Hospitality',sub:'Hôtel / restaurant',layout:'editorial',theme:'soft',accent:'pink',pattern:'blocks',bg:'#f6eee7',preview:'linear-gradient(145deg,#b5967b,#eadbd0 48%,#f8f2ed 49%)'},
-{id:'future-white',name:'Future White',sub:'3D minimal',layout:'minimal',theme:'ultra',accent:'cyan',pattern:'orbit',bg:'#fbfbfc',preview:'radial-gradient(circle at 55% 48%,#fdfdfd 0 18%,#dcecf1 19% 31%,#f9dcea 32% 40%,#fff 58%)'}];
+{id:'future-white',name:'Future White',sub:'3D minimal',layout:'minimal',theme:'ultra',accent:'cyan',pattern:'orbit',bg:'#fbfbfc',preview:'radial-gradient(circle at 55% 48%,#fdfdfd 0 18%,#dcecf1 19% 31%,#f9dcea 32% 40%,#fff 58%)'},
+{id:'opening-night',name:'Opening Night',sub:'Vernissage / soirée',layout:'poster',theme:'night',accent:'cyan',pattern:'signal',bg:'#111318',preview:'radial-gradient(circle at 72% 30%,#4bdbe6 0 9%,#815cff 10% 20%,transparent 35%),linear-gradient(#111318,#241d33)'},
+{id:'curatorial-red',name:'Curatorial Red',sub:'Affiche curatoriale',layout:'poster',theme:'editorial',accent:'red',pattern:'frame',bg:'#f2eee7',preview:'linear-gradient(90deg,#e83d4f 0 14%,#f4f0e9 14% 72%,#16171b 72%)'},
+{id:'atelier-paper',name:'Atelier Paper',sub:'Atelier / médiation',layout:'editorial',theme:'soft',accent:'pink',pattern:'paper-grain',bg:'#f3ede4',preview:'linear-gradient(150deg,#f0e6d8 0 60%,#e974aa 61% 76%,#7558e5 77%)'},
+{id:'territory-93',name:'Territoire 93',sub:'Collectif / banlieue',layout:'editorial',theme:'ultra',accent:'violet',pattern:'blocks',bg:'#edf0ff',preview:'linear-gradient(135deg,#15161c 0 26%,#7657ff 27% 49%,#50d4dc 50% 61%,#eef1ff 62%)'},
+{id:'gallery-glass',name:'Gallery Glass',sub:'Volume / galerie',layout:'split',theme:'ultra',accent:'cyan',pattern:'gradient-mesh',bg:'#f4f8f8',preview:'radial-gradient(circle at 72% 34%,rgba(74,213,222,.7) 0 14%,rgba(119,87,255,.25) 15% 28%,transparent 29%),linear-gradient(135deg,#fff,#e8f5f5)'},
+{id:'photo-journal',name:'Photo Journal',sub:'Reportage culturel',layout:'split',theme:'editorial',accent:'black',pattern:'grid',bg:'#f3f1eb',preview:'linear-gradient(90deg,#28282b 0 56%,#f3f1eb 56%)'},
+{id:'type-monument',name:'Type Monument',sub:'Typographie forte',layout:'minimal',theme:'ultra',accent:'black',pattern:'frame',bg:'#ffffff',preview:'linear-gradient(180deg,#111318 0 16%,#fff 16% 78%,#7657ff 79%)'},
+{id:'soft-volume',name:'Soft Volume',sub:'Relief contemporain',layout:'split',theme:'soft',accent:'violet',pattern:'gradient-mesh',bg:'#f6f0ff',preview:'radial-gradient(ellipse at 28% 42%,#f3c7df 0 18%,transparent 19%),radial-gradient(ellipse at 66% 58%,#a68bea 0 22%,transparent 23%),#f5effb'}];
 function installCreationV161(){
  const view=$('#view-creation');if(!view||$('#creationV161Rail'))return;setCreationMode('carousel');
  const panel=$('#carouselCreationPanel');if(!panel)return;
@@ -4685,8 +4693,8 @@ function renderEventsV167(){
     return '<article class="event-card-v167">'+
       '<div class="event-visual-v167"><img src="'+image+'" alt="" loading="lazy" decoding="async" onerror="this.style.display=\'none\'"><span>'+esc((e.event_type||'vernissage').replaceAll('_',' '))+'</span></div>'+
       '<div class="event-copy-v167"><div class="event-date-v167"><strong>'+esc(v167FmtDate(e.starts_at))+'</strong><small>'+esc(e.city||e.country||'')+'</small></div><h3>'+esc(e.title)+'</h3><p>'+esc(e.venue_name||'Lieu à confirmer')+'</p>'+
-      '<div class="event-tags-v167">'+(e.is_free?'<span>Gratuit</span>':'')+(e.verified?'<span>✓ Vérifié</span>':'')+(e.rsvp_url?'<span>RSVP</span>':'')+(/instagram/i.test(e.source_type||'')?'<span class="social">Instagram indexé</span>':/tiktok/i.test(e.source_type||'')?'<span class="social">TikTok indexé</span>':/municipal|official_city/i.test(e.source_type||'')?'<span>Source publique</span>':'')+'</div>'+
-      '<div class="event-actions-v167"><button data-event-create="'+e.id+'">✦ Créer</button><button data-event-agenda="'+e.id+'">Agenda</button><button data-event-map="'+e.id+'">Map</button><button data-event-fav="'+e.id+'">'+(e.favorite?'★':'☆')+'</button><a href="'+esc(e.source_url)+'" target="_blank" rel="noopener">Source ↗</a></div></div></article>';
+      '<div class="event-tags-v167">'+(e.is_free?'<span>Gratuit</span>':'')+(e.verified?'<span>✓ Vérifié</span>':'')+(e.rsvp_url?'<span>RSVP</span>':'')+(e.social_handle?'<span class="social">'+esc(e.social_platform||'Social')+' · '+esc(e.social_handle)+'</span>':/instagram/i.test(e.source_type||'')?'<span class="social">Instagram indexé</span>':/tiktok/i.test(e.source_type||'')?'<span class="social">TikTok indexé</span>':/municipal|official_city/i.test(e.source_type||'')?'<span>Source publique</span>':'')+'</div>'+
+      '<div class="event-actions-v167"><button data-event-create="'+e.id+'">✦ Créer</button><button data-event-agenda="'+e.id+'">Agenda</button><button data-event-map="'+e.id+'">Map</button><button data-event-fav="'+e.id+'">'+(e.favorite?'★':'☆')+'</button>'+(e.social_url?'<a class="social-link" href="'+esc(e.social_url)+'" target="_blank" rel="noopener">'+esc(e.social_platform||'Social')+' ↗</a>':'')+'<a href="'+esc(e.source_url)+'" target="_blank" rel="noopener">Source ↗</a></div></div></article>';
   }).join('');
   $$('[data-event-create]',box).forEach(b=>b.onclick=()=>eventToCreationV167(Number(b.dataset.eventCreate)));
   $$('[data-event-agenda]',box).forEach(b=>b.onclick=async()=>{try{await api('/api/v167/events/'+b.dataset.eventAgenda+'/to-agenda',{method:'POST',body:'{}'});toast('Vernissage préparé pour l’agenda')}catch{toast('Ajout agenda impossible')}});
@@ -4808,22 +4816,19 @@ async function searchCreativeAssetsV169_1(){
   const input=$('#creativeAssetQueryV1691'),box=$('#creativeAssetResultsV1691'),q=clean(input?.value);
   if(!box||!q)return;box.innerHTML='<div class="asset-search-loading-v1691">Recherche…</div>';
   try{
-    const rr=await fetch('https://api.iconify.design/search?query='+encodeURIComponent(q)+'&limit=36');
-    if(!rr.ok)throw new Error('HTTP '+rr.status);
-    const data=await rr.json(),icons=(data.icons||[]).slice(0,30);
-    box.innerHTML=icons.map(id=>{const [prefix,name]=id.split(':');const src='https://api.iconify.design/'+encodeURIComponent(prefix)+'/'+encodeURIComponent(name)+'.svg?width=72&height=72';return '<button data-iconify-v1691="'+esc(id)+'"><img src="'+src+'" alt=""><span>'+esc(name.replaceAll('-',' '))+'</span></button>'}).join('')||'<div class="empty">Aucun élément trouvé.</div>';
+    const data=await api('/api/v169/assets/search?q='+encodeURIComponent(q)+'&limit=48',{noMemCache:true,timeout:12000});
+    const icons=(data.icons||[]).slice(0,48);
+    box.innerHTML=icons.map(id=>{
+      const name=id.split(':').pop(),src='/api/v169/assets/svg?icon='+encodeURIComponent(id)+'&color=%23111318';
+      return '<article class="asset-card-v1694"><button data-iconify-v1691="'+esc(id)+'"><img src="'+src+'" alt="" loading="lazy" decoding="async"><span>'+esc(name.replaceAll('-',' '))+'</span></button><a href="/api/v169/assets/svg?download=true&icon='+encodeURIComponent(id)+'&color=%23111318" target="_blank" rel="noopener">SVG</a></article>';
+    }).join('')||'<div class="empty">Aucun élément trouvé.</div>';
     $$('[data-iconify-v1691]',box).forEach(b=>b.onclick=()=>insertCreativeAssetV169_1(b.dataset.iconifyV1691));
   }catch(e){box.innerHTML='<div class="empty">Bibliothèque externe momentanément indisponible.</div>'}
 }
 async function insertCreativeAssetV169_1(id){
-  const [prefix,name]=String(id||'').split(':');if(!prefix||!name)return;
-  try{
-    const rr=await fetch('https://api.iconify.design/'+encodeURIComponent(prefix)+'/'+encodeURIComponent(name)+'.svg?width=256&height=256');
-    if(!rr.ok)throw new Error('asset');
-    let svg=await rr.text();svg=svg.replace(/currentColor/g,'#111318');
-    const src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
-    addCanvasLayer('image',{src,w:22,h:22,radius:0});toast('Élément ajouté');
-  }catch{toast('Impossible d’insérer cet élément')}
+  if(!String(id||'').includes(':'))return;
+  const src='/api/v169/assets/svg?icon='+encodeURIComponent(id)+'&color=%237657ff';
+  addCanvasLayer('image',{src,w:22,h:22,radius:0});toast('Élément vectoriel ajouté');
 }
 function templateMiniV1692(key,label){
   const dark=/night|chrome|kinetic|experimental/.test(key),photo=/photo|gallery|vernissage|exhibition|atelier/.test(key),split=/split|grid|architecture|architect|map/.test(key);
@@ -4839,7 +4844,7 @@ function installCreationV167(){
       '<div class="v167-library-head"><small>MOTIFS</small><strong>Habillage</strong></div><div class="v167-pattern-grid">'+CREATION_PATTERNS_V167.map(x=>'<button data-v167-pattern="'+x[0]+'"><i data-pattern="'+x[0]+'"></i><span>'+x[1]+'</span></button>').join('')+'</div>'+
       '<div class="v167-library-head"><small>ÉLÉMENTS PREMIUM</small><strong>Relief · verre · chrome</strong></div><div class="v169-element-grid">'+PREMIUM_ELEMENTS_V169.map((x,i)=>'<button data-v169-element="'+i+'" title="'+esc(x[1])+'"><img src="'+premiumElementDataV169(x[2])+'" alt=""><span>'+esc(x[1])+'</span></button>').join('')+'</div>'+ 
       '<div class="v169-asset-search"><div class="v167-library-head"><small>BIBLIOTHÈQUE VECTORIELLE</small><strong>Rechercher un élément</strong></div><div><input id="creativeAssetQueryV1691" placeholder="cadre, flèche, galerie, étoile…"><button id="creativeAssetSearchV1691">Rechercher</button></div><section id="creativeAssetResultsV1691"></section></div>'+
-      '<div class="v167-library-head"><small>SIGNES TYPO</small><strong>Minimal</strong></div><div class="v167-symbol-grid">'+CREATION_SYMBOLS_V167.map(x=>'<button data-v167-symbol="'+esc(x)+'">'+esc(x)+'</button>').join('')+'</div>'+
+
       '<button class="v167-open-call-pack" id="openCallPackV167">✦ Générer Open Call · 5 slides</button>';
     lib.prepend(section);
   }
@@ -5043,7 +5048,8 @@ function renderPdfElementInspectorV169_1(){
     (e.type==='text'?'<label>Contenu<textarea data-pdf-prop-v1691="text" rows="3">'+esc(e.text||'')+'</textarea></label><div class="pdf-prop-grid-v1691"><label>Taille<input data-pdf-prop-v1691="fontSize" type="number" min="6" max="96" value="'+Number(e.fontSize||18)+'"></label><label>Graisse<select data-pdf-prop-v1691="weight"><option value="normal">Regular</option><option value="bold" '+(e.weight==='bold'?'selected':'')+'>Bold</option></select></label></div>':'')+
     '<div class="pdf-prop-grid-v1691"><label>X<input data-pdf-prop-v1691="x" type="number" step=".5" min="0" max="100" value="'+Number(e.x||0)+'"></label><label>Y<input data-pdf-prop-v1691="y" type="number" step=".5" min="0" max="100" value="'+Number(e.y||0)+'"></label><label>Largeur<input data-pdf-prop-v1691="w" type="number" step=".5" min="2" max="100" value="'+Number(e.w||20)+'"></label><label>Hauteur<input data-pdf-prop-v1691="h" type="number" step=".5" min="2" max="100" value="'+Number(e.h||10)+'"></label></div>'+
     '<div class="pdf-prop-grid-v1691"><label>Rotation<input data-pdf-prop-v1691="rotation" type="number" step="1" min="-180" max="180" value="'+Number(e.rotation||0)+'"></label><label>Opacité<input data-pdf-prop-v1691="opacity" type="range" min="0" max="1" step=".05" value="'+Number(e.opacity??1)+'"></label></div>'+
-    (e.type!=='image'?'<label>Couleur<input data-pdf-prop-v1691="color" type="color" value="'+esc(color)+'"></label>':'<label>Recadrage<select data-pdf-prop-v1691="position"><option>center</option><option>top</option><option>bottom</option><option>left</option><option>right</option></select></label>');
+    (e.type!=='image'?'<label>Couleur<input data-pdf-prop-v1691="color" type="color" value="'+esc(color)+'"></label>':'<label>Recadrage<select data-pdf-prop-v1691="position"><option>center</option><option>top</option><option>bottom</option><option>left</option><option>right</option></select></label>')+
+    '<div class="pdf-element-actions-v1694"><button id="pdfDuplicateElementV1694">Dupliquer</button><button id="pdfDeleteElementV1694">Supprimer</button></div>';
   $$('[data-pdf-prop-v1691]',box).forEach(input=>{
     if(input.dataset.pdfPropV1691==='weight')input.value=e.weight||'normal';
     if(input.dataset.pdfPropV1691==='position')input.value=e.position||'center';
@@ -5053,6 +5059,8 @@ function renderPdfElementInspectorV169_1(){
       renderPdfLivePageV169();schedulePdfAutoSaveV169();
     });
   });
+  $('#pdfDuplicateElementV1694').onclick=()=>{const copy=JSON.parse(JSON.stringify(e));copy.x=Math.min(96,Number(copy.x||0)+3);copy.y=Math.min(96,Number(copy.y||0)+3);els.splice(pdfSelectedElementV169_1+1,0,copy);pdfSelectedElementV169_1++;renderPdfElementsV168();schedulePdfAutoSaveV169()};
+  $('#pdfDeleteElementV1694').onclick=()=>{els.splice(pdfSelectedElementV169_1,1);pdfSelectedElementV169_1=-1;renderPdfElementsV168();schedulePdfAutoSaveV169()};
 }
 function addPdfElementV168(type){
   const els=pdfElementsV168();if(!state.activePdfProjectV167)return toast('Ouvre un projet PDF');
