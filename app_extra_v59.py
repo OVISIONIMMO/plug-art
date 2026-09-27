@@ -8,7 +8,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='169.2'
+app.version='169.3'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -17,7 +17,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='169.20260927.3'
+VERSION='169.20260927.4'
 
 @app.middleware("http")
 async def _v169_performance_headers(request: Request, call_next):
@@ -692,7 +692,7 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'169.2',
+      'version':'169.3',
       'ui':'plug-art-v169-2-studio',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
@@ -740,10 +740,10 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='168.20260927.6'
+    expected='169.20260927.4'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'169.2',
+      'version':'169.3',
       'ui':'plug-art-v169-performance-radar',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
@@ -3354,6 +3354,10 @@ def _v168_curated_events():
       {'event_type':'vernissage','title':'Endemic — Patricia Erbelding','venue_name':'Galerie Marie-Claude Duchosal','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-02T18:00','ends_at':'2026-10-02T20:30','artists':['Patricia Erbelding'],'disciplines':['peinture','art contemporain'],'description':'Vernissage de l’exposition Endemic, le vendredi 2 octobre de 18h à 20h30.','image_url':'','source_url':'https://www.paris.fr/evenements/patricia-erbelding-endemic-123826','source_type':'official_city','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
       {'event_type':'vernissage','title':'Jardin d’Amour — exposition collective','venue_name':'Galerie Jeanne Bucher Jaeger','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-03T15:00','ends_at':'2026-10-03T19:00','artists':[],'disciplines':['art contemporain','peinture','photographie','arts visuels'],'description':'Vernissage le samedi 3 octobre de 15h à 19h.','image_url':'','source_url':'https://jeannebucherjaeger.com/fr/exhibition/garden-of-love/','source_type':'official_gallery','rsvp_url':'','price_text':'Entrée galerie','is_free':True,'verified':True},
       {'event_type':'vernissage','title':'What Remains — Parcours Bijoux','venue_name':'Le 6B','venue_type':'art_center','city':'Saint-Denis','address':'6-10 Quai de Seine, 93200 Saint-Denis','country':'France','starts_at':'2026-10-06T18:30','ends_at':'2026-10-06T21:00','artists':['Sarrah Haouas','Lucie Leroy','Karine Pollastro','Marion Fillancq'],'disciplines':['bijou contemporain','installation'],'description':'Vernissage au 6B à Saint-Denis, dans le cadre de Parcours Bijoux.','image_url':'','source_url':'https://www.parcoursbijoux.com/fr/location/what-remains/','source_type':'official_event','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'Saveurs Savantes — Voyage autour du goût','venue_name':'Espace Mariton','venue_type':'municipal_gallery','city':'Saint-Ouen-sur-Seine','address':'10 rue Mariton, 93400 Saint-Ouen-sur-Seine','country':'France','starts_at':'2026-10-01T18:30','ends_at':'','artists':['Little K'],'disciplines':['arts visuels','street art','patrimoine'],'description':'Vernissage gratuit de l’exposition Saveurs Savantes, avec créations de Little K et œuvres municipales.','image_url':'','source_url':'https://www.saint-ouen.fr/events/fete-de-la-science-2026/','source_type':'official_municipal','rsvp_url':'','price_text':'Entrée gratuite','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'Pastels de la joie — Rhalidou Diaby','venue_name':'Studio Albatros','venue_type':'artist_space','city':'Montreuil','address':'52 rue du Sergent Bobillot, 93100 Montreuil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'2026-10-09T21:00','artists':['Rhalidou Diaby'],'disciplines':['pastel','portrait','arts visuels'],'description':'Vernissage convivial de la première exposition Pastels de la joie.','image_url':'','source_url':'https://www.autisme-en-idf.org/offres/gestion/events_814_57488_non-2158/vernissage-de-l-exposition-pastels-de-la-joie-le-9-10-2026.html','source_type':'organization','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'Toujours et partout','venue_name':'Mains d’Œuvres','venue_type':'art_center','city':'Saint-Ouen-sur-Seine','address':'1 rue Charles Garnier, 93400 Saint-Ouen-sur-Seine','country':'France','starts_at':'2026-10-15T18:30','ends_at':'2026-10-15T22:00','artists':['Marjorie Catez','Clara-Louise Hoffsaes','Lilou Granville'],'disciplines':['art contemporain','installation','arts visuels'],'description':'Vernissage de l’exposition Toujours et partout à Mains d’Œuvres.','image_url':'','source_url':'https://openagenda.com/fr/mains-doeuvres/events/8838370_toujours-et-partout','source_type':'official_agenda','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'Mémoire vive, 17 octobre 1961','venue_name':'Hôtel de Ville de Bagnolet','venue_type':'municipal','city':'Bagnolet','address':'Place Salvador Allende, 93170 Bagnolet','country':'France','starts_at':'2026-10-17T17:00','ends_at':'','artists':[],'disciplines':['exposition documentaire','mémoire'],'description':'Vernissage municipal de l’exposition Mémoire vive, 17 octobre 1961.','image_url':'','source_url':'https://ville-bagnolet.fr/bagnolet-bouge/dans-l-agenda/evenement/expo-memeoire-vive','source_type':'official_municipal','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
       {'event_type':'vernissage','title':'CONTRECHAMPS — Amitiés Amours Affinités','venue_name':'Ancienne Brasserie Bouchoule / Les Instants Chavirés','venue_type':'art_center','city':'Montreuil','address':'2 rue Émile Zola, 93100 Montreuil','country':'France','starts_at':'2026-10-10T17:00','ends_at':'2026-10-10T21:00','artists':[],'disciplines':['art contemporain','exposition collective'],'description':'Vernissage du chapitre 4 de CONTRECHAMPS, entrée libre.','image_url':'','source_url':'https://www.instantschavires.com/contrechampschapitre-4-du-cycle-amities-amours-affinites-par-line-gigs-et-fanny-testas/','source_type':'official_venue','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
       {'event_type':'vernissage','title':'EVOLUTIONS FLUIDES 2026','venue_name':'The Muisca Gallery','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-03T18:00','ends_at':'','artists':[],'disciplines':['arts visuels','exposition collective'],'description':'Vernissage de l’exposition collective EVOLUTIONS FLUIDES 2026.','image_url':'','source_url':'https://www.themuisca.com/','source_type':'official_gallery','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
       {'event_type':'vernissage','title':'Écris-moi ! — Camille de Cussac','venue_name':'Artazart','venue_type':'gallery','city':'Paris','address':'83 quai de Valmy, 75010 Paris','country':'France','starts_at':'2026-10-01T18:00','ends_at':'2026-10-01T19:30','artists':['Camille de Cussac'],'disciplines':['illustration','arts visuels'],'description':'Vernissage gratuit de l’exposition Écris-moi ! chez Artazart.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-de-l-exposition-de-camille-de-cussac-ecris-moi-124594','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
@@ -3442,16 +3446,16 @@ def _v169_paris_open_data_events(start=None,end=None):
     return found
 
 def _v168_refresh_events():
-    start=date.today();end=start+timedelta(days=16)
+    start=date.today();end=start+timedelta(days=35)
     curated=[x for x in _v168_curated_events() if str(x.get('starts_at') or '')[:10]>=start.isoformat()]
     ids=_v167_upsert_events(curated);ai_error=''
     try:ids+=_v167_upsert_events(_v169_paris_open_data_events(start,end))
     except Exception as exc:print('PLUG_ART_V169_PARIS_DATA_UPSERT '+str(exc)[:180],flush=True)
     body={
-      'cities':['Paris','Aubervilliers','Saint-Denis','Pantin','Montreuil','Boulogne-Billancourt','Ivry-sur-Seine','Vitry-sur-Seine','Neuilly-sur-Marne','Noisy-le-Sec'],
+      'cities':['Paris','Aubervilliers','Saint-Denis','Saint-Ouen-sur-Seine','Pantin','Montreuil','Bagnolet','Romainville','Bobigny','Noisy-le-Sec','Ivry-sur-Seine','Vitry-sur-Seine'],
       'date_from':start.isoformat(),'date_to':end.isoformat(),
       'types':['vernissage','opening','artist_talk','finissage','preview','nocturne','rencontre_artiste','lancement_exposition'],
-      'q':"Paris et Île-de-France. Inclure galeries, collectifs, centres d'art, mairies, hôtels de ville, écoles d'art, fondations, tiers-lieux, hôtels, salons, ateliers collectifs et pages Instagram et TikTok publiquement indexables. Requêtes utiles: #vernissage #vernissageparis #vernissageidf #vernissage93 #saintdenisart #montreuilart #aubervilliersart #parisart #galerieparis #expositionparis #openingparis #artcontemporainparis. Rechercher aussi les pages Instagram publiques de galeries, collectifs et lieux, ainsi que les pages TikTok publiquement indexables sans dépendre de leur API. Vérifier aussi les agendas Ville de Paris, OAM, L'Officiel des spectacles, Slash Paris, sites de galeries et plateformes d'événements."
+      'q':"Paris et Île-de-France. Inclure galeries, collectifs, centres d'art, mairies, hôtels de ville, écoles d'art, fondations, tiers-lieux, hôtels, salons, ateliers collectifs et pages Instagram et TikTok publiquement indexables. Requêtes utiles: #vernissage #vernissageparis #vernissageidf #vernissage93 #saintdenisart #montreuilart #aubervilliersart #saintouen #bagnolet #parisart #galerieparis #expositionparis #openingparis #artcontemporainparis. Effectuer aussi des requêtes site:instagram.com vernissage Paris, site:instagram.com vernissage Saint-Denis, Montreuil, Pantin, Aubervilliers, Saint-Ouen, Bagnolet et site:tiktok.com vernissage Paris. Utiliser seulement les pages sociales publiquement indexables dont la date et le lieu peuvent être recoupés. Vérifier aussi les agendas Ville de Paris, OAM, L'Officiel des spectacles, Slash Paris, sites de galeries et plateformes d'événements."
     }
     try:
         events=_v167_event_search_ai(body);ids+=_v167_upsert_events(events)
@@ -4060,7 +4064,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'169.2','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'169.3','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -4074,7 +4078,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'169.2','ui':'plug-art-v169-performance-radar',
+      'ok':True,'version':'169.3','ui':'plug-art-v169-performance-radar',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4143,7 +4147,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'169.2',
+      'version':'169.3',
       'ui':'plug-art-v169-performance-radar',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
@@ -4171,7 +4175,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V169_2_READY creator=fast_storyboard pdf=live_visual_pages radar=vernissages_direct_current plugy=smaller_20 qa=interactive",flush=True)
+print("PLUG_ART_V169_3_READY creator=storyboard_assets pdf=realtime_visual radar=paris_93_social plugy=full_body qa=interactive",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
