@@ -3272,10 +3272,10 @@ function ensureStoryboardV169_1(){
 function renderStoryboardV169_1(){
   const box=ensureStoryboardV169_1();if(!box)return;const slides=state.carousel.slides||[];
   box.innerHTML='<div class="storyboard-head-v1691"><span>STORYBOARD · '+slides.length+' SLIDE'+(slides.length>1?'S':'')+'</span><button data-story-add-v1691>＋ Ajouter</button></div><div class="storyboard-track-v1691">'+slides.map((s,i)=>{const d=slideDesign(s),bg=s.image?'background-image:url(&quot;'+esc(s.image).replace(/"/g,'%22')+'&quot;)':'background:'+esc(d.backgroundColor||'#f4f3ef');return '<article class="'+(i===state.carousel.active?'active':'')+'" data-story-slide-v1691="'+i+'"><button class="story-preview-v1691" data-story-open-v1691="'+i+'"><i style="'+bg+'" data-pattern="'+esc(d.pattern||'')+'"></i><b>0'+(i+1)+'</b><span>'+esc((s.title||'Slide '+(i+1)).slice(0,34))+'</span></button><div><button title="Dupliquer" data-story-copy-v1691="'+i+'">⧉</button><button title="Supprimer" data-story-delete-v1691="'+i+'">×</button></div></article>'}).join('')+'</div>';
-  $('[data-story-open-v1691]',box).forEach(b=>b.onclick=()=>{state.carousel.active=Number(b.dataset.storyOpenV1691);renderCarousel()});
+  $$('[data-story-open-v1691]',box).forEach(b=>b.onclick=()=>{state.carousel.active=Number(b.dataset.storyOpenV1691);renderCarousel()});
   $('[data-story-add-v1691]',box)?.addEventListener('click',addCarouselSlide);
-  $('[data-story-copy-v1691]',box).forEach(b=>b.onclick=()=>{state.carousel.active=Number(b.dataset.storyCopyV1691);duplicateCarouselSlide()});
-  $('[data-story-delete-v1691]',box).forEach(b=>b.onclick=()=>{state.carousel.active=Number(b.dataset.storyDeleteV1691);deleteCarouselSlideManual()});
+  $$('[data-story-copy-v1691]',box).forEach(b=>b.onclick=()=>{state.carousel.active=Number(b.dataset.storyCopyV1691);duplicateCarouselSlide()});
+  $$('[data-story-delete-v1691]',box).forEach(b=>b.onclick=()=>{state.carousel.active=Number(b.dataset.storyDeleteV1691);deleteCarouselSlideManual()});
 }
 function renderCarousel(){
   const slides=state.carousel.slides,s=slides[state.carousel.active]||{},d=slideDesign(s);$('#carouselCounter').textContent=slides.length+' slide'+(slides.length>1?'s':'');
@@ -4781,7 +4781,7 @@ async function searchCreativeAssetsV169_1(){
     if(!rr.ok)throw new Error('HTTP '+rr.status);
     const data=await rr.json(),icons=(data.icons||[]).slice(0,30);
     box.innerHTML=icons.map(id=>{const [prefix,name]=id.split(':');const src='https://api.iconify.design/'+encodeURIComponent(prefix)+'/'+encodeURIComponent(name)+'.svg?width=72&height=72';return '<button data-iconify-v1691="'+esc(id)+'"><img src="'+src+'" alt=""><span>'+esc(name.replaceAll('-',' '))+'</span></button>'}).join('')||'<div class="empty">Aucun élément trouvé.</div>';
-    $('[data-iconify-v1691]',box).forEach(b=>b.onclick=()=>insertCreativeAssetV169_1(b.dataset.iconifyV1691));
+    $$('[data-iconify-v1691]',box).forEach(b=>b.onclick=()=>insertCreativeAssetV169_1(b.dataset.iconifyV1691));
   }catch(e){box.innerHTML='<div class="empty">Bibliothèque externe momentanément indisponible.</div>'}
 }
 async function insertCreativeAssetV169_1(id){
@@ -4815,7 +4815,7 @@ function installCreationV167(){
   $$('[data-v167-template]').forEach(b=>b.onclick=()=>applyCreationTemplateV167(b.dataset.v167Template));
   $$('[data-v167-pattern]').forEach(b=>b.onclick=()=>applyCreationPatternV167(b.dataset.v167Pattern));
   $$('[data-v167-symbol]').forEach(b=>b.onclick=()=>addCanvasLayer('text',{text:b.dataset.v167Symbol,size:48,weight:700,w:18,h:14,color:'#7657ff',align:'center'}));
-  $('[data-v169-element]').forEach(b=>b.onclick=()=>addPremiumElementV169(Number(b.dataset.v169Element)));
+  $$('[data-v169-element]').forEach(b=>b.onclick=()=>addPremiumElementV169(Number(b.dataset.v169Element)));
   $('#creativeAssetSearchV1691')?.addEventListener('click',searchCreativeAssetsV169_1);
   $('#creativeAssetQueryV1691')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchCreativeAssetsV169_1()}});
   $('#openCallPackV167')?.addEventListener('click',()=>generateOpenCallPackV167());
@@ -4975,8 +4975,8 @@ function renderPdfElementsV168(){
   const els=pdfElementsV168();
   renderPdfLivePageV169();
   box.innerHTML=els.map((e,i)=>'<div class="pdf-element-row-v168"><button data-pdf-element-v168="'+i+'"><b>'+(e.type==='image'?'▧':e.type==='text'?'Aa':e.type==='circle'?'○':e.type==='line'?'—':'□')+'</b><span>'+esc(e.type==='text'?(e.text||'Texte').slice(0,30):e.type)+'</span></button><button data-pdf-remove-v168="'+i+'">×</button></div>').join('')||'<div class="empty">Page libre · ajoute du texte, une image ou une forme.</div>';
-  $('[data-pdf-element-v168]',box).forEach(b=>b.onclick=()=>{pdfSelectedElementV169_1=Number(b.dataset.pdfElementV168);renderPdfElementInspectorV169_1()});
-  $('[data-pdf-remove-v168]',box).forEach(b=>b.onclick=()=>{els.splice(Number(b.dataset.pdfRemoveV168),1);pdfSelectedElementV169_1=-1;renderPdfElementsV168();schedulePdfAutoSaveV169()});
+  $$('[data-pdf-element-v168]',box).forEach(b=>b.onclick=()=>{pdfSelectedElementV169_1=Number(b.dataset.pdfElementV168);renderPdfElementInspectorV169_1()});
+  $$('[data-pdf-remove-v168]',box).forEach(b=>b.onclick=()=>{els.splice(Number(b.dataset.pdfRemoveV168),1);pdfSelectedElementV169_1=-1;renderPdfElementsV168();schedulePdfAutoSaveV169()});
   renderPdfElementInspectorV169_1();
 }
 
@@ -4989,7 +4989,7 @@ function renderPdfElementInspectorV169_1(){
     '<div class="pdf-prop-grid-v1691"><label>X<input data-pdf-prop-v1691="x" type="number" step=".5" min="0" max="100" value="'+Number(e.x||0)+'"></label><label>Y<input data-pdf-prop-v1691="y" type="number" step=".5" min="0" max="100" value="'+Number(e.y||0)+'"></label><label>Largeur<input data-pdf-prop-v1691="w" type="number" step=".5" min="2" max="100" value="'+Number(e.w||20)+'"></label><label>Hauteur<input data-pdf-prop-v1691="h" type="number" step=".5" min="2" max="100" value="'+Number(e.h||10)+'"></label></div>'+
     '<div class="pdf-prop-grid-v1691"><label>Rotation<input data-pdf-prop-v1691="rotation" type="number" step="1" min="-180" max="180" value="'+Number(e.rotation||0)+'"></label><label>Opacité<input data-pdf-prop-v1691="opacity" type="range" min="0" max="1" step=".05" value="'+Number(e.opacity??1)+'"></label></div>'+
     (e.type!=='image'?'<label>Couleur<input data-pdf-prop-v1691="color" type="color" value="'+esc(color)+'"></label>':'<label>Recadrage<select data-pdf-prop-v1691="position"><option>center</option><option>top</option><option>bottom</option><option>left</option><option>right</option></select></label>');
-  $('[data-pdf-prop-v1691]',box).forEach(input=>{
+  $$('[data-pdf-prop-v1691]',box).forEach(input=>{
     if(input.dataset.pdfPropV1691==='weight')input.value=e.weight||'normal';
     if(input.dataset.pdfPropV1691==='position')input.value=e.position||'center';
     input.addEventListener('input',()=>{
