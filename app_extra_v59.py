@@ -3497,7 +3497,25 @@ def assets_icons_v169(q:str='art'):
         for icon in icons[:32]:
             if ':' not in icon:continue
             prefix,name=icon.split(':',1)
-            if not re.match(r'^[a-z0-9-]+
+            if not re.match(r'^[a-z0-9-]+$',prefix):continue
+            if not re.match(r'^[A-Za-z0-9_.-]+$',name):continue
+            items.append({'id':icon,'url':'/api/v169/assets/icon/'+prefix+'/'+name+'.svg'})
+        return {'ok':True,'items':items}
+    except HTTPException:raise
+    except Exception:raise HTTPException(502,'Recherche d’icônes indisponible')
+
+@app.get('/api/v169/assets/icon/{prefix}/{name}.svg')
+def asset_icon_v169(prefix:str,name:str):
+    if not re.match(r'^[a-z0-9-]+$',prefix) or not re.match(r'^[A-Za-z0-9_.-]+$',name):
+        raise HTTPException(400,'Icône invalide')
+    try:
+        rr=requests.get('https://api.iconify.design/'+prefix+'/'+name+'.svg',timeout=10,headers={'User-Agent':'PLUGART/168.2'})
+        if not rr.ok or 'svg' not in (rr.headers.get('content-type') or ''):
+            raise HTTPException(404,'Icône introuvable')
+        return Response(content=rr.content,media_type='image/svg+xml',headers={'Cache-Control':'public,max-age=604800'})
+    except HTTPException:raise
+    except Exception:raise HTTPException(404,'Icône introuvable')
+
 def _v168_live_radar_loop():
     time.sleep(max(20,int(os.getenv('PLUGART_V168_START_DELAY_SECONDS','90'))))
     while True:
