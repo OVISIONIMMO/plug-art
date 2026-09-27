@@ -4104,7 +4104,7 @@ def qa_manifest_v167():
     required=[
       ('GET','/api/v167/events'),('POST','/api/v167/events/search'),
       ('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),
-      ('POST','/api/v167/pdf-projects'),('GET','/api/v167/canva/config'),
+      ('POST','/api/v167/pdf-projects'),('GET','/api/v167/canva/config'),('GET','/api/v171/image'),
       ('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),
       ('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
     ]
