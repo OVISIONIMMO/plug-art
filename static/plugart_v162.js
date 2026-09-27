@@ -4498,12 +4498,18 @@ const PREMIUM_ELEMENTS_V169=[
   ['arch-window','Arch','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 340"><defs><linearGradient id="a" x1="0" x2="0" y2="1"><stop stop-color="#7657ff"/><stop offset="1" stop-color="#d5caff"/></linearGradient></defs><path d="M28 320V132C28 61 73 18 130 18s102 43 102 114v188Z" fill="url(#a)"/><path d="M55 320V137c0-51 31-86 75-86s75 35 75 86v183Z" fill="#fff" opacity=".86"/></svg>'],
   ['glass-card','Glass card','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><defs><linearGradient id="c"><stop stop-color="#fff" stop-opacity=".88"/><stop offset="1" stop-color="#d9d4ff" stop-opacity=".46"/></linearGradient></defs><rect x="8" y="8" width="304" height="184" rx="30" fill="url(#c)" stroke="#fff" stroke-width="5"/><circle cx="268" cy="52" r="22" fill="#7657ff" opacity=".8"/><path d="M36 70h150M36 102h220M36 134h170" stroke="#676b75" stroke-opacity=".35" stroke-width="10" stroke-linecap="round"/></svg>'],
   ['direction-arrow','Direction','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 120"><defs><linearGradient id="x"><stop stop-color="#111318"/><stop offset="1" stop-color="#7657ff"/></linearGradient></defs><path d="M20 60h215M190 16l52 44-52 44" fill="none" stroke="url(#x)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/></svg>'],
-  ['paint-swipe','Paint swipe','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 130"><defs><linearGradient id="q"><stop stop-color="#7657ff"/><stop offset=".5" stop-color="#ff6bb2"/><stop offset="1" stop-color="#ffb45b"/></linearGradient></defs><path d="M9 80c59-41 130-50 316-38-52 11-37 31 3 42-97 9-226 8-319-4Z" fill="url(#q)" opacity=".94"/></svg>']
+  ['paint-swipe','Paint swipe','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 130"><defs><linearGradient id="q"><stop stop-color="#7657ff"/><stop offset=".5" stop-color="#ff6bb2"/><stop offset="1" stop-color="#ffb45b"/></linearGradient></defs><path d="M9 80c59-41 130-50 316-38-52 11-37 31 3 42-97 9-226 8-319-4Z" fill="url(#q)" opacity=".94"/></svg>'],
+  ['glass-prism','Glass prism','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 260"><defs><linearGradient id="gp" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff" stop-opacity=".92"/><stop offset=".42" stop-color="#8be8f4" stop-opacity=".55"/><stop offset=".75" stop-color="#8c6bff" stop-opacity=".48"/><stop offset="1" stop-color="#ff8ec5" stop-opacity=".42"/></linearGradient></defs><path d="M120 12 224 200 120 248 16 200Z" fill="url(#gp)" stroke="#fff" stroke-width="5"/><path d="M120 12v236M16 200l104-45 104 45" fill="none" stroke="#fff" stroke-opacity=".62" stroke-width="3"/></svg>'],
+  ['chrome-sphere','Chrome sphere','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><defs><radialGradient id="cs" cx=".32" cy=".25"><stop stop-color="#fff"/><stop offset=".18" stop-color="#d6e2ff"/><stop offset=".38" stop-color="#353943"/><stop offset=".56" stop-color="#fafafa"/><stop offset=".72" stop-color="#8064d8"/><stop offset="1" stop-color="#16171b"/></radialGradient></defs><circle cx="120" cy="120" r="102" fill="url(#cs)"/><ellipse cx="82" cy="62" rx="45" ry="20" fill="#fff" opacity=".52"/></svg>'],
+  ['gradient-torus','Gradient torus','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 240"><defs><linearGradient id="gt"><stop stop-color="#49dce6"/><stop offset=".5" stop-color="#7657ff"/><stop offset="1" stop-color="#ff72b2"/></linearGradient></defs><ellipse cx="140" cy="120" rx="105" ry="72" fill="none" stroke="url(#gt)" stroke-width="34"/><ellipse cx="140" cy="104" rx="70" ry="36" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="7"/></svg>'],
+  ['floating-pill','Floating pill','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 150"><defs><linearGradient id="fp"><stop stop-color="#111318"/><stop offset=".45" stop-color="#7657ff"/><stop offset="1" stop-color="#52d3db"/></linearGradient></defs><rect x="12" y="18" width="296" height="114" rx="57" fill="url(#fp)"/><ellipse cx="90" cy="48" rx="54" ry="18" fill="#fff" opacity=".24"/></svg>'],
+  ['neon-frame','Neon frame','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 400"><defs><linearGradient id="nf"><stop stop-color="#45d9e2"/><stop offset=".5" stop-color="#7657ff"/><stop offset="1" stop-color="#ff6bb2"/></linearGradient><filter id="ng"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect x="24" y="24" width="272" height="352" rx="34" fill="none" stroke="url(#nf)" stroke-width="10" filter="url(#ng)"/></svg>'],
+  ['mesh-arc','Mesh arc','<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 220"><defs><linearGradient id="ma"><stop stop-color="#7657ff"/><stop offset=".52" stop-color="#45d9e2"/><stop offset="1" stop-color="#ff7bb9"/></linearGradient></defs><path d="M18 192C72 38 238 22 324 168" fill="none" stroke="url(#ma)" stroke-width="38" stroke-linecap="round" opacity=".88"/><path d="M30 178C97 69 230 57 307 158" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-dasharray="8 10"/></svg>']
 ];
 function premiumElementDataV169(svg){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)}
 function addPremiumElementV169(index){
   const item=PREMIUM_ELEMENTS_V169[index];if(!item)return;
-  const wide=['gradient-ribbon','deadline-sticker','glass-card','direction-arrow','paint-swipe'].includes(item[0]);
+  const wide=['gradient-ribbon','deadline-sticker','glass-card','direction-arrow','paint-swipe','floating-pill','neon-frame','mesh-arc'].includes(item[0]);
   addCanvasLayer('image',{src:premiumElementDataV169(item[2]),w:wide?44:25,h:wide?18:25});
   toast(item[1]+' ajouté');
 }
@@ -4767,7 +4773,7 @@ function installCreationV167(){
       '<div class="v167-template-grid">'+CREATION_TEMPLATES_V167.map(x=>'<button data-v167-template="'+x[0]+'"><i class="tpl-'+x[0]+'"></i><span>'+x[1]+'</span></button>').join('')+'</div>'+
       '<div class="v167-library-head"><small>MOTIFS</small><strong>Habillage</strong></div><div class="v167-pattern-grid">'+CREATION_PATTERNS_V167.map(x=>'<button data-v167-pattern="'+x[0]+'"><i data-pattern="'+x[0]+'"></i><span>'+x[1]+'</span></button>').join('')+'</div>'+
       '<div class="v167-library-head"><small>ÉLÉMENTS PREMIUM</small><strong>Relief · verre · chrome</strong></div><div class="v169-element-grid">'+PREMIUM_ELEMENTS_V169.map((x,i)=>'<button data-v169-element="'+i+'" title="'+esc(x[1])+'"><img src="'+premiumElementDataV169(x[2])+'" alt=""><span>'+esc(x[1])+'</span></button>').join('')+'</div>'+      '<div class="v167-library-head"><small>BIBLIOTHÈQUE VECTORIELLE</small><strong>Rechercher · insérer · télécharger</strong></div><div class="vector-search-v170"><input id="vectorAssetQueryV170" value="gallery art" placeholder="ex. arrow, frame, star, camera…"><button id="vectorAssetSearchV170">Rechercher</button></div><div id="vectorAssetResultsV170" class="vector-results-v170"></div>'+
-      '<div class="v167-library-head"><small>SIGNES TYPO</small><strong>Minimal</strong></div><div class="v167-symbol-grid">'+CREATION_SYMBOLS_V167.map(x=>'<button data-v167-symbol="'+esc(x)+'">'+esc(x)+'</button>').join('')+'</div>'+
+
       '<button class="v167-open-call-pack" id="openCallPackV167">✦ Générer Open Call · 5 slides</button>';
     lib.prepend(section);
   }
@@ -4824,7 +4830,15 @@ function installBureauV167(){
   $('#pdfBgV168').oninput=e=>{const page=pdfActivePageV168();if(page){page.content={...(page.content||{}),background:e.target.value};renderPdfElementsV168();schedulePdfAutoSaveV169()}};
   $$('[data-pdf-add-v168]').forEach(b=>b.onclick=()=>addPdfElementV168(b.dataset.pdfAddV168));
   $('#pdfImageUploadV168')?.addEventListener('change',importPdfImageV168);
-  $('#pdfPageBodyV167')?.addEventListener('input',()=>{const page=pdfActivePageV168();if(page){page.content={...(page.content||{}),body:$('#pdfPageBodyV167').value};schedulePdfAutoSaveV169()}});
+  $('#pdfPageBodyV167')?.addEventListener('input',()=>{
+    const page=pdfActivePageV168();if(!page)return;const text=$('#pdfPageBodyV167').value;page.content={...(page.content||{}),body:text};
+    const els=pdfElementsV168();let el=els.find(x=>x.role==='quick-body');
+    if(!el){el={type:'text',role:'quick-body',text,x:8,y:68,w:84,h:20,fontSize:13,weight:'normal',color:'#4f525b',lineHeight:1.3};els.push(el)}
+    else el.text=text;
+    renderPdfLivePageV169();renderPdfElementsV168();schedulePdfAutoSaveV169();
+  });
+  $('#pdfTitleV167')?.addEventListener('input',schedulePdfProjectMetaSaveV170);
+  $('#pdfTypeV167')?.addEventListener('change',schedulePdfProjectMetaSaveV170);
 }
 async function loadPdfProjectsV167(force=false){
   if(!$('#bureauPdfV167'))return;
@@ -4884,8 +4898,21 @@ function renderPdfPageStripV169(){
   const pages=state.activePdfProjectV167?.pages||[];
   if(!pages.length){box.innerHTML='';return}
   box.innerHTML=pages.map((p,i)=>'<button data-pdf-page-v169="'+(i+1)+'" class="'+(pdfPageV167===i+1?'active':'')+'"><em>'+(i+1)+'</em><span>'+esc(p.page_type||'Page')+'</span></button>').join('');
-  $$('[data-pdf-page-v169]',box).forEach(b=>b.onclick=()=>{pdfPageV167=Number(b.dataset.pdfPageV169);renderPdfElementsV168();renderPdfPageStripV169()});
+  $$('[data-pdf-page-v169]',box).forEach(b=>b.onclick=()=>{
+    pdfPageV167=Number(b.dataset.pdfPageV169);pdfSelectedElementV170=-1;
+    const page=pdfActivePageV168();if($('#pdfPageBodyV167'))$('#pdfPageBodyV167').value=page?.content?.body||page?.content?.elements?.find?.(x=>x.role==='quick-body')?.text||'';
+    renderPdfElementsV168();renderPdfPageStripV169()
+  });
   $('#pdfPageInfoV167').textContent='Page '+pdfPageV167+' / '+pages.length;
+}
+let pdfProjectMetaTimerV170=null;
+function schedulePdfProjectMetaSaveV170(){
+  clearTimeout(pdfProjectMetaTimerV170);pdfProjectMetaTimerV170=setTimeout(async()=>{
+    const p=state.activePdfProjectV167;if(!p?.id)return;
+    const title=clean($('#pdfTitleV167')?.value)||p.title||'Sans titre',project_type=$('#pdfTypeV167')?.value||p.project_type||'dossier_projet';
+    p.title=title;p.project_type=project_type;$('#pdfInspectorTitleV167').textContent=title;
+    try{await api('/api/v167/pdf-projects/'+p.id,{method:'PATCH',body:JSON.stringify({title,project_type})})}catch{}
+  },420);
 }
 let pdfAutoSaveTimerV169=null;
 function schedulePdfAutoSaveV169(){
@@ -4974,7 +5001,7 @@ function renderPdfElementsV168(){
   const content=page.content||{};if($('#pdfBgV168'))$('#pdfBgV168').value=content.background||'#ffffff';
   const els=pdfElementsV168();
   renderPdfLivePageV169();
-  box.innerHTML=els.map((e,i)=>'<div class="pdf-element-row-v168"><button data-pdf-element-v168="'+i+'"><b>'+(e.type==='image'?'▧':e.type==='text'?'Aa':e.type==='circle'?'○':e.type==='line'?'—':'□')+'</b><span>'+esc(e.type==='text'?(e.text||'Texte').slice(0,30):e.type)+'</span></button><button data-pdf-remove-v168="'+i+'">×</button></div>').join('')||'<div class="empty">Page libre · ajoute du texte, une image ou une forme.</div>';
+  box.innerHTML=els.map((e,i)=>'<div class="pdf-element-row-v168 '+(i===pdfSelectedElementV170?'selected':'')+'"><button data-pdf-element-v168="'+i+'"><b>'+(e.type==='image'?'▧':e.type==='text'?'Aa':e.type==='circle'?'○':e.type==='line'?'—':'□')+'</b><span>'+esc(e.type==='text'?(e.text||'Texte').slice(0,30):e.type)+'</span></button><button data-pdf-remove-v168="'+i+'">×</button></div>').join('')||'<div class="empty">Page libre · ajoute du texte, une image ou une forme.</div>';
   $$('[data-pdf-element-v168]',box).forEach(b=>{b.onclick=()=>selectPdfElementV170(Number(b.dataset.pdfElementV168));b.ondblclick=()=>editPdfElementV168(Number(b.dataset.pdfElementV168))});
   $$('[data-pdf-remove-v168]',box).forEach(b=>b.onclick=()=>{const i=Number(b.dataset.pdfRemoveV168);els.splice(i,1);if(pdfSelectedElementV170===i)pdfSelectedElementV170=-1;renderPdfElementsV168();schedulePdfAutoSaveV169()});renderPdfElementInspectorV170();
 }
@@ -4989,12 +5016,12 @@ function addPdfElementV168(type){
   if(type==='quote')els.push({type:'text',text:'« Une phrase forte pour rythmer le dossier. »',x:10,y:34,w:80,h:20,fontSize:24,weight:'bold',color:'#111318',align:'center',lineHeight:1.15});
   if(type==='circle')els.push({type:'circle',x:72,y:8,w:18,h:13,fill:'#45cbd7',opacity:.75});
   if(type==='line')els.push({type:'line',x:8,y:62,w:84,h:2,stroke:'#111318',thickness:1.5,opacity:.35});
-  renderPdfElementsV168();
+  pdfSelectedElementV170=Math.max(0,els.length-1);renderPdfElementsV168();schedulePdfAutoSaveV169();
 }
 function importPdfImageV168(ev){
   const file=ev.target?.files?.[0];if(!file)return;
   if(file.size>8*1024*1024){toast('Image limitée à 8 Mo');ev.target.value='';return}
-  const reader=new FileReader();reader.onload=()=>{const src=String(reader.result||'');if(!src.startsWith('data:image/'))return;pdfElementsV168().push({type:'image',src,x:8,y:12,w:84,h:45,crop:'cover',position:'center',radius:2});renderPdfElementsV168();toast('Image ajoutée au PDF')};reader.readAsDataURL(file);ev.target.value='';
+  const reader=new FileReader();reader.onload=()=>{const src=String(reader.result||'');if(!src.startsWith('data:image/'))return;const els=pdfElementsV168();els.push({type:'image',src,x:8,y:12,w:84,h:45,crop:'cover',position:'center',radius:2});pdfSelectedElementV170=els.length-1;renderPdfElementsV168();schedulePdfAutoSaveV169();toast('Image ajoutée au PDF')};reader.readAsDataURL(file);ev.target.value='';
 }
 function editPdfElementV168(index){
   const e=pdfElementsV168()[index];if(!e)return;
