@@ -17,7 +17,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='168.20260927.3'
+VERSION='168.20260927.4'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -728,7 +728,7 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='168.20260927.3'
+    expected='168.20260927.4'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
       'version':'168.0',
@@ -3591,7 +3591,7 @@ def _v168_raster_pdf_page(file_id:int,page_index:int,scale:float=1.6):
     out=_v168_pdf_raster_dir()/('file_'+str(file_id)+'_page_'+str(page_index)+'.png')
     if out.exists() and out.stat().st_mtime>=src.stat().st_mtime:return out
     try:
-        import fitz
+        import pymupdf as fitz
         doc=fitz.open(str(src))
         if page_index<0 or page_index>=doc.page_count:
             doc.close();raise HTTPException(404,'Page PDF introuvable')
@@ -3611,7 +3611,7 @@ def pdf_project_from_file_v168(file_id:int):
     src=Path(str(row.get('storage_path') or ''))
     if not src.exists():raise HTTPException(404,'Fichier PDF absent du stockage')
     try:
-        import fitz
+        import pymupdf as fitz
         doc=fitz.open(str(src));count=min(int(doc.page_count),60);doc.close()
     except Exception as exc:raise HTTPException(503,'Analyse du PDF indisponible') from exc
     pages=[{'page_type':'imported','content':{'background':'#FFFFFF','background_image':'/api/v168/bureau/files/'+str(file_id)+'/page/'+str(i)+'.png','elements':[]}} for i in range(count)]
