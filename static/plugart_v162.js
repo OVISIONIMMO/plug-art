@@ -3285,7 +3285,7 @@ function renderStoryboardV169_1(){
   $$('[data-story-delete-v1691]',box).forEach(b=>b.onclick=()=>{state.carousel.active=Number(b.dataset.storyDeleteV1691);deleteCarouselSlideManual()});
 }
 function renderCarousel(){
-  const slides=state.carousel.slides,s=slides[state.carousel.active]||{},d=slideDesign(s);$('#carouselCounter').textContent=slides.length+' slide'+(slides.length>1?'s':'');
+  const slides=state.carousel.slides,s=slides[state.carousel.active]||{},d=slideDesign(s);$('#carouselCounter').textContent=slides.length+' slide'+(slides.length>1?'s':'')+(slides.length===5?' · carrousel complet':'');
   $('#carouselSlides').innerHTML=slides.map((x,i)=>{const dx=slideDesign(x),bg=x.image?'background-image:url(&quot;'+esc(x.image).replace(/"/g,'%22')+'&quot;)':'background:'+esc(dx.backgroundColor||'#f4f3ef');return '<button class="carousel-slide-thumb v169-slide-thumb '+(i===state.carousel.active?'active':'')+'" draggable="true" data-carousel-slide="'+i+'"><em>'+(i+1)+'</em><i style="'+bg+'" data-pattern="'+esc(dx.pattern||'')+'"></i><span><b>'+esc(x.kicker||'SLIDE '+(i+1))+'</b><strong>'+esc((x.title||'Sans titre').slice(0,38))+'</strong></span></button>'}).join('')||'<div class="empty">Aucune slide.</div>';
   $$('[data-carousel-slide]').forEach(b=>{
     b.onclick=()=>{state.carousel.active=Number(b.dataset.carouselSlide);renderCarousel()};
@@ -4659,16 +4659,21 @@ async function loadEventsV167(force=false,extra={}){
   finally{state.eventsV167Loading=false}
 }
 async function searchEventsV167(){
-  const btn=$('#eventSearchWebV167');if(!btn||btn.disabled)return;const oldLabel=btn.textContent;
+  const btn=$('#eventSearchWebV167');if(!btn||btn.disabled)return;const oldLabel=btn.textContent,range=eventRangeV167();
   btn.disabled=true;btn.textContent='Recherche immédiate…';
   try{
-    const refreshed=await api('/api/v168/events/refresh',{method:'POST',timeout:90000,body:JSON.stringify({force:true})});
-    if(Array.isArray(refreshed?.items))state.eventsV167=refreshed.items;
-    await loadEventsV167(true);
-    const n=(state.eventsV167||[]).length;toast(n+' vernissage'+(n>1?'s':'')+' / événement'+(n>1?'s':'')+' disponible'+(n>1?'s':''));
+    const cityRaw=clean($('#eventCityV167')?.value)||'Paris';
+    const cities=cityRaw.split(',').map(x=>clean(x)).filter(Boolean).slice(0,12);
+    const type=$('#eventTypeV167')?.value||'';
+    const body={cities,date_from:range.from,date_to:range.to,q:clean($('#eventQueryV167')?.value),types:type?[type]:['vernissage','opening','artist_talk','finissage','preview','nocturne','rencontre_artiste','lancement_exposition']};
+    const out=await api('/api/v167/events/search',{method:'POST',timeout:95000,body:JSON.stringify(body)});
+    state.eventsV167=Array.isArray(out?.items)?out.items:[];
+    renderEventsV167();
+    const n=state.eventsV167.length;toast(n+' vernissage'+(n>1?'s':'')+' / événement'+(n>1?'s':'')+' disponible'+(n>1?'s':''));
     refreshRadarStatusV168();
   }catch(e){
-    try{await loadEventsV167(true);toast('Sources locales rechargées')}catch{toast('Recherche Vernissages impossible : '+clean(e.message||'erreur'))}
+    try{await refreshRadarLiveV168('events')}catch{try{await loadEventsV167(true)}catch{}}
+    toast('Recherche ciblée indisponible · sources locales rechargées');
   }finally{btn.disabled=false;btn.textContent=oldLabel}
 }
 function renderEventsV167(){
@@ -4680,7 +4685,7 @@ function renderEventsV167(){
     return '<article class="event-card-v167">'+
       '<div class="event-visual-v167"><img src="'+image+'" alt="" loading="lazy" decoding="async" onerror="this.style.display=\'none\'"><span>'+esc((e.event_type||'vernissage').replaceAll('_',' '))+'</span></div>'+
       '<div class="event-copy-v167"><div class="event-date-v167"><strong>'+esc(v167FmtDate(e.starts_at))+'</strong><small>'+esc(e.city||e.country||'')+'</small></div><h3>'+esc(e.title)+'</h3><p>'+esc(e.venue_name||'Lieu à confirmer')+'</p>'+
-      '<div class="event-tags-v167">'+(e.is_free?'<span>Gratuit</span>':'')+(e.verified?'<span>✓ Vérifié</span>':'')+(e.rsvp_url?'<span>RSVP</span>':'')+'</div>'+
+      '<div class="event-tags-v167">'+(e.is_free?'<span>Gratuit</span>':'')+(e.verified?'<span>✓ Vérifié</span>':'')+(e.rsvp_url?'<span>RSVP</span>':'')+(/instagram/i.test(e.source_type||'')?'<span class="social">Instagram indexé</span>':/tiktok/i.test(e.source_type||'')?'<span class="social">TikTok indexé</span>':/municipal|official_city/i.test(e.source_type||'')?'<span>Source publique</span>':'')+'</div>'+
       '<div class="event-actions-v167"><button data-event-create="'+e.id+'">✦ Créer</button><button data-event-agenda="'+e.id+'">Agenda</button><button data-event-map="'+e.id+'">Map</button><button data-event-fav="'+e.id+'">'+(e.favorite?'★':'☆')+'</button><a href="'+esc(e.source_url)+'" target="_blank" rel="noopener">Source ↗</a></div></div></article>';
   }).join('');
   $$('[data-event-create]',box).forEach(b=>b.onclick=()=>eventToCreationV167(Number(b.dataset.eventCreate)));
@@ -5065,7 +5070,7 @@ function addPdfElementV168(type){
 function importPdfImageV168(ev){
   const file=ev.target?.files?.[0];if(!file)return;
   if(file.size>8*1024*1024){toast('Image limitée à 8 Mo');ev.target.value='';return}
-  const reader=new FileReader();reader.onload=()=>{const src=String(reader.result||'');if(!src.startsWith('data:image/'))return;pdfElementsV168().push({type:'image',src,x:8,y:12,w:84,h:45,crop:'cover',position:'center',radius:2});renderPdfElementsV168();toast('Image ajoutée au PDF')};reader.readAsDataURL(file);ev.target.value='';
+  const reader=new FileReader();reader.onload=()=>{const src=String(reader.result||'');if(!src.startsWith('data:image/'))return;const els=pdfElementsV168();els.push({type:'image',src,x:8,y:12,w:84,h:45,crop:'cover',position:'center',radius:2});pdfSelectedElementV169_1=els.length-1;renderPdfElementsV168();schedulePdfAutoSaveV169();toast('Image ajoutée au PDF · sauvegarde auto')};reader.readAsDataURL(file);ev.target.value='';
 }
 function editPdfElementV168(index){
   const e=pdfElementsV168()[index];if(!e)return;
@@ -5078,7 +5083,8 @@ const PDF_TEMPLATES_V1692=[
  ['cover','Cover noir'],['editorial','Éditorial'],['split','Split'],['gallery','Galerie'],['statement','Statement'],['fullphoto','Plein cadre'],
  ['moodboard','Moodboard'],['timeline','Timeline'],['manifesto','Manifesto'],['projectmap','Carte projet'],['datacards','Fiches'],['quotehero','Citation'],
  ['portfolio','Portfolio'],['presskit','Press kit'],['exhibition','Expo / vernissage'],['workshop','Atelier'],['photoessay','Photo essay'],['sponsors','Partenaires'],
- ['programme','Programme'],['minimalgrid','Grid minimal']
+ ['programme','Programme'],['minimalgrid','Grid minimal'],['portraitwall','Mur de portraits'],['funding','Financeurs'],['budget','Budget visuel'],['floorplan','Plan / espace'],
+ ['talk','Talk / rencontre'],['impact','Impact projet'],['caseproject','Étude de projet'],['visualcover','Cover image forte']
 ];
 function renderPdfTemplateGalleryV1692(){
   const box=$('#pdfTemplateGalleryV1692');if(!box)return;
@@ -5108,6 +5114,14 @@ function applyPdfTemplateV168(name){
     photoessay:[{type:'rect',x:0,y:0,w:100,h:62,fill:'#111318'},{type:'text',text:title,x:7,y:68,w:86,h:15,fontSize:32,weight:'bold',color:'#111318'},{type:'text',text:'Photographies · récit · contexte',x:7,y:86,w:70,h:6,fontSize:10,color:'#666b74'}],
     sponsors:[{type:'text',text:'PARTENAIRES',x:7,y:7,w:40,h:7,fontSize:12,weight:'bold',color:'#111318'},{type:'rect',x:7,y:22,w:25,h:18,fill:'#f0edf8',radius:8},{type:'rect',x:38,y:22,w:25,h:18,fill:'#e8f8fa',radius:8},{type:'rect',x:69,y:22,w:24,h:18,fill:'#fff0f6',radius:8},{type:'rect',x:7,y:47,w:40,h:34,fill:'#f4f3ef',radius:8},{type:'text',text:'Financement · soutien · production',x:53,y:50,w:38,h:25,fontSize:18,weight:'bold',color:'#111318'}],
     programme:[{type:'text',text:'PROGRAMME',x:7,y:7,w:40,h:7,fontSize:12,weight:'bold',color:'#7657ff'},{type:'text',text:title,x:7,y:19,w:80,h:14,fontSize:32,weight:'bold',color:'#111318'},{type:'line',x:7,y:39,w:86,h:2,stroke:'#111318',opacity:.18},{type:'text',text:'18:00 · Ouverture\n19:00 · Talk\n20:00 · Performance\n21:00 · Rencontre',x:7,y:48,w:70,h:34,fontSize:16,color:'#3f424a',lineHeight:1.55}],
+    portraitwall:[{type:'text',text:title,x:6,y:5,w:88,h:10,fontSize:28,weight:'bold',color:'#111318'},{type:'rect',x:6,y:19,w:42,h:30,fill:'#eee9f7',radius:6},{type:'rect',x:52,y:19,w:42,h:30,fill:'#e7f4f5',radius:6},{type:'text',text:'PORTRAIT 01\nNom · récit · citation',x:8,y:53,w:38,h:14,fontSize:12,color:'#444851'},{type:'text',text:'PORTRAIT 02\nNom · récit · citation',x:54,y:53,w:38,h:14,fontSize:12,color:'#444851'},{type:'rect',x:6,y:72,w:88,h:19,fill:'#f7f2ea',radius:8}],
+    funding:[{type:'text',text:'FINANCEMENT',x:7,y:7,w:42,h:7,fontSize:12,weight:'bold',color:'#7657ff'},{type:'text',text:title,x:7,y:19,w:78,h:14,fontSize:32,weight:'bold',color:'#111318'},{type:'rect',x:7,y:41,w:26,h:20,fill:'#efeaff',radius:8},{type:'rect',x:37,y:41,w:26,h:20,fill:'#e8f8fa',radius:8},{type:'rect',x:67,y:41,w:26,h:20,fill:'#fff0f6',radius:8},{type:'text',text:'PUBLIC\nPRIVÉ\nPARTENAIRES',x:10,y:69,w:78,h:14,fontSize:16,weight:'bold',color:'#111318'}],
+    budget:[{type:'text',text:'BUDGET',x:7,y:7,w:30,h:7,fontSize:12,weight:'bold',color:'#111318'},{type:'text',text:title,x:7,y:18,w:80,h:13,fontSize:30,weight:'bold',color:'#111318'},{type:'rect',x:7,y:40,w:86,h:9,fill:'#eeeaf8',radius:5},{type:'rect',x:7,y:54,w:68,h:9,fill:'#dff5f7',radius:5},{type:'rect',x:7,y:68,w:48,h:9,fill:'#ffe9f3',radius:5},{type:'text',text:'Production · communication · artistes · technique',x:7,y:83,w:80,h:8,fontSize:12,color:'#5a5e68'}],
+    floorplan:[{type:'text',text:'ESPACE / PARCOURS',x:6,y:5,w:60,h:7,fontSize:12,weight:'bold',color:'#7657ff'},{type:'rect',x:6,y:17,w:88,h:62,fill:'#f1f2f4',radius:4},{type:'rect',x:12,y:24,w:30,h:21,fill:'#ffffff',radius:3},{type:'rect',x:47,y:24,w:40,h:21,fill:'#e8f8fa',radius:3},{type:'rect',x:12,y:50,w:48,h:21,fill:'#efeaff',radius:3},{type:'rect',x:65,y:50,w:22,h:21,fill:'#fff0f6',radius:3},{type:'text',text:'Entrée → Galerie → Talk → Atelier',x:7,y:84,w:84,h:8,fontSize:13,weight:'bold',color:'#111318'}],
+    talk:[{type:'rect',x:0,y:0,w:100,h:100,fill:'#111318'},{type:'text',text:'TALK / RENCONTRE',x:7,y:7,w:45,h:6,fontSize:11,weight:'bold',color:'#72e2ea'},{type:'text',text:title,x:7,y:20,w:84,h:22,fontSize:39,weight:'bold',color:'#ffffff'},{type:'circle',x:7,y:55,w:18,h:13,fill:'#7657ff'},{type:'circle',x:29,y:55,w:18,h:13,fill:'#e96cae'},{type:'text',text:'INVITÉ·ES · DATE · LIEU',x:7,y:78,w:65,h:8,fontSize:13,weight:'bold',color:'#ffffff'}],
+    impact:[{type:'text',text:'IMPACT',x:7,y:7,w:30,h:7,fontSize:12,weight:'bold',color:'#7657ff'},{type:'text',text:title,x:7,y:19,w:78,h:14,fontSize:31,weight:'bold',color:'#111318'},{type:'circle',x:8,y:48,w:21,h:15,fill:'#efeaff'},{type:'circle',x:39,y:48,w:21,h:15,fill:'#e8f8fa'},{type:'circle',x:70,y:48,w:21,h:15,fill:'#fff0f6'},{type:'text',text:'PUBLICS\nARTISTES\nTERRITOIRE',x:9,y:72,w:80,h:14,fontSize:16,weight:'bold',color:'#111318'}],
+    caseproject:[{type:'text',text:'CASE STUDY',x:7,y:7,w:35,h:6,fontSize:11,weight:'bold',color:'#7657ff'},{type:'text',text:title,x:7,y:18,w:80,h:16,fontSize:34,weight:'bold',color:'#111318'},{type:'rect',x:7,y:41,w:41,h:38,fill:'#e9e6f2',radius:7},{type:'text',text:'CONTEXTE\nOBJECTIF\nRÉSULTAT',x:54,y:44,w:38,h:30,fontSize:16,weight:'bold',color:'#111318'},{type:'line',x:54,y:78,w:35,h:2,stroke:'#7657ff',opacity:1}],
+    visualcover:[{type:'rect',x:0,y:0,w:100,h:100,fill:'#171820'},{type:'rect',x:6,y:6,w:88,h:62,fill:'#2a2c36',radius:5},{type:'text',text:title,x:7,y:73,w:86,h:14,fontSize:34,weight:'bold',color:'#ffffff'},{type:'text',text:'PLUG ART · DOSSIER VISUEL',x:7,y:91,w:55,h:5,fontSize:10,weight:'bold',color:'#b9b2ff'}],
     minimalgrid:[{type:'text',text:title,x:7,y:7,w:86,h:14,fontSize:30,weight:'bold',color:'#111318'},{type:'line',x:7,y:25,w:86,h:2,stroke:'#111318',opacity:.2},{type:'rect',x:7,y:34,w:27,h:52,fill:'#f3f0e8'},{type:'rect',x:37,y:34,w:27,h:52,fill:'#e9f6f7'},{type:'rect',x:67,y:34,w:26,h:52,fill:'#efeaff'}]
   };
   c.elements=(presets[name]||[]).map(x=>({...x}));if(img)c.background_image=img;renderPdfElementsV168();schedulePdfAutoSaveV169();toast('Modèle de page appliqué');
