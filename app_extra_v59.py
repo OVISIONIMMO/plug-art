@@ -3479,8 +3479,9 @@ def _v168_refresh_opportunities():
     except Exception as exc:
         ai_error=type(exc).__name__+': '+str(exc)
         print('PLUG_ART_V1681_OPPS_FALLBACK '+ai_error[:180],flush=True)
-    try:core.run_full_radar()
-    except Exception:pass
+    if os.getenv('PLUGART_LEGACY_RADAR','0')=='1':
+        try:core.run_full_radar()
+        except Exception:pass
     ids=list(dict.fromkeys(ids));_v168_set_refresh_state('opportunities_ai',len(ids),ai_error)
     return {'ok':True,'found':len(ids),'fallback':bool(ai_error),'items':core.rows("select * from opportunities where status in ('open','rolling') order by coalesce(radar_score,score,0) desc,deadline limit 100")}
 
