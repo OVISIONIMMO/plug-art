@@ -8,7 +8,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='168.1'
+app.version='168.2'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -17,7 +17,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='168.20260927.5'
+VERSION='168.20260927.6'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -680,8 +680,8 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'168.1',
-      'ui':'plug-art-v168-1-polish',
+      'version':'168.2',
+      'ui':'plug-art-v168-2-creative-workspace',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
@@ -728,11 +728,11 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='168.20260927.5'
+    expected='168.20260927.6'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'168.1',
-      'ui':'plug-art-v168-rich-workspace',
+      'version':'168.2',
+      'ui':'plug-art-v168-2-creative-workspace',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
       'html_has_slide_css': bool(js_path.exists() and 'plugart_v160_slide.css?v=' in js_path.read_text(encoding='utf-8')),
@@ -3331,21 +3331,24 @@ def _v168_should_refresh(key,hours):
 
 
 def _v168_curated_events():
-    # Verified public sources used as a resilient floor when AI web search is rate-limited.
+    # Publicly verifiable events kept as a resilient floor when live AI/social discovery is rate-limited.
     return [
-      {'event_type':'vernissage','title':'Jardins Amers — Anne Robin','venue_name':'Galerie du Génie de la Bastille','venue_type':'gallery','city':'Paris','address':'126 rue de Charonne, 75011 Paris','country':'France','starts_at':'2026-09-29T18:00','ends_at':'','artists':['Anne Robin'],'disciplines':['peinture'],'description':'Vernissage de l’exposition Jardins Amers.','image_url':'','source_url':'https://oam.io/expositions/jardins-amers','source_type':'official_listing','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
-      {'event_type':'vernissage','title':'Sérendipités — Valérie Queruau Lamerie','venue_name':'galerie paul*13','venue_type':'gallery','city':'Paris','address':'Paris 17e','country':'France','starts_at':'2026-10-01T18:00','ends_at':'','artists':['Valérie Queruau Lamerie'],'disciplines':['sculpture'],'description':'Vernissage de l’exposition Sérendipités.','image_url':'','source_url':'https://www.leparisien.fr/etudiant/sortir/paris/eve-serendipites/','source_type':'press_listing','rsvp_url':'','price_text':'','is_free':False,'verified':True},
-      {'event_type':'vernissage','title':'Endemic — Patricia Erbelding','venue_name':'Galerie Marie-Claude Duchosal','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-02T18:00','ends_at':'2026-10-02T20:30','artists':['Patricia Erbelding'],'disciplines':['peinture'],'description':'Vernissage de l’exposition Endemic.','image_url':'','source_url':'https://www.paris.fr/evenements/patricia-erbelding-endemic-123826','source_type':'official_city','rsvp_url':'','price_text':'','is_free':False,'verified':True},
-      {'event_type':'vernissage','title':'TOHIONA — La Petite Soirée','venue_name':'Elysia Gallery','venue_type':'gallery','city':'Paris','address':'13 rue d’Ormesson, 75004 Paris','country':'France','starts_at':'2026-10-02T18:00','ends_at':'2026-10-02T21:00','artists':['Naohito Watanabe / TOHIONA'],'disciplines':['art contemporain','performance'],'description':'Vernissage privé, exposition et rencontre avec l’artiste.','image_url':'','source_url':'https://luma.com/rvb1fkq6','source_type':'event_platform','rsvp_url':'https://luma.com/rvb1fkq6','price_text':'Sur inscription','is_free':False,'verified':True},
-      {'event_type':'vernissage','title':'Salon du déstructuralisme figuratif','venue_name':'Serre de l’Orangerie — Parc André Citroën','venue_type':'salon','city':'Paris','address':'16 rue de la Montagne de la Fage, 75015 Paris','country':'France','starts_at':'2026-10-03T18:00','ends_at':'','artists':[],'disciplines':['peinture','photographie','sculpture','mixed media'],'description':'Vernissage du Salon de déstructuralisme figuratif.','image_url':'','source_url':'https://www.paris.fr/evenements/participation-au-salon-du-destructuralisme-figuratif-124764','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'Écris-moi ! — Camille de Cussac','venue_name':'Artazart','venue_type':'gallery','city':'Paris','address':'83 quai de Valmy, 75010 Paris','country':'France','starts_at':'2026-10-01T18:00','ends_at':'2026-10-01T19:30','artists':['Camille de Cussac'],'disciplines':['illustration','arts visuels'],'description':'Vernissage gratuit de l’exposition Écris-moi ! chez Artazart.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-de-l-exposition-de-camille-de-cussac-ecris-moi-124594','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'AKKITHAM — Narayanan Akkitham','venue_name':'Galerie AB - Agnès Aittouares','venue_type':'gallery','city':'Paris','address':'5 rue Jacques Callot, 75006 Paris','country':'France','starts_at':'2026-10-01T18:00','ends_at':'','artists':['Narayanan Akkitham'],'disciplines':['peinture','art contemporain'],'description':'Vernissage de l’exposition AKKITHAM, entrée gratuite.','image_url':'','source_url':'https://www.paris.fr/evenements/exposition-a-la-galerie-ab-akkitham-117258','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'H.E.R.O — Hondo','venue_name':'Maison de la Vie Associative et Citoyenne du 7e','venue_type':'cultural_center','city':'Paris','address':'4 rue Amélie, 75007 Paris','country':'France','starts_at':'2026-10-08T18:30','ends_at':'2026-10-08T21:00','artists':['Hondo'],'disciplines':['peinture','street art'],'description':'Vernissage gratuit de H.E.R.O, exposition de Hondo.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-de-l-exposition-h-e-r-o-de-hondo-124380','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'gallery_event','title':'Portes ouvertes des ateliers d’artistes de Montreuil','venue_name':'Centre Tignous + ateliers de Montreuil','venue_type':'artist_studios','city':'Montreuil','address':'116 rue de Paris, 93100 Montreuil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'2026-10-11T20:00','artists':[],'disciplines':['arts visuels','peinture','photographie','sculpture','mixed media'],'description':'Plus de 250 ateliers ouvrent leurs portes. Vernissages, expositions, ateliers, concerts et performances. Entrée libre.','image_url':'','source_url':'https://www.montreuil.fr/agenda/journees-portes-ouvertes-des-ateliers-dartistes','source_type':'official_municipal','rsvp_url':'','price_text':'Entrée libre et gratuite','is_free':True,'verified':True},
+      {'event_type':'gallery_event','title':'Notre Mère Brûle — Portes ouvertes du Daron Perché','venue_name':'Jardin du Daron Perché','venue_type':'artist_space','city':'Montreuil','address':'74 rue Molière, 93100 Montreuil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'2026-10-11T20:00','artists':[],'disciplines':['land art','installation'],'description':'Exposition de land art, DJ set et portes ouvertes. Entrée libre.','image_url':'','source_url':'https://www.montreuil.fr/agenda/notre-mere-brule-portes-ouvertes-du-daron-perche','source_type':'official_municipal','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'trànsitos — Fernando Garcia Quintero','venue_name':'Centre Paris Anim’ Annie Fratellini','venue_type':'cultural_center','city':'Paris','address':'36 quai de la Rapée, 75012 Paris','country':'France','starts_at':'2026-10-15T19:00','ends_at':'2026-10-15T21:30','artists':['Fernando Garcia Quintero'],'disciplines':['peinture','art contemporain'],'description':'Vernissage gratuit avec l’artiste autour des thèmes migration, mémoire et déplacement.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-expo-transitos-124363','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
     ]
 
 def _v168_curated_opportunities():
     return [
-      {'title':'Open Call: Believing the Image — Paris, October 2026','organizer':'Zhen Yi Gallery','city':'Paris','country':'France','deadline':'2026-09-30','fee':'€230 si sélectionné','eligibility':'Artistes émergents et mid-career, photographie et mixed media photo. International.','summary':'Exposition physique à Paris autour de la photographie, de la réalité et de la croyance dans l’image.','source_url':'https://www.curatorspace.com/opportunities/detail/open-call-believing-the-image--paris-october---photography/11068?active=submit','source_name':'CuratorSpace','confidence':96},
-      {'title':'ODYSSEY — International Open Call for Artists | Paris','organizer':'Sol de Paris / Karine CHAI','city':'Paris','country':'France','deadline':'2026-09-30','fee':'200€ si sélectionné','eligibility':'Tous niveaux de carrière, international. Peinture, dessin, photographie, sculpture, mixed media, textile, digital, vidéo, installation.','summary':'Exposition collective physique à Paris autour du voyage, de la migration, de l’identité, de la mémoire et de la transformation.','source_url':'https://www.curatorspace.com/opportunities/detail/odyssey--international-open-call-for-artists--paris/11030','source_name':'CuratorSpace','confidence':98},
-      {'title':'Open Call: Shaping the View — Paris, October 2026','organizer':'Zhen Yi Gallery','city':'Paris','country':'France','deadline':'2026-10-04','fee':'€200 si sélectionné','eligibility':'Artistes internationaux, tous médias dont peinture, photographie, sculpture, installation, mixed media.','summary':'Exposition physique dans le Marais autour du cadrage, de la perception, de la visibilité et du point de vue.','source_url':'https://www.curatorspace.com/opportunities/detail/shaping-the-view/11139','source_name':'CuratorSpace','confidence':98},
-      {'title':'Appel à candidature exposition — La Gare Expérimentale','organizer':'La Gare Expérimentale','city':'Paris','country':'France','deadline':'2026-10-31','fee':'Gratuit / à vérifier','eligibility':'Artistes souhaitant proposer une exposition. Présence sur site demandée pendant l’exposition.','summary':'Candidature pour la programmation d’exposition de mars à juin, avec vernissage le mercredi soir.','source_url':'https://garexp.org/agenda/2026-06-29-appel-a-candidature-exposition','source_name':'La Gare Expérimentale','confidence':97},
+      {'title':'Art Emergence — biennale internationale des jeunes artistes','organizer':'Artagon / CENTQUATRE-PARIS','city':'Paris','country':'France','deadline':'2026-09-27','fee':'Gratuit','eligibility':'Jeunes artistes issus des écoles françaises et européennes, selon les conditions détaillées par l’organisateur.','summary':'Biennale dédiée à la jeune création contemporaine, organisée avec le CENTQUATRE-PARIS et Artagon.','source_url':'https://www.104.fr/appels-a-artistes/art-emergence','source_name':'CENTQUATRE-PARIS','confidence':99},
+      {'title':'Open Call: Believing the Image — Paris, October 2026','organizer':'Zhen Yi Gallery','city':'Paris','country':'France','deadline':'2026-09-30','fee':'€230 si sélectionné','eligibility':'Artistes émergents et mid-career, photographie et mixed media photo. International.','summary':'Exposition physique à Paris autour de la photographie, de la réalité et de la croyance dans l’image.','source_url':'https://www.curatorspace.com/opportunities/detail/open-call-believing-the-image--paris-october---photography/11068?active=submit','source_name':'CuratorSpace','confidence':98},
+      {'title':'Open Call: Shaping the View — Paris, October 2026','organizer':'Zhen Yi Gallery','city':'Paris','country':'France','deadline':'2026-10-04','fee':'€200 si sélectionné','eligibility':'Artistes internationaux, tous médias dont peinture, photographie, sculpture, installation et mixed media.','summary':'Exposition physique dans le Marais sur le cadrage, la perception, la visibilité et le point de vue.','source_url':'https://www.curatorspace.com/opportunities/detail/shaping-the-view/11139?active=submit','source_name':'CuratorSpace','confidence':99},
+      {'title':'Appel à candidature exposition — La Gare Expérimentale','organizer':'La Gare Expérimentale','city':'Paris','country':'France','deadline':'2026-10-31','fee':'Gratuit / à vérifier','eligibility':'Artistes souhaitant proposer une exposition. Présence sur site demandée pendant l’exposition.','summary':'Programmation d’exposition de mars à juin, avec vernissage le mercredi soir.','source_url':'https://garexp.org/agenda/2026-06-29-appel-a-candidature-exposition','source_name':'La Gare Expérimentale','confidence':99},
+      {'title':'Appel aux artistes — expositions collectives The Muisca Gallery','organizer':'The Muisca Gallery','city':'Paris','country':'France','deadline':'','fee':'À vérifier','eligibility':'Candidature spontanée ouverte toute l’année selon l’orientation artistique et les expositions programmées.','summary':'Galerie parisienne recherchant de nouveaux talents pour expositions collectives et solo shows.','source_url':'https://www.themuisca.com/appel-aux-artistes','source_name':'The Muisca Gallery','confidence':94},
+      {'title':'Appel à candidature — expositions collectives Galerie Mona Lisa','organizer':'Galerie Mona Lisa','city':'Paris','country':'France','deadline':'','fee':'Petite participation — montant à vérifier','eligibility':'Artistes émergents et confirmés : peinture, photographie, sculpture, dessin, etc.','summary':'Expositions collectives à Paris 7e, avec plusieurs dates en octobre, novembre et décembre 2026.','source_url':'https://galerie-monalisa.org/fr/appel-a-candidature/','source_name':'Galerie Mona Lisa','confidence':95},
     ]
 
 def _v168_refresh_events():
@@ -3928,7 +3931,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'168.1','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'168.2','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -3942,7 +3945,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'168.1','ui':'plug-art-v168-rich-workspace',
+      'ok':True,'version':'168.2','ui':'plug-art-v168-rich-workspace',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4011,7 +4014,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'168.1',
+      'version':'168.2',
       'ui':'plug-art-v168-rich-workspace',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
@@ -4039,7 +4042,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V168_1_READY plugy=smaller_non_obstructive creation=true_blank pdf=rich_media_editable radar=resilient_live_sources qa=interactive",flush=True)
+print("PLUG_ART_V168_2_READY plugy=smaller_non_obstructive creation=visual_five_slide pdf=realtime_rich radar=paris_93_live_sources qa=interactive",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
