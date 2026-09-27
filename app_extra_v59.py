@@ -8,7 +8,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='168.1'
+app.version='168.2'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -17,7 +17,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='168.20260927.5'
+VERSION='168.20260927.6'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -680,8 +680,8 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'168.1',
-      'ui':'plug-art-v168-1-polish',
+      'version':'168.2',
+      'ui':'plug-art-v168-2-studio-pro',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
@@ -728,10 +728,10 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='168.20260927.5'
+    expected='168.20260927.6'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'168.1',
+      'version':'168.2',
       'ui':'plug-art-v168-rich-workspace',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
@@ -3338,6 +3338,9 @@ def _v168_curated_events():
       {'event_type':'vernissage','title':'Endemic — Patricia Erbelding','venue_name':'Galerie Marie-Claude Duchosal','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-02T18:00','ends_at':'2026-10-02T20:30','artists':['Patricia Erbelding'],'disciplines':['peinture'],'description':'Vernissage de l’exposition Endemic.','image_url':'','source_url':'https://www.paris.fr/evenements/patricia-erbelding-endemic-123826','source_type':'official_city','rsvp_url':'','price_text':'','is_free':False,'verified':True},
       {'event_type':'vernissage','title':'TOHIONA — La Petite Soirée','venue_name':'Elysia Gallery','venue_type':'gallery','city':'Paris','address':'13 rue d’Ormesson, 75004 Paris','country':'France','starts_at':'2026-10-02T18:00','ends_at':'2026-10-02T21:00','artists':['Naohito Watanabe / TOHIONA'],'disciplines':['art contemporain','performance'],'description':'Vernissage privé, exposition et rencontre avec l’artiste.','image_url':'','source_url':'https://luma.com/rvb1fkq6','source_type':'event_platform','rsvp_url':'https://luma.com/rvb1fkq6','price_text':'Sur inscription','is_free':False,'verified':True},
       {'event_type':'vernissage','title':'Salon du déstructuralisme figuratif','venue_name':'Serre de l’Orangerie — Parc André Citroën','venue_type':'salon','city':'Paris','address':'16 rue de la Montagne de la Fage, 75015 Paris','country':'France','starts_at':'2026-10-03T18:00','ends_at':'','artists':[],'disciplines':['peinture','photographie','sculpture','mixed media'],'description':'Vernissage du Salon de déstructuralisme figuratif.','image_url':'','source_url':'https://www.paris.fr/evenements/participation-au-salon-du-destructuralisme-figuratif-124764','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'opening','title':'Portes ouvertes des ateliers d’artistes de Montreuil','venue_name':'Centre Tignous + ateliers dans toute la ville','venue_type':'open_studios','city':'Montreuil','address':'116 rue de Paris, 93100 Montreuil — point d’accueil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'2026-10-11T20:00','artists':[],'disciplines':['peinture','photographie','sculpture','céramique','arts visuels'],'description':'Plus de 250 ateliers ouvrent leurs portes. Vernissages, rencontres, expositions, performances et parcours dans la ville.','image_url':'','source_url':'https://www.montreuil.fr/agenda/journees-portes-ouvertes-des-ateliers-dartistes','source_type':'official_city','rsvp_url':'','price_text':'Entrée libre et gratuite','is_free':True,'verified':True},
+      {'event_type':'gallery_event','title':'Notre Mère Brûle — Portes ouvertes du Daron Perché','venue_name':'Jardin du Daron Perché','venue_type':'artist_space','city':'Montreuil','address':'74 rue Molière, 93100 Montreuil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'2026-10-11T20:00','artists':[],'disciplines':['land art','installation'],'description':'Installation, portes ouvertes, DJ set et rencontre dans un lieu artistique montreuillois.','image_url':'','source_url':'https://www.montreuil.fr/agenda/notre-mere-brule-portes-ouvertes-du-daron-perche','source_type':'official_city','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
+      {'event_type':'gallery_event','title':'Marché de créateurs ICI Montreuil','venue_name':'ICI MONTREUIL','venue_type':'creative_hub','city':'Montreuil','address':'135 boulevard Chanzy, 93100 Montreuil','country':'France','starts_at':'2026-10-17T10:00','ends_at':'2026-10-18T18:00','artists':[],'disciplines':['peinture','prints','céramique','design','artisanat'],'description':'Week-end de créateurs et galerie ouverte dans le tiers-lieu ICI Montreuil.','image_url':'','source_url':'https://www.montreuil.fr/agenda/marche-de-createurs-ici-montreuil','source_type':'official_city','rsvp_url':'','price_text':'Entrée libre et gratuite','is_free':True,'verified':True},
     ]
 
 def _v168_curated_opportunities():
@@ -3346,17 +3349,20 @@ def _v168_curated_opportunities():
       {'title':'ODYSSEY — International Open Call for Artists | Paris','organizer':'Sol de Paris / Karine CHAI','city':'Paris','country':'France','deadline':'2026-09-30','fee':'200€ si sélectionné','eligibility':'Tous niveaux de carrière, international. Peinture, dessin, photographie, sculpture, mixed media, textile, digital, vidéo, installation.','summary':'Exposition collective physique à Paris autour du voyage, de la migration, de l’identité, de la mémoire et de la transformation.','source_url':'https://www.curatorspace.com/opportunities/detail/odyssey--international-open-call-for-artists--paris/11030','source_name':'CuratorSpace','confidence':98},
       {'title':'Open Call: Shaping the View — Paris, October 2026','organizer':'Zhen Yi Gallery','city':'Paris','country':'France','deadline':'2026-10-04','fee':'€200 si sélectionné','eligibility':'Artistes internationaux, tous médias dont peinture, photographie, sculpture, installation, mixed media.','summary':'Exposition physique dans le Marais autour du cadrage, de la perception, de la visibilité et du point de vue.','source_url':'https://www.curatorspace.com/opportunities/detail/shaping-the-view/11139','source_name':'CuratorSpace','confidence':98},
       {'title':'Appel à candidature exposition — La Gare Expérimentale','organizer':'La Gare Expérimentale','city':'Paris','country':'France','deadline':'2026-10-31','fee':'Gratuit / à vérifier','eligibility':'Artistes souhaitant proposer une exposition. Présence sur site demandée pendant l’exposition.','summary':'Candidature pour la programmation d’exposition de mars à juin, avec vernissage le mercredi soir.','source_url':'https://garexp.org/agenda/2026-06-29-appel-a-candidature-exposition','source_name':'La Gare Expérimentale','confidence':97},
+      {'title':'Art Emergence 2027 — appel artistes','organizer':'CENTQUATRE-PARIS / Artagon','city':'Paris','country':'France','deadline':'2026-09-27','fee':'Gratuit','eligibility':'Jeunes artistes et diplômé·es récents selon les critères de l’appel. Exposition collective au CENTQUATRE-PARIS.','summary':'Appel pour une exposition de mars à avril 2027, avec vernissage le 19 mars 2027.','source_url':'https://www.104.fr/appels-a-artistes/art-emergence','source_name':'CENTQUATRE-PARIS','confidence':99},
+      {'title':'Candidature permanente — expositions collectives The Muisca Gallery','organizer':'The Muisca Gallery','city':'Paris','country':'France','deadline':'','fee':'À vérifier selon exposition','eligibility':'Artistes souhaitant exposer en collectif ou solo à Paris. Candidature ouverte toute l’année.','summary':'La galerie accepte les candidatures toute l’année et annonce des expositions collectives à Paris.','source_url':'https://www.themuisca.com/appel-aux-artistes','source_name':'The Muisca Gallery','confidence':94},
+      {'title':'Appel à candidature — Galerie Mona Lisa','organizer':'Galerie Mona Lisa','city':'Paris','country':'France','deadline':'','fee':'Participation demandée — montant à vérifier','eligibility':'Artistes émergents et confirmés : peinture, photographie, sculpture, dessin. Expositions collectives.','summary':'Candidature permanente pour plusieurs expositions collectives programmées à Paris en 2026.','source_url':'https://galerie-monalisa.org/fr/appel-a-candidature/','source_name':'Galerie Mona Lisa','confidence':92},
     ]
 
 def _v168_refresh_events():
-    start=date.today();end=start+timedelta(days=16)
+    start=date.today();end=start+timedelta(days=35)
     curated=[x for x in _v168_curated_events() if str(x.get('starts_at') or '')[:10]>=start.isoformat()]
     ids=_v167_upsert_events(curated);ai_error=''
     body={
-      'cities':['Paris','Aubervilliers','Saint-Denis','Pantin','Montreuil','Boulogne-Billancourt','Ivry-sur-Seine','Vitry-sur-Seine','Neuilly-sur-Marne','Noisy-le-Sec'],
+      'cities':['Paris','Aubervilliers','Saint-Denis','Pantin','Montreuil','Bobigny','Romainville','Bagnolet','Les Lilas','Noisy-le-Sec','Neuilly-sur-Marne','Rosny-sous-Bois','Le Pré-Saint-Gervais','Ivry-sur-Seine','Vitry-sur-Seine','Boulogne-Billancourt'],
       'date_from':start.isoformat(),'date_to':end.isoformat(),
       'types':['vernissage','opening','artist_talk','finissage','preview','nocturne','rencontre_artiste','lancement_exposition'],
-      'q':"Paris et Île-de-France. Inclure galeries, collectifs, centres d'art, mairies, hôtels de ville, écoles d'art, fondations, tiers-lieux, hôtels, salons, ateliers collectifs et pages Instagram publiquement indexables. Requêtes utiles: #vernissage #vernissageparis #vernissageidf #parisart #galerieparis #expositionparis #openingparis #artcontemporainparis. Vérifier aussi les agendas Ville de Paris, OAM, L'Officiel des spectacles, Slash Paris, sites de galeries et plateformes d'événements."
+      'q':"Paris, Seine-Saint-Denis et Île-de-France. Inclure galeries, collectifs, centres d'art, mairies, hôtels de ville, écoles d'art, fondations, tiers-lieux, hôtels, salons, ateliers collectifs, portes ouvertes et pages Instagram/TikTok publiquement indexables. Requêtes: #vernissage #vernissageparis #vernissage93 #vernissageidf #art93 #parisart #galerieparis #expositionparis #openingparis #artcontemporainparis. Vérifier Ville de Paris, agendas des villes du 93, OAM, L'Officiel des spectacles, Slash Paris, Fondation Fiminco, Magasins Généraux, Maison Populaire, Centre Tignous, sites de galeries et réseaux sociaux publics."
     }
     try:
         events=_v167_event_search_ai(body);ids+=_v167_upsert_events(events)
@@ -3471,6 +3477,2685 @@ def events_refresh_v168(body:dict={}):
 def opportunities_refresh_v168(body:dict={}):
     if bool((body or {}).get('force',True)):return _v168_refresh_opportunities()
     return {'ok':True,'started':_v168_start_refresh('opportunities')}
+
+@app.post('/api/v169/radar/refresh-all')
+def radar_refresh_all_v169(body:dict={}):
+    events=_v168_refresh_events()
+    opportunities=_v168_refresh_opportunities()
+    return {'ok':True,'events_found':events.get('found',0),'opportunities_found':opportunities.get('found',0),
+      'events':events.get('items',[]),'opportunities':opportunities.get('items',[]),
+      'fallback':bool(events.get('fallback') or opportunities.get('fallback'))}
+
+@app.get('/api/v169/assets/icons')
+def assets_icons_v169(q:str='art'):
+    query=str(q or 'art').strip()[:80] or 'art'
+    try:
+        rr=requests.get('https://api.iconify.design/search',params={'query':query,'limit':32},timeout=10,headers={'User-Agent':'PLUGART/168.2'})
+        if not rr.ok:raise HTTPException(502,'Recherche d’icônes indisponible')
+        icons=(rr.json() or {}).get('icons') or []
+        items=[]
+        for icon in icons[:32]:
+            if ':' not in icon:continue
+            prefix,name=icon.split(':',1)
+            if not re.match(r'^[a-z0-9-]+
+def _v168_live_radar_loop():
+    time.sleep(max(20,int(os.getenv('PLUGART_V168_START_DELAY_SECONDS','90'))))
+    while True:
+        try:
+            if _v168_should_refresh('events',float(os.getenv('PLUGART_EVENT_INTERVAL_HOURS','4'))):_v168_run_refresh('events')
+            if _v168_should_refresh('opportunities_ai',float(os.getenv('PLUGART_OPPORTUNITY_AI_INTERVAL_HOURS','18'))):_v168_run_refresh('opportunities')
+        except Exception as exc:print('PLUG_ART_V168_LOOP_ERROR '+str(exc)[:240],flush=True)
+        time.sleep(900)
+
+if os.getenv('PLUGART_EVENT_AUTORADAR','1')=='1':
+    threading.Thread(target=_v168_live_radar_loop,name='plugart-v168-live-radar',daemon=True).start()
+
+
+# ================= V167 · EDITABLE PDF WORKSPACE =================
+_v167p=core.conn()
+_v167p.executescript("""
+CREATE TABLE IF NOT EXISTS pdf_projects(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL DEFAULT 'Sans titre',
+  project_type TEXT DEFAULT 'dossier_projet',
+  cover_image TEXT DEFAULT '',
+  theme_json TEXT DEFAULT '{}',
+  metadata_json TEXT DEFAULT '{}',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS pdf_pages(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id INTEGER NOT NULL,
+  page_index INTEGER NOT NULL DEFAULT 0,
+  page_type TEXT DEFAULT 'content',
+  content_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT '',
+  FOREIGN KEY(project_id) REFERENCES pdf_projects(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_pdf_pages_project ON pdf_pages(project_id,page_index);
+""")
+_v167p.commit();_v167p.close()
+
+def _v167_pdf_project_out(row,with_pages=False):
+    if not row:return None
+    x=dict(row);x['theme']=_v167_json(x.pop('theme_json','{}'),{});x['metadata']=_v167_json(x.pop('metadata_json','{}'),{})
+    if with_pages:
+        pages=[]
+        for r in core.rows('select * from pdf_pages where project_id=? order by page_index,id',(x['id'],)):
+            p=dict(r);p['content']=_v167_json(p.pop('content_json','{}'),{});pages.append(p)
+        x['pages']=pages
+    return x
+
+@app.get('/api/v167/pdf-projects')
+def pdf_projects_list_v167():
+    return [_v167_pdf_project_out(x) for x in core.rows('select * from pdf_projects order by updated_at desc,id desc')]
+
+@app.post('/api/v167/pdf-projects')
+def pdf_project_create_v167(body:dict):
+    body=body or {};now=_now_v85()
+    title=str(body.get('title') or 'Nouveau dossier').strip()[:240] or 'Nouveau dossier'
+    typ=str(body.get('project_type') or 'dossier_projet').strip()[:80]
+    theme=json.dumps(body.get('theme') if isinstance(body.get('theme'),dict) else {},ensure_ascii=False)
+    meta=json.dumps(body.get('metadata') if isinstance(body.get('metadata'),dict) else {},ensure_ascii=False)
+    cover=str(body.get('cover_image') or '')[:2400]
+    pid=_v165_db_write(lambda db: db.execute('insert into pdf_projects(title,project_type,cover_image,theme_json,metadata_json,created_at,updated_at) values(?,?,?,?,?,?,?)',(title,typ,cover,theme,meta,now,now)).lastrowid)
+    pages=body.get('pages') if isinstance(body.get('pages'),list) else []
+    for i,p in enumerate(pages[:80]):
+        content=p.get('content') if isinstance(p,dict) and isinstance(p.get('content'),dict) else (p if isinstance(p,dict) else {})
+        _v165_db_write(lambda db,i=i,p=p,content=content: db.execute('insert into pdf_pages(project_id,page_index,page_type,content_json,created_at,updated_at) values(?,?,?,?,?,?)',(pid,i,str((p or {}).get('page_type') or 'content')[:80],json.dumps(content,ensure_ascii=False),now,now)))
+    return _v167_pdf_project_out(core.one('select * from pdf_projects where id=?',(pid,)),True)
+
+@app.get('/api/v167/pdf-projects/{project_id}')
+def pdf_project_get_v167(project_id:int):
+    row=core.one('select * from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    return _v167_pdf_project_out(row,True)
+
+@app.patch('/api/v167/pdf-projects/{project_id}')
+def pdf_project_update_v167(project_id:int,body:dict):
+    if not core.one('select id from pdf_projects where id=?',(project_id,)):raise HTTPException(404,'Projet PDF introuvable')
+    body=body or {};data={}
+    if 'title' in body:data['title']=str(body.get('title') or 'Sans titre')[:240]
+    if 'project_type' in body:data['project_type']=str(body.get('project_type') or '')[:80]
+    if 'cover_image' in body:data['cover_image']=str(body.get('cover_image') or '')[:2400]
+    if 'theme' in body:data['theme_json']=json.dumps(body.get('theme') if isinstance(body.get('theme'),dict) else {},ensure_ascii=False)
+    if 'metadata' in body:data['metadata_json']=json.dumps(body.get('metadata') if isinstance(body.get('metadata'),dict) else {},ensure_ascii=False)
+    if data:
+        data['updated_at']=_now_v85();sets=','.join(k+'=?' for k in data)
+        _v165_db_write(lambda db: db.execute('update pdf_projects set '+sets+' where id=?',(*data.values(),project_id)))
+    return pdf_project_get_v167(project_id)
+
+@app.delete('/api/v167/pdf-projects/{project_id}')
+def pdf_project_delete_v167(project_id:int):
+    row=core.one('select id from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    def _write(db):
+        db.execute('delete from pdf_pages where project_id=?',(project_id,))
+        return db.execute('delete from pdf_projects where id=?',(project_id,)).rowcount
+    _v165_db_write(_write);return {'ok':True}
+
+@app.post('/api/v167/pdf-projects/{project_id}/pages')
+def pdf_page_create_v167(project_id:int,body:dict):
+    if not core.one('select id from pdf_projects where id=?',(project_id,)):raise HTTPException(404,'Projet PDF introuvable')
+    body=body or {};now=_now_v85()
+    next_row=core.one('select coalesce(max(page_index),-1)+1 n from pdf_pages where project_id=?',(project_id,)) or {}
+    idx=int(body.get('page_index') if body.get('page_index') is not None else next_row.get('n',0))
+    content=body.get('content') if isinstance(body.get('content'),dict) else {}
+    _v165_db_write(lambda db: db.execute('insert into pdf_pages(project_id,page_index,page_type,content_json,created_at,updated_at) values(?,?,?,?,?,?)',(project_id,idx,str(body.get('page_type') or 'content')[:80],json.dumps(content,ensure_ascii=False),now,now)))
+    _v165_db_write(lambda db: db.execute('update pdf_projects set updated_at=? where id=?',(now,project_id)))
+    return pdf_project_get_v167(project_id)
+
+@app.patch('/api/v167/pdf-pages/{page_id}')
+def pdf_page_update_v167(page_id:int,body:dict):
+    row=core.one('select * from pdf_pages where id=?',(page_id,))
+    if not row:raise HTTPException(404,'Page PDF introuvable')
+    body=body or {};data={}
+    if 'page_index' in body:data['page_index']=int(body.get('page_index') or 0)
+    if 'page_type' in body:data['page_type']=str(body.get('page_type') or 'content')[:80]
+    if 'content' in body:data['content_json']=json.dumps(body.get('content') if isinstance(body.get('content'),dict) else {},ensure_ascii=False)
+    if data:
+        data['updated_at']=_now_v85();sets=','.join(k+'=?' for k in data)
+        _v165_db_write(lambda db: db.execute('update pdf_pages set '+sets+' where id=?',(*data.values(),page_id)))
+        _v165_db_write(lambda db: db.execute('update pdf_projects set updated_at=? where id=?',(_now_v85(),row['project_id'])))
+    return pdf_project_get_v167(int(row['project_id']))
+
+@app.delete('/api/v167/pdf-pages/{page_id}')
+def pdf_page_delete_v167(page_id:int):
+    row=core.one('select project_id from pdf_pages where id=?',(page_id,))
+    if not row:raise HTTPException(404,'Page PDF introuvable')
+    _v165_db_write(lambda db: db.execute('delete from pdf_pages where id=?',(page_id,)))
+    return pdf_project_get_v167(int(row['project_id']))
+
+def _v167_pdf_path(project_id):
+    root=Path('/data/generated_pdfs') if Path('/data').exists() else BASE/'generated_pdfs'
+    root.mkdir(parents=True,exist_ok=True)
+    return root/('plugart_project_'+str(int(project_id))+'.pdf')
+
+# ================= V168 · RICH PDF EDITOR =================
+def _v168_pdf_raster_dir():
+    root=Path('/data/pdf_raster') if Path('/data').exists() else BASE/'pdf_raster'
+    root.mkdir(parents=True,exist_ok=True)
+    return root
+
+def _v168_raster_pdf_page(file_id:int,page_index:int,scale:float=1.6):
+    row=core.one('select * from bureau_files where id=?',(file_id,))
+    if not row:raise HTTPException(404,'PDF introuvable')
+    src=Path(str(row.get('storage_path') or ''))
+    if not src.exists():raise HTTPException(404,'Fichier PDF absent du stockage')
+    out=_v168_pdf_raster_dir()/('file_'+str(file_id)+'_page_'+str(page_index)+'.png')
+    if out.exists() and out.stat().st_mtime>=src.stat().st_mtime:return out
+    try:
+        import pymupdf as fitz
+        doc=fitz.open(str(src))
+        if page_index<0 or page_index>=doc.page_count:
+            doc.close();raise HTTPException(404,'Page PDF introuvable')
+        pix=doc.load_page(page_index).get_pixmap(matrix=fitz.Matrix(scale,scale),alpha=False)
+        out.write_bytes(pix.tobytes('png'));doc.close();return out
+    except HTTPException:raise
+    except Exception as exc:raise HTTPException(503,'Rendu de page PDF indisponible') from exc
+
+@app.get('/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+def bureau_file_page_png_v168(file_id:int,page_index:int):
+    return FileResponse(_v168_raster_pdf_page(file_id,page_index),media_type='image/png',headers={'Cache-Control':'public,max-age=3600'})
+
+@app.post('/api/v168/pdf-projects/from-file/{file_id}')
+def pdf_project_from_file_v168(file_id:int):
+    row=core.one('select * from bureau_files where id=?',(file_id,))
+    if not row:raise HTTPException(404,'PDF introuvable')
+    src=Path(str(row.get('storage_path') or ''))
+    if not src.exists():raise HTTPException(404,'Fichier PDF absent du stockage')
+    try:
+        import pymupdf as fitz
+        doc=fitz.open(str(src));count=min(int(doc.page_count),60);doc.close()
+    except Exception as exc:raise HTTPException(503,'Analyse du PDF indisponible') from exc
+    pages=[{'page_type':'imported','content':{'background':'#FFFFFF','background_image':'/api/v168/bureau/files/'+str(file_id)+'/page/'+str(i)+'.png','elements':[]}} for i in range(count)]
+    return pdf_project_create_v167({'title':str(row.get('name') or row.get('original_name') or 'PDF éditable'),'project_type':'pdf_import','metadata':{'source_type':'bureau_file','source_file_id':file_id,'format':'A4 portrait','page_count':count},'pages':pages})
+
+def _v168_color(value,default=(0,0,0)):
+    s=str(value or '').strip().lstrip('#')
+    try:
+        if len(s)==3:s=''.join(ch*2 for ch in s)
+        if len(s)==6:return tuple(int(s[i:i+2],16)/255 for i in (0,2,4))
+    except Exception:pass
+    return default
+
+def _v168_image_bytes(ref):
+    ref=str(ref or '').strip()
+    if not ref:return b''
+    if ref.startswith('data:image/') and ';base64,' in ref:
+        try:
+            raw=base64.b64decode(ref.split(',',1)[1],validate=True)
+            return raw if len(raw)<=8*1024*1024 else b''
+        except Exception:return b''
+    m=re.match(r'^/api/v168/bureau/files/(\d+)/page/(\d+)\.png$',ref)
+    if m:
+        try:return _v168_raster_pdf_page(int(m.group(1)),int(m.group(2))).read_bytes()
+        except Exception:return b''
+    if ref.startswith(('http://','https://')):
+        try:
+            rr=requests.get(ref,timeout=10,headers={'User-Agent':'Mozilla/5.0 PLUGART-PDF/168'})
+            return rr.content if rr.ok and (rr.headers.get('content-type') or '').lower().startswith('image/') else b''
+        except Exception:return b''
+    return b''
+
+def _v168_crop_image(raw,ratio,position='center'):
+    if not raw:return None
+    try:
+        from PIL import Image
+        im=Image.open(io.BytesIO(raw)).convert('RGB');sw,sh=im.size;sr=sw/max(1,sh)
+        if sr>ratio:
+            nw=max(1,int(sh*ratio));left=(sw-nw)//2
+            if position=='left':left=0
+            elif position=='right':left=sw-nw
+            return im.crop((left,0,left+nw,sh))
+        nh=max(1,int(sw/max(.001,ratio)));top=(sh-nh)//2
+        if position=='top':top=0
+        elif position=='bottom':top=sh-nh
+        return im.crop((0,top,sw,top+nh))
+    except Exception:return None
+
+def _v168_draw_image(cv,ref,x,y,w,h,crop='cover',position='center'):
+    raw=_v168_image_bytes(ref)
+    if not raw:return
+    try:
+        from reportlab.lib.utils import ImageReader
+        if crop=='cover':
+            im=_v168_crop_image(raw,w/max(1,h),position)
+            if im is not None:
+                buf=io.BytesIO();im.save(buf,format='JPEG',quality=90);buf.seek(0)
+                cv.drawImage(ImageReader(buf),x,y,w,h,mask='auto',preserveAspectRatio=False);return
+        cv.drawImage(ImageReader(io.BytesIO(raw)),x,y,w,h,mask='auto',preserveAspectRatio=True,anchor='c')
+    except Exception:pass
+
+def _v168_draw_element(cv,e,W,H):
+    e=e or {};typ=str(e.get('type') or 'text').lower()
+    x=W*float(e.get('x',8))/100;y_top=H*float(e.get('y',8))/100
+    w=W*float(e.get('w',84))/100;h=H*float(e.get('h',18))/100;y=H-y_top-h
+    opacity=max(0,min(1,float(e.get('opacity',1) or 1)));rot=float(e.get('rotation',0) or 0)
+    cv.saveState()
+    try:
+        if hasattr(cv,'setFillAlpha'):cv.setFillAlpha(opacity)
+        if hasattr(cv,'setStrokeAlpha'):cv.setStrokeAlpha(opacity)
+        if rot:
+            cx=x+w/2;cy=y+h/2;cv.translate(cx,cy);cv.rotate(rot);x=-w/2;y=-h/2
+        if typ=='image':
+            _v168_draw_image(cv,e.get('src') or e.get('url'),x,y,w,h,str(e.get('crop') or 'cover'),str(e.get('position') or 'center'))
+        elif typ in ('rect','rectangle','shape'):
+            cv.setFillColorRGB(*_v168_color(e.get('fill'),(.45,.34,1)))
+            radius=max(0,float(e.get('radius',0) or 0))*min(W,H)/100
+            if radius:cv.roundRect(x,y,w,h,radius,fill=1,stroke=0)
+            else:cv.rect(x,y,w,h,fill=1,stroke=0)
+        elif typ in ('ellipse','circle'):
+            cv.setFillColorRGB(*_v168_color(e.get('fill'),(.45,.34,1)));cv.ellipse(x,y,x+w,y+h,fill=1,stroke=0)
+        elif typ=='line':
+            cv.setStrokeColorRGB(*_v168_color(e.get('stroke'),(.1,.1,.1)));cv.setLineWidth(max(.5,float(e.get('thickness',2) or 2)));cv.line(x,y+h/2,x+w,y+h/2)
+        else:
+            txt=str(e.get('text') or '');size=max(5,min(120,float(e.get('fontSize',24) or 24)))
+            cv.setFillColorRGB(*_v168_color(e.get('color'),(.08,.08,.10)))
+            font='Helvetica-Bold' if str(e.get('weight') or '').lower() in ('700','800','900','bold') else 'Helvetica'
+            cv.setFont(font,size);align=str(e.get('align') or 'left')
+            leading=max(size*1.05,float(e.get('lineHeight',1.15) or 1.15)*size);cursor=y+h-size
+            max_chars=max(8,int(w/max(1,size*.54)))
+            for para in txt.splitlines() or ['']:
+                words=para.split();line='';chunks=[]
+                for word in words:
+                    test=(line+' '+word).strip()
+                    if len(test)>max_chars and line:chunks.append(line);line=word
+                    else:line=test
+                if line or not chunks:chunks.append(line)
+                for line in chunks:
+                    if cursor<y:break
+                    if align=='center':cv.drawCentredString(x+w/2,cursor,line)
+                    elif align=='right':cv.drawRightString(x+w,cursor,line)
+                    else:cv.drawString(x,cursor,line)
+                    cursor-=leading
+    finally:cv.restoreState()
+
+def _v167_render_pdf(project_id):
+    project=pdf_project_get_v167(project_id)
+    try:
+        from reportlab.pdfgen import canvas as rl_canvas
+        from reportlab.lib.pagesizes import A4,landscape
+    except Exception as exc:
+        raise HTTPException(503,'Moteur PDF indisponible') from exc
+    meta=project.get('metadata') or {};fmt=str(meta.get('format') or 'A4 portrait').lower()
+    pagesize=landscape(A4) if 'paysage' in fmt or 'landscape' in fmt else A4
+    out=_v167_pdf_path(project_id);cv=rl_canvas.Canvas(str(out),pagesize=pagesize);W,H=pagesize
+    pages=project.get('pages') or [{'content':{'title':project.get('title'),'body':''}}]
+    for page in pages:
+        content=page.get('content') or {};bg=str(content.get('background') or '#FFFFFF')
+        cv.setFillColorRGB(*_v168_color(bg,(1,1,1)));cv.rect(0,0,W,H,fill=1,stroke=0)
+        bgimg=str(content.get('background_image') or '')
+        if bgimg:_v168_draw_image(cv,bgimg,0,0,W,H,'cover',str(content.get('background_position') or 'center'))
+        elements=content.get('elements') if isinstance(content.get('elements'),list) else []
+        if elements:
+            for element in elements[:120]:_v168_draw_element(cv,element,W,H)
+        else:
+            legacy_image=str(content.get('image') or '')
+            if legacy_image:_v168_draw_image(cv,legacy_image,0,H*.43,W,H*.57,'cover','center')
+            title=str(content.get('title') or project.get('title') or '')[:500]
+            kicker=str(content.get('kicker') or '')[:240]
+            body=str(content.get('body') or content.get('text') or '')[:12000]
+            if kicker:
+                cv.setFont('Helvetica-Bold',10);cv.setFillColorRGB(.42,.36,.72);cv.drawString(42,H-52,kicker.upper()[:80])
+            cv.setFillColorRGB(.07,.075,.09);cv.setFont('Helvetica-Bold',26);y=H-88
+            for chunk in re.findall(r'.{1,42}(?:\s+|$)',title)[:4]:
+                cv.drawString(42,y,chunk.strip());y-=31
+            cv.setFont('Helvetica',11);cv.setFillColorRGB(.28,.29,.33);y-=10
+            for para in body.splitlines():
+                if y<52:break
+                for chunk in re.findall(r'.{1,90}(?:\s+|$)',para) or ['']:
+                    cv.drawString(42,y,chunk.strip());y-=15
+                    if y<52:break
+                y-=5
+        cv.setFont('Helvetica',7);cv.setFillColorRGB(.55,.56,.60);cv.drawRightString(W-32,24,'PLUG ART · V168')
+        cv.showPage()
+    cv.save();return out
+
+@app.post('/api/v167/pdf-projects/{project_id}/export')
+def pdf_project_export_v167(project_id:int):
+    path=_v167_render_pdf(project_id)
+    return {'ok':True,'project_id':project_id,'preview_url':'/api/v167/pdf-projects/'+str(project_id)+'/preview.pdf','bytes':path.stat().st_size}
+
+@app.get('/api/v167/pdf-projects/{project_id}/preview.pdf')
+def pdf_project_preview_v167(project_id:int):
+    path=_v167_pdf_path(project_id);row=core.one('select title from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    if not path.exists():path=_v167_render_pdf(project_id)
+    safe=re.sub(r'[^A-Za-z0-9À-ÿ._ -]+','_',str(row.get('title') or 'PLUG_ART'))+'.pdf'
+    return FileResponse(path,media_type='application/pdf',filename=safe,content_disposition_type='inline')
+
+@app.post('/api/v167/pdf-projects/from-bureau/{doc_id}')
+def pdf_project_from_bureau_v167(doc_id:int):
+    doc=core.one('select * from bureau_documents where id=?',(doc_id,))
+    if not doc:raise HTTPException(404,'Document Bureau introuvable')
+    return pdf_project_create_v167({'title':doc.get('title') or 'Dossier PLUG ART','project_type':'bureau',
+      'metadata':{'source_type':'bureau','source_id':doc_id},
+      'pages':[{'page_type':'content','content':{'kicker':doc.get('folder') or 'PLUG ART','title':doc.get('title') or 'Document','body':doc.get('body') or ''}}]})
+
+@app.get('/api/v167/canva/config')
+def canva_config_v167():
+    default_url='https://www.canva.com/d/jzqydvXDq9GRdlC'
+    url=os.getenv('CANVA_STARTER_URL',default_url).strip() or default_url
+    return {'enabled':True,'starter_url':url,'mode':'bridge','fallback':'export-pack','template':'PLUG ART Open Call · 5 slides'}
+
+
+
+# ================= V167 · RESILIENT IDEAS / QA =================
+_v167i=core.conn()
+_v167i.executescript("""
+CREATE TABLE IF NOT EXISTS idea_links(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_idea_id INTEGER NOT NULL,
+  to_idea_id INTEGER NOT NULL,
+  created_at TEXT DEFAULT '',
+  UNIQUE(from_idea_id,to_idea_id)
+);
+""")
+_v167i.commit();_v167i.close()
+
+@app.get('/api/v167/ideas/health')
+def ideas_health_v167():
+    try:
+        count=(core.one('select count(*) count from idea_cloud') or {}).get('count',0)
+        db=core.conn()
+        db.execute('savepoint v167_health')
+        db.execute('create temp table if not exists _v167_health(x text)')
+        db.execute('insert into _v167_health(x) values(?)',(secrets.token_hex(4),))
+        db.execute('rollback to v167_health');db.execute('release v167_health');db.close()
+        return {'ok':True,'db':'ok','count':count,'writable':True}
+    except Exception as exc:
+        return {'ok':False,'db':type(exc).__name__,'count':0,'writable':False}
+
+@app.get('/api/v167/ideas/{idea_id}/links')
+def idea_links_v167(idea_id:int):
+    return core.rows("""select l.id,l.from_idea_id,l.to_idea_id,i.title to_title
+                        from idea_links l left join idea_cloud i on i.id=l.to_idea_id
+                        where l.from_idea_id=? order by l.id""",(idea_id,))
+
+@app.post('/api/v167/ideas/{idea_id}/links')
+def idea_link_create_v167(idea_id:int,body:dict):
+    to_id=int((body or {}).get('to_idea_id') or 0)
+    if not core.one('select id from idea_cloud where id=?',(idea_id,)) or not core.one('select id from idea_cloud where id=?',(to_id,)):
+        raise HTTPException(404,'Idée introuvable')
+    if idea_id==to_id:raise HTTPException(400,'Une idée ne peut pas se relier à elle-même')
+    _v165_db_write(lambda db: db.execute('insert or ignore into idea_links(from_idea_id,to_idea_id,created_at) values(?,?,?)',(idea_id,to_id,_now_v85())))
+    return {'ok':True,'links':idea_links_v167(idea_id)}
+
+@app.post('/api/v167/ideas/{idea_id}/to-bureau')
+def idea_to_bureau_v167(idea_id:int):
+    idea=core.one('select * from idea_cloud where id=?',(idea_id,))
+    if not idea:raise HTTPException(404,'Idée introuvable')
+    return bureau_create_v107({'title':idea.get('title') or 'Idée','body':idea.get('body') or '','folder':'Projets',
+      'tags':idea.get('tags') or '','source_type':'idea','source_id':str(idea_id)})
+
+@app.post('/api/v167/ideas/{idea_id}/to-pdf')
+def idea_to_pdf_v167(idea_id:int):
+    idea=core.one('select * from idea_cloud where id=?',(idea_id,))
+    if not idea:raise HTTPException(404,'Idée introuvable')
+    return pdf_project_create_v167({'title':idea.get('title') or 'Concept PLUG ART','project_type':'concept',
+      'metadata':{'source_type':'idea','source_id':idea_id,'project':idea.get('project')},
+      'pages':[{'content':{'kicker':'CONCEPT','title':idea.get('title') or 'Idée','body':idea.get('body') or '','image':idea.get('image_url') or ''}}]})
+
+@app.get('/api/v167/qa/manifest')
+def qa_manifest_v167():
+    required=[
+      ('GET','/api/v167/events'),('POST','/api/v167/events/search'),
+      ('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),
+      ('POST','/api/v167/pdf-projects'),('GET','/api/v167/canva/config'),
+      ('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),
+      ('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+    ]
+    active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
+    return {'ok':all(x in active for x in required),
+      'required':[m+' '+p for m,p in required],
+      'missing':[m+' '+p for m,p in required if (m,p) not in active]}
+
+
+@app.get('/api/v163/diagnostics')
+def diagnostics_v163():
+    started=time.perf_counter()
+    checks={}
+    try:
+        db=core.conn()
+        row=db.execute('pragma quick_check').fetchone()
+        checks['database']={'ok':bool(row and str(row[0]).lower()=='ok'),'detail':str(row[0] if row else 'unknown')}
+        db.close()
+    except Exception as exc:
+        checks['database']={'ok':False,'detail':type(exc).__name__}
+    static_required=[
+      BASE/'static'/'plugart_v162.html',BASE/'static'/'plugart_v162.js',BASE/'static'/'plugart_v162.css',
+      BASE/'static'/'plugy_v162.html',BASE/'static'/'plugy_v162.js',BASE/'static'/'plugy_v162.css'
+    ]
+    checks['static']={'ok':all(p.exists() and p.stat().st_size>0 for p in static_required),'files':len(static_required)}
+    checks['plugy_model']={'ok':bool(REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>1000),'bytes':REALISTIC_PLUGY.stat().st_size if REALISTIC_PLUGY.exists() else 0}
+    active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
+    critical=[
+      ('GET','/api/health'),('GET','/api/v124/dashboard-bootstrap'),('POST','/api/v125/plugy/stream'),
+      ('POST','/api/v162/plugy/speech'),('GET','/api/v156/bureau/files'),('GET','/api/v156/ideas'),('POST','/api/v164/projects/library/seed'),
+      ('GET','/api/v86/crm'),('POST','/api/radar/run'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/pdf-projects/from-file/{file_id}')
+    ]
+    missing=[f'{m} {p}' for m,p in critical if (m,p) not in active]
+    checks['routes']={'ok':not missing,'missing':missing}
+    checks['openai']={'configured':bool(os.getenv('OPENAI_API_KEY','').strip())}
+    meta_configured=bool(os.getenv('META_APP_ID','').strip() and os.getenv('META_APP_SECRET','').strip())
+    try:
+        igrow=_ig_row()
+        instagram_connected=bool(igrow.get('ig_user_id') and igrow.get('page_access_token'))
+    except Exception:
+        instagram_connected=False
+    checks['meta']={'configured':meta_configured,'instagram_connected':instagram_connected}
+    checks['railway']={'domain_configured':bool(os.getenv('RAILWAY_PUBLIC_DOMAIN','').strip())}
+    try:
+        t=time.perf_counter();payload=dashboard_bootstrap_v124();raw=json.dumps(payload,ensure_ascii=False,separators=(',',':')).encode('utf-8')
+        checks['bootstrap']={'ok':True,'ms':round((time.perf_counter()-t)*1000,1),'bytes':len(raw),'opportunities':len(payload.get('opportunities') or [])}
+    except Exception as exc:
+        checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
+    ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
+    return {'ok':ok,'version':'168.2','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+
+@app.get('/api/v164/status')
+@app.get('/api/v163/status')
+@app.get('/api/v1623/status')
+@app.get('/api/v162/status')
+@app.get('/api/v161/status')
+@app.get('/api/v160/status')
+@app.get('/api/v159/status')
+@app.get('/api/v158/status')
+@app.get('/api/v157/status')
+@app.get('/api/v156/status')
+def status_v156():
+    return {
+      'ok':True,'version':'168.2','ui':'plug-art-v168-rich-workspace',
+      'plugy':'full-body-safe-frame-sticky-natural-voice',
+      'creation':'live-editor-fast-lazy-assets',
+      'bureau':'documents-projects-pdf-library-packages-templates-hub',
+      'ideas':'visible-project-linked-draggable-cloud',
+      'hub_projects':['aubervilliers','millenaire','gennevilliers','chanteraines']
+    }
+
+
+@app.get('/api/v65/status')
+@app.get('/api/v66/status')
+@app.get('/api/v67/status')
+@app.get('/api/v68/status')
+@app.get('/api/v69/status')
+@app.get('/api/v70/status')
+@app.get('/api/v71/status')
+@app.get('/api/v72/status')
+@app.get('/api/v73/status')
+@app.get('/api/v74/status')
+@app.get('/api/v75/status')
+@app.get('/api/v77/status')
+@app.get('/api/v78/status')
+@app.get('/api/v79/status')
+@app.get('/api/v80/status')
+@app.get('/api/v81/status')
+@app.get('/api/v82/status')
+@app.get('/api/v83/status')
+@app.get('/api/v84/status')
+@app.get('/api/v85/status')
+@app.get('/api/v86/status')
+@app.get('/api/v87/status')
+@app.get('/api/v88/status')
+@app.get('/api/v89/status')
+
+@app.get('/api/v90/status')
+@app.get('/api/v100/status')
+@app.get('/api/v101/status')
+@app.get('/api/v102/status')
+@app.get('/api/v105/status')
+@app.get('/api/v106/status')
+@app.get('/api/v107/status')
+@app.get('/api/v110/status')
+@app.get('/api/v111/status')
+@app.get('/api/v112/status')
+@app.get('/api/v113/status')
+@app.get('/api/v114/status')
+@app.get('/api/v115/status')
+@app.get('/api/v116/status')
+@app.get('/api/v117/status')
+@app.get('/api/v118/status')
+@app.get('/api/v119/status')
+@app.get('/api/v120/status')
+@app.get('/api/v121/status')
+@app.get('/api/v122/status')
+@app.get('/api/v140/status')
+@app.get('/api/v141/status')
+@app.get('/api/v150/status')
+@app.get('/api/v149/status')
+@app.get('/api/v148/status')
+@app.get('/api/v147/status')
+@app.get('/api/v146/status')
+@app.get('/api/v145/status')
+@app.get('/api/v144/status')
+@app.get('/api/v143/status')
+@app.get('/api/v142/status')
+def status_v90():
+    raw=GLB.read_bytes() if GLB.exists() else b''
+    return {
+      'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
+      'version':'168.2',
+      'ui':'plug-art-v168-rich-workspace',
+      'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
+      'marketing_blocks':False,
+      'internal_workspace':True,
+      'runtime_split':True,
+      'navigation_fixed':True,
+      'typography':'Space Grotesk + Inter',
+      'legacy_index_served':False,
+      'single_mascot':True,
+      'plugy_reference':'single V113 premium animated model with runtime soft-pearl material tuning and reduced reflections',
+      'plugy_expected_sha256':PLUGY_REFERENCE_SHA256,
+      'plugy_reference_match':hashlib.sha256(raw).hexdigest()==PLUGY_REFERENCE_SHA256 if raw else False,
+      'plugy_model_path':'/assets/plugy-v113-premium.glb',
+      'plugy_material':RESULT.get('material'),
+      'plugy_official_base':RESULT.get('official_base','V26'),
+      'plugy_profile':RESULT.get('profile'),
+      'legacy_model_refs_in_dashboard':sum(DASH.read_text(encoding='utf-8').count(x) for x in ('PLUGY_final_animated.glb','/static/plugy.glb')) if DASH.exists() else -1,
+      'plugy_bytes':len(raw),
+      'plugy_sha256':hashlib.sha256(raw).hexdigest() if raw else '',
+      'plugy_animations':['Idle','SoftTurn','Think','Curious','Present','Bounce','Happy','Attentive','Wave','Dance','Blink','Listen','Speak','Charge','Travel'],
+      'studio':'Unified iPhone-first Content Studio with central free canvas, floating tool dock, bottom-sheet templates/media/text/elements/layers/style controls, contextual inspector, typography scales, color presets, snapping, AI assistance, PNG/ZIP export and Instagram publishing',
+      'layouts':['top','cover','left','right','band','collage','minimal'],
+      'cuts':['none','diagonal','curve','wave'],
+      'themes':['editorial','glass','impact','paper','night','color'],
+      'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
+    }
+
+print("PLUG_ART_V168_2_READY creation=storyboard_pro pdf=realtime_layers radar=refresh_all assets=iconify plugy=compact qa=interactive",flush=True)
+
+def _v127_runtime_smoke():
+    required_routes={
+      ('GET','/api/health'),
+      ('GET','/plugy'),
+      ('GET','/api/v154/ui-manifest'),
+      ('GET','/api/v90/builder/config'),
+      ('PATCH','/api/v90/builder/config'),
+      ('GET','/api/map'),
+      ('GET','/api/v124/dashboard-bootstrap'),
+      ('POST','/api/v125/plugy/stream'),
+      ('POST','/api/v32/plugy'),
+      ('POST','/api/v32/content/image'),
+      ('POST','/api/v162/plugy/speech'),
+      ('GET','/api/v86/crm'),
+      ('GET','/api/v107/bureau'),
+      ('GET','/api/v107/open-calls/workflow'),
+      ('GET','/api/v108/drafts'),
+      ('GET','/api/v88/instagram/status'),
+      ('GET','/api/v88/instagram/media'),
+      ('POST','/api/v88/instagram/publish'),
+      ('POST','/api/radar/run'),
+      ('GET','/api/v156/status'),
+      ('GET','/api/v156/bureau/files'),
+      ('POST','/api/v156/bureau/files'),
+      ('GET','/api/v156/ideas'),
+      ('POST','/api/v156/ideas'),
+      ('POST','/api/v164/projects/library/seed'),('GET','/api/v164/projects/library'),
+      ('GET','/api/v163/diagnostics'),
+      ('GET','/api/v163/status'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('POST','/api/v167/pdf-projects'),('GET','/api/v167/qa/manifest'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+    }
+    active=set()
+    for route in app.router.routes:
+        path=getattr(route,'path',None)
+        methods=getattr(route,'methods',set()) or set()
+        if not path:continue
+        for method in methods:
+            active.add((str(method).upper(),path))
+    missing=sorted(required_routes-active)
+    required_tables=[
+      'opportunities','artists','crm_leads','crm_history','bureau_documents',
+      'bureau_templates','application_packages','opportunity_workspace','content_drafts',
+      'bureau_files','idea_cloud','art_events','pdf_projects','pdf_pages','idea_links','radar_refresh_state'
+    ]
+    table_missing=[]
+    db_ok=False
+    quick='unknown'
+    try:
+        db=core.conn()
+        existing={str(x[0]) for x in db.execute("select name from sqlite_master where type='table'").fetchall()}
+        table_missing=[t for t in required_tables if t not in existing]
+        row=db.execute('pragma quick_check').fetchone()
+        quick=str(row[0] if row else 'unknown')
+        db_ok=(quick.lower()=='ok')
+        db.close()
+    except Exception as exc:
+        quick=f"{type(exc).__name__}:{str(exc)[:120]}"
+    ok=(not missing and not table_missing and db_ok)
+    print(
+      f"PLUG_ART_SMOKE ok={str(ok).lower()} routes={len(required_routes)-len(missing)}/{len(required_routes)} "
+      f"tables={len(required_tables)-len(table_missing)}/{len(required_tables)} db={quick} "
+      f"missing_routes={','.join(m+' '+p for m,p in missing) or 'none'} "
+      f"missing_tables={','.join(table_missing) or 'none'}",
+      flush=True
+    )
+
+def _v163_connectivity_smoke():
+    openai='not_configured';meta='not_configured';instagram='disconnected'
+    try:
+        key=os.getenv('OPENAI_API_KEY','').strip()
+        if key:
+            rr=requests.get('https://api.openai.com/v1/models',headers={'Authorization':f'Bearer {key}'},timeout=8)
+            openai='ok' if rr.ok else f'http_{rr.status_code}'
+    except Exception:
+        openai='network_error'
+    try:
+        configured=bool(os.getenv('META_APP_ID','').strip() and os.getenv('META_APP_SECRET','').strip())
+        meta='configured' if configured else 'not_configured'
+        row=_ig_row()
+        token=str(row.get('page_access_token') or '').strip()
+        igid=str(row.get('ig_user_id') or '').strip()
+        if token and igid:
+            rr=requests.get(f'https://graph.facebook.com/{_ig_graph_version()}/{igid}',params={'fields':'id,username','access_token':token},timeout=8)
+            instagram='ok' if rr.ok else f'http_{rr.status_code}'
+        elif configured:
+            instagram='not_connected'
+    except Exception:
+        instagram='network_error'
+    print(f'PLUG_ART_CONNECTIONS openai={openai} meta={meta} instagram={instagram}',flush=True)
+
+_v127_runtime_smoke()
+threading.Thread(target=_v163_connectivity_smoke,daemon=True).start()
+,prefix) or not re.match(r'^[A-Za-z0-9_.-]+
+def _v168_live_radar_loop():
+    time.sleep(max(20,int(os.getenv('PLUGART_V168_START_DELAY_SECONDS','90'))))
+    while True:
+        try:
+            if _v168_should_refresh('events',float(os.getenv('PLUGART_EVENT_INTERVAL_HOURS','4'))):_v168_run_refresh('events')
+            if _v168_should_refresh('opportunities_ai',float(os.getenv('PLUGART_OPPORTUNITY_AI_INTERVAL_HOURS','18'))):_v168_run_refresh('opportunities')
+        except Exception as exc:print('PLUG_ART_V168_LOOP_ERROR '+str(exc)[:240],flush=True)
+        time.sleep(900)
+
+if os.getenv('PLUGART_EVENT_AUTORADAR','1')=='1':
+    threading.Thread(target=_v168_live_radar_loop,name='plugart-v168-live-radar',daemon=True).start()
+
+
+# ================= V167 · EDITABLE PDF WORKSPACE =================
+_v167p=core.conn()
+_v167p.executescript("""
+CREATE TABLE IF NOT EXISTS pdf_projects(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL DEFAULT 'Sans titre',
+  project_type TEXT DEFAULT 'dossier_projet',
+  cover_image TEXT DEFAULT '',
+  theme_json TEXT DEFAULT '{}',
+  metadata_json TEXT DEFAULT '{}',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS pdf_pages(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id INTEGER NOT NULL,
+  page_index INTEGER NOT NULL DEFAULT 0,
+  page_type TEXT DEFAULT 'content',
+  content_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT '',
+  FOREIGN KEY(project_id) REFERENCES pdf_projects(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_pdf_pages_project ON pdf_pages(project_id,page_index);
+""")
+_v167p.commit();_v167p.close()
+
+def _v167_pdf_project_out(row,with_pages=False):
+    if not row:return None
+    x=dict(row);x['theme']=_v167_json(x.pop('theme_json','{}'),{});x['metadata']=_v167_json(x.pop('metadata_json','{}'),{})
+    if with_pages:
+        pages=[]
+        for r in core.rows('select * from pdf_pages where project_id=? order by page_index,id',(x['id'],)):
+            p=dict(r);p['content']=_v167_json(p.pop('content_json','{}'),{});pages.append(p)
+        x['pages']=pages
+    return x
+
+@app.get('/api/v167/pdf-projects')
+def pdf_projects_list_v167():
+    return [_v167_pdf_project_out(x) for x in core.rows('select * from pdf_projects order by updated_at desc,id desc')]
+
+@app.post('/api/v167/pdf-projects')
+def pdf_project_create_v167(body:dict):
+    body=body or {};now=_now_v85()
+    title=str(body.get('title') or 'Nouveau dossier').strip()[:240] or 'Nouveau dossier'
+    typ=str(body.get('project_type') or 'dossier_projet').strip()[:80]
+    theme=json.dumps(body.get('theme') if isinstance(body.get('theme'),dict) else {},ensure_ascii=False)
+    meta=json.dumps(body.get('metadata') if isinstance(body.get('metadata'),dict) else {},ensure_ascii=False)
+    cover=str(body.get('cover_image') or '')[:2400]
+    pid=_v165_db_write(lambda db: db.execute('insert into pdf_projects(title,project_type,cover_image,theme_json,metadata_json,created_at,updated_at) values(?,?,?,?,?,?,?)',(title,typ,cover,theme,meta,now,now)).lastrowid)
+    pages=body.get('pages') if isinstance(body.get('pages'),list) else []
+    for i,p in enumerate(pages[:80]):
+        content=p.get('content') if isinstance(p,dict) and isinstance(p.get('content'),dict) else (p if isinstance(p,dict) else {})
+        _v165_db_write(lambda db,i=i,p=p,content=content: db.execute('insert into pdf_pages(project_id,page_index,page_type,content_json,created_at,updated_at) values(?,?,?,?,?,?)',(pid,i,str((p or {}).get('page_type') or 'content')[:80],json.dumps(content,ensure_ascii=False),now,now)))
+    return _v167_pdf_project_out(core.one('select * from pdf_projects where id=?',(pid,)),True)
+
+@app.get('/api/v167/pdf-projects/{project_id}')
+def pdf_project_get_v167(project_id:int):
+    row=core.one('select * from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    return _v167_pdf_project_out(row,True)
+
+@app.patch('/api/v167/pdf-projects/{project_id}')
+def pdf_project_update_v167(project_id:int,body:dict):
+    if not core.one('select id from pdf_projects where id=?',(project_id,)):raise HTTPException(404,'Projet PDF introuvable')
+    body=body or {};data={}
+    if 'title' in body:data['title']=str(body.get('title') or 'Sans titre')[:240]
+    if 'project_type' in body:data['project_type']=str(body.get('project_type') or '')[:80]
+    if 'cover_image' in body:data['cover_image']=str(body.get('cover_image') or '')[:2400]
+    if 'theme' in body:data['theme_json']=json.dumps(body.get('theme') if isinstance(body.get('theme'),dict) else {},ensure_ascii=False)
+    if 'metadata' in body:data['metadata_json']=json.dumps(body.get('metadata') if isinstance(body.get('metadata'),dict) else {},ensure_ascii=False)
+    if data:
+        data['updated_at']=_now_v85();sets=','.join(k+'=?' for k in data)
+        _v165_db_write(lambda db: db.execute('update pdf_projects set '+sets+' where id=?',(*data.values(),project_id)))
+    return pdf_project_get_v167(project_id)
+
+@app.delete('/api/v167/pdf-projects/{project_id}')
+def pdf_project_delete_v167(project_id:int):
+    row=core.one('select id from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    def _write(db):
+        db.execute('delete from pdf_pages where project_id=?',(project_id,))
+        return db.execute('delete from pdf_projects where id=?',(project_id,)).rowcount
+    _v165_db_write(_write);return {'ok':True}
+
+@app.post('/api/v167/pdf-projects/{project_id}/pages')
+def pdf_page_create_v167(project_id:int,body:dict):
+    if not core.one('select id from pdf_projects where id=?',(project_id,)):raise HTTPException(404,'Projet PDF introuvable')
+    body=body or {};now=_now_v85()
+    next_row=core.one('select coalesce(max(page_index),-1)+1 n from pdf_pages where project_id=?',(project_id,)) or {}
+    idx=int(body.get('page_index') if body.get('page_index') is not None else next_row.get('n',0))
+    content=body.get('content') if isinstance(body.get('content'),dict) else {}
+    _v165_db_write(lambda db: db.execute('insert into pdf_pages(project_id,page_index,page_type,content_json,created_at,updated_at) values(?,?,?,?,?,?)',(project_id,idx,str(body.get('page_type') or 'content')[:80],json.dumps(content,ensure_ascii=False),now,now)))
+    _v165_db_write(lambda db: db.execute('update pdf_projects set updated_at=? where id=?',(now,project_id)))
+    return pdf_project_get_v167(project_id)
+
+@app.patch('/api/v167/pdf-pages/{page_id}')
+def pdf_page_update_v167(page_id:int,body:dict):
+    row=core.one('select * from pdf_pages where id=?',(page_id,))
+    if not row:raise HTTPException(404,'Page PDF introuvable')
+    body=body or {};data={}
+    if 'page_index' in body:data['page_index']=int(body.get('page_index') or 0)
+    if 'page_type' in body:data['page_type']=str(body.get('page_type') or 'content')[:80]
+    if 'content' in body:data['content_json']=json.dumps(body.get('content') if isinstance(body.get('content'),dict) else {},ensure_ascii=False)
+    if data:
+        data['updated_at']=_now_v85();sets=','.join(k+'=?' for k in data)
+        _v165_db_write(lambda db: db.execute('update pdf_pages set '+sets+' where id=?',(*data.values(),page_id)))
+        _v165_db_write(lambda db: db.execute('update pdf_projects set updated_at=? where id=?',(_now_v85(),row['project_id'])))
+    return pdf_project_get_v167(int(row['project_id']))
+
+@app.delete('/api/v167/pdf-pages/{page_id}')
+def pdf_page_delete_v167(page_id:int):
+    row=core.one('select project_id from pdf_pages where id=?',(page_id,))
+    if not row:raise HTTPException(404,'Page PDF introuvable')
+    _v165_db_write(lambda db: db.execute('delete from pdf_pages where id=?',(page_id,)))
+    return pdf_project_get_v167(int(row['project_id']))
+
+def _v167_pdf_path(project_id):
+    root=Path('/data/generated_pdfs') if Path('/data').exists() else BASE/'generated_pdfs'
+    root.mkdir(parents=True,exist_ok=True)
+    return root/('plugart_project_'+str(int(project_id))+'.pdf')
+
+# ================= V168 · RICH PDF EDITOR =================
+def _v168_pdf_raster_dir():
+    root=Path('/data/pdf_raster') if Path('/data').exists() else BASE/'pdf_raster'
+    root.mkdir(parents=True,exist_ok=True)
+    return root
+
+def _v168_raster_pdf_page(file_id:int,page_index:int,scale:float=1.6):
+    row=core.one('select * from bureau_files where id=?',(file_id,))
+    if not row:raise HTTPException(404,'PDF introuvable')
+    src=Path(str(row.get('storage_path') or ''))
+    if not src.exists():raise HTTPException(404,'Fichier PDF absent du stockage')
+    out=_v168_pdf_raster_dir()/('file_'+str(file_id)+'_page_'+str(page_index)+'.png')
+    if out.exists() and out.stat().st_mtime>=src.stat().st_mtime:return out
+    try:
+        import pymupdf as fitz
+        doc=fitz.open(str(src))
+        if page_index<0 or page_index>=doc.page_count:
+            doc.close();raise HTTPException(404,'Page PDF introuvable')
+        pix=doc.load_page(page_index).get_pixmap(matrix=fitz.Matrix(scale,scale),alpha=False)
+        out.write_bytes(pix.tobytes('png'));doc.close();return out
+    except HTTPException:raise
+    except Exception as exc:raise HTTPException(503,'Rendu de page PDF indisponible') from exc
+
+@app.get('/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+def bureau_file_page_png_v168(file_id:int,page_index:int):
+    return FileResponse(_v168_raster_pdf_page(file_id,page_index),media_type='image/png',headers={'Cache-Control':'public,max-age=3600'})
+
+@app.post('/api/v168/pdf-projects/from-file/{file_id}')
+def pdf_project_from_file_v168(file_id:int):
+    row=core.one('select * from bureau_files where id=?',(file_id,))
+    if not row:raise HTTPException(404,'PDF introuvable')
+    src=Path(str(row.get('storage_path') or ''))
+    if not src.exists():raise HTTPException(404,'Fichier PDF absent du stockage')
+    try:
+        import pymupdf as fitz
+        doc=fitz.open(str(src));count=min(int(doc.page_count),60);doc.close()
+    except Exception as exc:raise HTTPException(503,'Analyse du PDF indisponible') from exc
+    pages=[{'page_type':'imported','content':{'background':'#FFFFFF','background_image':'/api/v168/bureau/files/'+str(file_id)+'/page/'+str(i)+'.png','elements':[]}} for i in range(count)]
+    return pdf_project_create_v167({'title':str(row.get('name') or row.get('original_name') or 'PDF éditable'),'project_type':'pdf_import','metadata':{'source_type':'bureau_file','source_file_id':file_id,'format':'A4 portrait','page_count':count},'pages':pages})
+
+def _v168_color(value,default=(0,0,0)):
+    s=str(value or '').strip().lstrip('#')
+    try:
+        if len(s)==3:s=''.join(ch*2 for ch in s)
+        if len(s)==6:return tuple(int(s[i:i+2],16)/255 for i in (0,2,4))
+    except Exception:pass
+    return default
+
+def _v168_image_bytes(ref):
+    ref=str(ref or '').strip()
+    if not ref:return b''
+    if ref.startswith('data:image/') and ';base64,' in ref:
+        try:
+            raw=base64.b64decode(ref.split(',',1)[1],validate=True)
+            return raw if len(raw)<=8*1024*1024 else b''
+        except Exception:return b''
+    m=re.match(r'^/api/v168/bureau/files/(\d+)/page/(\d+)\.png$',ref)
+    if m:
+        try:return _v168_raster_pdf_page(int(m.group(1)),int(m.group(2))).read_bytes()
+        except Exception:return b''
+    if ref.startswith(('http://','https://')):
+        try:
+            rr=requests.get(ref,timeout=10,headers={'User-Agent':'Mozilla/5.0 PLUGART-PDF/168'})
+            return rr.content if rr.ok and (rr.headers.get('content-type') or '').lower().startswith('image/') else b''
+        except Exception:return b''
+    return b''
+
+def _v168_crop_image(raw,ratio,position='center'):
+    if not raw:return None
+    try:
+        from PIL import Image
+        im=Image.open(io.BytesIO(raw)).convert('RGB');sw,sh=im.size;sr=sw/max(1,sh)
+        if sr>ratio:
+            nw=max(1,int(sh*ratio));left=(sw-nw)//2
+            if position=='left':left=0
+            elif position=='right':left=sw-nw
+            return im.crop((left,0,left+nw,sh))
+        nh=max(1,int(sw/max(.001,ratio)));top=(sh-nh)//2
+        if position=='top':top=0
+        elif position=='bottom':top=sh-nh
+        return im.crop((0,top,sw,top+nh))
+    except Exception:return None
+
+def _v168_draw_image(cv,ref,x,y,w,h,crop='cover',position='center'):
+    raw=_v168_image_bytes(ref)
+    if not raw:return
+    try:
+        from reportlab.lib.utils import ImageReader
+        if crop=='cover':
+            im=_v168_crop_image(raw,w/max(1,h),position)
+            if im is not None:
+                buf=io.BytesIO();im.save(buf,format='JPEG',quality=90);buf.seek(0)
+                cv.drawImage(ImageReader(buf),x,y,w,h,mask='auto',preserveAspectRatio=False);return
+        cv.drawImage(ImageReader(io.BytesIO(raw)),x,y,w,h,mask='auto',preserveAspectRatio=True,anchor='c')
+    except Exception:pass
+
+def _v168_draw_element(cv,e,W,H):
+    e=e or {};typ=str(e.get('type') or 'text').lower()
+    x=W*float(e.get('x',8))/100;y_top=H*float(e.get('y',8))/100
+    w=W*float(e.get('w',84))/100;h=H*float(e.get('h',18))/100;y=H-y_top-h
+    opacity=max(0,min(1,float(e.get('opacity',1) or 1)));rot=float(e.get('rotation',0) or 0)
+    cv.saveState()
+    try:
+        if hasattr(cv,'setFillAlpha'):cv.setFillAlpha(opacity)
+        if hasattr(cv,'setStrokeAlpha'):cv.setStrokeAlpha(opacity)
+        if rot:
+            cx=x+w/2;cy=y+h/2;cv.translate(cx,cy);cv.rotate(rot);x=-w/2;y=-h/2
+        if typ=='image':
+            _v168_draw_image(cv,e.get('src') or e.get('url'),x,y,w,h,str(e.get('crop') or 'cover'),str(e.get('position') or 'center'))
+        elif typ in ('rect','rectangle','shape'):
+            cv.setFillColorRGB(*_v168_color(e.get('fill'),(.45,.34,1)))
+            radius=max(0,float(e.get('radius',0) or 0))*min(W,H)/100
+            if radius:cv.roundRect(x,y,w,h,radius,fill=1,stroke=0)
+            else:cv.rect(x,y,w,h,fill=1,stroke=0)
+        elif typ in ('ellipse','circle'):
+            cv.setFillColorRGB(*_v168_color(e.get('fill'),(.45,.34,1)));cv.ellipse(x,y,x+w,y+h,fill=1,stroke=0)
+        elif typ=='line':
+            cv.setStrokeColorRGB(*_v168_color(e.get('stroke'),(.1,.1,.1)));cv.setLineWidth(max(.5,float(e.get('thickness',2) or 2)));cv.line(x,y+h/2,x+w,y+h/2)
+        else:
+            txt=str(e.get('text') or '');size=max(5,min(120,float(e.get('fontSize',24) or 24)))
+            cv.setFillColorRGB(*_v168_color(e.get('color'),(.08,.08,.10)))
+            font='Helvetica-Bold' if str(e.get('weight') or '').lower() in ('700','800','900','bold') else 'Helvetica'
+            cv.setFont(font,size);align=str(e.get('align') or 'left')
+            leading=max(size*1.05,float(e.get('lineHeight',1.15) or 1.15)*size);cursor=y+h-size
+            max_chars=max(8,int(w/max(1,size*.54)))
+            for para in txt.splitlines() or ['']:
+                words=para.split();line='';chunks=[]
+                for word in words:
+                    test=(line+' '+word).strip()
+                    if len(test)>max_chars and line:chunks.append(line);line=word
+                    else:line=test
+                if line or not chunks:chunks.append(line)
+                for line in chunks:
+                    if cursor<y:break
+                    if align=='center':cv.drawCentredString(x+w/2,cursor,line)
+                    elif align=='right':cv.drawRightString(x+w,cursor,line)
+                    else:cv.drawString(x,cursor,line)
+                    cursor-=leading
+    finally:cv.restoreState()
+
+def _v167_render_pdf(project_id):
+    project=pdf_project_get_v167(project_id)
+    try:
+        from reportlab.pdfgen import canvas as rl_canvas
+        from reportlab.lib.pagesizes import A4,landscape
+    except Exception as exc:
+        raise HTTPException(503,'Moteur PDF indisponible') from exc
+    meta=project.get('metadata') or {};fmt=str(meta.get('format') or 'A4 portrait').lower()
+    pagesize=landscape(A4) if 'paysage' in fmt or 'landscape' in fmt else A4
+    out=_v167_pdf_path(project_id);cv=rl_canvas.Canvas(str(out),pagesize=pagesize);W,H=pagesize
+    pages=project.get('pages') or [{'content':{'title':project.get('title'),'body':''}}]
+    for page in pages:
+        content=page.get('content') or {};bg=str(content.get('background') or '#FFFFFF')
+        cv.setFillColorRGB(*_v168_color(bg,(1,1,1)));cv.rect(0,0,W,H,fill=1,stroke=0)
+        bgimg=str(content.get('background_image') or '')
+        if bgimg:_v168_draw_image(cv,bgimg,0,0,W,H,'cover',str(content.get('background_position') or 'center'))
+        elements=content.get('elements') if isinstance(content.get('elements'),list) else []
+        if elements:
+            for element in elements[:120]:_v168_draw_element(cv,element,W,H)
+        else:
+            legacy_image=str(content.get('image') or '')
+            if legacy_image:_v168_draw_image(cv,legacy_image,0,H*.43,W,H*.57,'cover','center')
+            title=str(content.get('title') or project.get('title') or '')[:500]
+            kicker=str(content.get('kicker') or '')[:240]
+            body=str(content.get('body') or content.get('text') or '')[:12000]
+            if kicker:
+                cv.setFont('Helvetica-Bold',10);cv.setFillColorRGB(.42,.36,.72);cv.drawString(42,H-52,kicker.upper()[:80])
+            cv.setFillColorRGB(.07,.075,.09);cv.setFont('Helvetica-Bold',26);y=H-88
+            for chunk in re.findall(r'.{1,42}(?:\s+|$)',title)[:4]:
+                cv.drawString(42,y,chunk.strip());y-=31
+            cv.setFont('Helvetica',11);cv.setFillColorRGB(.28,.29,.33);y-=10
+            for para in body.splitlines():
+                if y<52:break
+                for chunk in re.findall(r'.{1,90}(?:\s+|$)',para) or ['']:
+                    cv.drawString(42,y,chunk.strip());y-=15
+                    if y<52:break
+                y-=5
+        cv.setFont('Helvetica',7);cv.setFillColorRGB(.55,.56,.60);cv.drawRightString(W-32,24,'PLUG ART · V168')
+        cv.showPage()
+    cv.save();return out
+
+@app.post('/api/v167/pdf-projects/{project_id}/export')
+def pdf_project_export_v167(project_id:int):
+    path=_v167_render_pdf(project_id)
+    return {'ok':True,'project_id':project_id,'preview_url':'/api/v167/pdf-projects/'+str(project_id)+'/preview.pdf','bytes':path.stat().st_size}
+
+@app.get('/api/v167/pdf-projects/{project_id}/preview.pdf')
+def pdf_project_preview_v167(project_id:int):
+    path=_v167_pdf_path(project_id);row=core.one('select title from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    if not path.exists():path=_v167_render_pdf(project_id)
+    safe=re.sub(r'[^A-Za-z0-9À-ÿ._ -]+','_',str(row.get('title') or 'PLUG_ART'))+'.pdf'
+    return FileResponse(path,media_type='application/pdf',filename=safe,content_disposition_type='inline')
+
+@app.post('/api/v167/pdf-projects/from-bureau/{doc_id}')
+def pdf_project_from_bureau_v167(doc_id:int):
+    doc=core.one('select * from bureau_documents where id=?',(doc_id,))
+    if not doc:raise HTTPException(404,'Document Bureau introuvable')
+    return pdf_project_create_v167({'title':doc.get('title') or 'Dossier PLUG ART','project_type':'bureau',
+      'metadata':{'source_type':'bureau','source_id':doc_id},
+      'pages':[{'page_type':'content','content':{'kicker':doc.get('folder') or 'PLUG ART','title':doc.get('title') or 'Document','body':doc.get('body') or ''}}]})
+
+@app.get('/api/v167/canva/config')
+def canva_config_v167():
+    default_url='https://www.canva.com/d/jzqydvXDq9GRdlC'
+    url=os.getenv('CANVA_STARTER_URL',default_url).strip() or default_url
+    return {'enabled':True,'starter_url':url,'mode':'bridge','fallback':'export-pack','template':'PLUG ART Open Call · 5 slides'}
+
+
+
+# ================= V167 · RESILIENT IDEAS / QA =================
+_v167i=core.conn()
+_v167i.executescript("""
+CREATE TABLE IF NOT EXISTS idea_links(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_idea_id INTEGER NOT NULL,
+  to_idea_id INTEGER NOT NULL,
+  created_at TEXT DEFAULT '',
+  UNIQUE(from_idea_id,to_idea_id)
+);
+""")
+_v167i.commit();_v167i.close()
+
+@app.get('/api/v167/ideas/health')
+def ideas_health_v167():
+    try:
+        count=(core.one('select count(*) count from idea_cloud') or {}).get('count',0)
+        db=core.conn()
+        db.execute('savepoint v167_health')
+        db.execute('create temp table if not exists _v167_health(x text)')
+        db.execute('insert into _v167_health(x) values(?)',(secrets.token_hex(4),))
+        db.execute('rollback to v167_health');db.execute('release v167_health');db.close()
+        return {'ok':True,'db':'ok','count':count,'writable':True}
+    except Exception as exc:
+        return {'ok':False,'db':type(exc).__name__,'count':0,'writable':False}
+
+@app.get('/api/v167/ideas/{idea_id}/links')
+def idea_links_v167(idea_id:int):
+    return core.rows("""select l.id,l.from_idea_id,l.to_idea_id,i.title to_title
+                        from idea_links l left join idea_cloud i on i.id=l.to_idea_id
+                        where l.from_idea_id=? order by l.id""",(idea_id,))
+
+@app.post('/api/v167/ideas/{idea_id}/links')
+def idea_link_create_v167(idea_id:int,body:dict):
+    to_id=int((body or {}).get('to_idea_id') or 0)
+    if not core.one('select id from idea_cloud where id=?',(idea_id,)) or not core.one('select id from idea_cloud where id=?',(to_id,)):
+        raise HTTPException(404,'Idée introuvable')
+    if idea_id==to_id:raise HTTPException(400,'Une idée ne peut pas se relier à elle-même')
+    _v165_db_write(lambda db: db.execute('insert or ignore into idea_links(from_idea_id,to_idea_id,created_at) values(?,?,?)',(idea_id,to_id,_now_v85())))
+    return {'ok':True,'links':idea_links_v167(idea_id)}
+
+@app.post('/api/v167/ideas/{idea_id}/to-bureau')
+def idea_to_bureau_v167(idea_id:int):
+    idea=core.one('select * from idea_cloud where id=?',(idea_id,))
+    if not idea:raise HTTPException(404,'Idée introuvable')
+    return bureau_create_v107({'title':idea.get('title') or 'Idée','body':idea.get('body') or '','folder':'Projets',
+      'tags':idea.get('tags') or '','source_type':'idea','source_id':str(idea_id)})
+
+@app.post('/api/v167/ideas/{idea_id}/to-pdf')
+def idea_to_pdf_v167(idea_id:int):
+    idea=core.one('select * from idea_cloud where id=?',(idea_id,))
+    if not idea:raise HTTPException(404,'Idée introuvable')
+    return pdf_project_create_v167({'title':idea.get('title') or 'Concept PLUG ART','project_type':'concept',
+      'metadata':{'source_type':'idea','source_id':idea_id,'project':idea.get('project')},
+      'pages':[{'content':{'kicker':'CONCEPT','title':idea.get('title') or 'Idée','body':idea.get('body') or '','image':idea.get('image_url') or ''}}]})
+
+@app.get('/api/v167/qa/manifest')
+def qa_manifest_v167():
+    required=[
+      ('GET','/api/v167/events'),('POST','/api/v167/events/search'),
+      ('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),
+      ('POST','/api/v167/pdf-projects'),('GET','/api/v167/canva/config'),
+      ('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),
+      ('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+    ]
+    active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
+    return {'ok':all(x in active for x in required),
+      'required':[m+' '+p for m,p in required],
+      'missing':[m+' '+p for m,p in required if (m,p) not in active]}
+
+
+@app.get('/api/v163/diagnostics')
+def diagnostics_v163():
+    started=time.perf_counter()
+    checks={}
+    try:
+        db=core.conn()
+        row=db.execute('pragma quick_check').fetchone()
+        checks['database']={'ok':bool(row and str(row[0]).lower()=='ok'),'detail':str(row[0] if row else 'unknown')}
+        db.close()
+    except Exception as exc:
+        checks['database']={'ok':False,'detail':type(exc).__name__}
+    static_required=[
+      BASE/'static'/'plugart_v162.html',BASE/'static'/'plugart_v162.js',BASE/'static'/'plugart_v162.css',
+      BASE/'static'/'plugy_v162.html',BASE/'static'/'plugy_v162.js',BASE/'static'/'plugy_v162.css'
+    ]
+    checks['static']={'ok':all(p.exists() and p.stat().st_size>0 for p in static_required),'files':len(static_required)}
+    checks['plugy_model']={'ok':bool(REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>1000),'bytes':REALISTIC_PLUGY.stat().st_size if REALISTIC_PLUGY.exists() else 0}
+    active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
+    critical=[
+      ('GET','/api/health'),('GET','/api/v124/dashboard-bootstrap'),('POST','/api/v125/plugy/stream'),
+      ('POST','/api/v162/plugy/speech'),('GET','/api/v156/bureau/files'),('GET','/api/v156/ideas'),('POST','/api/v164/projects/library/seed'),
+      ('GET','/api/v86/crm'),('POST','/api/radar/run'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/pdf-projects/from-file/{file_id}')
+    ]
+    missing=[f'{m} {p}' for m,p in critical if (m,p) not in active]
+    checks['routes']={'ok':not missing,'missing':missing}
+    checks['openai']={'configured':bool(os.getenv('OPENAI_API_KEY','').strip())}
+    meta_configured=bool(os.getenv('META_APP_ID','').strip() and os.getenv('META_APP_SECRET','').strip())
+    try:
+        igrow=_ig_row()
+        instagram_connected=bool(igrow.get('ig_user_id') and igrow.get('page_access_token'))
+    except Exception:
+        instagram_connected=False
+    checks['meta']={'configured':meta_configured,'instagram_connected':instagram_connected}
+    checks['railway']={'domain_configured':bool(os.getenv('RAILWAY_PUBLIC_DOMAIN','').strip())}
+    try:
+        t=time.perf_counter();payload=dashboard_bootstrap_v124();raw=json.dumps(payload,ensure_ascii=False,separators=(',',':')).encode('utf-8')
+        checks['bootstrap']={'ok':True,'ms':round((time.perf_counter()-t)*1000,1),'bytes':len(raw),'opportunities':len(payload.get('opportunities') or [])}
+    except Exception as exc:
+        checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
+    ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
+    return {'ok':ok,'version':'168.2','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+
+@app.get('/api/v164/status')
+@app.get('/api/v163/status')
+@app.get('/api/v1623/status')
+@app.get('/api/v162/status')
+@app.get('/api/v161/status')
+@app.get('/api/v160/status')
+@app.get('/api/v159/status')
+@app.get('/api/v158/status')
+@app.get('/api/v157/status')
+@app.get('/api/v156/status')
+def status_v156():
+    return {
+      'ok':True,'version':'168.2','ui':'plug-art-v168-rich-workspace',
+      'plugy':'full-body-safe-frame-sticky-natural-voice',
+      'creation':'live-editor-fast-lazy-assets',
+      'bureau':'documents-projects-pdf-library-packages-templates-hub',
+      'ideas':'visible-project-linked-draggable-cloud',
+      'hub_projects':['aubervilliers','millenaire','gennevilliers','chanteraines']
+    }
+
+
+@app.get('/api/v65/status')
+@app.get('/api/v66/status')
+@app.get('/api/v67/status')
+@app.get('/api/v68/status')
+@app.get('/api/v69/status')
+@app.get('/api/v70/status')
+@app.get('/api/v71/status')
+@app.get('/api/v72/status')
+@app.get('/api/v73/status')
+@app.get('/api/v74/status')
+@app.get('/api/v75/status')
+@app.get('/api/v77/status')
+@app.get('/api/v78/status')
+@app.get('/api/v79/status')
+@app.get('/api/v80/status')
+@app.get('/api/v81/status')
+@app.get('/api/v82/status')
+@app.get('/api/v83/status')
+@app.get('/api/v84/status')
+@app.get('/api/v85/status')
+@app.get('/api/v86/status')
+@app.get('/api/v87/status')
+@app.get('/api/v88/status')
+@app.get('/api/v89/status')
+
+@app.get('/api/v90/status')
+@app.get('/api/v100/status')
+@app.get('/api/v101/status')
+@app.get('/api/v102/status')
+@app.get('/api/v105/status')
+@app.get('/api/v106/status')
+@app.get('/api/v107/status')
+@app.get('/api/v110/status')
+@app.get('/api/v111/status')
+@app.get('/api/v112/status')
+@app.get('/api/v113/status')
+@app.get('/api/v114/status')
+@app.get('/api/v115/status')
+@app.get('/api/v116/status')
+@app.get('/api/v117/status')
+@app.get('/api/v118/status')
+@app.get('/api/v119/status')
+@app.get('/api/v120/status')
+@app.get('/api/v121/status')
+@app.get('/api/v122/status')
+@app.get('/api/v140/status')
+@app.get('/api/v141/status')
+@app.get('/api/v150/status')
+@app.get('/api/v149/status')
+@app.get('/api/v148/status')
+@app.get('/api/v147/status')
+@app.get('/api/v146/status')
+@app.get('/api/v145/status')
+@app.get('/api/v144/status')
+@app.get('/api/v143/status')
+@app.get('/api/v142/status')
+def status_v90():
+    raw=GLB.read_bytes() if GLB.exists() else b''
+    return {
+      'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
+      'version':'168.2',
+      'ui':'plug-art-v168-rich-workspace',
+      'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
+      'marketing_blocks':False,
+      'internal_workspace':True,
+      'runtime_split':True,
+      'navigation_fixed':True,
+      'typography':'Space Grotesk + Inter',
+      'legacy_index_served':False,
+      'single_mascot':True,
+      'plugy_reference':'single V113 premium animated model with runtime soft-pearl material tuning and reduced reflections',
+      'plugy_expected_sha256':PLUGY_REFERENCE_SHA256,
+      'plugy_reference_match':hashlib.sha256(raw).hexdigest()==PLUGY_REFERENCE_SHA256 if raw else False,
+      'plugy_model_path':'/assets/plugy-v113-premium.glb',
+      'plugy_material':RESULT.get('material'),
+      'plugy_official_base':RESULT.get('official_base','V26'),
+      'plugy_profile':RESULT.get('profile'),
+      'legacy_model_refs_in_dashboard':sum(DASH.read_text(encoding='utf-8').count(x) for x in ('PLUGY_final_animated.glb','/static/plugy.glb')) if DASH.exists() else -1,
+      'plugy_bytes':len(raw),
+      'plugy_sha256':hashlib.sha256(raw).hexdigest() if raw else '',
+      'plugy_animations':['Idle','SoftTurn','Think','Curious','Present','Bounce','Happy','Attentive','Wave','Dance','Blink','Listen','Speak','Charge','Travel'],
+      'studio':'Unified iPhone-first Content Studio with central free canvas, floating tool dock, bottom-sheet templates/media/text/elements/layers/style controls, contextual inspector, typography scales, color presets, snapping, AI assistance, PNG/ZIP export and Instagram publishing',
+      'layouts':['top','cover','left','right','band','collage','minimal'],
+      'cuts':['none','diagonal','curve','wave'],
+      'themes':['editorial','glass','impact','paper','night','color'],
+      'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
+    }
+
+print("PLUG_ART_V168_1_READY plugy=smaller_non_obstructive creation=true_blank pdf=rich_media_editable radar=resilient_live_sources qa=interactive",flush=True)
+
+def _v127_runtime_smoke():
+    required_routes={
+      ('GET','/api/health'),
+      ('GET','/plugy'),
+      ('GET','/api/v154/ui-manifest'),
+      ('GET','/api/v90/builder/config'),
+      ('PATCH','/api/v90/builder/config'),
+      ('GET','/api/map'),
+      ('GET','/api/v124/dashboard-bootstrap'),
+      ('POST','/api/v125/plugy/stream'),
+      ('POST','/api/v32/plugy'),
+      ('POST','/api/v32/content/image'),
+      ('POST','/api/v162/plugy/speech'),
+      ('GET','/api/v86/crm'),
+      ('GET','/api/v107/bureau'),
+      ('GET','/api/v107/open-calls/workflow'),
+      ('GET','/api/v108/drafts'),
+      ('GET','/api/v88/instagram/status'),
+      ('GET','/api/v88/instagram/media'),
+      ('POST','/api/v88/instagram/publish'),
+      ('POST','/api/radar/run'),
+      ('GET','/api/v156/status'),
+      ('GET','/api/v156/bureau/files'),
+      ('POST','/api/v156/bureau/files'),
+      ('GET','/api/v156/ideas'),
+      ('POST','/api/v156/ideas'),
+      ('POST','/api/v164/projects/library/seed'),('GET','/api/v164/projects/library'),
+      ('GET','/api/v163/diagnostics'),
+      ('GET','/api/v163/status'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('POST','/api/v167/pdf-projects'),('GET','/api/v167/qa/manifest'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+    }
+    active=set()
+    for route in app.router.routes:
+        path=getattr(route,'path',None)
+        methods=getattr(route,'methods',set()) or set()
+        if not path:continue
+        for method in methods:
+            active.add((str(method).upper(),path))
+    missing=sorted(required_routes-active)
+    required_tables=[
+      'opportunities','artists','crm_leads','crm_history','bureau_documents',
+      'bureau_templates','application_packages','opportunity_workspace','content_drafts',
+      'bureau_files','idea_cloud','art_events','pdf_projects','pdf_pages','idea_links','radar_refresh_state'
+    ]
+    table_missing=[]
+    db_ok=False
+    quick='unknown'
+    try:
+        db=core.conn()
+        existing={str(x[0]) for x in db.execute("select name from sqlite_master where type='table'").fetchall()}
+        table_missing=[t for t in required_tables if t not in existing]
+        row=db.execute('pragma quick_check').fetchone()
+        quick=str(row[0] if row else 'unknown')
+        db_ok=(quick.lower()=='ok')
+        db.close()
+    except Exception as exc:
+        quick=f"{type(exc).__name__}:{str(exc)[:120]}"
+    ok=(not missing and not table_missing and db_ok)
+    print(
+      f"PLUG_ART_SMOKE ok={str(ok).lower()} routes={len(required_routes)-len(missing)}/{len(required_routes)} "
+      f"tables={len(required_tables)-len(table_missing)}/{len(required_tables)} db={quick} "
+      f"missing_routes={','.join(m+' '+p for m,p in missing) or 'none'} "
+      f"missing_tables={','.join(table_missing) or 'none'}",
+      flush=True
+    )
+
+def _v163_connectivity_smoke():
+    openai='not_configured';meta='not_configured';instagram='disconnected'
+    try:
+        key=os.getenv('OPENAI_API_KEY','').strip()
+        if key:
+            rr=requests.get('https://api.openai.com/v1/models',headers={'Authorization':f'Bearer {key}'},timeout=8)
+            openai='ok' if rr.ok else f'http_{rr.status_code}'
+    except Exception:
+        openai='network_error'
+    try:
+        configured=bool(os.getenv('META_APP_ID','').strip() and os.getenv('META_APP_SECRET','').strip())
+        meta='configured' if configured else 'not_configured'
+        row=_ig_row()
+        token=str(row.get('page_access_token') or '').strip()
+        igid=str(row.get('ig_user_id') or '').strip()
+        if token and igid:
+            rr=requests.get(f'https://graph.facebook.com/{_ig_graph_version()}/{igid}',params={'fields':'id,username','access_token':token},timeout=8)
+            instagram='ok' if rr.ok else f'http_{rr.status_code}'
+        elif configured:
+            instagram='not_connected'
+    except Exception:
+        instagram='network_error'
+    print(f'PLUG_ART_CONNECTIONS openai={openai} meta={meta} instagram={instagram}',flush=True)
+
+_v127_runtime_smoke()
+threading.Thread(target=_v163_connectivity_smoke,daemon=True).start()
+,name):continue
+            items.append({'id':icon,'url':'/api/v169/assets/icon/'+prefix+'/'+name+'.svg'})
+        return {'ok':True,'items':items}
+    except HTTPException:raise
+    except Exception:raise HTTPException(502,'Recherche d’icônes indisponible')
+
+@app.get('/api/v169/assets/icon/{prefix}/{name}.svg')
+def asset_icon_v169(prefix:str,name:str):
+    if not re.match(r'^[a-z0-9-]+
+def _v168_live_radar_loop():
+    time.sleep(max(20,int(os.getenv('PLUGART_V168_START_DELAY_SECONDS','90'))))
+    while True:
+        try:
+            if _v168_should_refresh('events',float(os.getenv('PLUGART_EVENT_INTERVAL_HOURS','4'))):_v168_run_refresh('events')
+            if _v168_should_refresh('opportunities_ai',float(os.getenv('PLUGART_OPPORTUNITY_AI_INTERVAL_HOURS','18'))):_v168_run_refresh('opportunities')
+        except Exception as exc:print('PLUG_ART_V168_LOOP_ERROR '+str(exc)[:240],flush=True)
+        time.sleep(900)
+
+if os.getenv('PLUGART_EVENT_AUTORADAR','1')=='1':
+    threading.Thread(target=_v168_live_radar_loop,name='plugart-v168-live-radar',daemon=True).start()
+
+
+# ================= V167 · EDITABLE PDF WORKSPACE =================
+_v167p=core.conn()
+_v167p.executescript("""
+CREATE TABLE IF NOT EXISTS pdf_projects(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL DEFAULT 'Sans titre',
+  project_type TEXT DEFAULT 'dossier_projet',
+  cover_image TEXT DEFAULT '',
+  theme_json TEXT DEFAULT '{}',
+  metadata_json TEXT DEFAULT '{}',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS pdf_pages(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id INTEGER NOT NULL,
+  page_index INTEGER NOT NULL DEFAULT 0,
+  page_type TEXT DEFAULT 'content',
+  content_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT '',
+  FOREIGN KEY(project_id) REFERENCES pdf_projects(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_pdf_pages_project ON pdf_pages(project_id,page_index);
+""")
+_v167p.commit();_v167p.close()
+
+def _v167_pdf_project_out(row,with_pages=False):
+    if not row:return None
+    x=dict(row);x['theme']=_v167_json(x.pop('theme_json','{}'),{});x['metadata']=_v167_json(x.pop('metadata_json','{}'),{})
+    if with_pages:
+        pages=[]
+        for r in core.rows('select * from pdf_pages where project_id=? order by page_index,id',(x['id'],)):
+            p=dict(r);p['content']=_v167_json(p.pop('content_json','{}'),{});pages.append(p)
+        x['pages']=pages
+    return x
+
+@app.get('/api/v167/pdf-projects')
+def pdf_projects_list_v167():
+    return [_v167_pdf_project_out(x) for x in core.rows('select * from pdf_projects order by updated_at desc,id desc')]
+
+@app.post('/api/v167/pdf-projects')
+def pdf_project_create_v167(body:dict):
+    body=body or {};now=_now_v85()
+    title=str(body.get('title') or 'Nouveau dossier').strip()[:240] or 'Nouveau dossier'
+    typ=str(body.get('project_type') or 'dossier_projet').strip()[:80]
+    theme=json.dumps(body.get('theme') if isinstance(body.get('theme'),dict) else {},ensure_ascii=False)
+    meta=json.dumps(body.get('metadata') if isinstance(body.get('metadata'),dict) else {},ensure_ascii=False)
+    cover=str(body.get('cover_image') or '')[:2400]
+    pid=_v165_db_write(lambda db: db.execute('insert into pdf_projects(title,project_type,cover_image,theme_json,metadata_json,created_at,updated_at) values(?,?,?,?,?,?,?)',(title,typ,cover,theme,meta,now,now)).lastrowid)
+    pages=body.get('pages') if isinstance(body.get('pages'),list) else []
+    for i,p in enumerate(pages[:80]):
+        content=p.get('content') if isinstance(p,dict) and isinstance(p.get('content'),dict) else (p if isinstance(p,dict) else {})
+        _v165_db_write(lambda db,i=i,p=p,content=content: db.execute('insert into pdf_pages(project_id,page_index,page_type,content_json,created_at,updated_at) values(?,?,?,?,?,?)',(pid,i,str((p or {}).get('page_type') or 'content')[:80],json.dumps(content,ensure_ascii=False),now,now)))
+    return _v167_pdf_project_out(core.one('select * from pdf_projects where id=?',(pid,)),True)
+
+@app.get('/api/v167/pdf-projects/{project_id}')
+def pdf_project_get_v167(project_id:int):
+    row=core.one('select * from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    return _v167_pdf_project_out(row,True)
+
+@app.patch('/api/v167/pdf-projects/{project_id}')
+def pdf_project_update_v167(project_id:int,body:dict):
+    if not core.one('select id from pdf_projects where id=?',(project_id,)):raise HTTPException(404,'Projet PDF introuvable')
+    body=body or {};data={}
+    if 'title' in body:data['title']=str(body.get('title') or 'Sans titre')[:240]
+    if 'project_type' in body:data['project_type']=str(body.get('project_type') or '')[:80]
+    if 'cover_image' in body:data['cover_image']=str(body.get('cover_image') or '')[:2400]
+    if 'theme' in body:data['theme_json']=json.dumps(body.get('theme') if isinstance(body.get('theme'),dict) else {},ensure_ascii=False)
+    if 'metadata' in body:data['metadata_json']=json.dumps(body.get('metadata') if isinstance(body.get('metadata'),dict) else {},ensure_ascii=False)
+    if data:
+        data['updated_at']=_now_v85();sets=','.join(k+'=?' for k in data)
+        _v165_db_write(lambda db: db.execute('update pdf_projects set '+sets+' where id=?',(*data.values(),project_id)))
+    return pdf_project_get_v167(project_id)
+
+@app.delete('/api/v167/pdf-projects/{project_id}')
+def pdf_project_delete_v167(project_id:int):
+    row=core.one('select id from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    def _write(db):
+        db.execute('delete from pdf_pages where project_id=?',(project_id,))
+        return db.execute('delete from pdf_projects where id=?',(project_id,)).rowcount
+    _v165_db_write(_write);return {'ok':True}
+
+@app.post('/api/v167/pdf-projects/{project_id}/pages')
+def pdf_page_create_v167(project_id:int,body:dict):
+    if not core.one('select id from pdf_projects where id=?',(project_id,)):raise HTTPException(404,'Projet PDF introuvable')
+    body=body or {};now=_now_v85()
+    next_row=core.one('select coalesce(max(page_index),-1)+1 n from pdf_pages where project_id=?',(project_id,)) or {}
+    idx=int(body.get('page_index') if body.get('page_index') is not None else next_row.get('n',0))
+    content=body.get('content') if isinstance(body.get('content'),dict) else {}
+    _v165_db_write(lambda db: db.execute('insert into pdf_pages(project_id,page_index,page_type,content_json,created_at,updated_at) values(?,?,?,?,?,?)',(project_id,idx,str(body.get('page_type') or 'content')[:80],json.dumps(content,ensure_ascii=False),now,now)))
+    _v165_db_write(lambda db: db.execute('update pdf_projects set updated_at=? where id=?',(now,project_id)))
+    return pdf_project_get_v167(project_id)
+
+@app.patch('/api/v167/pdf-pages/{page_id}')
+def pdf_page_update_v167(page_id:int,body:dict):
+    row=core.one('select * from pdf_pages where id=?',(page_id,))
+    if not row:raise HTTPException(404,'Page PDF introuvable')
+    body=body or {};data={}
+    if 'page_index' in body:data['page_index']=int(body.get('page_index') or 0)
+    if 'page_type' in body:data['page_type']=str(body.get('page_type') or 'content')[:80]
+    if 'content' in body:data['content_json']=json.dumps(body.get('content') if isinstance(body.get('content'),dict) else {},ensure_ascii=False)
+    if data:
+        data['updated_at']=_now_v85();sets=','.join(k+'=?' for k in data)
+        _v165_db_write(lambda db: db.execute('update pdf_pages set '+sets+' where id=?',(*data.values(),page_id)))
+        _v165_db_write(lambda db: db.execute('update pdf_projects set updated_at=? where id=?',(_now_v85(),row['project_id'])))
+    return pdf_project_get_v167(int(row['project_id']))
+
+@app.delete('/api/v167/pdf-pages/{page_id}')
+def pdf_page_delete_v167(page_id:int):
+    row=core.one('select project_id from pdf_pages where id=?',(page_id,))
+    if not row:raise HTTPException(404,'Page PDF introuvable')
+    _v165_db_write(lambda db: db.execute('delete from pdf_pages where id=?',(page_id,)))
+    return pdf_project_get_v167(int(row['project_id']))
+
+def _v167_pdf_path(project_id):
+    root=Path('/data/generated_pdfs') if Path('/data').exists() else BASE/'generated_pdfs'
+    root.mkdir(parents=True,exist_ok=True)
+    return root/('plugart_project_'+str(int(project_id))+'.pdf')
+
+# ================= V168 · RICH PDF EDITOR =================
+def _v168_pdf_raster_dir():
+    root=Path('/data/pdf_raster') if Path('/data').exists() else BASE/'pdf_raster'
+    root.mkdir(parents=True,exist_ok=True)
+    return root
+
+def _v168_raster_pdf_page(file_id:int,page_index:int,scale:float=1.6):
+    row=core.one('select * from bureau_files where id=?',(file_id,))
+    if not row:raise HTTPException(404,'PDF introuvable')
+    src=Path(str(row.get('storage_path') or ''))
+    if not src.exists():raise HTTPException(404,'Fichier PDF absent du stockage')
+    out=_v168_pdf_raster_dir()/('file_'+str(file_id)+'_page_'+str(page_index)+'.png')
+    if out.exists() and out.stat().st_mtime>=src.stat().st_mtime:return out
+    try:
+        import pymupdf as fitz
+        doc=fitz.open(str(src))
+        if page_index<0 or page_index>=doc.page_count:
+            doc.close();raise HTTPException(404,'Page PDF introuvable')
+        pix=doc.load_page(page_index).get_pixmap(matrix=fitz.Matrix(scale,scale),alpha=False)
+        out.write_bytes(pix.tobytes('png'));doc.close();return out
+    except HTTPException:raise
+    except Exception as exc:raise HTTPException(503,'Rendu de page PDF indisponible') from exc
+
+@app.get('/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+def bureau_file_page_png_v168(file_id:int,page_index:int):
+    return FileResponse(_v168_raster_pdf_page(file_id,page_index),media_type='image/png',headers={'Cache-Control':'public,max-age=3600'})
+
+@app.post('/api/v168/pdf-projects/from-file/{file_id}')
+def pdf_project_from_file_v168(file_id:int):
+    row=core.one('select * from bureau_files where id=?',(file_id,))
+    if not row:raise HTTPException(404,'PDF introuvable')
+    src=Path(str(row.get('storage_path') or ''))
+    if not src.exists():raise HTTPException(404,'Fichier PDF absent du stockage')
+    try:
+        import pymupdf as fitz
+        doc=fitz.open(str(src));count=min(int(doc.page_count),60);doc.close()
+    except Exception as exc:raise HTTPException(503,'Analyse du PDF indisponible') from exc
+    pages=[{'page_type':'imported','content':{'background':'#FFFFFF','background_image':'/api/v168/bureau/files/'+str(file_id)+'/page/'+str(i)+'.png','elements':[]}} for i in range(count)]
+    return pdf_project_create_v167({'title':str(row.get('name') or row.get('original_name') or 'PDF éditable'),'project_type':'pdf_import','metadata':{'source_type':'bureau_file','source_file_id':file_id,'format':'A4 portrait','page_count':count},'pages':pages})
+
+def _v168_color(value,default=(0,0,0)):
+    s=str(value or '').strip().lstrip('#')
+    try:
+        if len(s)==3:s=''.join(ch*2 for ch in s)
+        if len(s)==6:return tuple(int(s[i:i+2],16)/255 for i in (0,2,4))
+    except Exception:pass
+    return default
+
+def _v168_image_bytes(ref):
+    ref=str(ref or '').strip()
+    if not ref:return b''
+    if ref.startswith('data:image/') and ';base64,' in ref:
+        try:
+            raw=base64.b64decode(ref.split(',',1)[1],validate=True)
+            return raw if len(raw)<=8*1024*1024 else b''
+        except Exception:return b''
+    m=re.match(r'^/api/v168/bureau/files/(\d+)/page/(\d+)\.png$',ref)
+    if m:
+        try:return _v168_raster_pdf_page(int(m.group(1)),int(m.group(2))).read_bytes()
+        except Exception:return b''
+    if ref.startswith(('http://','https://')):
+        try:
+            rr=requests.get(ref,timeout=10,headers={'User-Agent':'Mozilla/5.0 PLUGART-PDF/168'})
+            return rr.content if rr.ok and (rr.headers.get('content-type') or '').lower().startswith('image/') else b''
+        except Exception:return b''
+    return b''
+
+def _v168_crop_image(raw,ratio,position='center'):
+    if not raw:return None
+    try:
+        from PIL import Image
+        im=Image.open(io.BytesIO(raw)).convert('RGB');sw,sh=im.size;sr=sw/max(1,sh)
+        if sr>ratio:
+            nw=max(1,int(sh*ratio));left=(sw-nw)//2
+            if position=='left':left=0
+            elif position=='right':left=sw-nw
+            return im.crop((left,0,left+nw,sh))
+        nh=max(1,int(sw/max(.001,ratio)));top=(sh-nh)//2
+        if position=='top':top=0
+        elif position=='bottom':top=sh-nh
+        return im.crop((0,top,sw,top+nh))
+    except Exception:return None
+
+def _v168_draw_image(cv,ref,x,y,w,h,crop='cover',position='center'):
+    raw=_v168_image_bytes(ref)
+    if not raw:return
+    try:
+        from reportlab.lib.utils import ImageReader
+        if crop=='cover':
+            im=_v168_crop_image(raw,w/max(1,h),position)
+            if im is not None:
+                buf=io.BytesIO();im.save(buf,format='JPEG',quality=90);buf.seek(0)
+                cv.drawImage(ImageReader(buf),x,y,w,h,mask='auto',preserveAspectRatio=False);return
+        cv.drawImage(ImageReader(io.BytesIO(raw)),x,y,w,h,mask='auto',preserveAspectRatio=True,anchor='c')
+    except Exception:pass
+
+def _v168_draw_element(cv,e,W,H):
+    e=e or {};typ=str(e.get('type') or 'text').lower()
+    x=W*float(e.get('x',8))/100;y_top=H*float(e.get('y',8))/100
+    w=W*float(e.get('w',84))/100;h=H*float(e.get('h',18))/100;y=H-y_top-h
+    opacity=max(0,min(1,float(e.get('opacity',1) or 1)));rot=float(e.get('rotation',0) or 0)
+    cv.saveState()
+    try:
+        if hasattr(cv,'setFillAlpha'):cv.setFillAlpha(opacity)
+        if hasattr(cv,'setStrokeAlpha'):cv.setStrokeAlpha(opacity)
+        if rot:
+            cx=x+w/2;cy=y+h/2;cv.translate(cx,cy);cv.rotate(rot);x=-w/2;y=-h/2
+        if typ=='image':
+            _v168_draw_image(cv,e.get('src') or e.get('url'),x,y,w,h,str(e.get('crop') or 'cover'),str(e.get('position') or 'center'))
+        elif typ in ('rect','rectangle','shape'):
+            cv.setFillColorRGB(*_v168_color(e.get('fill'),(.45,.34,1)))
+            radius=max(0,float(e.get('radius',0) or 0))*min(W,H)/100
+            if radius:cv.roundRect(x,y,w,h,radius,fill=1,stroke=0)
+            else:cv.rect(x,y,w,h,fill=1,stroke=0)
+        elif typ in ('ellipse','circle'):
+            cv.setFillColorRGB(*_v168_color(e.get('fill'),(.45,.34,1)));cv.ellipse(x,y,x+w,y+h,fill=1,stroke=0)
+        elif typ=='line':
+            cv.setStrokeColorRGB(*_v168_color(e.get('stroke'),(.1,.1,.1)));cv.setLineWidth(max(.5,float(e.get('thickness',2) or 2)));cv.line(x,y+h/2,x+w,y+h/2)
+        else:
+            txt=str(e.get('text') or '');size=max(5,min(120,float(e.get('fontSize',24) or 24)))
+            cv.setFillColorRGB(*_v168_color(e.get('color'),(.08,.08,.10)))
+            font='Helvetica-Bold' if str(e.get('weight') or '').lower() in ('700','800','900','bold') else 'Helvetica'
+            cv.setFont(font,size);align=str(e.get('align') or 'left')
+            leading=max(size*1.05,float(e.get('lineHeight',1.15) or 1.15)*size);cursor=y+h-size
+            max_chars=max(8,int(w/max(1,size*.54)))
+            for para in txt.splitlines() or ['']:
+                words=para.split();line='';chunks=[]
+                for word in words:
+                    test=(line+' '+word).strip()
+                    if len(test)>max_chars and line:chunks.append(line);line=word
+                    else:line=test
+                if line or not chunks:chunks.append(line)
+                for line in chunks:
+                    if cursor<y:break
+                    if align=='center':cv.drawCentredString(x+w/2,cursor,line)
+                    elif align=='right':cv.drawRightString(x+w,cursor,line)
+                    else:cv.drawString(x,cursor,line)
+                    cursor-=leading
+    finally:cv.restoreState()
+
+def _v167_render_pdf(project_id):
+    project=pdf_project_get_v167(project_id)
+    try:
+        from reportlab.pdfgen import canvas as rl_canvas
+        from reportlab.lib.pagesizes import A4,landscape
+    except Exception as exc:
+        raise HTTPException(503,'Moteur PDF indisponible') from exc
+    meta=project.get('metadata') or {};fmt=str(meta.get('format') or 'A4 portrait').lower()
+    pagesize=landscape(A4) if 'paysage' in fmt or 'landscape' in fmt else A4
+    out=_v167_pdf_path(project_id);cv=rl_canvas.Canvas(str(out),pagesize=pagesize);W,H=pagesize
+    pages=project.get('pages') or [{'content':{'title':project.get('title'),'body':''}}]
+    for page in pages:
+        content=page.get('content') or {};bg=str(content.get('background') or '#FFFFFF')
+        cv.setFillColorRGB(*_v168_color(bg,(1,1,1)));cv.rect(0,0,W,H,fill=1,stroke=0)
+        bgimg=str(content.get('background_image') or '')
+        if bgimg:_v168_draw_image(cv,bgimg,0,0,W,H,'cover',str(content.get('background_position') or 'center'))
+        elements=content.get('elements') if isinstance(content.get('elements'),list) else []
+        if elements:
+            for element in elements[:120]:_v168_draw_element(cv,element,W,H)
+        else:
+            legacy_image=str(content.get('image') or '')
+            if legacy_image:_v168_draw_image(cv,legacy_image,0,H*.43,W,H*.57,'cover','center')
+            title=str(content.get('title') or project.get('title') or '')[:500]
+            kicker=str(content.get('kicker') or '')[:240]
+            body=str(content.get('body') or content.get('text') or '')[:12000]
+            if kicker:
+                cv.setFont('Helvetica-Bold',10);cv.setFillColorRGB(.42,.36,.72);cv.drawString(42,H-52,kicker.upper()[:80])
+            cv.setFillColorRGB(.07,.075,.09);cv.setFont('Helvetica-Bold',26);y=H-88
+            for chunk in re.findall(r'.{1,42}(?:\s+|$)',title)[:4]:
+                cv.drawString(42,y,chunk.strip());y-=31
+            cv.setFont('Helvetica',11);cv.setFillColorRGB(.28,.29,.33);y-=10
+            for para in body.splitlines():
+                if y<52:break
+                for chunk in re.findall(r'.{1,90}(?:\s+|$)',para) or ['']:
+                    cv.drawString(42,y,chunk.strip());y-=15
+                    if y<52:break
+                y-=5
+        cv.setFont('Helvetica',7);cv.setFillColorRGB(.55,.56,.60);cv.drawRightString(W-32,24,'PLUG ART · V168')
+        cv.showPage()
+    cv.save();return out
+
+@app.post('/api/v167/pdf-projects/{project_id}/export')
+def pdf_project_export_v167(project_id:int):
+    path=_v167_render_pdf(project_id)
+    return {'ok':True,'project_id':project_id,'preview_url':'/api/v167/pdf-projects/'+str(project_id)+'/preview.pdf','bytes':path.stat().st_size}
+
+@app.get('/api/v167/pdf-projects/{project_id}/preview.pdf')
+def pdf_project_preview_v167(project_id:int):
+    path=_v167_pdf_path(project_id);row=core.one('select title from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    if not path.exists():path=_v167_render_pdf(project_id)
+    safe=re.sub(r'[^A-Za-z0-9À-ÿ._ -]+','_',str(row.get('title') or 'PLUG_ART'))+'.pdf'
+    return FileResponse(path,media_type='application/pdf',filename=safe,content_disposition_type='inline')
+
+@app.post('/api/v167/pdf-projects/from-bureau/{doc_id}')
+def pdf_project_from_bureau_v167(doc_id:int):
+    doc=core.one('select * from bureau_documents where id=?',(doc_id,))
+    if not doc:raise HTTPException(404,'Document Bureau introuvable')
+    return pdf_project_create_v167({'title':doc.get('title') or 'Dossier PLUG ART','project_type':'bureau',
+      'metadata':{'source_type':'bureau','source_id':doc_id},
+      'pages':[{'page_type':'content','content':{'kicker':doc.get('folder') or 'PLUG ART','title':doc.get('title') or 'Document','body':doc.get('body') or ''}}]})
+
+@app.get('/api/v167/canva/config')
+def canva_config_v167():
+    default_url='https://www.canva.com/d/jzqydvXDq9GRdlC'
+    url=os.getenv('CANVA_STARTER_URL',default_url).strip() or default_url
+    return {'enabled':True,'starter_url':url,'mode':'bridge','fallback':'export-pack','template':'PLUG ART Open Call · 5 slides'}
+
+
+
+# ================= V167 · RESILIENT IDEAS / QA =================
+_v167i=core.conn()
+_v167i.executescript("""
+CREATE TABLE IF NOT EXISTS idea_links(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_idea_id INTEGER NOT NULL,
+  to_idea_id INTEGER NOT NULL,
+  created_at TEXT DEFAULT '',
+  UNIQUE(from_idea_id,to_idea_id)
+);
+""")
+_v167i.commit();_v167i.close()
+
+@app.get('/api/v167/ideas/health')
+def ideas_health_v167():
+    try:
+        count=(core.one('select count(*) count from idea_cloud') or {}).get('count',0)
+        db=core.conn()
+        db.execute('savepoint v167_health')
+        db.execute('create temp table if not exists _v167_health(x text)')
+        db.execute('insert into _v167_health(x) values(?)',(secrets.token_hex(4),))
+        db.execute('rollback to v167_health');db.execute('release v167_health');db.close()
+        return {'ok':True,'db':'ok','count':count,'writable':True}
+    except Exception as exc:
+        return {'ok':False,'db':type(exc).__name__,'count':0,'writable':False}
+
+@app.get('/api/v167/ideas/{idea_id}/links')
+def idea_links_v167(idea_id:int):
+    return core.rows("""select l.id,l.from_idea_id,l.to_idea_id,i.title to_title
+                        from idea_links l left join idea_cloud i on i.id=l.to_idea_id
+                        where l.from_idea_id=? order by l.id""",(idea_id,))
+
+@app.post('/api/v167/ideas/{idea_id}/links')
+def idea_link_create_v167(idea_id:int,body:dict):
+    to_id=int((body or {}).get('to_idea_id') or 0)
+    if not core.one('select id from idea_cloud where id=?',(idea_id,)) or not core.one('select id from idea_cloud where id=?',(to_id,)):
+        raise HTTPException(404,'Idée introuvable')
+    if idea_id==to_id:raise HTTPException(400,'Une idée ne peut pas se relier à elle-même')
+    _v165_db_write(lambda db: db.execute('insert or ignore into idea_links(from_idea_id,to_idea_id,created_at) values(?,?,?)',(idea_id,to_id,_now_v85())))
+    return {'ok':True,'links':idea_links_v167(idea_id)}
+
+@app.post('/api/v167/ideas/{idea_id}/to-bureau')
+def idea_to_bureau_v167(idea_id:int):
+    idea=core.one('select * from idea_cloud where id=?',(idea_id,))
+    if not idea:raise HTTPException(404,'Idée introuvable')
+    return bureau_create_v107({'title':idea.get('title') or 'Idée','body':idea.get('body') or '','folder':'Projets',
+      'tags':idea.get('tags') or '','source_type':'idea','source_id':str(idea_id)})
+
+@app.post('/api/v167/ideas/{idea_id}/to-pdf')
+def idea_to_pdf_v167(idea_id:int):
+    idea=core.one('select * from idea_cloud where id=?',(idea_id,))
+    if not idea:raise HTTPException(404,'Idée introuvable')
+    return pdf_project_create_v167({'title':idea.get('title') or 'Concept PLUG ART','project_type':'concept',
+      'metadata':{'source_type':'idea','source_id':idea_id,'project':idea.get('project')},
+      'pages':[{'content':{'kicker':'CONCEPT','title':idea.get('title') or 'Idée','body':idea.get('body') or '','image':idea.get('image_url') or ''}}]})
+
+@app.get('/api/v167/qa/manifest')
+def qa_manifest_v167():
+    required=[
+      ('GET','/api/v167/events'),('POST','/api/v167/events/search'),
+      ('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),
+      ('POST','/api/v167/pdf-projects'),('GET','/api/v167/canva/config'),
+      ('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),
+      ('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+    ]
+    active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
+    return {'ok':all(x in active for x in required),
+      'required':[m+' '+p for m,p in required],
+      'missing':[m+' '+p for m,p in required if (m,p) not in active]}
+
+
+@app.get('/api/v163/diagnostics')
+def diagnostics_v163():
+    started=time.perf_counter()
+    checks={}
+    try:
+        db=core.conn()
+        row=db.execute('pragma quick_check').fetchone()
+        checks['database']={'ok':bool(row and str(row[0]).lower()=='ok'),'detail':str(row[0] if row else 'unknown')}
+        db.close()
+    except Exception as exc:
+        checks['database']={'ok':False,'detail':type(exc).__name__}
+    static_required=[
+      BASE/'static'/'plugart_v162.html',BASE/'static'/'plugart_v162.js',BASE/'static'/'plugart_v162.css',
+      BASE/'static'/'plugy_v162.html',BASE/'static'/'plugy_v162.js',BASE/'static'/'plugy_v162.css'
+    ]
+    checks['static']={'ok':all(p.exists() and p.stat().st_size>0 for p in static_required),'files':len(static_required)}
+    checks['plugy_model']={'ok':bool(REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>1000),'bytes':REALISTIC_PLUGY.stat().st_size if REALISTIC_PLUGY.exists() else 0}
+    active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
+    critical=[
+      ('GET','/api/health'),('GET','/api/v124/dashboard-bootstrap'),('POST','/api/v125/plugy/stream'),
+      ('POST','/api/v162/plugy/speech'),('GET','/api/v156/bureau/files'),('GET','/api/v156/ideas'),('POST','/api/v164/projects/library/seed'),
+      ('GET','/api/v86/crm'),('POST','/api/radar/run'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/pdf-projects/from-file/{file_id}')
+    ]
+    missing=[f'{m} {p}' for m,p in critical if (m,p) not in active]
+    checks['routes']={'ok':not missing,'missing':missing}
+    checks['openai']={'configured':bool(os.getenv('OPENAI_API_KEY','').strip())}
+    meta_configured=bool(os.getenv('META_APP_ID','').strip() and os.getenv('META_APP_SECRET','').strip())
+    try:
+        igrow=_ig_row()
+        instagram_connected=bool(igrow.get('ig_user_id') and igrow.get('page_access_token'))
+    except Exception:
+        instagram_connected=False
+    checks['meta']={'configured':meta_configured,'instagram_connected':instagram_connected}
+    checks['railway']={'domain_configured':bool(os.getenv('RAILWAY_PUBLIC_DOMAIN','').strip())}
+    try:
+        t=time.perf_counter();payload=dashboard_bootstrap_v124();raw=json.dumps(payload,ensure_ascii=False,separators=(',',':')).encode('utf-8')
+        checks['bootstrap']={'ok':True,'ms':round((time.perf_counter()-t)*1000,1),'bytes':len(raw),'opportunities':len(payload.get('opportunities') or [])}
+    except Exception as exc:
+        checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
+    ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
+    return {'ok':ok,'version':'168.2','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+
+@app.get('/api/v164/status')
+@app.get('/api/v163/status')
+@app.get('/api/v1623/status')
+@app.get('/api/v162/status')
+@app.get('/api/v161/status')
+@app.get('/api/v160/status')
+@app.get('/api/v159/status')
+@app.get('/api/v158/status')
+@app.get('/api/v157/status')
+@app.get('/api/v156/status')
+def status_v156():
+    return {
+      'ok':True,'version':'168.2','ui':'plug-art-v168-rich-workspace',
+      'plugy':'full-body-safe-frame-sticky-natural-voice',
+      'creation':'live-editor-fast-lazy-assets',
+      'bureau':'documents-projects-pdf-library-packages-templates-hub',
+      'ideas':'visible-project-linked-draggable-cloud',
+      'hub_projects':['aubervilliers','millenaire','gennevilliers','chanteraines']
+    }
+
+
+@app.get('/api/v65/status')
+@app.get('/api/v66/status')
+@app.get('/api/v67/status')
+@app.get('/api/v68/status')
+@app.get('/api/v69/status')
+@app.get('/api/v70/status')
+@app.get('/api/v71/status')
+@app.get('/api/v72/status')
+@app.get('/api/v73/status')
+@app.get('/api/v74/status')
+@app.get('/api/v75/status')
+@app.get('/api/v77/status')
+@app.get('/api/v78/status')
+@app.get('/api/v79/status')
+@app.get('/api/v80/status')
+@app.get('/api/v81/status')
+@app.get('/api/v82/status')
+@app.get('/api/v83/status')
+@app.get('/api/v84/status')
+@app.get('/api/v85/status')
+@app.get('/api/v86/status')
+@app.get('/api/v87/status')
+@app.get('/api/v88/status')
+@app.get('/api/v89/status')
+
+@app.get('/api/v90/status')
+@app.get('/api/v100/status')
+@app.get('/api/v101/status')
+@app.get('/api/v102/status')
+@app.get('/api/v105/status')
+@app.get('/api/v106/status')
+@app.get('/api/v107/status')
+@app.get('/api/v110/status')
+@app.get('/api/v111/status')
+@app.get('/api/v112/status')
+@app.get('/api/v113/status')
+@app.get('/api/v114/status')
+@app.get('/api/v115/status')
+@app.get('/api/v116/status')
+@app.get('/api/v117/status')
+@app.get('/api/v118/status')
+@app.get('/api/v119/status')
+@app.get('/api/v120/status')
+@app.get('/api/v121/status')
+@app.get('/api/v122/status')
+@app.get('/api/v140/status')
+@app.get('/api/v141/status')
+@app.get('/api/v150/status')
+@app.get('/api/v149/status')
+@app.get('/api/v148/status')
+@app.get('/api/v147/status')
+@app.get('/api/v146/status')
+@app.get('/api/v145/status')
+@app.get('/api/v144/status')
+@app.get('/api/v143/status')
+@app.get('/api/v142/status')
+def status_v90():
+    raw=GLB.read_bytes() if GLB.exists() else b''
+    return {
+      'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
+      'version':'168.2',
+      'ui':'plug-art-v168-rich-workspace',
+      'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
+      'marketing_blocks':False,
+      'internal_workspace':True,
+      'runtime_split':True,
+      'navigation_fixed':True,
+      'typography':'Space Grotesk + Inter',
+      'legacy_index_served':False,
+      'single_mascot':True,
+      'plugy_reference':'single V113 premium animated model with runtime soft-pearl material tuning and reduced reflections',
+      'plugy_expected_sha256':PLUGY_REFERENCE_SHA256,
+      'plugy_reference_match':hashlib.sha256(raw).hexdigest()==PLUGY_REFERENCE_SHA256 if raw else False,
+      'plugy_model_path':'/assets/plugy-v113-premium.glb',
+      'plugy_material':RESULT.get('material'),
+      'plugy_official_base':RESULT.get('official_base','V26'),
+      'plugy_profile':RESULT.get('profile'),
+      'legacy_model_refs_in_dashboard':sum(DASH.read_text(encoding='utf-8').count(x) for x in ('PLUGY_final_animated.glb','/static/plugy.glb')) if DASH.exists() else -1,
+      'plugy_bytes':len(raw),
+      'plugy_sha256':hashlib.sha256(raw).hexdigest() if raw else '',
+      'plugy_animations':['Idle','SoftTurn','Think','Curious','Present','Bounce','Happy','Attentive','Wave','Dance','Blink','Listen','Speak','Charge','Travel'],
+      'studio':'Unified iPhone-first Content Studio with central free canvas, floating tool dock, bottom-sheet templates/media/text/elements/layers/style controls, contextual inspector, typography scales, color presets, snapping, AI assistance, PNG/ZIP export and Instagram publishing',
+      'layouts':['top','cover','left','right','band','collage','minimal'],
+      'cuts':['none','diagonal','curve','wave'],
+      'themes':['editorial','glass','impact','paper','night','color'],
+      'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
+    }
+
+print("PLUG_ART_V168_1_READY plugy=smaller_non_obstructive creation=true_blank pdf=rich_media_editable radar=resilient_live_sources qa=interactive",flush=True)
+
+def _v127_runtime_smoke():
+    required_routes={
+      ('GET','/api/health'),
+      ('GET','/plugy'),
+      ('GET','/api/v154/ui-manifest'),
+      ('GET','/api/v90/builder/config'),
+      ('PATCH','/api/v90/builder/config'),
+      ('GET','/api/map'),
+      ('GET','/api/v124/dashboard-bootstrap'),
+      ('POST','/api/v125/plugy/stream'),
+      ('POST','/api/v32/plugy'),
+      ('POST','/api/v32/content/image'),
+      ('POST','/api/v162/plugy/speech'),
+      ('GET','/api/v86/crm'),
+      ('GET','/api/v107/bureau'),
+      ('GET','/api/v107/open-calls/workflow'),
+      ('GET','/api/v108/drafts'),
+      ('GET','/api/v88/instagram/status'),
+      ('GET','/api/v88/instagram/media'),
+      ('POST','/api/v88/instagram/publish'),
+      ('POST','/api/radar/run'),
+      ('GET','/api/v156/status'),
+      ('GET','/api/v156/bureau/files'),
+      ('POST','/api/v156/bureau/files'),
+      ('GET','/api/v156/ideas'),
+      ('POST','/api/v156/ideas'),
+      ('POST','/api/v164/projects/library/seed'),('GET','/api/v164/projects/library'),
+      ('GET','/api/v163/diagnostics'),
+      ('GET','/api/v163/status'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('POST','/api/v167/pdf-projects'),('GET','/api/v167/qa/manifest'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+    }
+    active=set()
+    for route in app.router.routes:
+        path=getattr(route,'path',None)
+        methods=getattr(route,'methods',set()) or set()
+        if not path:continue
+        for method in methods:
+            active.add((str(method).upper(),path))
+    missing=sorted(required_routes-active)
+    required_tables=[
+      'opportunities','artists','crm_leads','crm_history','bureau_documents',
+      'bureau_templates','application_packages','opportunity_workspace','content_drafts',
+      'bureau_files','idea_cloud','art_events','pdf_projects','pdf_pages','idea_links','radar_refresh_state'
+    ]
+    table_missing=[]
+    db_ok=False
+    quick='unknown'
+    try:
+        db=core.conn()
+        existing={str(x[0]) for x in db.execute("select name from sqlite_master where type='table'").fetchall()}
+        table_missing=[t for t in required_tables if t not in existing]
+        row=db.execute('pragma quick_check').fetchone()
+        quick=str(row[0] if row else 'unknown')
+        db_ok=(quick.lower()=='ok')
+        db.close()
+    except Exception as exc:
+        quick=f"{type(exc).__name__}:{str(exc)[:120]}"
+    ok=(not missing and not table_missing and db_ok)
+    print(
+      f"PLUG_ART_SMOKE ok={str(ok).lower()} routes={len(required_routes)-len(missing)}/{len(required_routes)} "
+      f"tables={len(required_tables)-len(table_missing)}/{len(required_tables)} db={quick} "
+      f"missing_routes={','.join(m+' '+p for m,p in missing) or 'none'} "
+      f"missing_tables={','.join(table_missing) or 'none'}",
+      flush=True
+    )
+
+def _v163_connectivity_smoke():
+    openai='not_configured';meta='not_configured';instagram='disconnected'
+    try:
+        key=os.getenv('OPENAI_API_KEY','').strip()
+        if key:
+            rr=requests.get('https://api.openai.com/v1/models',headers={'Authorization':f'Bearer {key}'},timeout=8)
+            openai='ok' if rr.ok else f'http_{rr.status_code}'
+    except Exception:
+        openai='network_error'
+    try:
+        configured=bool(os.getenv('META_APP_ID','').strip() and os.getenv('META_APP_SECRET','').strip())
+        meta='configured' if configured else 'not_configured'
+        row=_ig_row()
+        token=str(row.get('page_access_token') or '').strip()
+        igid=str(row.get('ig_user_id') or '').strip()
+        if token and igid:
+            rr=requests.get(f'https://graph.facebook.com/{_ig_graph_version()}/{igid}',params={'fields':'id,username','access_token':token},timeout=8)
+            instagram='ok' if rr.ok else f'http_{rr.status_code}'
+        elif configured:
+            instagram='not_connected'
+    except Exception:
+        instagram='network_error'
+    print(f'PLUG_ART_CONNECTIONS openai={openai} meta={meta} instagram={instagram}',flush=True)
+
+_v127_runtime_smoke()
+threading.Thread(target=_v163_connectivity_smoke,daemon=True).start()
+,prefix) or not re.match(r'^[A-Za-z0-9_.-]+
+def _v168_live_radar_loop():
+    time.sleep(max(20,int(os.getenv('PLUGART_V168_START_DELAY_SECONDS','90'))))
+    while True:
+        try:
+            if _v168_should_refresh('events',float(os.getenv('PLUGART_EVENT_INTERVAL_HOURS','4'))):_v168_run_refresh('events')
+            if _v168_should_refresh('opportunities_ai',float(os.getenv('PLUGART_OPPORTUNITY_AI_INTERVAL_HOURS','18'))):_v168_run_refresh('opportunities')
+        except Exception as exc:print('PLUG_ART_V168_LOOP_ERROR '+str(exc)[:240],flush=True)
+        time.sleep(900)
+
+if os.getenv('PLUGART_EVENT_AUTORADAR','1')=='1':
+    threading.Thread(target=_v168_live_radar_loop,name='plugart-v168-live-radar',daemon=True).start()
+
+
+# ================= V167 · EDITABLE PDF WORKSPACE =================
+_v167p=core.conn()
+_v167p.executescript("""
+CREATE TABLE IF NOT EXISTS pdf_projects(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL DEFAULT 'Sans titre',
+  project_type TEXT DEFAULT 'dossier_projet',
+  cover_image TEXT DEFAULT '',
+  theme_json TEXT DEFAULT '{}',
+  metadata_json TEXT DEFAULT '{}',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS pdf_pages(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id INTEGER NOT NULL,
+  page_index INTEGER NOT NULL DEFAULT 0,
+  page_type TEXT DEFAULT 'content',
+  content_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT DEFAULT '',
+  updated_at TEXT DEFAULT '',
+  FOREIGN KEY(project_id) REFERENCES pdf_projects(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_pdf_pages_project ON pdf_pages(project_id,page_index);
+""")
+_v167p.commit();_v167p.close()
+
+def _v167_pdf_project_out(row,with_pages=False):
+    if not row:return None
+    x=dict(row);x['theme']=_v167_json(x.pop('theme_json','{}'),{});x['metadata']=_v167_json(x.pop('metadata_json','{}'),{})
+    if with_pages:
+        pages=[]
+        for r in core.rows('select * from pdf_pages where project_id=? order by page_index,id',(x['id'],)):
+            p=dict(r);p['content']=_v167_json(p.pop('content_json','{}'),{});pages.append(p)
+        x['pages']=pages
+    return x
+
+@app.get('/api/v167/pdf-projects')
+def pdf_projects_list_v167():
+    return [_v167_pdf_project_out(x) for x in core.rows('select * from pdf_projects order by updated_at desc,id desc')]
+
+@app.post('/api/v167/pdf-projects')
+def pdf_project_create_v167(body:dict):
+    body=body or {};now=_now_v85()
+    title=str(body.get('title') or 'Nouveau dossier').strip()[:240] or 'Nouveau dossier'
+    typ=str(body.get('project_type') or 'dossier_projet').strip()[:80]
+    theme=json.dumps(body.get('theme') if isinstance(body.get('theme'),dict) else {},ensure_ascii=False)
+    meta=json.dumps(body.get('metadata') if isinstance(body.get('metadata'),dict) else {},ensure_ascii=False)
+    cover=str(body.get('cover_image') or '')[:2400]
+    pid=_v165_db_write(lambda db: db.execute('insert into pdf_projects(title,project_type,cover_image,theme_json,metadata_json,created_at,updated_at) values(?,?,?,?,?,?,?)',(title,typ,cover,theme,meta,now,now)).lastrowid)
+    pages=body.get('pages') if isinstance(body.get('pages'),list) else []
+    for i,p in enumerate(pages[:80]):
+        content=p.get('content') if isinstance(p,dict) and isinstance(p.get('content'),dict) else (p if isinstance(p,dict) else {})
+        _v165_db_write(lambda db,i=i,p=p,content=content: db.execute('insert into pdf_pages(project_id,page_index,page_type,content_json,created_at,updated_at) values(?,?,?,?,?,?)',(pid,i,str((p or {}).get('page_type') or 'content')[:80],json.dumps(content,ensure_ascii=False),now,now)))
+    return _v167_pdf_project_out(core.one('select * from pdf_projects where id=?',(pid,)),True)
+
+@app.get('/api/v167/pdf-projects/{project_id}')
+def pdf_project_get_v167(project_id:int):
+    row=core.one('select * from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    return _v167_pdf_project_out(row,True)
+
+@app.patch('/api/v167/pdf-projects/{project_id}')
+def pdf_project_update_v167(project_id:int,body:dict):
+    if not core.one('select id from pdf_projects where id=?',(project_id,)):raise HTTPException(404,'Projet PDF introuvable')
+    body=body or {};data={}
+    if 'title' in body:data['title']=str(body.get('title') or 'Sans titre')[:240]
+    if 'project_type' in body:data['project_type']=str(body.get('project_type') or '')[:80]
+    if 'cover_image' in body:data['cover_image']=str(body.get('cover_image') or '')[:2400]
+    if 'theme' in body:data['theme_json']=json.dumps(body.get('theme') if isinstance(body.get('theme'),dict) else {},ensure_ascii=False)
+    if 'metadata' in body:data['metadata_json']=json.dumps(body.get('metadata') if isinstance(body.get('metadata'),dict) else {},ensure_ascii=False)
+    if data:
+        data['updated_at']=_now_v85();sets=','.join(k+'=?' for k in data)
+        _v165_db_write(lambda db: db.execute('update pdf_projects set '+sets+' where id=?',(*data.values(),project_id)))
+    return pdf_project_get_v167(project_id)
+
+@app.delete('/api/v167/pdf-projects/{project_id}')
+def pdf_project_delete_v167(project_id:int):
+    row=core.one('select id from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    def _write(db):
+        db.execute('delete from pdf_pages where project_id=?',(project_id,))
+        return db.execute('delete from pdf_projects where id=?',(project_id,)).rowcount
+    _v165_db_write(_write);return {'ok':True}
+
+@app.post('/api/v167/pdf-projects/{project_id}/pages')
+def pdf_page_create_v167(project_id:int,body:dict):
+    if not core.one('select id from pdf_projects where id=?',(project_id,)):raise HTTPException(404,'Projet PDF introuvable')
+    body=body or {};now=_now_v85()
+    next_row=core.one('select coalesce(max(page_index),-1)+1 n from pdf_pages where project_id=?',(project_id,)) or {}
+    idx=int(body.get('page_index') if body.get('page_index') is not None else next_row.get('n',0))
+    content=body.get('content') if isinstance(body.get('content'),dict) else {}
+    _v165_db_write(lambda db: db.execute('insert into pdf_pages(project_id,page_index,page_type,content_json,created_at,updated_at) values(?,?,?,?,?,?)',(project_id,idx,str(body.get('page_type') or 'content')[:80],json.dumps(content,ensure_ascii=False),now,now)))
+    _v165_db_write(lambda db: db.execute('update pdf_projects set updated_at=? where id=?',(now,project_id)))
+    return pdf_project_get_v167(project_id)
+
+@app.patch('/api/v167/pdf-pages/{page_id}')
+def pdf_page_update_v167(page_id:int,body:dict):
+    row=core.one('select * from pdf_pages where id=?',(page_id,))
+    if not row:raise HTTPException(404,'Page PDF introuvable')
+    body=body or {};data={}
+    if 'page_index' in body:data['page_index']=int(body.get('page_index') or 0)
+    if 'page_type' in body:data['page_type']=str(body.get('page_type') or 'content')[:80]
+    if 'content' in body:data['content_json']=json.dumps(body.get('content') if isinstance(body.get('content'),dict) else {},ensure_ascii=False)
+    if data:
+        data['updated_at']=_now_v85();sets=','.join(k+'=?' for k in data)
+        _v165_db_write(lambda db: db.execute('update pdf_pages set '+sets+' where id=?',(*data.values(),page_id)))
+        _v165_db_write(lambda db: db.execute('update pdf_projects set updated_at=? where id=?',(_now_v85(),row['project_id'])))
+    return pdf_project_get_v167(int(row['project_id']))
+
+@app.delete('/api/v167/pdf-pages/{page_id}')
+def pdf_page_delete_v167(page_id:int):
+    row=core.one('select project_id from pdf_pages where id=?',(page_id,))
+    if not row:raise HTTPException(404,'Page PDF introuvable')
+    _v165_db_write(lambda db: db.execute('delete from pdf_pages where id=?',(page_id,)))
+    return pdf_project_get_v167(int(row['project_id']))
+
+def _v167_pdf_path(project_id):
+    root=Path('/data/generated_pdfs') if Path('/data').exists() else BASE/'generated_pdfs'
+    root.mkdir(parents=True,exist_ok=True)
+    return root/('plugart_project_'+str(int(project_id))+'.pdf')
+
+# ================= V168 · RICH PDF EDITOR =================
+def _v168_pdf_raster_dir():
+    root=Path('/data/pdf_raster') if Path('/data').exists() else BASE/'pdf_raster'
+    root.mkdir(parents=True,exist_ok=True)
+    return root
+
+def _v168_raster_pdf_page(file_id:int,page_index:int,scale:float=1.6):
+    row=core.one('select * from bureau_files where id=?',(file_id,))
+    if not row:raise HTTPException(404,'PDF introuvable')
+    src=Path(str(row.get('storage_path') or ''))
+    if not src.exists():raise HTTPException(404,'Fichier PDF absent du stockage')
+    out=_v168_pdf_raster_dir()/('file_'+str(file_id)+'_page_'+str(page_index)+'.png')
+    if out.exists() and out.stat().st_mtime>=src.stat().st_mtime:return out
+    try:
+        import pymupdf as fitz
+        doc=fitz.open(str(src))
+        if page_index<0 or page_index>=doc.page_count:
+            doc.close();raise HTTPException(404,'Page PDF introuvable')
+        pix=doc.load_page(page_index).get_pixmap(matrix=fitz.Matrix(scale,scale),alpha=False)
+        out.write_bytes(pix.tobytes('png'));doc.close();return out
+    except HTTPException:raise
+    except Exception as exc:raise HTTPException(503,'Rendu de page PDF indisponible') from exc
+
+@app.get('/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+def bureau_file_page_png_v168(file_id:int,page_index:int):
+    return FileResponse(_v168_raster_pdf_page(file_id,page_index),media_type='image/png',headers={'Cache-Control':'public,max-age=3600'})
+
+@app.post('/api/v168/pdf-projects/from-file/{file_id}')
+def pdf_project_from_file_v168(file_id:int):
+    row=core.one('select * from bureau_files where id=?',(file_id,))
+    if not row:raise HTTPException(404,'PDF introuvable')
+    src=Path(str(row.get('storage_path') or ''))
+    if not src.exists():raise HTTPException(404,'Fichier PDF absent du stockage')
+    try:
+        import pymupdf as fitz
+        doc=fitz.open(str(src));count=min(int(doc.page_count),60);doc.close()
+    except Exception as exc:raise HTTPException(503,'Analyse du PDF indisponible') from exc
+    pages=[{'page_type':'imported','content':{'background':'#FFFFFF','background_image':'/api/v168/bureau/files/'+str(file_id)+'/page/'+str(i)+'.png','elements':[]}} for i in range(count)]
+    return pdf_project_create_v167({'title':str(row.get('name') or row.get('original_name') or 'PDF éditable'),'project_type':'pdf_import','metadata':{'source_type':'bureau_file','source_file_id':file_id,'format':'A4 portrait','page_count':count},'pages':pages})
+
+def _v168_color(value,default=(0,0,0)):
+    s=str(value or '').strip().lstrip('#')
+    try:
+        if len(s)==3:s=''.join(ch*2 for ch in s)
+        if len(s)==6:return tuple(int(s[i:i+2],16)/255 for i in (0,2,4))
+    except Exception:pass
+    return default
+
+def _v168_image_bytes(ref):
+    ref=str(ref or '').strip()
+    if not ref:return b''
+    if ref.startswith('data:image/') and ';base64,' in ref:
+        try:
+            raw=base64.b64decode(ref.split(',',1)[1],validate=True)
+            return raw if len(raw)<=8*1024*1024 else b''
+        except Exception:return b''
+    m=re.match(r'^/api/v168/bureau/files/(\d+)/page/(\d+)\.png$',ref)
+    if m:
+        try:return _v168_raster_pdf_page(int(m.group(1)),int(m.group(2))).read_bytes()
+        except Exception:return b''
+    if ref.startswith(('http://','https://')):
+        try:
+            rr=requests.get(ref,timeout=10,headers={'User-Agent':'Mozilla/5.0 PLUGART-PDF/168'})
+            return rr.content if rr.ok and (rr.headers.get('content-type') or '').lower().startswith('image/') else b''
+        except Exception:return b''
+    return b''
+
+def _v168_crop_image(raw,ratio,position='center'):
+    if not raw:return None
+    try:
+        from PIL import Image
+        im=Image.open(io.BytesIO(raw)).convert('RGB');sw,sh=im.size;sr=sw/max(1,sh)
+        if sr>ratio:
+            nw=max(1,int(sh*ratio));left=(sw-nw)//2
+            if position=='left':left=0
+            elif position=='right':left=sw-nw
+            return im.crop((left,0,left+nw,sh))
+        nh=max(1,int(sw/max(.001,ratio)));top=(sh-nh)//2
+        if position=='top':top=0
+        elif position=='bottom':top=sh-nh
+        return im.crop((0,top,sw,top+nh))
+    except Exception:return None
+
+def _v168_draw_image(cv,ref,x,y,w,h,crop='cover',position='center'):
+    raw=_v168_image_bytes(ref)
+    if not raw:return
+    try:
+        from reportlab.lib.utils import ImageReader
+        if crop=='cover':
+            im=_v168_crop_image(raw,w/max(1,h),position)
+            if im is not None:
+                buf=io.BytesIO();im.save(buf,format='JPEG',quality=90);buf.seek(0)
+                cv.drawImage(ImageReader(buf),x,y,w,h,mask='auto',preserveAspectRatio=False);return
+        cv.drawImage(ImageReader(io.BytesIO(raw)),x,y,w,h,mask='auto',preserveAspectRatio=True,anchor='c')
+    except Exception:pass
+
+def _v168_draw_element(cv,e,W,H):
+    e=e or {};typ=str(e.get('type') or 'text').lower()
+    x=W*float(e.get('x',8))/100;y_top=H*float(e.get('y',8))/100
+    w=W*float(e.get('w',84))/100;h=H*float(e.get('h',18))/100;y=H-y_top-h
+    opacity=max(0,min(1,float(e.get('opacity',1) or 1)));rot=float(e.get('rotation',0) or 0)
+    cv.saveState()
+    try:
+        if hasattr(cv,'setFillAlpha'):cv.setFillAlpha(opacity)
+        if hasattr(cv,'setStrokeAlpha'):cv.setStrokeAlpha(opacity)
+        if rot:
+            cx=x+w/2;cy=y+h/2;cv.translate(cx,cy);cv.rotate(rot);x=-w/2;y=-h/2
+        if typ=='image':
+            _v168_draw_image(cv,e.get('src') or e.get('url'),x,y,w,h,str(e.get('crop') or 'cover'),str(e.get('position') or 'center'))
+        elif typ in ('rect','rectangle','shape'):
+            cv.setFillColorRGB(*_v168_color(e.get('fill'),(.45,.34,1)))
+            radius=max(0,float(e.get('radius',0) or 0))*min(W,H)/100
+            if radius:cv.roundRect(x,y,w,h,radius,fill=1,stroke=0)
+            else:cv.rect(x,y,w,h,fill=1,stroke=0)
+        elif typ in ('ellipse','circle'):
+            cv.setFillColorRGB(*_v168_color(e.get('fill'),(.45,.34,1)));cv.ellipse(x,y,x+w,y+h,fill=1,stroke=0)
+        elif typ=='line':
+            cv.setStrokeColorRGB(*_v168_color(e.get('stroke'),(.1,.1,.1)));cv.setLineWidth(max(.5,float(e.get('thickness',2) or 2)));cv.line(x,y+h/2,x+w,y+h/2)
+        else:
+            txt=str(e.get('text') or '');size=max(5,min(120,float(e.get('fontSize',24) or 24)))
+            cv.setFillColorRGB(*_v168_color(e.get('color'),(.08,.08,.10)))
+            font='Helvetica-Bold' if str(e.get('weight') or '').lower() in ('700','800','900','bold') else 'Helvetica'
+            cv.setFont(font,size);align=str(e.get('align') or 'left')
+            leading=max(size*1.05,float(e.get('lineHeight',1.15) or 1.15)*size);cursor=y+h-size
+            max_chars=max(8,int(w/max(1,size*.54)))
+            for para in txt.splitlines() or ['']:
+                words=para.split();line='';chunks=[]
+                for word in words:
+                    test=(line+' '+word).strip()
+                    if len(test)>max_chars and line:chunks.append(line);line=word
+                    else:line=test
+                if line or not chunks:chunks.append(line)
+                for line in chunks:
+                    if cursor<y:break
+                    if align=='center':cv.drawCentredString(x+w/2,cursor,line)
+                    elif align=='right':cv.drawRightString(x+w,cursor,line)
+                    else:cv.drawString(x,cursor,line)
+                    cursor-=leading
+    finally:cv.restoreState()
+
+def _v167_render_pdf(project_id):
+    project=pdf_project_get_v167(project_id)
+    try:
+        from reportlab.pdfgen import canvas as rl_canvas
+        from reportlab.lib.pagesizes import A4,landscape
+    except Exception as exc:
+        raise HTTPException(503,'Moteur PDF indisponible') from exc
+    meta=project.get('metadata') or {};fmt=str(meta.get('format') or 'A4 portrait').lower()
+    pagesize=landscape(A4) if 'paysage' in fmt or 'landscape' in fmt else A4
+    out=_v167_pdf_path(project_id);cv=rl_canvas.Canvas(str(out),pagesize=pagesize);W,H=pagesize
+    pages=project.get('pages') or [{'content':{'title':project.get('title'),'body':''}}]
+    for page in pages:
+        content=page.get('content') or {};bg=str(content.get('background') or '#FFFFFF')
+        cv.setFillColorRGB(*_v168_color(bg,(1,1,1)));cv.rect(0,0,W,H,fill=1,stroke=0)
+        bgimg=str(content.get('background_image') or '')
+        if bgimg:_v168_draw_image(cv,bgimg,0,0,W,H,'cover',str(content.get('background_position') or 'center'))
+        elements=content.get('elements') if isinstance(content.get('elements'),list) else []
+        if elements:
+            for element in elements[:120]:_v168_draw_element(cv,element,W,H)
+        else:
+            legacy_image=str(content.get('image') or '')
+            if legacy_image:_v168_draw_image(cv,legacy_image,0,H*.43,W,H*.57,'cover','center')
+            title=str(content.get('title') or project.get('title') or '')[:500]
+            kicker=str(content.get('kicker') or '')[:240]
+            body=str(content.get('body') or content.get('text') or '')[:12000]
+            if kicker:
+                cv.setFont('Helvetica-Bold',10);cv.setFillColorRGB(.42,.36,.72);cv.drawString(42,H-52,kicker.upper()[:80])
+            cv.setFillColorRGB(.07,.075,.09);cv.setFont('Helvetica-Bold',26);y=H-88
+            for chunk in re.findall(r'.{1,42}(?:\s+|$)',title)[:4]:
+                cv.drawString(42,y,chunk.strip());y-=31
+            cv.setFont('Helvetica',11);cv.setFillColorRGB(.28,.29,.33);y-=10
+            for para in body.splitlines():
+                if y<52:break
+                for chunk in re.findall(r'.{1,90}(?:\s+|$)',para) or ['']:
+                    cv.drawString(42,y,chunk.strip());y-=15
+                    if y<52:break
+                y-=5
+        cv.setFont('Helvetica',7);cv.setFillColorRGB(.55,.56,.60);cv.drawRightString(W-32,24,'PLUG ART · V168')
+        cv.showPage()
+    cv.save();return out
+
+@app.post('/api/v167/pdf-projects/{project_id}/export')
+def pdf_project_export_v167(project_id:int):
+    path=_v167_render_pdf(project_id)
+    return {'ok':True,'project_id':project_id,'preview_url':'/api/v167/pdf-projects/'+str(project_id)+'/preview.pdf','bytes':path.stat().st_size}
+
+@app.get('/api/v167/pdf-projects/{project_id}/preview.pdf')
+def pdf_project_preview_v167(project_id:int):
+    path=_v167_pdf_path(project_id);row=core.one('select title from pdf_projects where id=?',(project_id,))
+    if not row:raise HTTPException(404,'Projet PDF introuvable')
+    if not path.exists():path=_v167_render_pdf(project_id)
+    safe=re.sub(r'[^A-Za-z0-9À-ÿ._ -]+','_',str(row.get('title') or 'PLUG_ART'))+'.pdf'
+    return FileResponse(path,media_type='application/pdf',filename=safe,content_disposition_type='inline')
+
+@app.post('/api/v167/pdf-projects/from-bureau/{doc_id}')
+def pdf_project_from_bureau_v167(doc_id:int):
+    doc=core.one('select * from bureau_documents where id=?',(doc_id,))
+    if not doc:raise HTTPException(404,'Document Bureau introuvable')
+    return pdf_project_create_v167({'title':doc.get('title') or 'Dossier PLUG ART','project_type':'bureau',
+      'metadata':{'source_type':'bureau','source_id':doc_id},
+      'pages':[{'page_type':'content','content':{'kicker':doc.get('folder') or 'PLUG ART','title':doc.get('title') or 'Document','body':doc.get('body') or ''}}]})
+
+@app.get('/api/v167/canva/config')
+def canva_config_v167():
+    default_url='https://www.canva.com/d/jzqydvXDq9GRdlC'
+    url=os.getenv('CANVA_STARTER_URL',default_url).strip() or default_url
+    return {'enabled':True,'starter_url':url,'mode':'bridge','fallback':'export-pack','template':'PLUG ART Open Call · 5 slides'}
+
+
+
+# ================= V167 · RESILIENT IDEAS / QA =================
+_v167i=core.conn()
+_v167i.executescript("""
+CREATE TABLE IF NOT EXISTS idea_links(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  from_idea_id INTEGER NOT NULL,
+  to_idea_id INTEGER NOT NULL,
+  created_at TEXT DEFAULT '',
+  UNIQUE(from_idea_id,to_idea_id)
+);
+""")
+_v167i.commit();_v167i.close()
+
+@app.get('/api/v167/ideas/health')
+def ideas_health_v167():
+    try:
+        count=(core.one('select count(*) count from idea_cloud') or {}).get('count',0)
+        db=core.conn()
+        db.execute('savepoint v167_health')
+        db.execute('create temp table if not exists _v167_health(x text)')
+        db.execute('insert into _v167_health(x) values(?)',(secrets.token_hex(4),))
+        db.execute('rollback to v167_health');db.execute('release v167_health');db.close()
+        return {'ok':True,'db':'ok','count':count,'writable':True}
+    except Exception as exc:
+        return {'ok':False,'db':type(exc).__name__,'count':0,'writable':False}
+
+@app.get('/api/v167/ideas/{idea_id}/links')
+def idea_links_v167(idea_id:int):
+    return core.rows("""select l.id,l.from_idea_id,l.to_idea_id,i.title to_title
+                        from idea_links l left join idea_cloud i on i.id=l.to_idea_id
+                        where l.from_idea_id=? order by l.id""",(idea_id,))
+
+@app.post('/api/v167/ideas/{idea_id}/links')
+def idea_link_create_v167(idea_id:int,body:dict):
+    to_id=int((body or {}).get('to_idea_id') or 0)
+    if not core.one('select id from idea_cloud where id=?',(idea_id,)) or not core.one('select id from idea_cloud where id=?',(to_id,)):
+        raise HTTPException(404,'Idée introuvable')
+    if idea_id==to_id:raise HTTPException(400,'Une idée ne peut pas se relier à elle-même')
+    _v165_db_write(lambda db: db.execute('insert or ignore into idea_links(from_idea_id,to_idea_id,created_at) values(?,?,?)',(idea_id,to_id,_now_v85())))
+    return {'ok':True,'links':idea_links_v167(idea_id)}
+
+@app.post('/api/v167/ideas/{idea_id}/to-bureau')
+def idea_to_bureau_v167(idea_id:int):
+    idea=core.one('select * from idea_cloud where id=?',(idea_id,))
+    if not idea:raise HTTPException(404,'Idée introuvable')
+    return bureau_create_v107({'title':idea.get('title') or 'Idée','body':idea.get('body') or '','folder':'Projets',
+      'tags':idea.get('tags') or '','source_type':'idea','source_id':str(idea_id)})
+
+@app.post('/api/v167/ideas/{idea_id}/to-pdf')
+def idea_to_pdf_v167(idea_id:int):
+    idea=core.one('select * from idea_cloud where id=?',(idea_id,))
+    if not idea:raise HTTPException(404,'Idée introuvable')
+    return pdf_project_create_v167({'title':idea.get('title') or 'Concept PLUG ART','project_type':'concept',
+      'metadata':{'source_type':'idea','source_id':idea_id,'project':idea.get('project')},
+      'pages':[{'content':{'kicker':'CONCEPT','title':idea.get('title') or 'Idée','body':idea.get('body') or '','image':idea.get('image_url') or ''}}]})
+
+@app.get('/api/v167/qa/manifest')
+def qa_manifest_v167():
+    required=[
+      ('GET','/api/v167/events'),('POST','/api/v167/events/search'),
+      ('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),
+      ('POST','/api/v167/pdf-projects'),('GET','/api/v167/canva/config'),
+      ('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),
+      ('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+    ]
+    active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
+    return {'ok':all(x in active for x in required),
+      'required':[m+' '+p for m,p in required],
+      'missing':[m+' '+p for m,p in required if (m,p) not in active]}
+
+
+@app.get('/api/v163/diagnostics')
+def diagnostics_v163():
+    started=time.perf_counter()
+    checks={}
+    try:
+        db=core.conn()
+        row=db.execute('pragma quick_check').fetchone()
+        checks['database']={'ok':bool(row and str(row[0]).lower()=='ok'),'detail':str(row[0] if row else 'unknown')}
+        db.close()
+    except Exception as exc:
+        checks['database']={'ok':False,'detail':type(exc).__name__}
+    static_required=[
+      BASE/'static'/'plugart_v162.html',BASE/'static'/'plugart_v162.js',BASE/'static'/'plugart_v162.css',
+      BASE/'static'/'plugy_v162.html',BASE/'static'/'plugy_v162.js',BASE/'static'/'plugy_v162.css'
+    ]
+    checks['static']={'ok':all(p.exists() and p.stat().st_size>0 for p in static_required),'files':len(static_required)}
+    checks['plugy_model']={'ok':bool(REALISTIC_PLUGY.exists() and REALISTIC_PLUGY.stat().st_size>1000),'bytes':REALISTIC_PLUGY.stat().st_size if REALISTIC_PLUGY.exists() else 0}
+    active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
+    critical=[
+      ('GET','/api/health'),('GET','/api/v124/dashboard-bootstrap'),('POST','/api/v125/plugy/stream'),
+      ('POST','/api/v162/plugy/speech'),('GET','/api/v156/bureau/files'),('GET','/api/v156/ideas'),('POST','/api/v164/projects/library/seed'),
+      ('GET','/api/v86/crm'),('POST','/api/radar/run'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/pdf-projects/from-file/{file_id}')
+    ]
+    missing=[f'{m} {p}' for m,p in critical if (m,p) not in active]
+    checks['routes']={'ok':not missing,'missing':missing}
+    checks['openai']={'configured':bool(os.getenv('OPENAI_API_KEY','').strip())}
+    meta_configured=bool(os.getenv('META_APP_ID','').strip() and os.getenv('META_APP_SECRET','').strip())
+    try:
+        igrow=_ig_row()
+        instagram_connected=bool(igrow.get('ig_user_id') and igrow.get('page_access_token'))
+    except Exception:
+        instagram_connected=False
+    checks['meta']={'configured':meta_configured,'instagram_connected':instagram_connected}
+    checks['railway']={'domain_configured':bool(os.getenv('RAILWAY_PUBLIC_DOMAIN','').strip())}
+    try:
+        t=time.perf_counter();payload=dashboard_bootstrap_v124();raw=json.dumps(payload,ensure_ascii=False,separators=(',',':')).encode('utf-8')
+        checks['bootstrap']={'ok':True,'ms':round((time.perf_counter()-t)*1000,1),'bytes':len(raw),'opportunities':len(payload.get('opportunities') or [])}
+    except Exception as exc:
+        checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
+    ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
+    return {'ok':ok,'version':'168.2','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+
+@app.get('/api/v164/status')
+@app.get('/api/v163/status')
+@app.get('/api/v1623/status')
+@app.get('/api/v162/status')
+@app.get('/api/v161/status')
+@app.get('/api/v160/status')
+@app.get('/api/v159/status')
+@app.get('/api/v158/status')
+@app.get('/api/v157/status')
+@app.get('/api/v156/status')
+def status_v156():
+    return {
+      'ok':True,'version':'168.2','ui':'plug-art-v168-rich-workspace',
+      'plugy':'full-body-safe-frame-sticky-natural-voice',
+      'creation':'live-editor-fast-lazy-assets',
+      'bureau':'documents-projects-pdf-library-packages-templates-hub',
+      'ideas':'visible-project-linked-draggable-cloud',
+      'hub_projects':['aubervilliers','millenaire','gennevilliers','chanteraines']
+    }
+
+
+@app.get('/api/v65/status')
+@app.get('/api/v66/status')
+@app.get('/api/v67/status')
+@app.get('/api/v68/status')
+@app.get('/api/v69/status')
+@app.get('/api/v70/status')
+@app.get('/api/v71/status')
+@app.get('/api/v72/status')
+@app.get('/api/v73/status')
+@app.get('/api/v74/status')
+@app.get('/api/v75/status')
+@app.get('/api/v77/status')
+@app.get('/api/v78/status')
+@app.get('/api/v79/status')
+@app.get('/api/v80/status')
+@app.get('/api/v81/status')
+@app.get('/api/v82/status')
+@app.get('/api/v83/status')
+@app.get('/api/v84/status')
+@app.get('/api/v85/status')
+@app.get('/api/v86/status')
+@app.get('/api/v87/status')
+@app.get('/api/v88/status')
+@app.get('/api/v89/status')
+
+@app.get('/api/v90/status')
+@app.get('/api/v100/status')
+@app.get('/api/v101/status')
+@app.get('/api/v102/status')
+@app.get('/api/v105/status')
+@app.get('/api/v106/status')
+@app.get('/api/v107/status')
+@app.get('/api/v110/status')
+@app.get('/api/v111/status')
+@app.get('/api/v112/status')
+@app.get('/api/v113/status')
+@app.get('/api/v114/status')
+@app.get('/api/v115/status')
+@app.get('/api/v116/status')
+@app.get('/api/v117/status')
+@app.get('/api/v118/status')
+@app.get('/api/v119/status')
+@app.get('/api/v120/status')
+@app.get('/api/v121/status')
+@app.get('/api/v122/status')
+@app.get('/api/v140/status')
+@app.get('/api/v141/status')
+@app.get('/api/v150/status')
+@app.get('/api/v149/status')
+@app.get('/api/v148/status')
+@app.get('/api/v147/status')
+@app.get('/api/v146/status')
+@app.get('/api/v145/status')
+@app.get('/api/v144/status')
+@app.get('/api/v143/status')
+@app.get('/api/v142/status')
+def status_v90():
+    raw=GLB.read_bytes() if GLB.exists() else b''
+    return {
+      'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
+      'version':'168.2',
+      'ui':'plug-art-v168-rich-workspace',
+      'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
+      'marketing_blocks':False,
+      'internal_workspace':True,
+      'runtime_split':True,
+      'navigation_fixed':True,
+      'typography':'Space Grotesk + Inter',
+      'legacy_index_served':False,
+      'single_mascot':True,
+      'plugy_reference':'single V113 premium animated model with runtime soft-pearl material tuning and reduced reflections',
+      'plugy_expected_sha256':PLUGY_REFERENCE_SHA256,
+      'plugy_reference_match':hashlib.sha256(raw).hexdigest()==PLUGY_REFERENCE_SHA256 if raw else False,
+      'plugy_model_path':'/assets/plugy-v113-premium.glb',
+      'plugy_material':RESULT.get('material'),
+      'plugy_official_base':RESULT.get('official_base','V26'),
+      'plugy_profile':RESULT.get('profile'),
+      'legacy_model_refs_in_dashboard':sum(DASH.read_text(encoding='utf-8').count(x) for x in ('PLUGY_final_animated.glb','/static/plugy.glb')) if DASH.exists() else -1,
+      'plugy_bytes':len(raw),
+      'plugy_sha256':hashlib.sha256(raw).hexdigest() if raw else '',
+      'plugy_animations':['Idle','SoftTurn','Think','Curious','Present','Bounce','Happy','Attentive','Wave','Dance','Blink','Listen','Speak','Charge','Travel'],
+      'studio':'Unified iPhone-first Content Studio with central free canvas, floating tool dock, bottom-sheet templates/media/text/elements/layers/style controls, contextual inspector, typography scales, color presets, snapping, AI assistance, PNG/ZIP export and Instagram publishing',
+      'layouts':['top','cover','left','right','band','collage','minimal'],
+      'cuts':['none','diagonal','curve','wave'],
+      'themes':['editorial','glass','impact','paper','night','color'],
+      'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
+    }
+
+print("PLUG_ART_V168_1_READY plugy=smaller_non_obstructive creation=true_blank pdf=rich_media_editable radar=resilient_live_sources qa=interactive",flush=True)
+
+def _v127_runtime_smoke():
+    required_routes={
+      ('GET','/api/health'),
+      ('GET','/plugy'),
+      ('GET','/api/v154/ui-manifest'),
+      ('GET','/api/v90/builder/config'),
+      ('PATCH','/api/v90/builder/config'),
+      ('GET','/api/map'),
+      ('GET','/api/v124/dashboard-bootstrap'),
+      ('POST','/api/v125/plugy/stream'),
+      ('POST','/api/v32/plugy'),
+      ('POST','/api/v32/content/image'),
+      ('POST','/api/v162/plugy/speech'),
+      ('GET','/api/v86/crm'),
+      ('GET','/api/v107/bureau'),
+      ('GET','/api/v107/open-calls/workflow'),
+      ('GET','/api/v108/drafts'),
+      ('GET','/api/v88/instagram/status'),
+      ('GET','/api/v88/instagram/media'),
+      ('POST','/api/v88/instagram/publish'),
+      ('POST','/api/radar/run'),
+      ('GET','/api/v156/status'),
+      ('GET','/api/v156/bureau/files'),
+      ('POST','/api/v156/bureau/files'),
+      ('GET','/api/v156/ideas'),
+      ('POST','/api/v156/ideas'),
+      ('POST','/api/v164/projects/library/seed'),('GET','/api/v164/projects/library'),
+      ('GET','/api/v163/diagnostics'),
+      ('GET','/api/v163/status'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('POST','/api/v167/pdf-projects'),('GET','/api/v167/qa/manifest'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+    }
+    active=set()
+    for route in app.router.routes:
+        path=getattr(route,'path',None)
+        methods=getattr(route,'methods',set()) or set()
+        if not path:continue
+        for method in methods:
+            active.add((str(method).upper(),path))
+    missing=sorted(required_routes-active)
+    required_tables=[
+      'opportunities','artists','crm_leads','crm_history','bureau_documents',
+      'bureau_templates','application_packages','opportunity_workspace','content_drafts',
+      'bureau_files','idea_cloud','art_events','pdf_projects','pdf_pages','idea_links','radar_refresh_state'
+    ]
+    table_missing=[]
+    db_ok=False
+    quick='unknown'
+    try:
+        db=core.conn()
+        existing={str(x[0]) for x in db.execute("select name from sqlite_master where type='table'").fetchall()}
+        table_missing=[t for t in required_tables if t not in existing]
+        row=db.execute('pragma quick_check').fetchone()
+        quick=str(row[0] if row else 'unknown')
+        db_ok=(quick.lower()=='ok')
+        db.close()
+    except Exception as exc:
+        quick=f"{type(exc).__name__}:{str(exc)[:120]}"
+    ok=(not missing and not table_missing and db_ok)
+    print(
+      f"PLUG_ART_SMOKE ok={str(ok).lower()} routes={len(required_routes)-len(missing)}/{len(required_routes)} "
+      f"tables={len(required_tables)-len(table_missing)}/{len(required_tables)} db={quick} "
+      f"missing_routes={','.join(m+' '+p for m,p in missing) or 'none'} "
+      f"missing_tables={','.join(table_missing) or 'none'}",
+      flush=True
+    )
+
+def _v163_connectivity_smoke():
+    openai='not_configured';meta='not_configured';instagram='disconnected'
+    try:
+        key=os.getenv('OPENAI_API_KEY','').strip()
+        if key:
+            rr=requests.get('https://api.openai.com/v1/models',headers={'Authorization':f'Bearer {key}'},timeout=8)
+            openai='ok' if rr.ok else f'http_{rr.status_code}'
+    except Exception:
+        openai='network_error'
+    try:
+        configured=bool(os.getenv('META_APP_ID','').strip() and os.getenv('META_APP_SECRET','').strip())
+        meta='configured' if configured else 'not_configured'
+        row=_ig_row()
+        token=str(row.get('page_access_token') or '').strip()
+        igid=str(row.get('ig_user_id') or '').strip()
+        if token and igid:
+            rr=requests.get(f'https://graph.facebook.com/{_ig_graph_version()}/{igid}',params={'fields':'id,username','access_token':token},timeout=8)
+            instagram='ok' if rr.ok else f'http_{rr.status_code}'
+        elif configured:
+            instagram='not_connected'
+    except Exception:
+        instagram='network_error'
+    print(f'PLUG_ART_CONNECTIONS openai={openai} meta={meta} instagram={instagram}',flush=True)
+
+_v127_runtime_smoke()
+threading.Thread(target=_v163_connectivity_smoke,daemon=True).start()
+,name):raise HTTPException(400,'Icône invalide')
+    try:
+        rr=requests.get('https://api.iconify.design/'+prefix+'/'+name+'.svg',timeout=10,headers={'User-Agent':'PLUGART/168.2'})
+        if not rr.ok or 'svg' not in (rr.headers.get('content-type') or ''):raise HTTPException(404,'Icône introuvable')
+        return Response(content=rr.content,media_type='image/svg+xml',headers={'Cache-Control':'public,max-age=604800'})
+    except HTTPException:raise
+    except Exception:raise HTTPException(404,'Icône introuvable')
 
 def _v168_live_radar_loop():
     time.sleep(max(20,int(os.getenv('PLUGART_V168_START_DELAY_SECONDS','90'))))
@@ -3928,7 +6613,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'168.1','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'168.2','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -3942,7 +6627,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'168.1','ui':'plug-art-v168-rich-workspace',
+      'ok':True,'version':'168.2','ui':'plug-art-v168-rich-workspace',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4011,7 +6696,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'168.1',
+      'version':'168.2',
       'ui':'plug-art-v168-rich-workspace',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
