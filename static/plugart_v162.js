@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='169.20260927.3';
+const VERSION='169.20260927.4';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -184,7 +184,7 @@ function route(id,push=true){
   }else renderRouteView(id);
   if(radarEventsAlias)setTimeout(()=>{setRadarModeV167('events');refreshRadarStatusV168()},40);
 }
-$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route);if(b.dataset.radarDirect==='events')setTimeout(()=>{setRadarModeV167('events');refreshRadarStatusV168()},40)}));
+$$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route);if(b.dataset.radarDirect==='events')setTimeout(()=>{setRadarModeV167('events');refreshRadarStatusV168()},40)}));
 window.PLUGART_ROUTE=route;
 
 const ROUTE_PREFETCH_TIMERS_V164=new WeakMap();
@@ -3274,7 +3274,7 @@ function ensureStoryboardV169_1(){
 function renderStoryboardV169_1(){
   const box=ensureStoryboardV169_1();if(!box)return;const slides=state.carousel.slides||[];
   box.innerHTML='<div class="storyboard-head-v1691"><span>STORYBOARD · '+slides.length+' SLIDE'+(slides.length>1?'S':'')+'</span><button data-story-add-v1691>＋ Ajouter</button></div><div class="storyboard-track-v1691">'+slides.map((s,i)=>{const d=slideDesign(s),bg=s.image?'background-image:url(&quot;'+esc(s.image).replace(/"/g,'%22')+'&quot;)':'background:'+esc(d.backgroundColor||'#f4f3ef');return '<article class="'+(i===state.carousel.active?'active':'')+'" data-story-slide-v1691="'+i+'"><button class="story-preview-v1691" data-story-open-v1691="'+i+'"><i style="'+bg+'" data-pattern="'+esc(d.pattern||'')+'"></i><b>0'+(i+1)+'</b><span>'+esc((s.title||'Slide '+(i+1)).slice(0,34))+'</span></button><div><button title="Dupliquer" data-story-copy-v1691="'+i+'">⧉</button><button title="Supprimer" data-story-delete-v1691="'+i+'">×</button></div></article>'}).join('')+'</div>';
-  $('[data-story-open-v1691]',box).forEach(b=>{
+  $$('[data-story-open-v1691]',box).forEach(b=>{
     b.onclick=()=>{state.carousel.active=Number(b.dataset.storyOpenV1691);renderCarousel()};
     b.draggable=true;b.ondragstart=e=>{e.dataTransfer.setData('text/plain',b.dataset.storyOpenV1691);e.dataTransfer.effectAllowed='move'};
     b.ondragover=e=>{e.preventDefault();e.dataTransfer.dropEffect='move'};
@@ -4582,10 +4582,10 @@ function installRadarV167(){
     const k=b.dataset.eventDiscovery,q=$('#eventQueryV167'),city=$('#eventCityV167');
     const presets={
       paris:{city:'Paris',q:'galerie vernissage opening exposition'},
-      '93':{city:'Montreuil, Pantin, Saint-Denis, Aubervilliers, Bobigny, Romainville',q:'vernissage ateliers collectif art contemporain'},
+      '93':{city:'Montreuil, Pantin, Saint-Denis, Aubervilliers, Bobigny, Romainville, Saint-Ouen, Bagnolet, Les Lilas, Noisy-le-Sec, Le Bourget',q:'vernissage opening ateliers collectif art contemporain gratuit entrée libre'},
       collectifs:{city:'Paris, Montreuil, Pantin, Saint-Denis',q:'collectif artistes vernissage exposition'},
       municipal:{city:'Paris, Montreuil, Saint-Denis, Aubervilliers',q:'mairie hôtel de ville centre culturel vernissage'},
-      social:{city:'Paris, Montreuil, Pantin, Saint-Denis',q:'#vernissage #vernissageparis #parisart #galerieparis #expositionparis Instagram'},
+      social:{city:'Paris, Montreuil, Pantin, Saint-Denis, Aubervilliers, Saint-Ouen, Romainville',q:'#vernissage #vernissageparis #vernissage93 #pantinart #montreuilart #saintdenisart #saintouenart #romainvilleart Instagram TikTok collectif galerie opening'},
       free:{city:'Paris, Montreuil, Pantin, Saint-Denis',q:'vernissage gratuit entrée libre'}
     }[k]||{city:'Paris',q:''};
     if(city)city.value=presets.city;if(q)q.value=presets.q;if(k==='free'&&$('#eventFreeV167'))$('#eventFreeV167').checked=true;
@@ -4659,16 +4659,25 @@ async function loadEventsV167(force=false,extra={}){
   finally{state.eventsV167Loading=false}
 }
 async function searchEventsV167(){
-  const btn=$('#eventSearchWebV167');if(!btn||btn.disabled)return;const oldLabel=btn.textContent;
+  const btn=$('#eventSearchWebV167');if(!btn||btn.disabled)return;const oldLabel=btn.textContent,range=eventRangeV167();
   btn.disabled=true;btn.textContent='Recherche immédiate…';
+  const cities=clean($('#eventCityV167')?.value||'Paris').split(',').map(x=>clean(x)).filter(Boolean);
+  const type=$('#eventTypeV167')?.value||'',q=clean($('#eventQueryV167')?.value||'');
+  const body={cities:cities.length?cities:['Paris'],date_from:range.from,date_to:range.to,
+    types:type?[type]:['vernissage','opening','artist_talk','finissage','preview','nocturne','rencontre_artiste','lancement_exposition'],
+    q:q||'vernissage galerie collectif artistes'};
   try{
-    const refreshed=await api('/api/v168/events/refresh',{method:'POST',timeout:90000,body:JSON.stringify({force:true})});
-    if(Array.isArray(refreshed?.items))state.eventsV167=refreshed.items;
+    const direct=await api('/api/v167/events/search',{method:'POST',timeout:90000,body:JSON.stringify(body)});
+    if(Array.isArray(direct?.items))state.eventsV167=direct.items;
     await loadEventsV167(true);
     const n=(state.eventsV167||[]).length;toast(n+' vernissage'+(n>1?'s':'')+' / événement'+(n>1?'s':'')+' disponible'+(n>1?'s':''));
     refreshRadarStatusV168();
   }catch(e){
-    try{await loadEventsV167(true);toast('Sources locales rechargées')}catch{toast('Recherche Vernissages impossible : '+clean(e.message||'erreur'))}
+    try{
+      const refreshed=await api('/api/v168/events/refresh',{method:'POST',timeout:90000,body:JSON.stringify({force:true})});
+      if(Array.isArray(refreshed?.items))state.eventsV167=refreshed.items;
+      await loadEventsV167(true);toast('Recherche web limitée · sources officielles et locales rechargées');
+    }catch{toast('Recherche Vernissages impossible : '+clean(e.message||'erreur'))}
   }finally{btn.disabled=false;btn.textContent=oldLabel}
 }
 function renderEventsV167(){
@@ -4680,7 +4689,7 @@ function renderEventsV167(){
     return '<article class="event-card-v167">'+
       '<div class="event-visual-v167"><img src="'+image+'" alt="" loading="lazy" decoding="async" onerror="this.style.display=\'none\'"><span>'+esc((e.event_type||'vernissage').replaceAll('_',' '))+'</span></div>'+
       '<div class="event-copy-v167"><div class="event-date-v167"><strong>'+esc(v167FmtDate(e.starts_at))+'</strong><small>'+esc(e.city||e.country||'')+'</small></div><h3>'+esc(e.title)+'</h3><p>'+esc(e.venue_name||'Lieu à confirmer')+'</p>'+
-      '<div class="event-tags-v167">'+(e.is_free?'<span>Gratuit</span>':'')+(e.verified?'<span>✓ Vérifié</span>':'')+(e.rsvp_url?'<span>RSVP</span>':'')+'</div>'+
+      '<div class="event-tags-v167">'+(e.is_free?'<span>Gratuit</span>':'')+(e.verified?'<span>✓ Vérifié</span>':'')+(e.rsvp_url?'<span>RSVP</span>':'')+(e.source_type?'<span>'+esc(String(e.source_type).replaceAll('_',' '))+'</span>':'')+'</div>'+
       '<div class="event-actions-v167"><button data-event-create="'+e.id+'">✦ Créer</button><button data-event-agenda="'+e.id+'">Agenda</button><button data-event-map="'+e.id+'">Map</button><button data-event-fav="'+e.id+'">'+(e.favorite?'★':'☆')+'</button><a href="'+esc(e.source_url)+'" target="_blank" rel="noopener">Source ↗</a></div></div></article>';
   }).join('');
   $$('[data-event-create]',box).forEach(b=>b.onclick=()=>eventToCreationV167(Number(b.dataset.eventCreate)));
@@ -4956,9 +4965,9 @@ function renderPdfPageStripV169(){
   const pages=state.activePdfProjectV167?.pages||[];
   if(!pages.length){box.innerHTML='';return}
   box.innerHTML=pages.map((p,i)=>'<article class="pdf-page-card-v1692 '+(pdfPageV167===i+1?'active':'')+'"><button data-pdf-page-v169="'+(i+1)+'">'+pdfPageThumbV1692(p,i)+'<span><em>'+(i+1)+'</em>'+esc(p.page_type||'Page')+'</span></button><div><button data-pdf-page-copy-v1692="'+(i+1)+'" title="Dupliquer">⧉</button><button data-pdf-page-delete-v1692="'+(i+1)+'" title="Supprimer">×</button></div></article>').join('');
-  $('[data-pdf-page-v169]',box).forEach(b=>b.onclick=()=>{pdfPageV167=Number(b.dataset.pdfPageV169);renderPdfElementsV168();renderPdfPageStripV169()});
-  $('[data-pdf-page-copy-v1692]',box).forEach(b=>b.onclick=()=>duplicatePdfPageV1692(Number(b.dataset.pdfPageCopyV1692)));
-  $('[data-pdf-page-delete-v1692]',box).forEach(b=>b.onclick=()=>deletePdfPageV1692(Number(b.dataset.pdfPageDeleteV1692)));
+  $$('[data-pdf-page-v169]',box).forEach(b=>b.onclick=()=>{pdfPageV167=Number(b.dataset.pdfPageV169);renderPdfElementsV168();renderPdfPageStripV169()});
+  $$('[data-pdf-page-copy-v1692]',box).forEach(b=>b.onclick=()=>duplicatePdfPageV1692(Number(b.dataset.pdfPageCopyV1692)));
+  $$('[data-pdf-page-delete-v1692]',box).forEach(b=>b.onclick=()=>deletePdfPageV1692(Number(b.dataset.pdfPageDeleteV1692)));
   $('#pdfPageInfoV167').textContent='Page '+pdfPageV167+' / '+pages.length;
 }
 async function duplicatePdfPageV1692(pageNo){
@@ -4974,7 +4983,7 @@ function schedulePdfAutoSaveV169(){
   clearTimeout(pdfAutoSaveTimerV169);pdfAutoSaveTimerV169=setTimeout(async()=>{
     const p=state.activePdfProjectV167,page=pdfActivePageV168();if(!p||!page?.id)return;
     try{await api('/api/v167/pdf-pages/'+page.id,{method:'PATCH',body:JSON.stringify({content:page.content||{}})});$('#pdfInspectorTitleV167')?.setAttribute('data-saved','1')}catch{}
-  },450);
+  },260);
 }
 function ensurePdfLivePageV169(){
   const wrap=$('#pdfCanvasWrapV167');if(!wrap)return null;
@@ -4995,7 +5004,7 @@ function renderPdfLivePageV169(){
     if(e.type==='line')return '<div class="pdf-live-el-v169 line" data-pdf-live-el="'+i+'" style="'+st+';background:'+esc(e.stroke||'#111318')+'"><i class="pdf-resize-handle-v1692"></i></div>';
     return '<div class="pdf-live-el-v169 shape '+esc(e.type)+'" data-pdf-live-el="'+i+'" style="'+st+';background:'+esc(e.fill||'#7657ff')+';border-radius:'+(e.type==='circle'?'50%':Number(e.radius||0)+'px')+'"><i class="pdf-resize-handle-v1692"></i></div>';
   }).join('');
-  $('[data-pdf-live-el]',live).forEach(el=>{bindPdfLiveDragV169(el);bindPdfLiveResizeV1692(el)});
+  $$('[data-pdf-live-el]',live).forEach(el=>{bindPdfLiveDragV169(el);bindPdfLiveResizeV1692(el)});
 }
 function bindPdfLiveDragV169(el){
   el.onpointerdown=e=>{
@@ -5083,7 +5092,7 @@ const PDF_TEMPLATES_V1692=[
 function renderPdfTemplateGalleryV1692(){
   const box=$('#pdfTemplateGalleryV1692');if(!box)return;
   box.innerHTML=PDF_TEMPLATES_V1692.map(x=>'<button data-pdf-template-v1692="'+x[0]+'" title="'+esc(x[1])+'"><i class="pdf-template-mini-v1692 '+x[0]+'"><b></b><span></span><em></em></i><small>'+esc(x[1])+'</small></button>').join('');
-  $('[data-pdf-template-v1692]',box).forEach(b=>b.onclick=()=>{$('#pdfTemplateV168').value=b.dataset.pdfTemplateV1692;applyPdfTemplateV168(b.dataset.pdfTemplateV1692)});
+  $$('[data-pdf-template-v1692]',box).forEach(b=>b.onclick=()=>{$('#pdfTemplateV168').value=b.dataset.pdfTemplateV1692;applyPdfTemplateV168(b.dataset.pdfTemplateV1692)});
 }
 function applyPdfTemplateV168(name){
   const page=pdfActivePageV168();if(!page||!name)return;const c=page.content=page.content||{};const title=$('#pdfTitleV167')?.value||state.activePdfProjectV167?.title||'PLUG ART';
