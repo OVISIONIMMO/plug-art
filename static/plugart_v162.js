@@ -4768,15 +4768,13 @@ async function createPdfFromBureauV167(){
 }
 async function openPdfProjectV167(id){
   try{
-    const p=await api('/api/v167/pdf-projects/'+id,{noMemCache:true});state.activePdfProjectV167=p;
+    const p=await api('/api/v167/pdf-projects/'+id,{noMemCache:true});state.activePdfProjectV167=p;pdfDocV167=null;pdfPageV167=1;pdfSelectedElementV169=null;
     $('#pdfInspectorTitleV167').textContent=p.title;$('#pdfTitleV167').value=p.title||'';$('#pdfTypeV167').value=p.project_type||'dossier_projet';
-    pdfPageV167=1;const page=p.pages?.[0];$('#pdfPageBodyV167').value=page?.content?.body||page?.content?.text||'';renderPdfElementsV168();
-    renderPdfProjectsV167(await api('/api/v156/bureau/files').catch(()=>[]));
-    await api('/api/v167/pdf-projects/'+id+'/export',{method:'POST',body:'{}'});openPdfUrlV167('/api/v167/pdf-projects/'+id+'/preview.pdf',p);
+    const page=p.pages?.[0];$('#pdfPageBodyV167').value=page?.content?.body||page?.content?.text||'';renderPdfProjectsV167(await api('/api/v156/bureau/files').catch(()=>[]));renderPdfElementsV168();renderPdfLiveV169();
   }catch(e){toast('Ouverture du projet PDF impossible')}
 }
 async function openPdfUrlV167(url,project){
-  pdfPageV167=1;pdfZoomV167=1;const iframe=$('#pdfFallbackV167'),canvas=$('#pdfCanvasV167');
+  if(!project)state.activePdfProjectV167=null;pdfPageV167=1;pdfZoomV167=1;const stage=$('#pdfLiveStageV169'),iframe=$('#pdfFallbackV167'),canvas=$('#pdfCanvasV167');if(stage)stage.hidden=true;
   if(!project){
     pdfDocV167=null;if(canvas)canvas.hidden=true;if(iframe){iframe.hidden=false;iframe.src=url+'#toolbar=1&navpanes=1&view=FitH'}$('#pdfPageInfoV167').textContent='PDF importé · lecteur direct';$('#pdfZoomInfoV167').textContent='natif';return;
   }
@@ -4879,7 +4877,7 @@ function editPdfElementV168(index){
   if(e.type==='text'){const txt=prompt('Texte :',e.text||'');if(txt!==null)e.text=txt;const size=prompt('Taille de police :',String(e.fontSize||18));if(size!==null&&Number(size))e.fontSize=Number(size)}
   else if(e.type==='image'){const src=prompt('URL image :',e.src||'');if(src!==null)e.src=src;const pos=prompt('Recadrage : center, top, bottom, left, right',e.position||'center');if(pos)e.position=pos}
   else{const fill=prompt('Couleur hexadécimale :',e.fill||e.stroke||'#7657ff');if(fill){if(e.type==='line')e.stroke=fill;else e.fill=fill}}
-  renderPdfElementsV168();
+  renderPdfElementsV168();renderPdfLiveV169();schedulePdfAutosaveV169();
 }
 function applyPdfTemplateV168(name){
   const page=pdfActivePageV168();if(!page||!name)return;const c=page.content=page.content||{};const title=$('#pdfTitleV167')?.value||state.activePdfProjectV167?.title||'PLUG ART';
@@ -4891,7 +4889,7 @@ function applyPdfTemplateV168(name){
     gallery:[{type:'text',text:title,x:7,y:7,w:86,h:12,fontSize:28,weight:'bold',color:'#111318'},{type:'rect',x:7,y:23,w:41,h:30,fill:'#f0edf9'},{type:'rect',x:52,y:23,w:41,h:30,fill:'#e9f6f7'},{type:'rect',x:7,y:57,w:86,h:30,fill:'#f5f3ef'}],
     statement:[{type:'text',text:'STATEMENT',x:8,y:9,w:84,h:6,fontSize:9,weight:'bold',color:'#7657ff'},{type:'text',text:title,x:8,y:19,w:84,h:18,fontSize:36,weight:'bold',color:'#111318'},{type:'text',text:'Développe ici une page très lisible, pensée comme un manifeste ou un texte de présentation.',x:8,y:46,w:72,h:32,fontSize:14,color:'#3f424a',lineHeight:1.4}]
   };
-  c.elements=(presets[name]||[]).map(x=>({...x}));if(img)c.background_image=img;renderPdfElementsV168();toast('Modèle de page appliqué');
+  c.elements=(presets[name]||[]).map(x=>({...x}));if(img)c.background_image=img;pdfSelectedElementV169=null;renderPdfElementsV168();renderPdfLiveV169();schedulePdfAutosaveV169();toast('Modèle de page appliqué');
 }
 async function makeImportedPdfEditableV168(fileId){
   try{const p=await api('/api/v168/pdf-projects/from-file/'+fileId,{method:'POST',timeout:30000,body:'{}'});state.pdfProjectsV167.unshift(p);state.activePdfProjectV167=p;await openPdfProjectV167(p.id);toast('PDF importé converti en version éditable')}catch(e){toast('Conversion du PDF impossible')}
