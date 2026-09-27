@@ -4268,7 +4268,7 @@ def _v127_runtime_smoke():
       ('POST','/api/v156/ideas'),
       ('POST','/api/v164/projects/library/seed'),('GET','/api/v164/projects/library'),
       ('GET','/api/v163/diagnostics'),
-      ('GET','/api/v163/status'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('POST','/api/v167/pdf-projects'),('GET','/api/v167/qa/manifest'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+      ('GET','/api/v163/status'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('POST','/api/v167/pdf-projects'),('GET','/api/v167/qa/manifest'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),('POST','/api/v168/radar/refresh-all'),('GET','/api/v169/assets/search'),('GET','/api/v169/assets/svg'),('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
     }
     active=set()
     for route in app.router.routes:
