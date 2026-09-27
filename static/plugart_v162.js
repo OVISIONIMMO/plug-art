@@ -4792,6 +4792,54 @@ async function renderPdfPageV167(fit=false){
   await page.render({canvasContext:ctx,viewport:vp}).promise;$('#pdfPageInfoV167').textContent='Page '+pdfPageV167+' / '+pdfDocV167.numPages;$('#pdfZoomInfoV167').textContent=Math.round(pdfZoomV167*100)+'%';renderPdfElementsV168();
 }
 
+let pdfSelectedElementV169=null,pdfAutosaveTimerV169=null;
+function pdfPageCountV169(){return state.activePdfProjectV167?.pages?.length||0}
+function renderPdfPageStripV169(){
+  const box=$('#pdfPageStripV169'),p=state.activePdfProjectV167;if(!box)return;
+  const pages=p?.pages||[];box.innerHTML=pages.map((pg,i)=>'<button class="'+(i===pdfPageV167-1?'active':'')+'" data-pdf-page-v169="'+(i+1)+'"><b>'+(i+1)+'</b><span>'+esc(pg.page_type||'Page')+'</span></button>').join('');
+  $('[data-pdf-page-v169]',box).forEach(b=>b.onclick=()=>{pdfPageV167=Number(b.dataset.pdfPageV169);pdfSelectedElementV169=null;renderPdfLiveV169();renderPdfElementsV168()});
+}
+function schedulePdfAutosaveV169(){
+  clearTimeout(pdfAutosaveTimerV169);const p=state.activePdfProjectV167,page=pdfActivePageV168();if(!p||!page?.id)return;
+  pdfAutosaveTimerV169=setTimeout(async()=>{try{await api('/api/v167/pdf-pages/'+page.id,{method:'PATCH',body:JSON.stringify({content:page.content||{}})});const title=$('#pdfTitleV167')?.value;if(title&&title!==p.title){await api('/api/v167/pdf-projects/'+p.id,{method:'PATCH',body:JSON.stringify({title})});p.title=title}}catch{}},650);
+}
+function pdfElementStyleV169(e){
+  const bg=e.type==='rect'||e.type==='circle'?(e.gradient||e.fill||'#7657ff'):'transparent';
+  return 'left:'+Number(e.x||0)+'%;top:'+Number(e.y||0)+'%;width:'+Number(e.w||20)+'%;height:'+Number(e.h||10)+'%;opacity:'+Number(e.opacity??1)+';transform:rotate('+Number(e.rotate||0)+'deg);background:'+bg+';border-radius:'+Number(e.radius||0)+'px;';
+}
+function renderPdfLiveV169(){
+  const stage=$('#pdfLiveStageV169'),canvas=$('#pdfCanvasV167'),iframe=$('#pdfFallbackV167'),p=state.activePdfProjectV167,page=pdfActivePageV168();if(!stage||!p||!page)return;
+  stage.hidden=false;if(canvas)canvas.hidden=true;if(iframe)iframe.hidden=true;stage.style.background=page.content?.background||'#fff';
+  const bg=page.content?.background_image||'';stage.style.backgroundImage=bg?'url("'+String(bg).replace(/"/g,'%22')+'")':'none';
+  const els=Array.isArray(page.content?.elements)?page.content.elements:[];
+  stage.innerHTML=els.map((e,i)=>{
+    const selected=i===pdfSelectedElementV169?' selected':'',style=pdfElementStyleV169(e);
+    if(e.type==='text')return '<div class="pdf-live-el text'+selected+'" data-pdf-live-el="'+i+'" style="'+style+'color:'+esc(e.color||'#111318')+';font-size:'+Number(e.fontSize||18)+'px;font-weight:'+(e.weight||'normal')+';text-align:'+(e.align||'left')+';line-height:'+Number(e.lineHeight||1.2)+'">'+esc(e.text||'Texte')+'</div>';
+    if(e.type==='image')return '<div class="pdf-live-el image'+selected+'" data-pdf-live-el="'+i+'" style="'+style+'"><img src="'+esc(e.src||'')+'" style="object-position:'+esc(e.position||'center')+'"></div>';
+    if(e.type==='line')return '<div class="pdf-live-el line'+selected+'" data-pdf-live-el="'+i+'" style="left:'+Number(e.x||0)+'%;top:'+Number(e.y||0)+'%;width:'+Number(e.w||50)+'%;height:'+Math.max(1,Number(e.thickness||1.5))+'px;background:'+esc(e.stroke||'#111318')+';opacity:'+Number(e.opacity??1)+';transform:rotate('+Number(e.rotate||0)+'deg)"></div>';
+    return '<div class="pdf-live-el shape'+selected+'" data-pdf-live-el="'+i+'" style="'+style+'"></div>';
+  }).join('');
+  $('[data-pdf-live-el]',stage).forEach(el=>{
+    const idx=Number(el.dataset.pdfLiveEl),e=els[idx];
+    el.onclick=ev=>{ev.stopPropagation();pdfSelectedElementV169=idx;renderPdfElementInspectorV169();$('[data-pdf-live-el]',stage).forEach(x=>x.classList.toggle('selected',x===el))};
+    el.onpointerdown=ev=>{if(ev.button!==0)return;pdfSelectedElementV169=idx;const r=stage.getBoundingClientRect(),sx=ev.clientX,sy=ev.clientY,ox=Number(e.x||0),oy=Number(e.y||0);el.setPointerCapture?.(ev.pointerId);const move=m=>{e.x=Math.max(0,Math.min(95,ox+(m.clientX-sx)/r.width*100));e.y=Math.max(0,Math.min(95,oy+(m.clientY-sy)/r.height*100));el.style.left=e.x+'%';el.style.top=e.y+'%'};const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);renderPdfElementsV168();schedulePdfAutosaveV169()};el.addEventListener('pointermove',move);el.addEventListener('pointerup',up)};
+  });
+  stage.onclick=()=>{pdfSelectedElementV169=null;renderPdfElementInspectorV169();$('[data-pdf-live-el]',stage).forEach(x=>x.classList.remove('selected'))};
+  $('#pdfPageInfoV167').textContent='Page '+pdfPageV167+' / '+pdfPageCountV169();renderPdfPageStripV169();renderPdfElementInspectorV169();
+}
+function renderPdfElementInspectorV169(){
+  const box=$('#pdfElementInspectorV169'),els=pdfElementsV168(),e=els[pdfSelectedElementV169];if(!box)return;
+  if(!e){box.innerHTML='<div class="empty">Sélectionne un élément directement sur la page pour l’ajuster.</div>';return}
+  box.innerHTML='<div class="pdf-selected-head-v169"><strong>'+(e.type==='text'?'Texte':e.type==='image'?'Image':e.type==='line'?'Ligne':'Forme')+'</strong><button id="pdfSelectedDeleteV169">Supprimer</button></div>'+
+    '<div class="pdf-props-grid-v169"><label>X<input data-pdf-prop="x" type="number" min="0" max="100" step=".5" value="'+Number(e.x||0)+'"></label><label>Y<input data-pdf-prop="y" type="number" min="0" max="100" step=".5" value="'+Number(e.y||0)+'"></label><label>Largeur<input data-pdf-prop="w" type="number" min="2" max="100" step=".5" value="'+Number(e.w||20)+'"></label><label>Hauteur<input data-pdf-prop="h" type="number" min="2" max="100" step=".5" value="'+Number(e.h||10)+'"></label><label>Rotation<input data-pdf-prop="rotate" type="number" min="-180" max="180" value="'+Number(e.rotate||0)+'"></label><label>Opacité<input data-pdf-prop="opacity" type="range" min="0" max="1" step=".05" value="'+Number(e.opacity??1)+'"></label></div>'+
+    (e.type==='text'?'<label>Texte<textarea id="pdfSelectedTextV169" rows="4">'+esc(e.text||'')+'</textarea></label><div class="pdf-props-grid-v169"><label>Taille<input data-pdf-prop="fontSize" type="number" min="6" max="80" value="'+Number(e.fontSize||18)+'"></label><label>Couleur<input id="pdfSelectedColorV169" type="color" value="'+esc(e.color||'#111318')+'"></label></div>':'')+
+    ((e.type==='rect'||e.type==='circle')?'<label>Couleur<input id="pdfSelectedFillV169" type="color" value="'+(/^#[0-9A-Fa-f]{6}$/.test(e.fill||'')?esc(e.fill):'#7657ff')+'"></label>':'');
+  $('[data-pdf-prop]',box).forEach(inp=>inp.oninput=()=>{e[inp.dataset.pdfProp]=Number(inp.value);renderPdfLiveV169();schedulePdfAutosaveV169()});
+  $('#pdfSelectedTextV169')?.addEventListener('input',ev=>{e.text=ev.target.value;renderPdfLiveV169();schedulePdfAutosaveV169()});
+  $('#pdfSelectedColorV169')?.addEventListener('input',ev=>{e.color=ev.target.value;renderPdfLiveV169();schedulePdfAutosaveV169()});
+  $('#pdfSelectedFillV169')?.addEventListener('input',ev=>{e.fill=ev.target.value;delete e.gradient;renderPdfLiveV169();schedulePdfAutosaveV169()});
+  $('#pdfSelectedDeleteV169')?.addEventListener('click',()=>{els.splice(pdfSelectedElementV169,1);pdfSelectedElementV169=null;renderPdfElementsV168();renderPdfLiveV169();schedulePdfAutosaveV169()});
+}
 function pdfActivePageV168(){
   const p=state.activePdfProjectV167;if(!p?.pages?.length)return null;
   return p.pages[Math.max(0,Math.min(p.pages.length-1,pdfPageV167-1))]||p.pages[0];
