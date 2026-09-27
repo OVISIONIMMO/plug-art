@@ -8,7 +8,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='169.0'
+app.version='169.1'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -692,7 +692,7 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'169.0',
+      'version':'169.1',
       'ui':'plug-art-v169-performance-radar',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
@@ -743,7 +743,7 @@ def ui_manifest_v128():
     expected='168.20260927.6'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'169.0',
+      'version':'169.1',
       'ui':'plug-art-v169-performance-radar',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
@@ -3363,6 +3363,14 @@ def _v168_curated_events():
       {'event_type':'vernissage','title':'Ashkhar — Sonya Orfalian','venue_name':'Maison de la vie associative du 14e','venue_type':'cultural_center','city':'Paris','address':'76 rue Daguerre, 75014 Paris','country':'France','starts_at':'2026-10-06T18:30','ends_at':'2026-10-06T21:30','artists':['Sonya Orfalian'],'disciplines':['peinture','art contemporain'],'description':'Vernissage gratuit de l’exposition Ashkhar en présence de l’artiste.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-de-l-exposition-de-sonya-orfalian-123444','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
       {'event_type':'vernissage','title':'Rétrospective Bernard Mandeville','venue_name':'Galerie Athéna — Mairie du 13e','venue_type':'public_gallery','city':'Paris','address':'1 place d’Italie, 75013 Paris','country':'France','starts_at':'2026-10-06T18:00','ends_at':'2026-10-06T21:00','artists':['Bernard Mandeville'],'disciplines':['peinture','collage','lithographie'],'description':'Vernissage de la rétrospective Bernard Mandeville. Entrée libre et gratuite.','image_url':'','source_url':'https://mairie13.paris.fr/pages/exposition-bernard-mandeville-36583','source_type':'official_municipal','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
       {'event_type':'vernissage','title':'Faire place au monde','venue_name':'Cité internationale des arts','venue_type':'art_center','city':'Paris','address':'18 rue de l’Hôtel de Ville, 75004 Paris','country':'France','starts_at':'2026-10-07T18:00','ends_at':'2026-10-07T21:00','artists':[],'disciplines':['art contemporain','installation'],'description':'Vernissage gratuit de l’exposition collective Faire place au monde.','image_url':'','source_url':'https://www.paris.fr/evenements/les-voix-se-levent-118181','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'Jardins amers — Anne Robin','venue_name':'Galerie du Génie de la Bastille','venue_type':'gallery','city':'Paris','address':'126 rue de Charonne, 75011 Paris','country':'France','starts_at':'2026-09-29','ends_at':'2026-10-04','artists':['Anne Robin'],'disciplines':['arts visuels'],'description':'Vernissage / ouverture signalé dans l’agenda des galeries parisiennes.','image_url':'','source_url':'https://www.offi.fr/expositions-musees/galeries/vernissages.html?npage=5','source_type':'cultural_agenda','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'Pia van Velde','venue_name':'Galerie La Capitale','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-09-28','ends_at':'2026-10-24','artists':['Pia van Velde'],'disciplines':['arts visuels'],'description':'Vernissage / ouverture répertorié par L’Officiel des spectacles.','image_url':'','source_url':'https://www.offi.fr/expositions-musees/galeries/vernissages.html?npage=5','source_type':'cultural_agenda','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'Sérendipités — Valérie Queruau Lamerie','venue_name':'Galerie paul*13','venue_type':'gallery','city':'Paris','address':'Paris 17e','country':'France','starts_at':'2026-10-01','ends_at':'2026-10-11','artists':['Valérie Queruau Lamerie'],'disciplines':['sculpture','arts visuels'],'description':'Vernissage répertorié dans l’agenda parisien des galeries.','image_url':'','source_url':'https://www.offi.fr/expositions-musees/galeries/vernissages.html?npage=5','source_type':'cultural_agenda','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'Complices — Catherine Beaunez & Ellie Drouilleau','venue_name':'Ateliers d’Artistes de Belleville — Galerie AAB','venue_type':'artist_collective','city':'Paris','address':'Belleville, Paris','country':'France','starts_at':'2026-10-01','ends_at':'2026-10-11','artists':['Catherine Beaunez','Ellie Drouilleau'],'disciplines':['arts visuels'],'description':'Ouverture d’exposition portée par les Ateliers d’Artistes de Belleville.','image_url':'','source_url':'https://www.offi.fr/expositions-musees/galeries/vernissages.html?npage=5','source_type':'cultural_agenda','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'L’Envers du visible','venue_name':'Galerie XII Paris','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-02','ends_at':'2026-10-31','artists':[],'disciplines':['photographie','arts visuels'],'description':'Vernissage / ouverture répertorié dans l’agenda des galeries parisiennes.','image_url':'','source_url':'https://www.offi.fr/expositions-musees/galeries/vernissages.html?npage=5','source_type':'cultural_agenda','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'RE-Garder — Rémi Delaplace','venue_name':'Galerie Le Pavé d’Orsay','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-02','ends_at':'2026-10-11','artists':['Rémi Delaplace'],'disciplines':['arts visuels'],'description':'Vernissage / ouverture répertorié dans l’agenda des galeries parisiennes.','image_url':'','source_url':'https://www.offi.fr/expositions-musees/galeries/vernissages.html?npage=5','source_type':'cultural_agenda','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'Jardin d’amour','venue_name':'Galerie Jeanne Bucher Jaeger — Espace Marais','venue_type':'gallery','city':'Paris','address':'Paris 3e','country':'France','starts_at':'2026-10-03','ends_at':'2026-12-19','artists':[],'disciplines':['art contemporain'],'description':'Ouverture répertoriée parmi les vernissages des galeries parisiennes.','image_url':'','source_url':'https://www.offi.fr/expositions-musees/galeries/vernissages.html?npage=5','source_type':'cultural_agenda','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'Théâtre de la couleur — Harry Gruyaert','venue_name':'Galerie Leica Paris','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-03','ends_at':'2027-01-09','artists':['Harry Gruyaert'],'disciplines':['photographie'],'description':'Ouverture répertoriée dans l’agenda des galeries parisiennes.','image_url':'','source_url':'https://www.offi.fr/expositions-musees/galeries/vernissages.html?npage=5','source_type':'cultural_agenda','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
     ]
 
 def _v168_curated_opportunities():
@@ -3373,7 +3381,12 @@ def _v168_curated_opportunities():
       {'title':'Appel à candidature exposition — La Gare Expérimentale','organizer':'La Gare Expérimentale','city':'Paris','country':'France','deadline':'2026-10-31','fee':'Gratuit / à vérifier','eligibility':'Artistes souhaitant proposer une exposition. Présence sur site demandée pendant l’exposition.','summary':'Programmation d’exposition de mars à juin, avec vernissage le mercredi soir.','source_url':'https://garexp.org/agenda/2026-06-29-appel-a-candidature-exposition','source_name':'La Gare Expérimentale','confidence':99},
       {'title':'Appel aux artistes — expositions collectives The Muisca Gallery','organizer':'The Muisca Gallery','city':'Paris','country':'France','deadline':'','fee':'À vérifier','eligibility':'Candidature spontanée ouverte toute l’année selon l’orientation artistique et les expositions programmées.','summary':'Galerie parisienne recherchant de nouveaux talents pour expositions collectives et solo shows.','source_url':'https://www.themuisca.com/appel-aux-artistes','source_name':'The Muisca Gallery','confidence':94},
       {'title':'Appel à candidature — expositions collectives Galerie Mona Lisa','organizer':'Galerie Mona Lisa','city':'Paris','country':'France','deadline':'','fee':'Petite participation — montant à vérifier','eligibility':'Artistes émergents et confirmés : peinture, photographie, sculpture, dessin, etc.','summary':'Expositions collectives à Paris 7e, avec plusieurs dates en octobre, novembre et décembre 2026.','source_url':'https://galerie-monalisa.org/fr/appel-a-candidature/','source_name':'Galerie Mona Lisa','confidence':95},
-      {'title':'ODYSSEY — International Open Call for Artists | Paris','organizer':'Sol de Paris','city':'Paris','country':'France','deadline':'2026-09-30','fee':'Candidature gratuite · 200 € si sélectionné','eligibility':'Artistes de toutes nationalités et tous niveaux de carrière. Peinture, dessin, photographie, sculpture, mixed media, textile, numérique, vidéo et installation.','summary':'Open call international pour une exposition collective physique à Paris, avec publication et promotion des artistes sélectionnés.','source_url':'https://artfond.me/en/opportunities/291-odyssey-international-open-call-for-artists-paris','source_name':'ArtFond / CuratorSpace','confidence':99},
+      {'title':'ODYSSEY — International Open Call for Artists | Paris','organizer':'Sol de Paris','city':'Paris','country':'France','deadline':'2026-09-30','fee':'Candidature gratuite · 200 € si sélectionné','eligibility':'Artistes de toutes nationalités et tous niveaux de carrière. Peinture, dessin, photographie, sculpture, mixed media, textile, numérique, vidéo et installation.','summary':'Open call international pour une exposition collective physique à Paris, avec publication et promotion des artistes sélectionnés.','source_url':'https://www.curatorspace.com/opportunities/detail/odyssey--international-open-call-for-artists--paris/11030','source_name':'CuratorSpace','confidence':99},
+      {'title':'Espace d’exposition du Pont Saint-Ange — appel à projets 2027','organizer':'Ville de Paris','city':'Paris','country':'France','deadline':'2026-10-15','fee':'Gratuit','eligibility':'Associations culturelles, collectifs d’artistes et structures de production ou de diffusion artistique avec expérience en arts visuels.','summary':'Programmation de quatre expositions photographiques en plein air entre les 10e et 18e arrondissements, avec possibilité de subvention municipale.','source_url':'https://www.paris.fr/pages/espace-d-exposition-du-pont-saint-ange-appel-a-projets-2027-36413','source_name':'Ville de Paris','confidence':100},
+      {'title':'A New World — Call For Artists','organizer':'Boomer Gallery','city':'London','country':'United Kingdom','deadline':'2026-10-03','fee':'Gratuit','eligibility':'Artistes de nombreuses disciplines dont peinture, photographie, sculpture, installation, mixed media et arts visuels.','summary':'Open call pour une exposition collective autour d’un monde en transformation et de futurs possibles.','source_url':'https://www.artconnect.com/opportunity/IFhY0XWiwtajHG7u0fh4B','source_name':'ArtConnect','confidence':96},
+      {'title':'OPEN CALL FOR ARTISTS — The House of Art','organizer':'The House of Art','city':'Geneva','country':'Switzerland','deadline':'2026-10-12','fee':'25 € de candidature','eligibility':'Peinture, sculpture, photographie, mixed media, dessin et installation. Jusqu’à 5 œuvres.','summary':'Exposition physique à Genève du 18 novembre au 19 décembre 2026, vernissage le 2 décembre. Aucun frais supplémentaire après sélection.','source_url':'https://www.curatorspace.com/opportunities/detail/open-call-for-artists/11041','source_name':'CuratorSpace','confidence':97},
+      {'title':'P.A.R.I.S. 2026 — Digital Display in Paris','organizer':'TERAVARNA Art Gallery / Horizon World Art','city':'Paris','country':'France','deadline':'2026-10-23','fee':'Participation payante — montant à vérifier','eligibility':'Peinture, photographie, dessin, sculpture, arts visuels, digital et autres médias. Aucun historique d’exposition requis.','summary':'Présentation numérique pendant l’exposition P.A.R.I.S. 2026, avec promotion sociale et couverture locale annoncée.','source_url':'https://www.artconnect.com/opportunity/OSReq6nivke7F8U9_gJix','source_name':'ArtConnect','confidence':94},
+      {'title':'42nd Community Art Exhibition in Virtual Reality','organizer':'Community Art Exhibition','city':'Online','country':'International','deadline':'2026-10-05','fee':'À vérifier','eligibility':'Tous médias : peinture, photographie, vidéo, illustration, sculpture, installation et plus.','summary':'Exposition VR du 12 octobre au 3 novembre avec catalogue PDF et promotion sur Instagram, Facebook, Bluesky, Threads et réseaux partenaires.','source_url':'https://www.curatorspace.com/opportunities/detail/open-call-for-artists--nd-community-art-exhibition-in-virtual-reality/11098?active=submit','source_name':'CuratorSpace','confidence':91},
     ]
 
 def _v169_paris_open_data_events(start=None,end=None):
@@ -4032,7 +4045,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'169.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'169.1','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -4046,7 +4059,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'169.0','ui':'plug-art-v169-performance-radar',
+      'ok':True,'version':'169.1','ui':'plug-art-v169-performance-radar',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4115,7 +4128,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'169.0',
+      'version':'169.1',
       'ui':'plug-art-v169-performance-radar',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
@@ -4143,7 +4156,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V169_READY performance=lean_dashboard images=lazy radar=paris_data_daily refresh_all=fixed",flush=True)
+print("PLUG_ART_V169_1_READY creator=storyboard_assets pdf=realtime_inspector radar=current_events_opportunities plugy=smaller qa=interactive",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
