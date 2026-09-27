@@ -8,7 +8,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='169.3'
+app.version='169.4'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -17,7 +17,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='169.20260927.4'
+VERSION='169.20260927.5'
 
 @app.middleware("http")
 async def _v169_performance_headers(request: Request, call_next):
@@ -692,7 +692,7 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'169.3',
+      'version':'169.4',
       'ui':'plug-art-v169-2-studio',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
@@ -740,10 +740,10 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='169.20260927.4'
+    expected='169.20260927.5'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'169.3',
+      'version':'169.4',
       'ui':'plug-art-v169-performance-radar',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
@@ -3084,6 +3084,12 @@ CREATE INDEX IF NOT EXISTS idx_art_events_type ON art_events(event_type);
 CREATE INDEX IF NOT EXISTS idx_art_events_venue ON art_events(venue_name);
 CREATE INDEX IF NOT EXISTS idx_art_events_status ON art_events(status);
 """)
+_v167e.commit()
+_v167_event_cols={str(x[1]) for x in _v167e.execute("pragma table_info(art_events)").fetchall()}
+for _col,_ddl in (
+  ('social_platform',"TEXT DEFAULT ''"),('social_handle',"TEXT DEFAULT ''"),('social_url',"TEXT DEFAULT ''")
+):
+    if _col not in _v167_event_cols:_v167e.execute("alter table art_events add column "+_col+" "+_ddl)
 _v167e.commit();_v167e.close()
 
 _V167_EVENT_TYPES={'vernissage','opening','finissage','artist_talk','gallery_event','preview','nocturne','rencontre_artiste','lancement_exposition'}
@@ -3148,6 +3154,9 @@ def _v167_normalize_event(item):
       'description':str(item.get('description') or '')[:4000],
       'image_url':str(item.get('image_url') or '')[:2400],
       'source_url':source,'source_type':str(item.get('source_type') or 'web')[:80],
+      'social_platform':str(item.get('social_platform') or '')[:40],
+      'social_handle':str(item.get('social_handle') or '')[:160],
+      'social_url':str(item.get('social_url') or '')[:2400],
       'rsvp_url':str(item.get('rsvp_url') or '')[:2400],'price_text':price,
       'is_free':1 if free else 0,'verified':1 if item.get('verified') else 0,
       'verified_at':now if item.get('verified') else '','status':'active','created_at':now,'updated_at':now
@@ -3155,24 +3164,29 @@ def _v167_normalize_event(item):
 
 def _v167_upsert_events(events):
     ids=[]
+    cols=['event_type','title','venue_name','venue_type','city','address','country','starts_at','ends_at','artists_json',
+      'disciplines_json','description','image_url','source_url','source_type','social_platform','social_handle','social_url',
+      'rsvp_url','price_text','is_free','verified','verified_at','status','created_at','updated_at']
     for raw in events or []:
         e=_v167_normalize_event(raw)
         if not e:continue
         def _write(db,e=e):
-            db.execute("""INSERT INTO art_events(
-              event_type,title,venue_name,venue_type,city,address,country,starts_at,ends_at,artists_json,
-              disciplines_json,description,image_url,source_url,source_type,rsvp_url,price_text,is_free,
-              verified,verified_at,status,created_at,updated_at)
-              VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            values=[e.get(k) for k in cols]
+            db.execute("""INSERT INTO art_events("""+','.join(cols)+""")
+              VALUES("""+','.join('?' for _ in cols)+""")
               ON CONFLICT(source_url,starts_at) DO UPDATE SET
                 event_type=excluded.event_type,title=excluded.title,venue_name=excluded.venue_name,
                 venue_type=excluded.venue_type,city=excluded.city,address=excluded.address,country=excluded.country,
                 ends_at=excluded.ends_at,artists_json=excluded.artists_json,disciplines_json=excluded.disciplines_json,
                 description=excluded.description,image_url=coalesce(nullif(excluded.image_url,''),art_events.image_url),
-                source_type=excluded.source_type,rsvp_url=excluded.rsvp_url,price_text=excluded.price_text,
+                source_type=excluded.source_type,
+                social_platform=coalesce(nullif(excluded.social_platform,''),art_events.social_platform),
+                social_handle=coalesce(nullif(excluded.social_handle,''),art_events.social_handle),
+                social_url=coalesce(nullif(excluded.social_url,''),art_events.social_url),
+                rsvp_url=excluded.rsvp_url,price_text=excluded.price_text,
                 is_free=excluded.is_free,verified=max(art_events.verified,excluded.verified),
                 verified_at=case when excluded.verified=1 then excluded.verified_at else art_events.verified_at end,
-                status='active',updated_at=excluded.updated_at""",tuple(e.values()))
+                status='active',updated_at=excluded.updated_at""",values)
             hit=db.execute('select id from art_events where source_url=? and starts_at=?',(e['source_url'],e['starts_at'])).fetchone()
             return int(hit[0]) if hit else None
         iid=_v165_db_write(_write)
@@ -3335,6 +3349,7 @@ _v168r.execute("""CREATE TABLE IF NOT EXISTS radar_refresh_state(
 _v168r.commit();_v168r.close()
 
 _v168_refresh_lock=threading.Lock()
+_v168_serial_refresh_lock=threading.RLock()
 _v168_refresh_running=set()
 
 def _v168_refresh_state(key):
@@ -3359,16 +3374,18 @@ def _v168_curated_events():
     return [
       {'event_type':'vernissage','title':'Endemic — Patricia Erbelding','venue_name':'Galerie Marie-Claude Duchosal','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-02T18:00','ends_at':'2026-10-02T20:30','artists':['Patricia Erbelding'],'disciplines':['peinture','art contemporain'],'description':'Vernissage de l’exposition Endemic, le vendredi 2 octobre de 18h à 20h30.','image_url':'','source_url':'https://www.paris.fr/evenements/patricia-erbelding-endemic-123826','source_type':'official_city','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
       {'event_type':'vernissage','title':'Jardin d’Amour — exposition collective','venue_name':'Galerie Jeanne Bucher Jaeger','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-03T15:00','ends_at':'2026-10-03T19:00','artists':[],'disciplines':['art contemporain','peinture','photographie','arts visuels'],'description':'Vernissage le samedi 3 octobre de 15h à 19h.','image_url':'','source_url':'https://jeannebucherjaeger.com/fr/exhibition/garden-of-love/','source_type':'official_gallery','rsvp_url':'','price_text':'Entrée galerie','is_free':True,'verified':True},
-      {'event_type':'vernissage','title':'What Remains — Parcours Bijoux','venue_name':'Le 6B','venue_type':'art_center','city':'Saint-Denis','address':'6-10 Quai de Seine, 93200 Saint-Denis','country':'France','starts_at':'2026-10-06T18:30','ends_at':'2026-10-06T21:00','artists':['Sarrah Haouas','Lucie Leroy','Karine Pollastro','Marion Fillancq'],'disciplines':['bijou contemporain','installation'],'description':'Vernissage au 6B à Saint-Denis, dans le cadre de Parcours Bijoux.','image_url':'','source_url':'https://www.parcoursbijoux.com/fr/location/what-remains/','source_type':'official_event','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'What Remains — Parcours Bijoux','venue_name':'Le 6B','venue_type':'art_center','city':'Saint-Denis','address':'6-10 Quai de Seine, 93200 Saint-Denis','country':'France','starts_at':'2026-10-06T18:30','ends_at':'2026-10-06T21:00','artists':['Sarrah Haouas','Lucie Leroy','Karine Pollastro','Marion Fillancq'],'disciplines':['bijou contemporain','installation'],'description':'Vernissage au 6B à Saint-Denis, dans le cadre de Parcours Bijoux.','image_url':'','source_url':'https://www.parcoursbijoux.com/fr/location/what-remains/','source_type':'official_event','social_platform':'Instagram','social_handle':'@6b_-officiel','social_url':'https://www.instagram.com/6b_-officiel/','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
       {'event_type':'vernissage','title':'Saveurs Savantes — Voyage autour du goût','venue_name':'Espace Mariton','venue_type':'municipal_gallery','city':'Saint-Ouen-sur-Seine','address':'10 rue Mariton, 93400 Saint-Ouen-sur-Seine','country':'France','starts_at':'2026-10-01T18:30','ends_at':'','artists':['Little K'],'disciplines':['arts visuels','street art','patrimoine'],'description':'Vernissage gratuit de l’exposition Saveurs Savantes, avec créations de Little K et œuvres municipales.','image_url':'','source_url':'https://www.saint-ouen.fr/events/fete-de-la-science-2026/','source_type':'official_municipal','rsvp_url':'','price_text':'Entrée gratuite','is_free':True,'verified':True},
       {'event_type':'vernissage','title':'Pastels de la joie — Rhalidou Diaby','venue_name':'Studio Albatros','venue_type':'artist_space','city':'Montreuil','address':'52 rue du Sergent Bobillot, 93100 Montreuil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'2026-10-09T21:00','artists':['Rhalidou Diaby'],'disciplines':['pastel','portrait','arts visuels'],'description':'Vernissage convivial de la première exposition Pastels de la joie.','image_url':'','source_url':'https://www.autisme-en-idf.org/offres/gestion/events_814_57488_non-2158/vernissage-de-l-exposition-pastels-de-la-joie-le-9-10-2026.html','source_type':'organization','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
       {'event_type':'vernissage','title':'Toujours et partout','venue_name':'Mains d’Œuvres','venue_type':'art_center','city':'Saint-Ouen-sur-Seine','address':'1 rue Charles Garnier, 93400 Saint-Ouen-sur-Seine','country':'France','starts_at':'2026-10-15T18:30','ends_at':'2026-10-15T22:00','artists':['Marjorie Catez','Clara-Louise Hoffsaes','Lilou Granville'],'disciplines':['art contemporain','installation','arts visuels'],'description':'Vernissage de l’exposition Toujours et partout à Mains d’Œuvres.','image_url':'','source_url':'https://openagenda.com/fr/mains-doeuvres/events/8838370_toujours-et-partout','source_type':'official_agenda','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
       {'event_type':'vernissage','title':'Mémoire vive, 17 octobre 1961','venue_name':'Hôtel de Ville de Bagnolet','venue_type':'municipal','city':'Bagnolet','address':'Place Salvador Allende, 93170 Bagnolet','country':'France','starts_at':'2026-10-17T17:00','ends_at':'','artists':[],'disciplines':['exposition documentaire','mémoire'],'description':'Vernissage municipal de l’exposition Mémoire vive, 17 octobre 1961.','image_url':'','source_url':'https://ville-bagnolet.fr/bagnolet-bouge/dans-l-agenda/evenement/expo-memeoire-vive','source_type':'official_municipal','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
-      {'event_type':'vernissage','title':'CONTRECHAMPS — Amitiés Amours Affinités','venue_name':'Ancienne Brasserie Bouchoule / Les Instants Chavirés','venue_type':'art_center','city':'Montreuil','address':'2 rue Émile Zola, 93100 Montreuil','country':'France','starts_at':'2026-10-10T17:00','ends_at':'2026-10-10T21:00','artists':[],'disciplines':['art contemporain','exposition collective'],'description':'Vernissage du chapitre 4 de CONTRECHAMPS, entrée libre.','image_url':'','source_url':'https://www.instantschavires.com/contrechampschapitre-4-du-cycle-amities-amours-affinites-par-line-gigs-et-fanny-testas/','source_type':'official_venue','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'CONTRECHAMPS — Amitiés Amours Affinités','venue_name':'Ancienne Brasserie Bouchoule / Les Instants Chavirés','venue_type':'art_center','city':'Montreuil','address':'2 rue Émile Zola, 93100 Montreuil','country':'France','starts_at':'2026-10-10T17:00','ends_at':'2026-10-10T21:00','artists':[],'disciplines':['art contemporain','exposition collective'],'description':'Vernissage du chapitre 4 de CONTRECHAMPS, entrée libre.','image_url':'','source_url':'https://www.instantschavires.com/contrechampschapitre-4-du-cycle-amities-amours-affinites-par-line-gigs-et-fanny-testas/','source_type':'official_venue','social_platform':'Instagram','social_handle':'Instants Chavirés','social_url':'https://www.instantschavires.com/','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
       {'event_type':'vernissage','title':'EVOLUTIONS FLUIDES 2026','venue_name':'The Muisca Gallery','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-03T18:00','ends_at':'','artists':[],'disciplines':['arts visuels','exposition collective'],'description':'Vernissage de l’exposition collective EVOLUTIONS FLUIDES 2026.','image_url':'','source_url':'https://www.themuisca.com/','source_type':'official_gallery','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
       {'event_type':'vernissage','title':'Écris-moi ! — Camille de Cussac','venue_name':'Artazart','venue_type':'gallery','city':'Paris','address':'83 quai de Valmy, 75010 Paris','country':'France','starts_at':'2026-10-01T18:00','ends_at':'2026-10-01T19:30','artists':['Camille de Cussac'],'disciplines':['illustration','arts visuels'],'description':'Vernissage gratuit de l’exposition Écris-moi ! chez Artazart.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-de-l-exposition-de-camille-de-cussac-ecris-moi-124594','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
       {'event_type':'vernissage','title':'AKKITHAM — Narayanan Akkitham','venue_name':'Galerie AB - Agnès Aittouares','venue_type':'gallery','city':'Paris','address':'5 rue Jacques Callot, 75006 Paris','country':'France','starts_at':'2026-10-08T18:00','ends_at':'','artists':['Narayanan Akkitham'],'disciplines':['peinture','art contemporain'],'description':'Vernissage le jeudi 8 octobre à partir de 18h, entrée libre.','image_url':'','source_url':'https://galerie-ab.paris/exposition','source_type':'official_gallery','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
       {'event_type':'vernissage','title':'H.E.R.O — Hondo','venue_name':'Maison de la Vie Associative et Citoyenne du 7e','venue_type':'cultural_center','city':'Paris','address':'4 rue Amélie, 75007 Paris','country':'France','starts_at':'2026-10-08T18:30','ends_at':'2026-10-08T21:00','artists':['Hondo'],'disciplines':['peinture','street art'],'description':'Vernissage gratuit de H.E.R.O, exposition de Hondo.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-de-l-exposition-h-e-r-o-de-hondo-124380','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'Natures Vives — collectif','venue_name':'Portes Ouvertes des Ateliers d’Artistes','venue_type':'artist_collective','city':'Montreuil','address':'5-7 rue Thomas Sankara, 93100 Montreuil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'','artists':['Bertille Verlaine','Maïtô','Marina Vit','Raffaella Tringali'],'disciplines':['peinture','arts visuels','fresque'],'description':'Vernissage du collectif Natures Vives dans le cadre des Portes Ouvertes des Ateliers d’Artistes de Montreuil.','image_url':'','source_url':'https://fr.linkedin.com/posts/bertille-verlaine_save-the-date-le-collectif-natures-vives-activity-7508766027867009024-unJY','source_type':'social_post','social_platform':'LinkedIn','social_handle':'Bertille Verlaine','social_url':'https://fr.linkedin.com/posts/bertille-verlaine_save-the-date-le-collectif-natures-vives-activity-7508766027867009024-unJY','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'Atelier Ferrer — POAA Montreuil','venue_name':'Atelier Ferrer','venue_type':'artist_collective','city':'Montreuil','address':'9 rue Francisco Ferrer, 93100 Montreuil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'2026-10-09T22:00','artists':['Thibaut Bechecat','Agnès Thierry','Samia Jedi','Mathieu Agnus'],'disciplines':['céramique','gravure','verrerie','artisanat d’art'],'description':'Vernissage de l’atelier collectif avec démonstrations, linogravure et DJ set.','image_url':'','source_url':'https://poaa.centretignousdartcontemporain.fr/workshops/atelier-ferrer/','source_type':'official_program','social_platform':'Instagram','social_handle':'@thibautbechecat · @at.ceramicsouls','social_url':'https://www.instagram.com/thibautbechecat/','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
       {'event_type':'gallery_event','title':'Portes ouvertes des ateliers d’artistes de Montreuil','venue_name':'Centre Tignous + ateliers de Montreuil','venue_type':'artist_studios','city':'Montreuil','address':'116 rue de Paris, 93100 Montreuil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'2026-10-11T20:00','artists':[],'disciplines':['arts visuels','peinture','photographie','sculpture','mixed media'],'description':'Plus de 250 ateliers ouvrent leurs portes. Vernissages, expositions, ateliers, concerts et performances. Entrée libre.','image_url':'','source_url':'https://www.montreuil.fr/agenda/journees-portes-ouvertes-des-ateliers-dartistes','source_type':'official_municipal','rsvp_url':'','price_text':'Entrée libre et gratuite','is_free':True,'verified':True},
       {'event_type':'gallery_event','title':'Notre Mère Brûle — Portes ouvertes du Daron Perché','venue_name':'Jardin du Daron Perché','venue_type':'artist_space','city':'Montreuil','address':'74 rue Molière, 93100 Montreuil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'2026-10-11T20:00','artists':[],'disciplines':['land art','installation'],'description':'Exposition de land art, DJ set et portes ouvertes. Entrée libre.','image_url':'','source_url':'https://www.montreuil.fr/agenda/notre-mere-brule-portes-ouvertes-du-daron-perche','source_type':'official_municipal','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
       {'event_type':'vernissage','title':'trànsitos — Fernando Garcia Quintero','venue_name':'Centre Paris Anim’ Annie Fratellini','venue_type':'cultural_center','city':'Paris','address':'36 quai de la Rapée, 75012 Paris','country':'France','starts_at':'2026-10-15T19:00','ends_at':'2026-10-15T21:30','artists':['Fernando Garcia Quintero'],'disciplines':['peinture','art contemporain'],'description':'Vernissage gratuit avec l’artiste autour des thèmes migration, mémoire et déplacement.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-expo-transitos-124363','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
@@ -3406,7 +3423,10 @@ def _v168_curated_opportunities():
       {'title':'Appel à candidature — expositions collectives Galerie Mona Lisa','organizer':'Galerie Mona Lisa','city':'Paris','country':'France','deadline':'','fee':'Petite participation — montant à vérifier','eligibility':'Artistes émergents et confirmés : peinture, photographie, sculpture, dessin, etc.','summary':'Expositions collectives à Paris 7e, avec plusieurs dates en octobre, novembre et décembre 2026.','source_url':'https://galerie-monalisa.org/fr/appel-a-candidature/','source_name':'Galerie Mona Lisa','confidence':95},
       {'title':'ODYSSEY — International Open Call for Artists | Paris','organizer':'Sol de Paris','city':'Paris','country':'France','deadline':'2026-09-30','fee':'Candidature gratuite · 200 € si sélectionné','eligibility':'Artistes de toutes nationalités et tous niveaux de carrière. Peinture, dessin, photographie, sculpture, mixed media, textile, numérique, vidéo et installation.','summary':'Open call international pour une exposition collective physique à Paris, avec publication et promotion des artistes sélectionnés.','source_url':'https://www.curatorspace.com/opportunities/detail/odyssey--international-open-call-for-artists--paris/11030','source_name':'CuratorSpace','confidence':99},
       {'title':'Espace d’exposition du Pont Saint-Ange — appel à projets 2027','organizer':'Ville de Paris','city':'Paris','country':'France','deadline':'2026-10-15','fee':'Gratuit','eligibility':'Associations culturelles, collectifs d’artistes et structures de production ou de diffusion artistique avec expérience en arts visuels.','summary':'Programmation de quatre expositions photographiques en plein air entre les 10e et 18e arrondissements, avec possibilité de subvention municipale.','source_url':'https://www.paris.fr/pages/espace-d-exposition-du-pont-saint-ange-appel-a-projets-2027-36413','source_name':'Ville de Paris','confidence':100},
-      {'title':'A New World — Call For Artists','organizer':'Boomer Gallery','city':'London','country':'United Kingdom','deadline':'2026-10-03','fee':'Gratuit','eligibility':'Artistes de nombreuses disciplines dont peinture, photographie, sculpture, installation, mixed media et arts visuels.','summary':'Open call pour une exposition collective autour d’un monde en transformation et de futurs possibles.','source_url':'https://www.artconnect.com/opportunity/IFhY0XWiwtajHG7u0fh4B','source_name':'ArtConnect','confidence':96},
+      {'title':'A New World — Call For Artists','organizer':'Boomer Gallery','city':'London','country':'United Kingdom','deadline':'2026-10-03','fee':'Candidature gratuite · £189 si sélectionné','eligibility':'International. Peinture, sculpture, photographie, installation, print, textile, illustration, digital et autres médias.','summary':'Exposition collective physique à Londres du 9 au 14 octobre 2026, vernissage le 9 octobre.','source_url':'https://www.boomergallery.net/a-new-world-call-for-artists','source_name':'Boomer Gallery','confidence':99},
+      {'title':'Call for Art — Membrane','organizer':'Monica Mardare','city':'London','country':'United Kingdom','deadline':'2026-10-05','fee':'£150 par mètre / œuvre sélectionnée','eligibility':'Tous niveaux et disciplines, candidatures internationales et collectives acceptées.','summary':'Exposition physique à Londres du 5 au 10 novembre 2026, avec private view, artist talks et promotion Instagram.','source_url':'https://www.curatorspace.com/opportunities/detail/call-for-art-membrane-london-se/10980?active=submit','source_name':'CuratorSpace','confidence':98},
+      {'title':'Shifting Ground — International Environmental Photography','organizer':'13b','city':'Kamnik','country':'Slovenia','deadline':'2026-10-09','fee':'Candidature gratuite · 24 € si sélectionné','eligibility':'Photographes du monde entier. Jusqu’à 3 images, une œuvre sélectionnée.','summary':'Exposition collective physique de quatre semaines sur les paysages et environnements en transformation. Impression et installation incluses.','source_url':'https://www.curatorspace.com/opportunities/detail/shifting-ground-international-environmental-photography-open-call/10944?active=submit','source_name':'CuratorSpace','confidence':99},
+      {'title':'Show Your Work in Amsterdam Noord — October 2026','organizer':'Arrival Gallery','city':'Amsterdam','country':'Netherlands','deadline':'2026-10-09','fee':'Candidature gratuite · $40 participation','eligibility':'Large éventail de disciplines : peinture, photographie, sculpture, installation, performance, vidéo, arts visuels et plus.','summary':'Exposition collective physique de trois jours à Amsterdam Noord, du 23 au 25 octobre 2026.','source_url':'https://www.artconnect.com/opportunity/_l7_wVgknY0pgiXG7kAy5','source_name':'ArtConnect','confidence':98},
       {'title':'OPEN CALL FOR ARTISTS — The House of Art','organizer':'The House of Art','city':'Geneva','country':'Switzerland','deadline':'2026-10-12','fee':'25 € de candidature','eligibility':'Peinture, sculpture, photographie, mixed media, dessin et installation. Jusqu’à 5 œuvres.','summary':'Exposition physique à Genève du 18 novembre au 19 décembre 2026, vernissage le 2 décembre. Aucun frais supplémentaire après sélection.','source_url':'https://www.curatorspace.com/opportunities/detail/open-call-for-artists/11041','source_name':'CuratorSpace','confidence':97},
       {'title':'P.A.R.I.S. 2026 — Digital Display in Paris','organizer':'TERAVARNA Art Gallery / Horizon World Art','city':'Paris','country':'France','deadline':'2026-10-23','fee':'Participation payante — montant à vérifier','eligibility':'Peinture, photographie, dessin, sculpture, arts visuels, digital et autres médias. Aucun historique d’exposition requis.','summary':'Présentation numérique pendant l’exposition P.A.R.I.S. 2026, avec promotion sociale et couverture locale annoncée.','source_url':'https://www.artconnect.com/opportunity/OSReq6nivke7F8U9_gJix','source_name':'ArtConnect','confidence':94},
       {'title':'42nd Community Art Exhibition in Virtual Reality','organizer':'Community Art Exhibition','city':'Online','country':'International','deadline':'2026-10-05','fee':'À vérifier','eligibility':'Tous médias : peinture, photographie, vidéo, illustration, sculpture, installation et plus.','summary':'Exposition VR du 12 octobre au 3 novembre avec catalogue PDF et promotion sur Instagram, Facebook, Bluesky, Threads et réseaux partenaires.','source_url':'https://www.curatorspace.com/opportunities/detail/open-call-for-artists--nd-community-art-exhibition-in-virtual-reality/11098?active=submit','source_name':'CuratorSpace','confidence':91},
@@ -3566,7 +3586,7 @@ def _v168_refresh_opportunities():
     except Exception as exc:
         ai_error=type(exc).__name__+': '+str(exc)
         print('PLUG_ART_V1681_OPPS_FALLBACK '+ai_error[:180],flush=True)
-    if os.getenv('PLUGART_LEGACY_RADAR_BACKGROUND','1')=='1':
+    if os.getenv('PLUGART_LEGACY_RADAR_BACKGROUND','0')=='1':
         threading.Thread(target=_v169_run_legacy_radar_later,name='plugart-v169-legacy-radar',daemon=True).start()
     ids=list(dict.fromkeys(ids));_v168_set_refresh_state('opportunities_ai',len(ids),ai_error)
     return {'ok':True,'found':len(ids),'fallback':bool(ai_error),'items':core.rows("select * from opportunities where status in ('open','rolling') order by coalesce(radar_score,score,0) desc,deadline limit 100")}
@@ -3583,8 +3603,9 @@ _v169_seed_verified_floor()
 
 @app.post('/api/v168/radar/refresh-all')
 def radar_refresh_all_v169(body:dict={}):
-    events=_v168_refresh_events()
-    opportunities=_v168_refresh_opportunities()
+    with _v168_serial_refresh_lock:
+        events=_v168_refresh_events()
+        opportunities=_v168_refresh_opportunities()
     return {'ok':True,'found':int(events.get('found') or 0)+int(opportunities.get('found') or 0),
       'events':events,'opportunities':opportunities}
 
@@ -3594,8 +3615,9 @@ def _v168_run_refresh(kind):
         if kind in _v168_refresh_running:return
         _v168_refresh_running.add(kind)
     try:
-        if kind=='events':_v168_refresh_events()
-        elif kind=='opportunities':_v168_refresh_opportunities()
+        with _v168_serial_refresh_lock:
+            if kind=='events':_v168_refresh_events()
+            elif kind=='opportunities':_v168_refresh_opportunities()
     except Exception as exc:
         _v168_set_refresh_state('events' if kind=='events' else 'opportunities_ai',0,type(exc).__name__+': '+str(exc))
         print('PLUG_ART_V168_REFRESH_ERROR kind='+kind+' error='+type(exc).__name__+':'+str(exc)[:240],flush=True)
@@ -3611,12 +3633,14 @@ def radar_refresh_status_v168():
 
 @app.post('/api/v168/events/refresh')
 def events_refresh_v168(body:dict={}):
-    if bool((body or {}).get('force',True)):return _v168_refresh_events()
+    if bool((body or {}).get('force',True)):
+        with _v168_serial_refresh_lock:return _v168_refresh_events()
     return {'ok':True,'started':_v168_start_refresh('events')}
 
 @app.post('/api/v168/opportunities/refresh')
 def opportunities_refresh_v168(body:dict={}):
-    if bool((body or {}).get('force',True)):return _v168_refresh_opportunities()
+    if bool((body or {}).get('force',True)):
+        with _v168_serial_refresh_lock:return _v168_refresh_opportunities()
     return {'ok':True,'started':_v168_start_refresh('opportunities')}
 
 def _v168_live_radar_loop():
@@ -4035,6 +4059,34 @@ def qa_manifest_v167():
       'missing':[m+' '+p for m,p in required if (m,p) not in active]}
 
 
+@app.get('/api/v169/assets/search')
+def creative_assets_search_v169(q:str='art',limit:int=48):
+    query=str(q or 'art').strip()[:80] or 'art';limit=max(24,min(96,int(limit or 48)))
+    try:
+        rr=requests.get('https://api.iconify.design/search',params={'query':query,'limit':limit},timeout=8)
+        if not rr.ok:raise HTTPException(502,'Bibliothèque vectorielle indisponible')
+        data=rr.json();icons=[str(x) for x in (data.get('icons') or [])[:limit] if ':' in str(x)]
+        return {'ok':True,'query':query,'total':int(data.get('total') or len(icons)),'icons':icons}
+    except HTTPException:raise
+    except Exception:raise HTTPException(502,'Bibliothèque vectorielle indisponible')
+
+@app.get('/api/v169/assets/svg')
+def creative_asset_svg_v169(icon:str,color:str='#111318',download:bool=False):
+    raw=str(icon or '').strip()
+    if ':' not in raw or len(raw)>180:raise HTTPException(400,'Icône invalide')
+    prefix,name=raw.split(':',1)
+    if not re.fullmatch(r'[A-Za-z0-9_-]+',prefix) or not re.fullmatch(r'[A-Za-z0-9_-]+',name):raise HTTPException(400,'Icône invalide')
+    safe_color=str(color or '#111318').strip()
+    if not re.fullmatch(r'#[0-9A-Fa-f]{6}',safe_color):safe_color='#111318'
+    try:
+        rr=requests.get('https://api.iconify.design/'+prefix+'/'+name+'.svg',params={'color':safe_color,'width':'256','height':'256','box':'1'},timeout=8)
+        if not rr.ok or 'svg' not in (rr.headers.get('content-type') or '').lower():raise HTTPException(404,'Icône introuvable')
+        headers={'Cache-Control':'public,max-age=604800,stale-while-revalidate=2592000'}
+        if download:headers['Content-Disposition']='attachment; filename="'+prefix+'-'+name+'.svg"'
+        return Response(content=rr.content,media_type='image/svg+xml',headers=headers)
+    except HTTPException:raise
+    except Exception:raise HTTPException(502,'Icône indisponible')
+
 @app.get('/api/v163/diagnostics')
 def diagnostics_v163():
     started=time.perf_counter()
@@ -4075,7 +4127,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'169.3','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'169.4','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -4089,7 +4141,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'169.3','ui':'plug-art-v169-performance-radar',
+      'ok':True,'version':'169.4','ui':'plug-art-v169-performance-radar',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4158,7 +4210,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'169.3',
+      'version':'169.4',
       'ui':'plug-art-v169-performance-radar',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
