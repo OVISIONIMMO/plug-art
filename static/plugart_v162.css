@@ -3986,3 +3986,78 @@ body[data-view="creation"] .creation-studio-shell{max-width:none!important;width
 }
 .pdf-import-actions-v168 .pdf-edit-import-v168{background:#111318;color:#fff;border-color:#111318}
 .pdf-add-elements-v168{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+
+
+/* ================= V168.2 · Creation filmstrip + premium elements ================= */
+.v169-element-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:2px
+}
+.v169-element-grid button{
+  min-width:0;border:1px solid #e2e4e9;background:linear-gradient(180deg,#fff,#f8f8fb);
+  border-radius:12px;padding:7px;display:grid;grid-template-columns:42px minmax(0,1fr);gap:7px;align-items:center;text-align:left;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease
+}
+.v169-element-grid button:hover{transform:translateY(-1px);border-color:#c4bae9;box-shadow:0 10px 22px rgba(52,44,90,.08)}
+.v169-element-grid img{width:42px;height:42px;object-fit:contain;display:block;filter:drop-shadow(0 7px 10px rgba(55,44,94,.12))}
+.v169-element-grid span{font-size:6.3px;font-weight:850;color:#555963;line-height:1.2}
+
+#view-creation .carousel-strip{
+  max-height:none!important;
+  overflow:visible!important;
+  margin-top:10px!important
+}
+#view-creation #carouselSlides{
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:7px!important;
+  overflow:visible!important;
+  padding:0!important
+}
+#view-creation .v169-slide-thumb{
+  min-width:0!important;max-width:none!important;height:96px!important;
+  border:1px solid #dfe1e6!important;border-radius:13px!important;padding:6px!important;
+  display:grid!important;grid-template-columns:20px 56px minmax(0,1fr)!important;gap:6px!important;align-items:center!important;
+  background:#fff!important;box-shadow:none!important;position:relative!important
+}
+#view-creation .v169-slide-thumb.active{
+  border-color:#7657ff!important;box-shadow:0 0 0 2px rgba(118,87,255,.12)!important;background:#fbfaff!important
+}
+#view-creation .v169-slide-thumb em{
+  width:20px;height:20px;border-radius:999px;background:#f0eef8;color:#6a58c4;
+  display:grid;place-items:center;font-size:6px;font-style:normal;font-weight:900
+}
+#view-creation .v169-slide-thumb i{
+  width:56px;height:72px;border-radius:8px;background-size:cover!important;background-position:center!important;border:1px solid rgba(20,22,30,.07);overflow:hidden
+}
+#view-creation .v169-slide-thumb>span{min-width:0!important;display:block!important;text-align:left!important}
+#view-creation .v169-slide-thumb>span b,
+#view-creation .v169-slide-thumb>span strong{display:block!important;white-space:normal!important}
+#view-creation .v169-slide-thumb>span b{font-size:5.7px!important;letter-spacing:.5px;color:#8a8d97!important;margin-bottom:4px}
+#view-creation .v169-slide-thumb>span strong{font-size:7.2px!important;line-height:1.15;color:#2d2f36!important}
+@media(max-width:1500px){
+  #view-creation #carouselSlides{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:1050px){
+  #view-creation #carouselSlides{display:flex!important;overflow-x:auto!important}
+  #view-creation .v169-slide-thumb{min-width:190px!important}
+}
+
+/* ================= V168.2 · PDF realtime visual editor ================= */
+.pdf-canvas-wrap-v167{position:relative!important}
+.pdf-live-page-v169{
+  position:relative;width:min(76%,760px);aspect-ratio:210/297;background:#fff;
+  box-shadow:0 28px 65px rgba(20,21,29,.22);overflow:hidden;
+  background-size:cover;background-position:center;flex:0 0 auto
+}
+.pdf-live-page-v169[hidden]{display:none!important}
+.pdf-live-el-v169{position:absolute;box-sizing:border-box;cursor:grab;user-select:none;touch-action:none}
+.pdf-live-el-v169:active{cursor:grabbing}
+.pdf-live-el-v169:hover{outline:1px solid rgba(118,87,255,.45);outline-offset:2px}
+.pdf-live-el-v169.image{overflow:hidden}
+.pdf-live-el-v169.image img{width:100%;height:100%;display:block;object-fit:cover}
+.pdf-live-el-v169.text{white-space:pre-wrap;overflow:hidden;padding:2px}
+.pdf-live-el-v169.line{height:2px!important;min-height:2px}
+.pdf-live-el-v169.shape{box-shadow:0 10px 28px rgba(40,42,56,.08)}
+#pdfInspectorTitleV167[data-saved="1"]:after{
+  content:" · enregistré";font-size:6px;font-weight:700;color:#58a777
+}
