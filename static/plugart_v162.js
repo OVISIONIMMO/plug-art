@@ -4728,15 +4728,15 @@ function installBureauV167(){
     '<label>Texte rapide<textarea id="pdfPageBodyV167" rows="7" placeholder="Texte principal de la page…"></textarea></label><div class="pdf-inspector-actions-v167"><button id="pdfAddPageV167">＋ Page</button><button id="pdfSaveV167">Enregistrer</button><button id="pdfExportV167">Générer PDF</button><button id="pdfCanvaV167">Canva ↗</button></div></aside>';
   view.appendChild(panel);
   $('#pdfNewV167').onclick=createPdfProjectV167;$('#pdfFromDocV167').onclick=createPdfFromBureauV167;
-  $('#pdfPrevV167').onclick=()=>{if(pdfPageV167>1){pdfPageV167--;renderPdfPageV167()}};
-  $('#pdfNextV167').onclick=()=>{if(pdfDocV167&&pdfPageV167<pdfDocV167.numPages){pdfPageV167++;renderPdfPageV167()}};
+  $('#pdfPrevV167').onclick=()=>{if(pdfPageV167>1){pdfPageV167--;pdfSelectedElementV169=null;state.activePdfProjectV167?renderPdfLiveV169():renderPdfPageV167();renderPdfElementsV168()}};
+  $('#pdfNextV167').onclick=()=>{const max=state.activePdfProjectV167?pdfPageCountV169():(pdfDocV167?.numPages||0);if(pdfPageV167<max){pdfPageV167++;pdfSelectedElementV169=null;state.activePdfProjectV167?renderPdfLiveV169():renderPdfPageV167();renderPdfElementsV168()}};
   $('#pdfZoomOutV167').onclick=()=>{pdfZoomV167=Math.max(.4,pdfZoomV167-.15);renderPdfPageV167()};
   $('#pdfZoomInV167').onclick=()=>{pdfZoomV167=Math.min(2.5,pdfZoomV167+.15);renderPdfPageV167()};
   $('#pdfFitV167').onclick=()=>{pdfZoomV167=1;renderPdfPageV167(true)};
   $('#pdfFullscreenV167').onclick=()=>$('#pdfCanvasWrapV167')?.requestFullscreen?.();
-  $('#pdfAddPageV167').onclick=addPdfPageV167;$('#pdfSaveV167').onclick=savePdfProjectV167;$('#pdfExportV167').onclick=exportPdfProjectV167;$('#pdfCanvaV167').onclick=openCanvaBridgeV167;
+  $('#pdfAddPageV167').onclick=addPdfPageV167;$('#pdfPageBodyV167')?.addEventListener('input',e=>{const page=pdfActivePageV168();if(page){page.content={...(page.content||{}),body:e.target.value};schedulePdfAutosaveV169()}});$('#pdfTitleV167')?.addEventListener('input',()=>schedulePdfAutosaveV169());$('#pdfSaveV167').onclick=savePdfProjectV167;$('#pdfExportV167').onclick=exportPdfProjectV167;$('#pdfCanvaV167').onclick=openCanvaBridgeV167;
   $('#pdfTemplateV168').onchange=e=>applyPdfTemplateV168(e.target.value);
-  $('#pdfBgV168').oninput=e=>{const page=pdfActivePageV168();if(page){page.content={...(page.content||{}),background:e.target.value};renderPdfElementsV168()}};
+  $('#pdfBgV168').oninput=e=>{const page=pdfActivePageV168();if(page){page.content={...(page.content||{}),background:e.target.value};renderPdfElementsV168();renderPdfLiveV169();schedulePdfAutosaveV169()}};
   $$('[data-pdf-add-v168]').forEach(b=>b.onclick=()=>addPdfElementV168(b.dataset.pdfAddV168));
   $('#pdfImageUploadV168')?.addEventListener('change',importPdfImageV168);
 }
