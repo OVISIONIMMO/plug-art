@@ -8,7 +8,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='169.1'
+app.version='169.2'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -17,7 +17,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='169.20260927.2'
+VERSION='169.20260927.3'
 
 @app.middleware("http")
 async def _v169_performance_headers(request: Request, call_next):
@@ -692,8 +692,8 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'169.1',
-      'ui':'plug-art-v169-performance-radar',
+      'version':'169.2',
+      'ui':'plug-art-v169-2-studio',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
@@ -743,7 +743,7 @@ def ui_manifest_v128():
     expected='168.20260927.6'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'169.1',
+      'version':'169.2',
       'ui':'plug-art-v169-performance-radar',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
@@ -3351,6 +3351,11 @@ def _v168_should_refresh(key,hours):
 def _v168_curated_events():
     # Publicly verifiable events kept as a resilient floor when live AI/social discovery is rate-limited.
     return [
+      {'event_type':'vernissage','title':'Endemic — Patricia Erbelding','venue_name':'Galerie Marie-Claude Duchosal','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-02T18:00','ends_at':'2026-10-02T20:30','artists':['Patricia Erbelding'],'disciplines':['peinture','art contemporain'],'description':'Vernissage de l’exposition Endemic, le vendredi 2 octobre de 18h à 20h30.','image_url':'','source_url':'https://www.paris.fr/evenements/patricia-erbelding-endemic-123826','source_type':'official_city','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'Jardin d’Amour — exposition collective','venue_name':'Galerie Jeanne Bucher Jaeger','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-03T15:00','ends_at':'2026-10-03T19:00','artists':[],'disciplines':['art contemporain','peinture','photographie','arts visuels'],'description':'Vernissage le samedi 3 octobre de 15h à 19h.','image_url':'','source_url':'https://jeannebucherjaeger.com/fr/exhibition/garden-of-love/','source_type':'official_gallery','rsvp_url':'','price_text':'Entrée galerie','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'What Remains — Parcours Bijoux','venue_name':'Le 6B','venue_type':'art_center','city':'Saint-Denis','address':'6-10 Quai de Seine, 93200 Saint-Denis','country':'France','starts_at':'2026-10-06T18:30','ends_at':'2026-10-06T21:00','artists':['Sarrah Haouas','Lucie Leroy','Karine Pollastro','Marion Fillancq'],'disciplines':['bijou contemporain','installation'],'description':'Vernissage au 6B à Saint-Denis, dans le cadre de Parcours Bijoux.','image_url':'','source_url':'https://www.parcoursbijoux.com/fr/location/what-remains/','source_type':'official_event','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'CONTRECHAMPS — Amitiés Amours Affinités','venue_name':'Ancienne Brasserie Bouchoule / Les Instants Chavirés','venue_type':'art_center','city':'Montreuil','address':'2 rue Émile Zola, 93100 Montreuil','country':'France','starts_at':'2026-10-10T17:00','ends_at':'2026-10-10T21:00','artists':[],'disciplines':['art contemporain','exposition collective'],'description':'Vernissage du chapitre 4 de CONTRECHAMPS, entrée libre.','image_url':'','source_url':'https://www.instantschavires.com/contrechampschapitre-4-du-cycle-amities-amours-affinites-par-line-gigs-et-fanny-testas/','source_type':'official_venue','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'EVOLUTIONS FLUIDES 2026','venue_name':'The Muisca Gallery','venue_type':'gallery','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-03T18:00','ends_at':'','artists':[],'disciplines':['arts visuels','exposition collective'],'description':'Vernissage de l’exposition collective EVOLUTIONS FLUIDES 2026.','image_url':'','source_url':'https://www.themuisca.com/','source_type':'official_gallery','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
       {'event_type':'vernissage','title':'Écris-moi ! — Camille de Cussac','venue_name':'Artazart','venue_type':'gallery','city':'Paris','address':'83 quai de Valmy, 75010 Paris','country':'France','starts_at':'2026-10-01T18:00','ends_at':'2026-10-01T19:30','artists':['Camille de Cussac'],'disciplines':['illustration','arts visuels'],'description':'Vernissage gratuit de l’exposition Écris-moi ! chez Artazart.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-de-l-exposition-de-camille-de-cussac-ecris-moi-124594','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
       {'event_type':'vernissage','title':'AKKITHAM — Narayanan Akkitham','venue_name':'Galerie AB - Agnès Aittouares','venue_type':'gallery','city':'Paris','address':'5 rue Jacques Callot, 75006 Paris','country':'France','starts_at':'2026-10-01T18:00','ends_at':'','artists':['Narayanan Akkitham'],'disciplines':['peinture','art contemporain'],'description':'Vernissage de l’exposition AKKITHAM, entrée gratuite.','image_url':'','source_url':'https://www.paris.fr/evenements/exposition-a-la-galerie-ab-akkitham-117258','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
       {'event_type':'vernissage','title':'H.E.R.O — Hondo','venue_name':'Maison de la Vie Associative et Citoyenne du 7e','venue_type':'cultural_center','city':'Paris','address':'4 rue Amélie, 75007 Paris','country':'France','starts_at':'2026-10-08T18:30','ends_at':'2026-10-08T21:00','artists':['Hondo'],'disciplines':['peinture','street art'],'description':'Vernissage gratuit de H.E.R.O, exposition de Hondo.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-de-l-exposition-h-e-r-o-de-hondo-124380','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
@@ -3375,6 +3380,9 @@ def _v168_curated_events():
 
 def _v168_curated_opportunities():
     return [
+      {'title':'In Situ — Cité internationale des arts','organizer':'Cité internationale des arts / Fondation Daniel et Nina Carasso','city':'Paris','country':'France','deadline':'2026-09-27','fee':'À vérifier','eligibility':'Artistes selon les critères détaillés par la Cité internationale des arts.','summary':'Appel en cours de la Cité internationale des arts, deadline le 27 septembre 2026.','source_url':'https://www.citeinternationaledesarts.fr/en/open-calls/','source_name':'Cité internationale des arts','confidence':99},
+      {'title':'MEP x Collection Gervanne + Matthias Leridon x Cité internationale des arts','organizer':'Cité internationale des arts / MEP','city':'Paris','country':'France','deadline':'2026-10-04','fee':'À vérifier','eligibility':'Artistes selon les conditions de l’appel officiel.','summary':'Appel actuellement ouvert avec deadline le 4 octobre 2026.','source_url':'https://www.citeinternationaledesarts.fr/en/open-calls/','source_name':'Cité internationale des arts','confidence':99},
+      {'title':'Institut français x Cité internationale des arts','organizer':'Cité internationale des arts / Institut français','city':'Paris','country':'France','deadline':'2026-10-08','fee':'À vérifier','eligibility':'Artistes selon les critères de l’appel officiel.','summary':'Appel en cours à la Cité internationale des arts, deadline le 8 octobre 2026.','source_url':'https://www.citeinternationaledesarts.fr/en/open-calls/','source_name':'Cité internationale des arts','confidence':99},
       {'title':'Art Emergence — biennale internationale des jeunes artistes','organizer':'Artagon / CENTQUATRE-PARIS','city':'Paris','country':'France','deadline':'2026-09-27','fee':'Gratuit','eligibility':'Jeunes artistes issus des écoles françaises et européennes, selon les conditions détaillées par l’organisateur.','summary':'Biennale dédiée à la jeune création contemporaine, organisée avec le CENTQUATRE-PARIS et Artagon.','source_url':'https://www.104.fr/appels-a-artistes/art-emergence','source_name':'CENTQUATRE-PARIS','confidence':99},
       {'title':'Open Call: Believing the Image — Paris, October 2026','organizer':'Zhen Yi Gallery','city':'Paris','country':'France','deadline':'2026-09-30','fee':'€230 si sélectionné','eligibility':'Artistes émergents et mid-career, photographie et mixed media photo. International.','summary':'Exposition physique à Paris autour de la photographie, de la réalité et de la croyance dans l’image.','source_url':'https://www.curatorspace.com/opportunities/detail/open-call-believing-the-image--paris-october---photography/11068?active=submit','source_name':'CuratorSpace','confidence':98},
       {'title':'Open Call: Shaping the View — Paris, October 2026','organizer':'Zhen Yi Gallery','city':'Paris','country':'France','deadline':'2026-10-04','fee':'€200 si sélectionné','eligibility':'Artistes internationaux, tous médias dont peinture, photographie, sculpture, installation et mixed media.','summary':'Exposition physique dans le Marais sur le cadrage, la perception, la visibilité et le point de vue.','source_url':'https://www.curatorspace.com/opportunities/detail/shaping-the-view/11139?active=submit','source_name':'CuratorSpace','confidence':99},
@@ -3443,7 +3451,7 @@ def _v168_refresh_events():
       'cities':['Paris','Aubervilliers','Saint-Denis','Pantin','Montreuil','Boulogne-Billancourt','Ivry-sur-Seine','Vitry-sur-Seine','Neuilly-sur-Marne','Noisy-le-Sec'],
       'date_from':start.isoformat(),'date_to':end.isoformat(),
       'types':['vernissage','opening','artist_talk','finissage','preview','nocturne','rencontre_artiste','lancement_exposition'],
-      'q':"Paris et Île-de-France. Inclure galeries, collectifs, centres d'art, mairies, hôtels de ville, écoles d'art, fondations, tiers-lieux, hôtels, salons, ateliers collectifs et pages Instagram et TikTok publiquement indexables. Requêtes utiles: #vernissage #vernissageparis #vernissageidf #parisart #galerieparis #expositionparis #openingparis #artcontemporainparis. Vérifier aussi les agendas Ville de Paris, OAM, L'Officiel des spectacles, Slash Paris, sites de galeries et plateformes d'événements."
+      'q':"Paris et Île-de-France. Inclure galeries, collectifs, centres d'art, mairies, hôtels de ville, écoles d'art, fondations, tiers-lieux, hôtels, salons, ateliers collectifs et pages Instagram et TikTok publiquement indexables. Requêtes utiles: #vernissage #vernissageparis #vernissageidf #vernissage93 #saintdenisart #montreuilart #aubervilliersart #parisart #galerieparis #expositionparis #openingparis #artcontemporainparis. Rechercher aussi les pages Instagram publiques de galeries, collectifs et lieux, ainsi que les pages TikTok publiquement indexables sans dépendre de leur API. Vérifier aussi les agendas Ville de Paris, OAM, L'Officiel des spectacles, Slash Paris, sites de galeries et plateformes d'événements."
     }
     try:
         events=_v167_event_search_ai(body);ids+=_v167_upsert_events(events)
@@ -4052,7 +4060,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'169.1','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'169.2','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -4066,7 +4074,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'169.1','ui':'plug-art-v169-performance-radar',
+      'ok':True,'version':'169.2','ui':'plug-art-v169-performance-radar',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4135,7 +4143,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'169.1',
+      'version':'169.2',
       'ui':'plug-art-v169-performance-radar',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
@@ -4163,7 +4171,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V169_1_READY creator=storyboard_assets pdf=realtime_inspector radar=current_events_opportunities plugy=smaller qa=interactive",flush=True)
+print("PLUG_ART_V169_2_READY creator=fast_storyboard pdf=live_visual_pages radar=vernissages_direct_current plugy=smaller_20 qa=interactive",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
