@@ -351,11 +351,11 @@ function computePlugyCameraV167(target,mode='hero'){
   const w=innerWidth||1200,h=innerHeight||900,r=target?.getBoundingClientRect?.()||{width:w*.5,height:h*.5};
   const short=Number(r.height||0)<350,compact=w<=820,tablet=w>820&&w<=1180,ultrawide=w>=2200,desktop=w>=1440;
   let distance=4.15,fov=37;
-  if(compact){distance=6.05;fov=43}
-  else if(tablet){distance=h<900?6.25:6.05;fov=42}
-  else if(ultrawide){distance=mode==='follower'?5.65:mode==='drawer'?5.20:4.95;fov=39}
-  else if(desktop){distance=mode==='follower'?5.45:mode==='drawer'?5.10:4.85;fov=39}
-  else{distance=mode==='follower'?5.30:4.85;fov=39}
+  if(compact){distance=6.55;fov=44}
+  else if(tablet){distance=h<900?6.75:6.50;fov=43}
+  else if(ultrawide){distance=mode==='follower'?6.55:mode==='drawer'?5.95:5.65;fov=41}
+  else if(desktop){distance=mode==='follower'?6.30:mode==='drawer'?5.85:5.55;fov=41}
+  else{distance=mode==='follower'?6.05:5.55;fov=41}
   if(short)distance+=.45;
   const aspect=(Number(r.width||1)/Math.max(1,Number(r.height||1)));
   if(aspect<.72)distance+=.25;
@@ -4544,7 +4544,7 @@ function installRadarV167(){
     '<div class="event-search-v167">'+
       '<div class="event-search-main-v167"><label>Recherche<input id="eventQueryV167" placeholder="Galerie, exposition, artiste…"></label><label>Ville<input id="eventCityV167" value="Paris" placeholder="Paris, Aubervilliers…"></label>'+
       '<label>Type<select id="eventTypeV167"><option value="">Tous</option><option value="vernissage">Vernissage</option><option value="opening">Opening</option><option value="artist_talk">Artist talk</option><option value="finissage">Finissage</option><option value="nocturne">Nocturne</option></select></label>'+
-      '<button class="primary-btn" id="eventSearchWebV167">◉ Rechercher sur le web</button></div>'+
+      '<button class="primary-btn" id="eventSearchWebV167">◉ Recherche immédiate</button></div>'+
       '<div class="event-ranges-v167"><button data-event-range="today">Aujourd’hui</button><button class="active" data-event-range="week">Cette semaine</button><button data-event-range="weekend">Ce week-end</button><button data-event-range="month">Ce mois</button><label><input type="checkbox" id="eventFreeV167"> Gratuit</label><label><input type="checkbox" id="eventRsvpV167"> RSVP</label><label><input type="checkbox" id="eventVerifiedV167"> Vérifié</label><span></span><button class="event-week-content-v167" id="eventWeekContentV167">✦ Créer les vernissages de la semaine</button></div>'+
       '<div class="event-discovery-v169"><span>RECHERCHE RAPIDE</span><button data-event-discovery="paris">Paris galeries</button><button data-event-discovery="93">93 / banlieue</button><button data-event-discovery="collectifs">Collectifs</button><button data-event-discovery="municipal">Mairies / centres</button><button data-event-discovery="social">Instagram / réseaux indexés</button><button data-event-discovery="free">Gratuits</button></div>'+
     '</div>'+
@@ -4639,15 +4639,17 @@ async function loadEventsV167(force=false,extra={}){
   finally{state.eventsV167Loading=false}
 }
 async function searchEventsV167(){
-  const btn=$('#eventSearchWebV167');if(!btn||btn.disabled)return;const old=btn.textContent,range=eventRangeV167();
-  btn.disabled=true;btn.textContent='Recherche des vernissages…';
+  const btn=$('#eventSearchWebV167');if(!btn||btn.disabled)return;const oldLabel=btn.textContent;
+  btn.disabled=true;btn.textContent='Recherche immédiate…';
   try{
-    const city=clean($('#eventCityV167')?.value)||'Paris',type=$('#eventTypeV167')?.value;
-    const body={cities:city.split(',').map(x=>clean(x)).filter(Boolean),date_from:range.from,date_to:range.to,q:clean($('#eventQueryV167')?.value),types:type?[type]:['vernissage','opening','artist_talk','finissage','nocturne']};
-    const out=await api('/api/v167/events/search',{method:'POST',timeout:60000,body:JSON.stringify(body)});
-    state.eventsV167=Array.isArray(out.items)?out.items:[];renderEventsV167();toast((out.found||0)+' événement'+((out.found||0)>1?'s':'')+' trouvé'+((out.found||0)>1?'s':''));
-  }catch(e){toast('Recherche Vernissages impossible : '+clean(e.message||'erreur'))}
-  finally{btn.disabled=false;btn.textContent=old}
+    const refreshed=await api('/api/v168/events/refresh',{method:'POST',timeout:90000,body:JSON.stringify({force:true})});
+    if(Array.isArray(refreshed?.items))state.eventsV167=refreshed.items;
+    await loadEventsV167(true);
+    const n=(state.eventsV167||[]).length;toast(n+' vernissage'+(n>1?'s':'')+' / événement'+(n>1?'s':'')+' disponible'+(n>1?'s':''));
+    refreshRadarStatusV168();
+  }catch(e){
+    try{await loadEventsV167(true);toast('Sources locales rechargées')}catch{toast('Recherche Vernissages impossible : '+clean(e.message||'erreur'))}
+  }finally{btn.disabled=false;btn.textContent=oldLabel}
 }
 function renderEventsV167(){
   const box=$('#eventGridV167');if(!box)return;const rows=state.eventsV167||[];
