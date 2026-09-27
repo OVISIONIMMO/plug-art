@@ -3464,7 +3464,7 @@ def _v169_prime_paris_data():
     except Exception as exc:
         print('PLUG_ART_V169_PARIS_PRIME_ERROR '+type(exc).__name__+': '+str(exc)[:180],flush=True)
 
-threading.Thread(target=_v169_prime_paris_data,name='plugart-v169-paris-prime',daemon=True).start()
+# V169.1: Paris Open Data refresh is handled by the regular Radar refresh path.
 
 def _v168_extract_opportunities(raw):
     parsed=_v167_extract_json(raw)
