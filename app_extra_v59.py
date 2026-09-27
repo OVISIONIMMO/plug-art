@@ -3509,12 +3509,14 @@ def radar_refresh_status_v168():
 
 @app.post('/api/v168/events/refresh')
 def events_refresh_v168(body:dict={}):
-    if bool((body or {}).get('force',True)):return _v168_refresh_events()
+    if bool((body or {}).get('force',True)):
+        with _v168_serial_refresh_lock:return _v168_refresh_events()
     return {'ok':True,'started':_v168_start_refresh('events')}
 
 @app.post('/api/v168/opportunities/refresh')
 def opportunities_refresh_v168(body:dict={}):
-    if bool((body or {}).get('force',True)):return _v168_refresh_opportunities()
+    if bool((body or {}).get('force',True)):
+        with _v168_serial_refresh_lock:return _v168_refresh_opportunities()
     return {'ok':True,'started':_v168_start_refresh('opportunities')}
 
 @app.post('/api/v168/radar/refresh-all')
@@ -3522,8 +3524,9 @@ def radar_refresh_all_v168(body:dict={}):
     force=bool((body or {}).get('force',True))
     if not force:
         return {'ok':True,'started_events':_v168_start_refresh('events'),'started_opportunities':_v168_start_refresh('opportunities')}
-    events=_v168_refresh_events()
-    opportunities=_v168_refresh_opportunities()
+    with _v168_serial_refresh_lock:
+        events=_v168_refresh_events()
+        opportunities=_v168_refresh_opportunities()
     return {'ok':True,'found':int(events.get('found') or 0)+int(opportunities.get('found') or 0),
       'events':events,'opportunities':opportunities}
 
