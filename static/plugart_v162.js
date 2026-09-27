@@ -157,6 +157,7 @@ function renderRouteView(id=state.view){
 }
 
 function route(id,push=true){
+  const radarEventsAlias=id==='vernissages';if(radarEventsAlias)id='radar';
   if(!viewMeta[id])id='dashboard';
   document.body.classList.add('route-switching');requestAnimationFrame(()=>requestAnimationFrame(()=>document.body.classList.remove('route-switching')));
   ensureRouteRuntime(id);
@@ -181,8 +182,9 @@ function route(id,push=true){
     renderRouteView(id);
     ensureViewData(id).then(()=>{if(state.view===id)renderRouteView(id)}).catch(()=>{if(state.view===id)toast('Données momentanément indisponibles')});
   }else renderRouteView(id);
+  if(radarEventsAlias)setTimeout(()=>{setRadarModeV167('events');refreshRadarStatusV168()},40);
 }
-$$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route)}));
+$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route);if(b.dataset.radarDirect==='events')setTimeout(()=>{setRadarModeV167('events');refreshRadarStatusV168()},40)}));
 window.PLUGART_ROUTE=route;
 
 const ROUTE_PREFETCH_TIMERS_V164=new WeakMap();
@@ -2050,7 +2052,7 @@ function renderCommand(term){
   term=clean(term).toLowerCase();const pages=Object.entries(viewMeta).map(([id,m])=>({type:'Page',title:m[1],id}));const opps=(state.bootstrap?.opportunities||[]).slice(0,40).map(o=>({type:'Open Call',title:o.title,id:o.id,route:'opencalls'}));const leads=state.leads.slice(0,30).map(l=>({type:'Contact',title:l.organization||l.name,id:l.id,route:'prospection'}));const docs=state.bureau.slice(0,30).map(n=>({type:'Bureau',title:n.title,id:n.id,route:'bureau'}));const drafts=state.drafts.slice(0,30).map(d=>({type:'Brouillon',title:d.title,id:d.id,route:'creation'}));const all=[...pages,...opps,...leads,...docs,...drafts].filter(x=>!term||String(x.title).toLowerCase().includes(term)).slice(0,18);$('#commandResults').innerHTML=all.map((x,i)=>'<button class="command-result" data-cmd="'+i+'"><strong>'+esc(x.title)+'</strong><span>'+esc(x.type)+'</span></button>').join('');$$('[data-cmd]').forEach((b,i)=>b.onclick=async()=>{const x=all[i];$('#searchOverlay').classList.remove('open');route(x.route||x.id);try{if(x.type==='Contact'){await ensureViewData('prospection');selectLead(x.id)}if(x.type==='Bureau'){await ensureViewData('bureau');selectDoc(x.id)}if(x.type==='Open Call'){await ensureViewData('opencalls');openOpportunity(x.id)}if(x.type==='Brouillon'){await ensureViewData('creation');loadDraft(x.id)}}catch{}})
 }
 $('#globalSearch')?.addEventListener('click',openSearch);$('#commandInput')?.addEventListener('input',e=>renderCommand(e.target.value));
-$('#refreshData')?.addEventListener('click',loadAll);
+$('#refreshData')?.addEventListener('click',()=>{if(state.view==='radar')refreshRadarLiveV168('all');else loadAll()});
 $('#newAction')?.addEventListener('click',()=>$('#newOverlay').classList.add('open'));
 $$('[data-close-overlay]').forEach(b=>b.onclick=()=>b.closest('.overlay').classList.remove('open'));
 $$('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
