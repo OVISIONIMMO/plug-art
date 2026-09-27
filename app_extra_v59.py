@@ -1,14 +1,14 @@
 from pathlib import Path
 from fastapi import Request, HTTPException
 from fastapi.responses import HTMLResponse, Response, RedirectResponse, FileResponse
-from urllib.parse import urljoin, urlencode
+from urllib.parse import urljoin, urlencode, urlparse
 from datetime import date, timedelta
-import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64,hmac,math,struct,io,zipfile,sqlite3,shutil
+import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64,hmac,math,struct,io,zipfile,sqlite3,shutil,socket,ipaddress
 import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='169.3'
+app.version='169.4'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -17,7 +17,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='169.20260927.5'
+VERSION='169.20260927.6'
 
 @app.middleware("http")
 async def _v169_performance_headers(request: Request, call_next):
@@ -32,6 +32,74 @@ async def _v169_performance_headers(request: Request, call_next):
 
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
+REMOTE_IMAGE_CACHE={}
+
+def _safe_remote_image_url(raw:str):
+    raw=str(raw or '').strip()
+    try:p=urlparse(raw)
+    except Exception:raise HTTPException(400,'URL image invalide')
+    if p.scheme not in ('http','https') or not p.hostname:raise HTTPException(400,'URL image invalide')
+    host=p.hostname.lower().strip('.')
+    if host in ('localhost','localhost.localdomain') or host.endswith('.local'):
+        raise HTTPException(400,'Hôte image refusé')
+    try:
+        infos=socket.getaddrinfo(host,p.port or (443 if p.scheme=='https' else 80),type=socket.SOCK_STREAM)
+        for info in infos:
+            ip=ipaddress.ip_address(info[4][0])
+            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
+                raise HTTPException(400,'Hôte image refusé')
+    except HTTPException:raise
+    except Exception:raise HTTPException(400,'Hôte image inaccessible')
+    return raw
+
+def _guess_image_type(data:bytes,header_type:str=''):
+    ct=(header_type or '').split(';')[0].strip().lower()
+    if ct.startswith('image/'):return ct
+    if data.startswith(b'\xff\xd8\xff'):return 'image/jpeg'
+    if data.startswith(b'\x89PNG\r\n\x1a\n'):return 'image/png'
+    if data[:6] in (b'GIF87a',b'GIF89a'):return 'image/gif'
+    if data.startswith(b'RIFF') and data[8:12]==b'WEBP':return 'image/webp'
+    head=data[:256].lstrip().lower()
+    if head.startswith(b'<svg') or b'<svg' in head:return 'image/svg+xml'
+    return ''
+
+@app.get('/api/v171/image')
+def image_proxy_v171(url:str):
+    url=_safe_remote_image_url(url)
+    key=hashlib.sha256(url.encode('utf-8')).hexdigest()
+    now=time.time();cached=REMOTE_IMAGE_CACHE.get(key)
+    if cached and now-cached[0]<21600:
+        return Response(content=cached[1],media_type=cached[2],headers={
+          'Cache-Control':'public,max-age=604800,stale-while-revalidate=2592000',
+          'ETag':cached[3],'X-PLUG-Image-Cache':'HIT'
+        })
+    headers={
+      'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/153 Safari/537.36 PLUGART-Image/171',
+      'Accept':'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.7',
+      'Referer':url
+    }
+    try:
+        with requests.get(url,timeout=(4,12),headers=headers,allow_redirects=True,stream=True) as rr:
+            if not rr.ok:raise HTTPException(404,'Image distante indisponible')
+            total=0;chunks=[]
+            for chunk in rr.iter_content(65536):
+                if not chunk:continue
+                total+=len(chunk)
+                if total>12_000_000:raise HTTPException(413,'Image trop volumineuse')
+                chunks.append(chunk)
+            data=b''.join(chunks)
+            if len(data)<64:raise HTTPException(404,'Image vide')
+            ct=_guess_image_type(data,rr.headers.get('content-type') or '')
+            if not ct:raise HTTPException(415,'Format image non supporté')
+    except HTTPException:raise
+    except Exception:raise HTTPException(404,'Image distante indisponible')
+    etag='"'+hashlib.sha1(data).hexdigest()+'"'
+    REMOTE_IMAGE_CACHE[key]=(now,data,ct,etag)
+    if len(REMOTE_IMAGE_CACHE)>220:REMOTE_IMAGE_CACHE.pop(next(iter(REMOTE_IMAGE_CACHE)))
+    return Response(content=data,media_type=ct,headers={
+      'Cache-Control':'public,max-age=604800,stale-while-revalidate=2592000',
+      'ETag':etag,'X-PLUG-Image-Cache':'MISS'
+    })
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
 REALISTIC_PLUGY=Path('/data/plugy_v113_realistic_premium.glb') if Path('/data').exists() else BASE/'static'/'plugy_v113_realistic_premium.glb'
 REALISTIC_PLUGY_LOCK=threading.Lock()
@@ -692,7 +760,7 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'169.3',
+      'version':'169.4',
       'ui':'plug-art-v169-2-studio',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
@@ -743,7 +811,7 @@ def ui_manifest_v128():
     expected='169.20260927.5'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'169.3',
+      'version':'169.4',
       'ui':'plug-art-v169-performance-radar',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
@@ -3288,9 +3356,14 @@ def _v167_event_page_image(url):
 @app.get('/api/v167/events/{event_id}/media')
 def event_media_v167(event_id:int):
     e=event_get_v167(event_id);items=[]
-    if e.get('image_url'):items.append({'url':e['image_url'],'source':'event'})
-    page=_v167_event_page_image(e.get('source_url'))
-    if page and page not in [x['url'] for x in items]:items.append({'url':page,'source':'official_page'})
+    if e.get('image_url'):
+        items.append({'url':e['image_url'],'source':'event'})
+    else:
+        page=_v167_event_page_image(e.get('source_url'))
+        if page:
+            items.append({'url':page,'source':'official_page'})
+            try:_v165_db_write(lambda db: db.execute('update art_events set image_url=?,updated_at=? where id=?',(page,_now_v85(),event_id)))
+            except Exception:pass
     return {'event_id':event_id,'media':items[:8]}
 
 @app.get('/api/v167/events/{event_id}/media/{index}')
@@ -4081,7 +4154,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'169.3','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'169.4','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -4095,7 +4168,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'169.3','ui':'plug-art-v169-performance-radar',
+      'ok':True,'version':'169.4','ui':'plug-art-v169-performance-radar',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4164,7 +4237,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'169.3',
+      'version':'169.4',
       'ui':'plug-art-v169-performance-radar',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
@@ -4192,7 +4265,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V169_3_READY creator=storyboard_assets pdf=realtime_visual radar=paris_93_social plugy=full_body qa=interactive",flush=True)
+print("PLUG_ART_V169_4_READY performance=global_compact images=proxy_cache_resilient creator=storyboard pdf=realtime radar=paris_93_social",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
