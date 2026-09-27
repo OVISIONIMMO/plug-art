@@ -4092,3 +4092,37 @@ body[data-view="creation"] .creation-studio-shell{max-width:none!important;width
   #view-creation .carousel-slide-thumb{min-width:112px!important}
   .pdf-live-stage-v169{width:min(96%,620px)}
 }
+
+
+/* V168.2 · PLUGY even lighter in the interface */
+.plugy-follower{
+  width:min(240px,18vw)!important;
+  height:min(255px,31vh)!important;
+  right:10px!important;
+  bottom:12px!important;
+  opacity:.90!important
+}
+.plugy-follower.visible{opacity:.90!important}
+#dashboardPlugyMount{
+  height:min(38vh,420px)!important;
+  min-height:300px!important;
+  max-width:700px!important
+}
+.slide-plugy-zone{
+  height:min(40vh,440px)!important;
+  min-height:310px!important;
+  max-width:740px!important
+}
+@media(min-width:1440px){
+  .plugy-follower{width:min(255px,16vw)!important;height:min(270px,32vh)!important}
+  #dashboardPlugyMount{height:min(42vh,455px)!important;min-height:330px!important;width:min(100%,730px)!important}
+  .slide-plugy-zone{height:min(42vh,465px)!important;min-height:340px!important;width:min(100%,750px)!important}
+}
+@media(min-width:2200px){
+  .plugy-follower{width:min(275px,11vw)!important;height:min(290px,34vh)!important}
+  #dashboardPlugyMount{height:min(46vh,510px)!important;min-height:360px!important;width:min(100%,780px)!important}
+  .slide-plugy-zone{height:min(46vh,520px)!important;min-height:370px!important;width:min(100%,800px)!important}
+}
+@media(max-width:820px){
+  .plugy-follower{width:34vw!important;height:23vh!important;max-height:210px!important}
+}
