@@ -3577,12 +3577,146 @@ def _v167_pdf_path(project_id):
     root.mkdir(parents=True,exist_ok=True)
     return root/('plugart_project_'+str(int(project_id))+'.pdf')
 
+# ================= V168 · RICH PDF EDITOR =================
+def _v168_pdf_raster_dir():
+    root=Path('/data/pdf_raster') if Path('/data').exists() else BASE/'pdf_raster'
+    root.mkdir(parents=True,exist_ok=True)
+    return root
+
+def _v168_raster_pdf_page(file_id:int,page_index:int,scale:float=1.6):
+    row=core.one('select * from bureau_files where id=?',(file_id,))
+    if not row:raise HTTPException(404,'PDF introuvable')
+    src=Path(str(row.get('storage_path') or ''))
+    if not src.exists():raise HTTPException(404,'Fichier PDF absent du stockage')
+    out=_v168_pdf_raster_dir()/('file_'+str(file_id)+'_page_'+str(page_index)+'.png')
+    if out.exists() and out.stat().st_mtime>=src.stat().st_mtime:return out
+    try:
+        import fitz
+        doc=fitz.open(str(src))
+        if page_index<0 or page_index>=doc.page_count:
+            doc.close();raise HTTPException(404,'Page PDF introuvable')
+        pix=doc.load_page(page_index).get_pixmap(matrix=fitz.Matrix(scale,scale),alpha=False)
+        out.write_bytes(pix.tobytes('png'));doc.close();return out
+    except HTTPException:raise
+    except Exception as exc:raise HTTPException(503,'Rendu de page PDF indisponible') from exc
+
+@app.get('/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+def bureau_file_page_png_v168(file_id:int,page_index:int):
+    return FileResponse(_v168_raster_pdf_page(file_id,page_index),media_type='image/png',headers={'Cache-Control':'public,max-age=3600'})
+
+@app.post('/api/v168/pdf-projects/from-file/{file_id}')
+def pdf_project_from_file_v168(file_id:int):
+    row=core.one('select * from bureau_files where id=?',(file_id,))
+    if not row:raise HTTPException(404,'PDF introuvable')
+    src=Path(str(row.get('storage_path') or ''))
+    if not src.exists():raise HTTPException(404,'Fichier PDF absent du stockage')
+    try:
+        import fitz
+        doc=fitz.open(str(src));count=min(int(doc.page_count),60);doc.close()
+    except Exception as exc:raise HTTPException(503,'Analyse du PDF indisponible') from exc
+    pages=[{'page_type':'imported','content':{'background':'#FFFFFF','background_image':'/api/v168/bureau/files/'+str(file_id)+'/page/'+str(i)+'.png','elements':[]}} for i in range(count)]
+    return pdf_project_create_v167({'title':str(row.get('name') or row.get('original_name') or 'PDF éditable'),'project_type':'pdf_import','metadata':{'source_type':'bureau_file','source_file_id':file_id,'format':'A4 portrait','page_count':count},'pages':pages})
+
+def _v168_color(value,default=(0,0,0)):
+    s=str(value or '').strip().lstrip('#')
+    try:
+        if len(s)==3:s=''.join(ch*2 for ch in s)
+        if len(s)==6:return tuple(int(s[i:i+2],16)/255 for i in (0,2,4))
+    except Exception:pass
+    return default
+
+def _v168_image_bytes(ref):
+    ref=str(ref or '').strip()
+    if not ref:return b''
+    m=re.match(r'^/api/v168/bureau/files/(\d+)/page/(\d+)\.png$',ref)
+    if m:
+        try:return _v168_raster_pdf_page(int(m.group(1)),int(m.group(2))).read_bytes()
+        except Exception:return b''
+    if ref.startswith(('http://','https://')):
+        try:
+            rr=requests.get(ref,timeout=10,headers={'User-Agent':'Mozilla/5.0 PLUGART-PDF/168'})
+            return rr.content if rr.ok and (rr.headers.get('content-type') or '').lower().startswith('image/') else b''
+        except Exception:return b''
+    return b''
+
+def _v168_crop_image(raw,ratio,position='center'):
+    if not raw:return None
+    try:
+        from PIL import Image
+        im=Image.open(io.BytesIO(raw)).convert('RGB');sw,sh=im.size;sr=sw/max(1,sh)
+        if sr>ratio:
+            nw=max(1,int(sh*ratio));left=(sw-nw)//2
+            if position=='left':left=0
+            elif position=='right':left=sw-nw
+            return im.crop((left,0,left+nw,sh))
+        nh=max(1,int(sw/max(.001,ratio)));top=(sh-nh)//2
+        if position=='top':top=0
+        elif position=='bottom':top=sh-nh
+        return im.crop((0,top,sw,top+nh))
+    except Exception:return None
+
+def _v168_draw_image(cv,ref,x,y,w,h,crop='cover',position='center'):
+    raw=_v168_image_bytes(ref)
+    if not raw:return
+    try:
+        from reportlab.lib.utils import ImageReader
+        if crop=='cover':
+            im=_v168_crop_image(raw,w/max(1,h),position)
+            if im is not None:
+                buf=io.BytesIO();im.save(buf,format='JPEG',quality=90);buf.seek(0)
+                cv.drawImage(ImageReader(buf),x,y,w,h,mask='auto',preserveAspectRatio=False);return
+        cv.drawImage(ImageReader(io.BytesIO(raw)),x,y,w,h,mask='auto',preserveAspectRatio=True,anchor='c')
+    except Exception:pass
+
+def _v168_draw_element(cv,e,W,H):
+    e=e or {};typ=str(e.get('type') or 'text').lower()
+    x=W*float(e.get('x',8))/100;y_top=H*float(e.get('y',8))/100
+    w=W*float(e.get('w',84))/100;h=H*float(e.get('h',18))/100;y=H-y_top-h
+    opacity=max(0,min(1,float(e.get('opacity',1) or 1)));rot=float(e.get('rotation',0) or 0)
+    cv.saveState()
+    try:
+        if hasattr(cv,'setFillAlpha'):cv.setFillAlpha(opacity)
+        if hasattr(cv,'setStrokeAlpha'):cv.setStrokeAlpha(opacity)
+        if rot:
+            cx=x+w/2;cy=y+h/2;cv.translate(cx,cy);cv.rotate(rot);x=-w/2;y=-h/2
+        if typ=='image':
+            _v168_draw_image(cv,e.get('src') or e.get('url'),x,y,w,h,str(e.get('crop') or 'cover'),str(e.get('position') or 'center'))
+        elif typ in ('rect','rectangle','shape'):
+            cv.setFillColorRGB(*_v168_color(e.get('fill'),(.45,.34,1)))
+            radius=max(0,float(e.get('radius',0) or 0))*min(W,H)/100
+            if radius:cv.roundRect(x,y,w,h,radius,fill=1,stroke=0)
+            else:cv.rect(x,y,w,h,fill=1,stroke=0)
+        elif typ in ('ellipse','circle'):
+            cv.setFillColorRGB(*_v168_color(e.get('fill'),(.45,.34,1)));cv.ellipse(x,y,x+w,y+h,fill=1,stroke=0)
+        elif typ=='line':
+            cv.setStrokeColorRGB(*_v168_color(e.get('stroke'),(.1,.1,.1)));cv.setLineWidth(max(.5,float(e.get('thickness',2) or 2)));cv.line(x,y+h/2,x+w,y+h/2)
+        else:
+            txt=str(e.get('text') or '');size=max(5,min(120,float(e.get('fontSize',24) or 24)))
+            cv.setFillColorRGB(*_v168_color(e.get('color'),(.08,.08,.10)))
+            font='Helvetica-Bold' if str(e.get('weight') or '').lower() in ('700','800','900','bold') else 'Helvetica'
+            cv.setFont(font,size);align=str(e.get('align') or 'left')
+            leading=max(size*1.05,float(e.get('lineHeight',1.15) or 1.15)*size);cursor=y+h-size
+            max_chars=max(8,int(w/max(1,size*.54)))
+            for para in txt.splitlines() or ['']:
+                words=para.split();line='';chunks=[]
+                for word in words:
+                    test=(line+' '+word).strip()
+                    if len(test)>max_chars and line:chunks.append(line);line=word
+                    else:line=test
+                if line or not chunks:chunks.append(line)
+                for line in chunks:
+                    if cursor<y:break
+                    if align=='center':cv.drawCentredString(x+w/2,cursor,line)
+                    elif align=='right':cv.drawRightString(x+w,cursor,line)
+                    else:cv.drawString(x,cursor,line)
+                    cursor-=leading
+    finally:cv.restoreState()
+
 def _v167_render_pdf(project_id):
     project=pdf_project_get_v167(project_id)
     try:
         from reportlab.pdfgen import canvas as rl_canvas
         from reportlab.lib.pagesizes import A4,landscape
-        from reportlab.lib.utils import ImageReader
     except Exception as exc:
         raise HTTPException(503,'Moteur PDF indisponible') from exc
     meta=project.get('metadata') or {};fmt=str(meta.get('format') or 'A4 portrait').lower()
@@ -3591,33 +3725,31 @@ def _v167_render_pdf(project_id):
     pages=project.get('pages') or [{'content':{'title':project.get('title'),'body':''}}]
     for page in pages:
         content=page.get('content') or {};bg=str(content.get('background') or '#FFFFFF')
-        try:
-            hx=bg.lstrip('#');rgb=tuple(int(hx[i:i+2],16)/255 for i in (0,2,4)) if len(hx)==6 else (1,1,1)
-            cv.setFillColorRGB(*rgb);cv.rect(0,0,W,H,fill=1,stroke=0)
-        except Exception:pass
-        image_url=str(content.get('image') or '')
-        if image_url.startswith(('http://','https://')):
-            try:
-                rr=requests.get(image_url,timeout=8,headers={'User-Agent':'Mozilla/5.0 PLUGART-PDF/167'})
-                if rr.ok:cv.drawImage(ImageReader(io.BytesIO(rr.content)),0,H*.43,W,H*.57,mask='auto',preserveAspectRatio=True,anchor='c')
-            except Exception:pass
-        title=str(content.get('title') or project.get('title') or '')[:500]
-        kicker=str(content.get('kicker') or '')[:240]
-        body=str(content.get('body') or content.get('text') or '')[:12000]
-        if kicker:
-            cv.setFont('Helvetica-Bold',10);cv.setFillColorRGB(.42,.36,.72);cv.drawString(42,H-52,kicker.upper()[:80])
-        cv.setFillColorRGB(.07,.075,.09);cv.setFont('Helvetica-Bold',26);y=H-88
-        for chunk in re.findall(r'.{1,42}(?:\s+|$)',title)[:4]:
-            cv.drawString(42,y,chunk.strip());y-=31
-        cv.setFont('Helvetica',11);cv.setFillColorRGB(.28,.29,.33);y-=10
-        for para in body.splitlines():
-            if y<52:break
-            chunks=re.findall(r'.{1,90}(?:\s+|$)',para) or ['']
-            for chunk in chunks:
-                cv.drawString(42,y,chunk.strip());y-=15
+        cv.setFillColorRGB(*_v168_color(bg,(1,1,1)));cv.rect(0,0,W,H,fill=1,stroke=0)
+        bgimg=str(content.get('background_image') or '')
+        if bgimg:_v168_draw_image(cv,bgimg,0,0,W,H,'cover',str(content.get('background_position') or 'center'))
+        elements=content.get('elements') if isinstance(content.get('elements'),list) else []
+        if elements:
+            for element in elements[:120]:_v168_draw_element(cv,element,W,H)
+        else:
+            legacy_image=str(content.get('image') or '')
+            if legacy_image:_v168_draw_image(cv,legacy_image,0,H*.43,W,H*.57,'cover','center')
+            title=str(content.get('title') or project.get('title') or '')[:500]
+            kicker=str(content.get('kicker') or '')[:240]
+            body=str(content.get('body') or content.get('text') or '')[:12000]
+            if kicker:
+                cv.setFont('Helvetica-Bold',10);cv.setFillColorRGB(.42,.36,.72);cv.drawString(42,H-52,kicker.upper()[:80])
+            cv.setFillColorRGB(.07,.075,.09);cv.setFont('Helvetica-Bold',26);y=H-88
+            for chunk in re.findall(r'.{1,42}(?:\s+|$)',title)[:4]:
+                cv.drawString(42,y,chunk.strip());y-=31
+            cv.setFont('Helvetica',11);cv.setFillColorRGB(.28,.29,.33);y-=10
+            for para in body.splitlines():
                 if y<52:break
-            y-=5
-        cv.setFont('Helvetica',7);cv.setFillColorRGB(.55,.56,.60);cv.drawRightString(W-32,24,'PLUG ART · V167')
+                for chunk in re.findall(r'.{1,90}(?:\s+|$)',para) or ['']:
+                    cv.drawString(42,y,chunk.strip());y-=15
+                    if y<52:break
+                y-=5
+        cv.setFont('Helvetica',7);cv.setFillColorRGB(.55,.56,.60);cv.drawRightString(W-32,24,'PLUG ART · V168')
         cv.showPage()
     cv.save();return out
 
