@@ -3960,6 +3960,39 @@ def creative_asset_svg_v169(icon:str,color:str='#111318',download:bool=False):
     except HTTPException:raise
     except Exception:raise HTTPException(502,'Icône indisponible')
 
+
+# ================= V169 · CREATION VECTOR ASSET SEARCH =================
+@app.get('/api/v169/assets/search')
+def assets_search_v169(q:str='art',limit:int=32):
+    query=str(q or 'art').strip()[:80] or 'art';limit=max(8,min(48,int(limit or 32)))
+    try:
+        rr=requests.get('https://api.iconify.design/search',params={'query':query,'limit':limit},timeout=12,headers={'User-Agent':'PLUGART/169'})
+        if not rr.ok:raise HTTPException(502,'Bibliothèque vectorielle indisponible')
+        data=rr.json();items=[]
+        for raw in (data.get('icons') or [])[:limit]:
+            name=str(raw or '')
+            if ':' not in name:continue
+            prefix,icon=name.split(':',1)
+            if not re.fullmatch(r'[A-Za-z0-9._-]+',prefix) or not re.fullmatch(r'[A-Za-z0-9._-]+',icon):continue
+            items.append({'id':name,'name':icon.replace('-',' '),'prefix':prefix,'icon':icon,'url':f'/api/v169/assets/icon/{prefix}/{icon}.svg'})
+        return {'ok':True,'query':query,'items':items}
+    except HTTPException:raise
+    except Exception as exc:raise HTTPException(502,'Bibliothèque vectorielle indisponible') from exc
+
+@app.get('/api/v169/assets/icon/{prefix}/{icon}.svg')
+def asset_icon_v169(prefix:str,icon:str):
+    if not re.fullmatch(r'[A-Za-z0-9._-]+',prefix) or not re.fullmatch(r'[A-Za-z0-9._-]+',icon):raise HTTPException(400,'Icône invalide')
+    key='iconify:'+prefix+':'+icon;now=time.time();cached=MEDIA_BYTES_CACHE.get(key)
+    if cached and now-cached[0]<604800:return Response(content=cached[1],media_type='image/svg+xml',headers={'Cache-Control':'public,max-age=604800,immutable'})
+    try:
+        rr=requests.get(f'https://api.iconify.design/{prefix}/{icon}.svg',timeout=12,headers={'User-Agent':'PLUGART/169'})
+        if not rr.ok or len(rr.content)<80:raise HTTPException(404,'Icône introuvable')
+        MEDIA_BYTES_CACHE[key]=(now,rr.content,'image/svg+xml')
+        return Response(content=rr.content,media_type='image/svg+xml',headers={'Cache-Control':'public,max-age=604800,immutable'})
+    except HTTPException:raise
+    except Exception:raise HTTPException(404,'Icône introuvable')
+
+
 @app.get('/api/v163/diagnostics')
 def diagnostics_v163():
     started=time.perf_counter()
