@@ -8,7 +8,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='168.2'
+app.version='168.3'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -17,7 +17,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='168.20260927.6'
+VERSION='168.20260927.7'
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
 REALISTIC_PLUGY_URL='https://storage.to3d.app/generated-3d/models/2026-09-23/task_1833847e-a573-482a-9410-2433496158d4_model.glb'
@@ -680,8 +680,8 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'168.2',
-      'ui':'plug-art-v168-2-creative-workspace',
+      'version':'168.3',
+      'ui':'plug-art-v168-3-social-creative-workspace',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
@@ -728,10 +728,10 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='168.20260927.6'
+    expected='168.20260927.7'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'168.2',
+      'version':'168.3',
       'ui':'plug-art-v168-2-creative-workspace',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
@@ -3072,6 +3072,13 @@ CREATE INDEX IF NOT EXISTS idx_art_events_type ON art_events(event_type);
 CREATE INDEX IF NOT EXISTS idx_art_events_venue ON art_events(venue_name);
 CREATE INDEX IF NOT EXISTS idx_art_events_status ON art_events(status);
 """)
+_v167e.commit()
+_v167_cols={str(x[1]) for x in _v167e.execute("pragma table_info(art_events)").fetchall()}
+for _col,_ddl in (
+  ('social_platform',"TEXT DEFAULT ''"),('social_handle',"TEXT DEFAULT ''"),('social_url',"TEXT DEFAULT ''")
+):
+    if _col not in _v167_cols:
+        _v167e.execute("alter table art_events add column "+_col+" "+_ddl)
 _v167e.commit();_v167e.close()
 
 _V167_EVENT_TYPES={'vernissage','opening','finissage','artist_talk','gallery_event','preview','nocturne','rencontre_artiste','lancement_exposition'}
@@ -3136,6 +3143,9 @@ def _v167_normalize_event(item):
       'description':str(item.get('description') or '')[:4000],
       'image_url':str(item.get('image_url') or '')[:2400],
       'source_url':source,'source_type':str(item.get('source_type') or 'web')[:80],
+      'social_platform':str(item.get('social_platform') or '')[:40],
+      'social_handle':str(item.get('social_handle') or '')[:160],
+      'social_url':str(item.get('social_url') or '')[:2400],
       'rsvp_url':str(item.get('rsvp_url') or '')[:2400],'price_text':price,
       'is_free':1 if free else 0,'verified':1 if item.get('verified') else 0,
       'verified_at':now if item.get('verified') else '','status':'active','created_at':now,'updated_at':now
@@ -3143,24 +3153,29 @@ def _v167_normalize_event(item):
 
 def _v167_upsert_events(events):
     ids=[]
+    cols=['event_type','title','venue_name','venue_type','city','address','country','starts_at','ends_at','artists_json',
+      'disciplines_json','description','image_url','source_url','source_type','social_platform','social_handle','social_url',
+      'rsvp_url','price_text','is_free','verified','verified_at','status','created_at','updated_at']
     for raw in events or []:
         e=_v167_normalize_event(raw)
         if not e:continue
         def _write(db,e=e):
-            db.execute("""INSERT INTO art_events(
-              event_type,title,venue_name,venue_type,city,address,country,starts_at,ends_at,artists_json,
-              disciplines_json,description,image_url,source_url,source_type,rsvp_url,price_text,is_free,
-              verified,verified_at,status,created_at,updated_at)
-              VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            values=[e.get(k) for k in cols]
+            db.execute("""INSERT INTO art_events("""+','.join(cols)+""")
+              VALUES("""+','.join('?' for _ in cols)+""")
               ON CONFLICT(source_url,starts_at) DO UPDATE SET
                 event_type=excluded.event_type,title=excluded.title,venue_name=excluded.venue_name,
                 venue_type=excluded.venue_type,city=excluded.city,address=excluded.address,country=excluded.country,
                 ends_at=excluded.ends_at,artists_json=excluded.artists_json,disciplines_json=excluded.disciplines_json,
                 description=excluded.description,image_url=coalesce(nullif(excluded.image_url,''),art_events.image_url),
-                source_type=excluded.source_type,rsvp_url=excluded.rsvp_url,price_text=excluded.price_text,
+                source_type=excluded.source_type,
+                social_platform=coalesce(nullif(excluded.social_platform,''),art_events.social_platform),
+                social_handle=coalesce(nullif(excluded.social_handle,''),art_events.social_handle),
+                social_url=coalesce(nullif(excluded.social_url,''),art_events.social_url),
+                rsvp_url=excluded.rsvp_url,price_text=excluded.price_text,
                 is_free=excluded.is_free,verified=max(art_events.verified,excluded.verified),
                 verified_at=case when excluded.verified=1 then excluded.verified_at else art_events.verified_at end,
-                status='active',updated_at=excluded.updated_at""",tuple(e.values()))
+                status='active',updated_at=excluded.updated_at""",values)
             hit=db.execute('select id from art_events where source_url=? and starts_at=?',(e['source_url'],e['starts_at'])).fetchone()
             return int(hit[0]) if hit else None
         iid=_v165_db_write(_write)
@@ -3179,7 +3194,7 @@ def _v167_event_search_ai(body):
       "Zones: "+', '.join(cities)+". Période: "+date_from+" à "+(date_to or "dans les 31 prochains jours")+". Types: "+', '.join(types)+". "
       "Requête additionnelle: "+(query or "aucune")+". Cherche dans plusieurs familles de sources : sites officiels de galeries, centres d'art, fondations, collectifs, mairies et hôtels de ville, écoles d'art, associations culturelles, tiers-lieux, hôtels, lieux hybrides et agendas culturels fiables. "
       "Effectue aussi des recherches web indexables de type site:instagram.com avec les termes vernissage Paris, opening Paris, galerie Paris et les hashtags #vernissage #vernissageparis #parisart #galerieparis #expositionparis #openingparis. "
-      "Priorité aux pages officielles ou aux annonces du lieu/collectif. Une page Instagram indexable peut être utilisée seulement si elle indique clairement lieu et date. "
+      "Priorité aux pages officielles ou aux annonces du lieu/collectif. Recherche aussi les publications sociales publiquement indexables et les pages web qui renvoient explicitement vers Instagram/TikTok. Si un compte social officiel est identifiable, renseigne social_platform, social_handle et social_url. Une publication sociale n'est retenue que si lieu et date sont vérifiables. "
       "Ignore tout événement passé ou non daté. Retourne UNIQUEMENT du JSON valide sous la forme "
       "{\"events\":[{\"event_type\":\"vernissage\",\"title\":\"\",\"venue_name\":\"\",\"venue_type\":\"gallery\",\"city\":\"\",\"address\":\"\",\"country\":\"France\","
       "\"starts_at\":\"YYYY-MM-DDTHH:MM\",\"ends_at\":\"\",\"artists\":[],\"disciplines\":[],\"description\":\"\",\"image_url\":\"\",\"source_url\":\"https://...\","
@@ -3337,14 +3352,19 @@ def _v168_should_refresh(key,hours):
 
 
 def _v168_curated_events():
-    # Publicly verifiable events kept as a resilient floor when live AI/social discovery is rate-limited.
+    # Resilient floor assembled from public official, gallery and social-linked sources.
     return [
-      {'event_type':'vernissage','title':'Écris-moi ! — Camille de Cussac','venue_name':'Artazart','venue_type':'gallery','city':'Paris','address':'83 quai de Valmy, 75010 Paris','country':'France','starts_at':'2026-10-01T18:00','ends_at':'2026-10-01T19:30','artists':['Camille de Cussac'],'disciplines':['illustration','arts visuels'],'description':'Vernissage gratuit de l’exposition Écris-moi ! chez Artazart.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-de-l-exposition-de-camille-de-cussac-ecris-moi-124594','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
-      {'event_type':'vernissage','title':'AKKITHAM — Narayanan Akkitham','venue_name':'Galerie AB - Agnès Aittouares','venue_type':'gallery','city':'Paris','address':'5 rue Jacques Callot, 75006 Paris','country':'France','starts_at':'2026-10-01T18:00','ends_at':'','artists':['Narayanan Akkitham'],'disciplines':['peinture','art contemporain'],'description':'Vernissage de l’exposition AKKITHAM, entrée gratuite.','image_url':'','source_url':'https://www.paris.fr/evenements/exposition-a-la-galerie-ab-akkitham-117258','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
-      {'event_type':'vernissage','title':'H.E.R.O — Hondo','venue_name':'Maison de la Vie Associative et Citoyenne du 7e','venue_type':'cultural_center','city':'Paris','address':'4 rue Amélie, 75007 Paris','country':'France','starts_at':'2026-10-08T18:30','ends_at':'2026-10-08T21:00','artists':['Hondo'],'disciplines':['peinture','street art'],'description':'Vernissage gratuit de H.E.R.O, exposition de Hondo.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-de-l-exposition-h-e-r-o-de-hondo-124380','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
-      {'event_type':'gallery_event','title':'Portes ouvertes des ateliers d’artistes de Montreuil','venue_name':'Centre Tignous + ateliers de Montreuil','venue_type':'artist_studios','city':'Montreuil','address':'116 rue de Paris, 93100 Montreuil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'2026-10-11T20:00','artists':[],'disciplines':['arts visuels','peinture','photographie','sculpture','mixed media'],'description':'Plus de 250 ateliers ouvrent leurs portes. Vernissages, expositions, ateliers, concerts et performances. Entrée libre.','image_url':'','source_url':'https://www.montreuil.fr/agenda/journees-portes-ouvertes-des-ateliers-dartistes','source_type':'official_municipal','rsvp_url':'','price_text':'Entrée libre et gratuite','is_free':True,'verified':True},
-      {'event_type':'gallery_event','title':'Notre Mère Brûle — Portes ouvertes du Daron Perché','venue_name':'Jardin du Daron Perché','venue_type':'artist_space','city':'Montreuil','address':'74 rue Molière, 93100 Montreuil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'2026-10-11T20:00','artists':[],'disciplines':['land art','installation'],'description':'Exposition de land art, DJ set et portes ouvertes. Entrée libre.','image_url':'','source_url':'https://www.montreuil.fr/agenda/notre-mere-brule-portes-ouvertes-du-daron-perche','source_type':'official_municipal','rsvp_url':'','price_text':'Entrée libre','is_free':True,'verified':True},
-      {'event_type':'vernissage','title':'trànsitos — Fernando Garcia Quintero','venue_name':'Centre Paris Anim’ Annie Fratellini','venue_type':'cultural_center','city':'Paris','address':'36 quai de la Rapée, 75012 Paris','country':'France','starts_at':'2026-10-15T19:00','ends_at':'2026-10-15T21:30','artists':['Fernando Garcia Quintero'],'disciplines':['peinture','art contemporain'],'description':'Vernissage gratuit avec l’artiste autour des thèmes migration, mémoire et déplacement.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-expo-transitos-124363','source_type':'official_city','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'SELF™ — KR02','venue_name':'Kramer','venue_type':'gallery','city':'Paris','address':'132 boulevard de Magenta, 75010 Paris','country':'France','starts_at':'2026-09-28T18:00','ends_at':'2026-09-28T21:00','artists':['F1LTHY','Kristoffer Borgli','Sonny Hall','Pouria Khojastehpay','Noémie Ninot','Yury Belyavskiy'],'disciplines':['art contemporain','vidéo','arts visuels'],'description':'Vernissage de KR02 « SELF™ » au 4e étage de Kramer.','image_url':'','source_url':'https://kramer.paris/','source_type':'official_gallery','social_platform':'Instagram','social_handle':'@galeriekramer','social_url':'https://www.instagram.com/galeriekramer/','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'Envisage… — Kati Béal','venue_name':'FIAP Paris','venue_type':'cultural_center','city':'Paris','address':'30 rue Cabanis, 75014 Paris','country':'France','starts_at':'2026-10-01T18:30','ends_at':'2026-10-01T21:00','artists':['Kati Béal'],'disciplines':['peinture','encre','portrait'],'description':'Vernissage sur inscription de l’exposition Envisage…, gratuit.','image_url':'','source_url':'https://www.paris.fr/evenements/exposition-d-oeuvres-sur-carton-et-papier-recycle-118327','source_type':'official_city','social_platform':'Instagram','social_handle':'@fiap_paris','social_url':'https://www.instagram.com/fiap_paris/','rsvp_url':'https://shotgun.live/fr/events/exposition-envisage','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'David Storey — exposition Paris','venue_name':'Galerie au Médicis / Yoyo Maeght','venue_type':'gallery','city':'Paris','address':'5 rue de Médicis, 75006 Paris','country':'France','starts_at':'2026-10-01T17:00','ends_at':'2026-10-01T20:00','artists':['David Storey'],'disciplines':['peinture'],'description':'Vernissage gratuit sur inscription, en présence de David Storey et Yoyo Maeght.','image_url':'','source_url':'https://maeght.myshopify.com/blogs/focus/david-storey-exposition-paris','source_type':'official_gallery','social_platform':'Instagram','social_handle':'@yoyomaeght','social_url':'https://www.instagram.com/yoyomaeght/','rsvp_url':'','price_text':'Gratuit sur inscription','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'AKKITHAM — Narayanan Akkitham','venue_name':'Galerie AB - Agnès Aittouares','venue_type':'gallery','city':'Paris','address':'5 rue Jacques Callot, 75006 Paris','country':'France','starts_at':'2026-10-01T18:00','ends_at':'','artists':['Narayanan Akkitham'],'disciplines':['peinture','art contemporain'],'description':'Vernissage de l’exposition AKKITHAM.','image_url':'','source_url':'https://galerie-ab.paris/','source_type':'official_gallery','social_platform':'Instagram','social_handle':'@galerie.ab','social_url':'https://www.instagram.com/galerie.ab/','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'Le Corset — Louis Clichy','venue_name':'Galerie Achetez de l’Art','venue_type':'gallery','city':'Paris','address':'24 rue de Lappe, 75011 Paris','country':'France','starts_at':'2026-10-01T18:00','ends_at':'','artists':['Louis Clichy'],'disciplines':['dessin','illustration','animation'],'description':'Vernissage ouvert à tous de l’exposition de dessins originaux du film Le Corset.','image_url':'','source_url':'https://www.paris.fr/evenements/exposition-dead-train-par-le-turk-118509','source_type':'official_city','social_platform':'Instagram','social_handle':'@achetezdelart','social_url':'https://www.instagram.com/achetezdelart/','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'Endemic — Patricia Erbelding','venue_name':'Galerie Marie-Claude Duchosal','venue_type':'gallery','city':'Paris','address':'1 rue Ferdinand Duval, 75004 Paris','country':'France','starts_at':'2026-10-02T18:00','ends_at':'2026-10-02T20:30','artists':['Patricia Erbelding'],'disciplines':['peinture'],'description':'Vernissage de l’exposition Endemic.','image_url':'','source_url':'https://www.jds.fr/paris/expos/patricia-erbelding-endemic-1745020_A','source_type':'cultural_listing','social_platform':'Instagram','social_handle':'','social_url':'','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'Sensitive Cartographies — Jewellery, Body and Inner Landscapes','venue_name':'Le Syndrome de Stendhal','venue_type':'artist_space','city':'Paris','address':'18 rue Stendhal, 75020 Paris','country':'France','starts_at':'2026-10-03T19:00','ends_at':'2026-10-03T21:00','artists':['Julia Boix-Vives','Clémentine Despocq','Isabelle Gillieaux','Jeannette Knigge','Svetlana Prigoditch','Philippine Schaefer'],'disciplines':['bijou contemporain','objet','photographie','performance'],'description':'Vernissage avec performance collective à 20h.','image_url':'','source_url':'https://www.parcoursbijoux.com/fr/location/sensitive-cartographies-jewellery-body-and-inner-landscapes-2/','source_type':'official_program','social_platform':'Instagram','social_handle':'@cartographies_sensibles','social_url':'https://www.instagram.com/cartographies_sensibles/','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'Code sacré — Séverine Péron','venue_name':'Espace o25rjj / F.L.A.C.','venue_type':'artist_space','city':'Paris','address':'Paris','country':'France','starts_at':'2026-10-03T18:00','ends_at':'','artists':['Séverine Péron'],'disciplines':['peinture','dessin','installation vidéo'],'description':'Vernissage de l’œuvre Code sacré, visible du 3 au 31 octobre.','image_url':'','source_url':'https://o25rjj.fr/laflac/artiste.html','source_type':'artist_space','social_platform':'Instagram','social_handle':'@severine_peron','social_url':'https://www.instagram.com/severine_peron/','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'vernissage','title':'Ce Qui Demeure','venue_name':'Le 6B','venue_type':'artist_space','city':'Saint-Denis','address':'6-10 quai de Seine, 93200 Saint-Denis','country':'France','starts_at':'2026-10-06T18:30','ends_at':'2026-10-06T21:00','artists':['Sarrah Haouas','Lucie Leroy','Karine Pollastro','Marion Fillancq'],'disciplines':['bijou contemporain','arts visuels'],'description':'Vernissage au 6B à Saint-Denis autour du temps, de la mémoire et de la survivance.','image_url':'','source_url':'https://www.parcoursbijoux.com/fr/location/what-remains/','source_type':'official_program','social_platform':'Instagram','social_handle':'@le6b_officiel','social_url':'https://www.instagram.com/le6b_officiel/','rsvp_url':'','price_text':'À vérifier','is_free':False,'verified':True},
+      {'event_type':'gallery_event','title':'Portes ouvertes des ateliers d’artistes de Montreuil','venue_name':'Centre Tignous + ateliers de Montreuil','venue_type':'artist_studios','city':'Montreuil','address':'116 rue de Paris, 93100 Montreuil','country':'France','starts_at':'2026-10-09T18:00','ends_at':'2026-10-11T20:00','artists':[],'disciplines':['arts visuels','peinture','photographie','sculpture','mixed media'],'description':'Plus de 250 ateliers ouvrent leurs portes. Vernissages, expositions, ateliers, concerts et performances. Entrée libre.','image_url':'','source_url':'https://www.montreuil.fr/agenda/journees-portes-ouvertes-des-ateliers-dartistes','source_type':'official_municipal','social_platform':'','social_handle':'','social_url':'','rsvp_url':'','price_text':'Entrée libre et gratuite','is_free':True,'verified':True},
+      {'event_type':'vernissage','title':'H.E.R.O — Hondo','venue_name':'Maison de la Vie Associative et Citoyenne du 7e','venue_type':'cultural_center','city':'Paris','address':'4 rue Amélie, 75007 Paris','country':'France','starts_at':'2026-10-08T18:30','ends_at':'2026-10-08T21:00','artists':['Hondo'],'disciplines':['peinture','street art'],'description':'Vernissage gratuit de H.E.R.O, exposition de Hondo.','image_url':'','source_url':'https://www.paris.fr/evenements/vernissage-de-l-exposition-h-e-r-o-de-hondo-124380','source_type':'official_city','social_platform':'','social_handle':'','social_url':'','rsvp_url':'','price_text':'Gratuit','is_free':True,'verified':True},
     ]
 
 def _v168_curated_opportunities():
@@ -3480,6 +3500,16 @@ def events_refresh_v168(body:dict={}):
 def opportunities_refresh_v168(body:dict={}):
     if bool((body or {}).get('force',True)):return _v168_refresh_opportunities()
     return {'ok':True,'started':_v168_start_refresh('opportunities')}
+
+@app.post('/api/v168/radar/refresh-all')
+def radar_refresh_all_v168(body:dict={}):
+    force=bool((body or {}).get('force',True))
+    if not force:
+        return {'ok':True,'started_events':_v168_start_refresh('events'),'started_opportunities':_v168_start_refresh('opportunities')}
+    events=_v168_refresh_events()
+    opportunities=_v168_refresh_opportunities()
+    return {'ok':True,'found':int(events.get('found') or 0)+int(opportunities.get('found') or 0),
+      'events':events,'opportunities':opportunities}
 
 def _v168_live_radar_loop():
     time.sleep(max(20,int(os.getenv('PLUGART_V168_START_DELAY_SECONDS','90'))))
@@ -3888,7 +3918,7 @@ def qa_manifest_v167():
       ('GET','/api/v167/events'),('POST','/api/v167/events/search'),
       ('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),
       ('POST','/api/v167/pdf-projects'),('GET','/api/v167/canva/config'),
-      ('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),
+      ('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),('POST','/api/v168/radar/refresh-all'),('GET','/api/v169/assets/search'),('GET','/api/v169/assets/svg'),
       ('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
     ]
     active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
@@ -3896,6 +3926,34 @@ def qa_manifest_v167():
       'required':[m+' '+p for m,p in required],
       'missing':[m+' '+p for m,p in required if (m,p) not in active]}
 
+
+@app.get('/api/v169/assets/search')
+def creative_assets_search_v169(q:str='art',limit:int=48):
+    query=str(q or 'art').strip()[:80] or 'art';limit=max(32,min(96,int(limit or 48)))
+    try:
+        rr=requests.get('https://api.iconify.design/search',params={'query':query,'limit':limit},timeout=8)
+        if not rr.ok:raise HTTPException(502,'Bibliothèque vectorielle indisponible')
+        data=rr.json();icons=[str(x) for x in (data.get('icons') or [])[:limit] if ':' in str(x)]
+        return {'ok':True,'query':query,'total':int(data.get('total') or len(icons)),'icons':icons}
+    except HTTPException:raise
+    except Exception:raise HTTPException(502,'Bibliothèque vectorielle indisponible')
+
+@app.get('/api/v169/assets/svg')
+def creative_asset_svg_v169(icon:str,color:str='#111318',download:bool=False):
+    raw=str(icon or '').strip()
+    if ':' not in raw or len(raw)>180:raise HTTPException(400,'Icône invalide')
+    prefix,name=raw.split(':',1)
+    if not re.fullmatch(r'[A-Za-z0-9_-]+',prefix) or not re.fullmatch(r'[A-Za-z0-9_-]+',name):raise HTTPException(400,'Icône invalide')
+    safe_color=str(color or '#111318').strip()
+    if not re.fullmatch(r'#[0-9A-Fa-f]{6}',safe_color):safe_color='#111318'
+    try:
+        rr=requests.get('https://api.iconify.design/'+prefix+'/'+name+'.svg',params={'color':safe_color,'width':'256','height':'256','box':'1'},timeout=8)
+        if not rr.ok or 'svg' not in (rr.headers.get('content-type') or '').lower():raise HTTPException(404,'Icône introuvable')
+        headers={'Cache-Control':'public,max-age=604800,stale-while-revalidate=2592000'}
+        if download:headers['Content-Disposition']='attachment; filename="'+prefix+'-'+name+'.svg"'
+        return Response(content=rr.content,media_type='image/svg+xml',headers=headers)
+    except HTTPException:raise
+    except Exception:raise HTTPException(502,'Icône indisponible')
 
 @app.get('/api/v163/diagnostics')
 def diagnostics_v163():
@@ -3937,7 +3995,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'168.2','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'168.3','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -3951,7 +4009,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'168.2','ui':'plug-art-v168-2-creative-workspace',
+      'ok':True,'version':'168.3','ui':'plug-art-v168-2-creative-workspace',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4020,7 +4078,7 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'168.2',
+      'version':'168.3',
       'ui':'plug-art-v168-2-creative-workspace',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
@@ -4048,7 +4106,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V168_2_READY plugy=smaller_non_obstructive creation=visual_five_slide pdf=realtime_rich radar=paris_93_live_sources qa=interactive",flush=True)
+print("PLUG_ART_V168_3_READY plugy=small_non_obstructive creation=visual_five_slide_plus_assets pdf=realtime_rich radar=social_paris_93_live qa=interactive",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
