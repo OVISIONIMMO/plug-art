@@ -732,7 +732,7 @@ def ui_manifest_v128():
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
       'version':'168.3',
-      'ui':'plug-art-v168-2-creative-workspace',
+      'ui':'plug-art-v168-3-social-creative-workspace',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
       'html_has_slide_css': bool(js_path.exists() and 'plugart_v160_slide.css?v=' in js_path.read_text(encoding='utf-8')),
@@ -4192,7 +4192,7 @@ def _v127_runtime_smoke():
       ('POST','/api/v156/ideas'),
       ('POST','/api/v164/projects/library/seed'),('GET','/api/v164/projects/library'),
       ('GET','/api/v163/diagnostics'),
-      ('GET','/api/v163/status'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('POST','/api/v167/pdf-projects'),('GET','/api/v167/qa/manifest'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
+      ('GET','/api/v163/status'),('GET','/api/v167/events'),('POST','/api/v167/events/search'),('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),('POST','/api/v167/pdf-projects'),('GET','/api/v167/qa/manifest'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),('POST','/api/v168/radar/refresh-all'),('GET','/api/v169/assets/search'),('GET','/api/v169/assets/svg'),('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
     }
     active=set()
     for route in app.router.routes:
