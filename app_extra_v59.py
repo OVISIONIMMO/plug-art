@@ -3491,8 +3491,9 @@ def _v168_run_refresh(kind):
         if kind in _v168_refresh_running:return
         _v168_refresh_running.add(kind)
     try:
-        if kind=='events':_v168_refresh_events()
-        elif kind=='opportunities':_v168_refresh_opportunities()
+        with _v168_serial_refresh_lock:
+            if kind=='events':_v168_refresh_events()
+            elif kind=='opportunities':_v168_refresh_opportunities()
     except Exception as exc:
         _v168_set_refresh_state('events' if kind=='events' else 'opportunities_ai',0,type(exc).__name__+': '+str(exc))
         print('PLUG_ART_V168_REFRESH_ERROR kind='+kind+' error='+type(exc).__name__+':'+str(exc)[:240],flush=True)
