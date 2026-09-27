@@ -4558,7 +4558,7 @@ function installRadarV167(){
   const panel=document.createElement('section');panel.id='radarEventsV167';panel.className='radar-events-v167';
   panel.innerHTML=
     '<div class="event-search-v167">'+
-      '<div class="event-search-main-v167"><label>Recherche<input id="eventQueryV167" placeholder="Galerie, exposition, artiste…"></label><label>Ville<input id="eventCityV167" value="Paris" placeholder="Paris, Aubervilliers…"></label>'+
+      '<div class="event-search-main-v167"><label>Recherche<input id="eventQueryV167" placeholder="Galerie, exposition, artiste…"></label><label>Ville<input id="eventCityV167" value="" placeholder="Toutes · Paris, Saint-Denis, Montreuil…"></label>'+
       '<label>Type<select id="eventTypeV167"><option value="">Tous</option><option value="vernissage">Vernissage</option><option value="opening">Opening</option><option value="artist_talk">Artist talk</option><option value="finissage">Finissage</option><option value="nocturne">Nocturne</option></select></label>'+
       '<button class="primary-btn" id="eventSearchWebV167">◉ Rechercher sur le web</button></div>'+
       '<div class="event-ranges-v167"><button data-event-range="today">Aujourd’hui</button><button class="active" data-event-range="week">Cette semaine</button><button data-event-range="weekend">Ce week-end</button><button data-event-range="month">Ce mois</button><label><input type="checkbox" id="eventFreeV167"> Gratuit</label><label><input type="checkbox" id="eventRsvpV167"> RSVP</label><label><input type="checkbox" id="eventVerifiedV167"> Vérifié</label><span></span><button class="event-week-content-v167" id="eventWeekContentV167">✦ Créer les vernissages de la semaine</button></div>'+
@@ -4658,8 +4658,8 @@ async function searchEventsV167(){
   const btn=$('#eventSearchWebV167');if(!btn||btn.disabled)return;const old=btn.textContent,range=eventRangeV167();
   btn.disabled=true;btn.textContent='Recherche des vernissages…';
   try{
-    const city=clean($('#eventCityV167')?.value)||'Paris',type=$('#eventTypeV167')?.value;
-    const body={cities:city.split(',').map(x=>clean(x)).filter(Boolean),date_from:range.from,date_to:range.to,q:clean($('#eventQueryV167')?.value),types:type?[type]:['vernissage','opening','artist_talk','finissage','nocturne']};
+    const city=clean($('#eventCityV167')?.value),type=$('#eventTypeV167')?.value;
+    const body={cities:city?city.split(',').map(x=>clean(x)).filter(Boolean):['Paris','Saint-Denis','Saint-Ouen-sur-Seine','Montreuil','Pantin','Aubervilliers','Bagnolet','Romainville','Bobigny'],date_from:range.from,date_to:range.to,q:clean($('#eventQueryV167')?.value),types:type?[type]:['vernissage','opening','artist_talk','finissage','nocturne']};
     const out=await api('/api/v167/events/search',{method:'POST',timeout:60000,body:JSON.stringify(body)});
     state.eventsV167=Array.isArray(out.items)?out.items:[];renderEventsV167();toast((out.found||0)+' événement'+((out.found||0)>1?'s':'')+' trouvé'+((out.found||0)>1?'s':''));
   }catch(e){toast('Recherche Vernissages impossible : '+clean(e.message||'erreur'))}
