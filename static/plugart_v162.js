@@ -4,7 +4,7 @@ const VERSION='168.20260927.6';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
-const state={view:'dashboard',radarV167Mode:'opencalls',eventsV167:[],eventsV167Loading:false,pdfProjectsV167:[],activePdfProjectV167:null,bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,projectMode:'millenaire',projectFiles:[],ideas:[],ideaProject:'',leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,voiceOutput:localStorage.getItem('plugart:plugy-voice')!=='0',recognition:null,plugyBusy:false,creationMode:'carousel',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:'',history:[]},canvasLayer:null,canvasTool:'templates',studioGuides:false,studioSafe:false,studioSnap:true};
+const state={view:'dashboard',radarV167Mode:'events',eventsV167:[],eventsV167Loading:false,pdfProjectsV167:[],activePdfProjectV167:null,bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,projectMode:'millenaire',projectFiles:[],ideas:[],ideaProject:'',leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,voiceOutput:localStorage.getItem('plugart:plugy-voice')!=='0',recognition:null,plugyBusy:false,creationMode:'carousel',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:'',history:[]},canvasLayer:null,canvasTool:'templates',studioGuides:false,studioSafe:false,studioSnap:true};
 
 const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
@@ -4741,14 +4741,14 @@ function installBureauV167(){
   const panel=document.createElement('section');panel.id='bureauPdfV167';panel.className='bureau-mode-panel bureau-pdf-v167';
   panel.innerHTML=
     '<aside class="pdf-projects-v167"><div class="pdf-project-actions-v167"><button id="pdfNewV167">＋ Nouveau PDF</button><button id="pdfFromDocV167">Depuis le document</button></div><div id="pdfProjectListV167"></div><div class="pdf-imported-title-v167">PDF importés</div><div id="pdfImportedListV167"></div></aside>'+
-    '<section class="pdf-reader-v167"><div class="pdf-reader-toolbar-v167"><button id="pdfPrevV167">←</button><span id="pdfPageInfoV167">Page 0 / 0</span><button id="pdfNextV167">→</button><button id="pdfZoomOutV167">−</button><span id="pdfZoomInfoV167">100%</span><button id="pdfZoomInV167">＋</button><button id="pdfFitV167">Ajuster</button><button id="pdfFullscreenV167">⛶</button></div><div class="pdf-canvas-wrap-v167" id="pdfCanvasWrapV167"><canvas id="pdfCanvasV167"></canvas><iframe id="pdfFallbackV167" title="Lecteur PDF" hidden></iframe></div></section>'+
+    '<section class="pdf-reader-v167"><div class="pdf-reader-toolbar-v167"><button id="pdfPrevV167">←</button><span id="pdfPageInfoV167">Page 0 / 0</span><button id="pdfNextV167">→</button><button id="pdfZoomOutV167">−</button><span id="pdfZoomInfoV167">100%</span><button id="pdfZoomInV167">＋</button><button id="pdfFitV167">Ajuster</button><button id="pdfFullscreenV167">⛶</button></div><div id="pdfPageStripV169" class="pdf-page-strip-v169"></div><div class="pdf-canvas-wrap-v167" id="pdfCanvasWrapV167"><canvas id="pdfCanvasV167"></canvas><iframe id="pdfFallbackV167" title="Lecteur PDF" hidden></iframe></div></section>'+
     '<aside class="pdf-inspector-v167"><div class="v167-library-head"><small>PROJET PDF</small><strong id="pdfInspectorTitleV167">Aucun projet</strong></div><label>Titre<input id="pdfTitleV167"></label><label>Type<select id="pdfTypeV167"><option value="dossier_projet">Dossier projet</option><option value="dossier_artistique">Dossier artistique</option><option value="candidature">Candidature</option><option value="presentation">Présentation</option><option value="pdf_import">PDF importé éditable</option></select></label>'+
     '<div class="pdf-rich-v168"><div class="v167-library-head"><small>DESIGN DE PAGE</small><strong>Composition</strong></div><label>Modèle<select id="pdfTemplateV168"><option value="">Libre</option><option value="cover">Couverture image</option><option value="editorial">Éditorial</option><option value="split">Split 50/50</option><option value="gallery">Galerie</option><option value="statement">Statement</option></select></label><label>Fond<input type="color" id="pdfBgV168" value="#ffffff"></label><div class="pdf-add-elements-v168"><button data-pdf-add-v168="title">Titre</button><button data-pdf-add-v168="text">Texte</button><button data-pdf-add-v168="image-upload">Photo</button><button data-pdf-add-v168="rect">Bloc</button><button data-pdf-add-v168="circle">Cercle</button><button data-pdf-add-v168="line">Ligne</button><button data-pdf-add-v168="band">Bandeau</button><button data-pdf-add-v168="quote">Citation</button><button data-pdf-add-v168="image">Image URL</button></div><input id="pdfImageUploadV168" type="file" accept="image/png,image/jpeg,image/webp" hidden><div id="pdfElementsV168"></div></div>'+
     '<label>Texte rapide<textarea id="pdfPageBodyV167" rows="7" placeholder="Texte principal de la page…"></textarea></label><div class="pdf-inspector-actions-v167"><button id="pdfAddPageV167">＋ Page</button><button id="pdfSaveV167">Enregistrer</button><button id="pdfExportV167">Générer PDF</button><button id="pdfCanvaV167">Canva ↗</button></div></aside>';
   view.appendChild(panel);
   $('#pdfNewV167').onclick=createPdfProjectV167;$('#pdfFromDocV167').onclick=createPdfFromBureauV167;
-  $('#pdfPrevV167').onclick=()=>{if(pdfPageV167>1){pdfPageV167--;renderPdfPageV167()}};
-  $('#pdfNextV167').onclick=()=>{if(pdfDocV167&&pdfPageV167<pdfDocV167.numPages){pdfPageV167++;renderPdfPageV167()}};
+  $('#pdfPrevV167').onclick=()=>{if(pdfPageV167<=1)return;pdfPageV167--;if(state.activePdfProjectV167){renderPdfElementsV168();renderPdfPageStripV169()}else renderPdfPageV167()};
+  $('#pdfNextV167').onclick=()=>{const max=state.activePdfProjectV167?.pages?.length||pdfDocV167?.numPages||0;if(pdfPageV167>=max)return;pdfPageV167++;if(state.activePdfProjectV167){renderPdfElementsV168();renderPdfPageStripV169()}else renderPdfPageV167()};
   $('#pdfZoomOutV167').onclick=()=>{pdfZoomV167=Math.max(.4,pdfZoomV167-.15);renderPdfPageV167()};
   $('#pdfZoomInV167').onclick=()=>{pdfZoomV167=Math.min(2.5,pdfZoomV167+.15);renderPdfPageV167()};
   $('#pdfFitV167').onclick=()=>{pdfZoomV167=1;renderPdfPageV167(true)};
@@ -4792,11 +4792,11 @@ async function openPdfProjectV167(id){
     $('#pdfInspectorTitleV167').textContent=p.title;$('#pdfTitleV167').value=p.title||'';$('#pdfTypeV167').value=p.project_type||'dossier_projet';
     pdfPageV167=1;const page=p.pages?.[0];$('#pdfPageBodyV167').value=page?.content?.body||page?.content?.text||'';renderPdfElementsV168();
     renderPdfProjectsV167(await api('/api/v156/bureau/files').catch(()=>[]));
-    pdfPageV167=1;renderPdfElementsV168();renderPdfLivePageV169();
+    pdfPageV167=1;renderPdfElementsV168();renderPdfLivePageV169();renderPdfPageStripV169();
   }catch(e){toast('Ouverture du projet PDF impossible')}
 }
 async function openPdfUrlV167(url,project){
-  pdfPageV167=1;pdfZoomV167=1;const iframe=$('#pdfFallbackV167'),canvas=$('#pdfCanvasV167');
+  pdfPageV167=1;pdfZoomV167=1;state.activePdfProjectV167=project||null;const live=$('#pdfLivePageV169');if(live)live.hidden=true;const iframe=$('#pdfFallbackV167'),canvas=$('#pdfCanvasV167');
   if(!project){
     pdfDocV167=null;if(canvas)canvas.hidden=true;if(iframe){iframe.hidden=false;iframe.src=url+'#toolbar=1&navpanes=1&view=FitH'}$('#pdfPageInfoV167').textContent='PDF importé · lecteur direct';$('#pdfZoomInfoV167').textContent='natif';return;
   }
@@ -4813,6 +4813,14 @@ async function renderPdfPageV167(fit=false){
 }
 
 
+function renderPdfPageStripV169(){
+  const box=$('#pdfPageStripV169');if(!box)return;
+  const pages=state.activePdfProjectV167?.pages||[];
+  if(!pages.length){box.innerHTML='';return}
+  box.innerHTML=pages.map((p,i)=>'<button data-pdf-page-v169="'+(i+1)+'" class="'+(pdfPageV167===i+1?'active':'')+'"><em>'+(i+1)+'</em><span>'+esc(p.page_type||'Page')+'</span></button>').join('');
+  $$('[data-pdf-page-v169]',box).forEach(b=>b.onclick=()=>{pdfPageV167=Number(b.dataset.pdfPageV169);renderPdfElementsV168();renderPdfPageStripV169()});
+  $('#pdfPageInfoV167').textContent='Page '+pdfPageV167+' / '+pages.length;
+}
 let pdfAutoSaveTimerV169=null;
 function schedulePdfAutoSaveV169(){
   clearTimeout(pdfAutoSaveTimerV169);pdfAutoSaveTimerV169=setTimeout(async()=>{
@@ -4827,7 +4835,7 @@ function ensurePdfLivePageV169(){
 }
 function renderPdfLivePageV169(){
   const p=state.activePdfProjectV167,page=pdfActivePageV168(),live=ensurePdfLivePageV169(),canvas=$('#pdfCanvasV167'),iframe=$('#pdfFallbackV167');
-  if(!p||!page||!live)return;
+  if(!p||!page||!live)return;renderPdfPageStripV169();
   if(canvas)canvas.hidden=true;if(iframe)iframe.hidden=true;live.hidden=false;
   const content=page.content||{},els=pdfElementsV168();live.style.background=content.background||'#fff';
   live.style.backgroundImage=content.background_image?'url("'+String(content.background_image).replace(/"/g,'%22')+'")':'none';
@@ -4919,7 +4927,7 @@ async function savePdfProjectV167(){
 }
 async function addPdfPageV167(){
   const p=state.activePdfProjectV167;if(!p)return toast('Crée un projet PDF');
-  try{await api('/api/v167/pdf-projects/'+p.id+'/pages',{method:'POST',body:JSON.stringify({page_type:'content',content:{background:'#FFFFFF',elements:[]}})});await openPdfProjectV167(p.id);state.activePdfProjectV167.pages&&(pdfPageV167=state.activePdfProjectV167.pages.length);renderPdfElementsV168();toast('Page vierge ajoutée')}catch{toast('Ajout de page impossible')}
+  try{await api('/api/v167/pdf-projects/'+p.id+'/pages',{method:'POST',body:JSON.stringify({page_type:'content',content:{background:'#FFFFFF',elements:[]}})});const fresh=await api('/api/v167/pdf-projects/'+p.id,{noMemCache:true});state.activePdfProjectV167=fresh;pdfPageV167=fresh.pages?.length||1;renderPdfElementsV168();renderPdfLivePageV169();renderPdfPageStripV169();toast('Page vierge ajoutée')}catch{toast('Ajout de page impossible')}
 }
 async function exportPdfProjectV167(){
   const p=state.activePdfProjectV167;if(!p)return toast('Aucun projet PDF');
