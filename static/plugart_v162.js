@@ -4873,7 +4873,7 @@ function renderPdfElementsV168(){
   const els=pdfElementsV168();
   box.innerHTML=els.map((e,i)=>'<div class="pdf-element-row-v168"><button data-pdf-element-v168="'+i+'"><b>'+(e.type==='image'?'▧':e.type==='text'?'Aa':e.type==='circle'?'○':e.type==='line'?'—':'□')+'</b><span>'+esc(e.type==='text'?(e.text||'Texte').slice(0,30):e.type)+'</span></button><button data-pdf-remove-v168="'+i+'">×</button></div>').join('')||'<div class="empty">Page libre · ajoute du texte, une image ou une forme.</div>';
   $$('[data-pdf-element-v168]',box).forEach(b=>b.onclick=()=>editPdfElementV168(Number(b.dataset.pdfElementV168)));
-  $('[data-pdf-remove-v168]',box).forEach(b=>b.onclick=()=>{els.splice(Number(b.dataset.pdfRemoveV168),1);pdfSelectedElementV169=null;renderPdfElementsV168();renderPdfLiveV169();schedulePdfAutosaveV169()});
+  $$('[data-pdf-remove-v168]',box).forEach(b=>b.onclick=()=>{els.splice(Number(b.dataset.pdfRemoveV168),1);pdfSelectedElementV169=null;renderPdfElementsV168();renderPdfLiveV169();schedulePdfAutosaveV169()});
 }
 function addPdfElementV168(type){
   const els=pdfElementsV168();if(!state.activePdfProjectV167)return toast('Ouvre un projet PDF');
