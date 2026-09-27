@@ -17,7 +17,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='169.20260927.1'
+VERSION='169.20260927.2'
 
 @app.middleware("http")
 async def _v169_performance_headers(request: Request, call_next):
@@ -692,8 +692,8 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'168.2',
-      'ui':'plug-art-v168-2-creative-workspace',
+      'version':'169.0',
+      'ui':'plug-art-v169-performance-radar',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
@@ -743,8 +743,8 @@ def ui_manifest_v128():
     expected='168.20260927.6'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'168.2',
-      'ui':'plug-art-v168-2-creative-workspace',
+      'version':'169.0',
+      'ui':'plug-art-v169-performance-radar',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
       'html_has_slide_css': bool(js_path.exists() and 'plugart_v160_slide.css?v=' in js_path.read_text(encoding='utf-8')),
@@ -3440,6 +3440,19 @@ def _v168_refresh_events():
     ids=list(dict.fromkeys(ids));_v168_set_refresh_state('events',len(ids),ai_error)
     return {'ok':True,'found':len(ids),'fallback':bool(ai_error),'items':events_list_v167(date_from=start.isoformat(),date_to=end.isoformat())}
 
+def _v169_prime_paris_data():
+    time.sleep(2)
+    try:
+        start=date.today();end=start+timedelta(days=45)
+        items=_v169_paris_open_data_events(start,end)
+        ids=_v167_upsert_events(items)
+        if items:_v168_set_refresh_state('events',len(ids),'')
+        print('PLUG_ART_V169_PARIS_PRIME items='+str(len(items))+' saved='+str(len(ids)),flush=True)
+    except Exception as exc:
+        print('PLUG_ART_V169_PARIS_PRIME_ERROR '+type(exc).__name__+': '+str(exc)[:180],flush=True)
+
+threading.Thread(target=_v169_prime_paris_data,name='plugart-v169-paris-prime',daemon=True).start()
+
 def _v168_extract_opportunities(raw):
     parsed=_v167_extract_json(raw)
     items=parsed.get('opportunities') if isinstance(parsed,dict) else parsed
@@ -4019,7 +4032,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'168.2','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'169.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -4033,7 +4046,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'168.2','ui':'plug-art-v168-2-creative-workspace',
+      'ok':True,'version':'169.0','ui':'plug-art-v169-performance-radar',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4102,8 +4115,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'168.2',
-      'ui':'plug-art-v168-2-creative-workspace',
+      'version':'169.0',
+      'ui':'plug-art-v169-performance-radar',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -4130,7 +4143,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V168_2_READY plugy=smaller_non_obstructive creation=visual_five_slide pdf=realtime_rich radar=paris_93_live_sources qa=interactive",flush=True)
+print("PLUG_ART_V169_READY performance=lean_dashboard images=lazy radar=paris_data_daily refresh_all=fixed",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
