@@ -4214,3 +4214,13 @@ body[data-view="creation"] .creation-studio-shell{max-width:none!important;width
   #view-creation .carousel-strip{padding:7px!important}
   #view-creation .v169-slide-thumb{height:96px!important;min-width:210px!important}
 }
+
+
+/* V168.3 PDF selection + richer creative template visibility */
+.pdf-element-row-v168.selected{
+  border-radius:10px;background:#f5f2ff;box-shadow:inset 0 0 0 1px #cfc5f8;padding:2px
+}
+.pdf-element-row-v168.selected>button:first-child{background:#fff}
+.pdf-add-elements-v168 button:hover{border-color:#bdb2ee;box-shadow:0 6px 16px rgba(64,51,123,.08)}
+.studio-marketing-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+@media(min-width:1680px){.studio-marketing-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
