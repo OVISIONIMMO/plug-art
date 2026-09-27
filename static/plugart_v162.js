@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='168.20260927.6';
+const VERSION='168.20260927.7';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -2719,6 +2719,34 @@ const MARKETING_TEMPLATES={
     ['PARCOURS','Repères','Expositions · projets · collaborations','En savoir plus'],
     ['À SUIVRE','Retrouver l’artiste','Lien, exposition ou prochaine actualité.','Suivre →']
   ]},
+  vernissage:{label:'Vernissage',count:5,theme:'night',accent:'cyan',layout:'poster',slides:[
+    ['VERNISSAGES','Les rendez-vous de la semaine','Paris · 93 · galeries · collectifs','À enregistrer'],
+    ['CE SOIR','Un opening à voir','Artiste · lieu · horaire','Voir les infos →'],
+    ['LE LIEU','Pourquoi y aller','Galerie · collectif · centre d’art','Découvrir →'],
+    ['PRATIQUE','Tout en un coup d’œil','Adresse · entrée · RSVP · métro','Enregistrer'],
+    ['AGENDA','La sélection PLUG ART','Des rendez-vous accessibles et actuels.','Partager →']
+  ]},
+  atelier:{label:'Atelier',count:5,theme:'soft',accent:'pink',layout:'editorial',slides:[
+    ['ATELIER','Créer ensemble','Titre de l’atelier · lieu · date','Réserver →'],
+    ['EXPÉRIENCE','Ce qu’on va faire','Technique · geste · expérimentation','Découvrir →'],
+    ['POUR QUI','Accessible à qui ?','Niveau · âge · matériel · durée','Voir les détails'],
+    ['LE LIEU','Un espace pensé pour créer','Adresse · ambiance · accès','Venir →'],
+    ['INSCRIPTION','Places limitées','Date · horaire · contact','Je participe →']
+  ]},
+  venue:{label:'Lieu culturel',count:5,theme:'editorial',accent:'black',layout:'split',slides:[
+    ['LE LIEU','Une adresse à connaître','Galerie · HUB · atelier · tiers-lieu','Découvrir →'],
+    ['IDENTITÉ','Ce qui rend le lieu singulier','Architecture · programmation · communauté','Explorer →'],
+    ['PROGRAMME','Ce qui s’y passe','Expositions · ateliers · talks · rencontres','Agenda →'],
+    ['ESPACE','À quoi ressemble le lieu','Volumes · circulation · usages','Voir →'],
+    ['RENCONTRE','Pourquoi y aller','Un lieu vivant pour artistes et publics.','Enregistrer →']
+  ]},
+  collective:{label:'Collectif / 93',count:5,theme:'ultra',accent:'violet',layout:'editorial',slides:[
+    ['COLLECTIF','Créer depuis le territoire','Nom · ville · pratique','Découvrir →'],
+    ['ÉNERGIE','Une scène locale vivante','Artistes · disciplines · projet commun','Explorer →'],
+    ['RENDEZ-VOUS','À voir cette semaine','Vernissage · atelier · performance','Agenda →'],
+    ['93','Le territoire comme espace de création','Montreuil · Saint-Denis · Pantin · Aubervilliers','Repérer →'],
+    ['PLUG ART','Se rencontrer pour créer','Une sélection utile, pas un annuaire froid.','Partager →']
+  ]},
   partnership:{label:'Partenariat',count:4,theme:'ultra',accent:'cyan',layout:'minimal',slides:[
     ['PARTENARIAT','Une collaboration qui a du sens','Présente la valeur commune.','Découvrir →'],
     ['OBJECTIF','Ce que le projet apporte','Audience · lieu · expérience · visibilité','Comprendre →'],
@@ -2887,6 +2915,10 @@ function installCreationModes(){
         '<button data-marketing-template="event"><i class="mk-event"></i><span><b>Événement</b><small>Galerie / expo</small></span></button>'+
         '<button data-marketing-template="last-call"><i class="mk-last"></i><span><b>Dernier appel</b><small>Urgence premium</small></span></button>'+
         '<button data-marketing-template="artist"><i class="mk-artist"></i><span><b>Artiste</b><small>Portrait / focus</small></span></button>'+
+        '<button data-marketing-template="vernissage"><i class="mk-event"></i><span><b>Vernissage</b><small>Agenda / opening</small></span></button>'+
+        '<button data-marketing-template="atelier"><i class="mk-open"></i><span><b>Atelier</b><small>Programme / inscription</small></span></button>'+
+        '<button data-marketing-template="venue"><i class="mk-partner"></i><span><b>Lieu culturel</b><small>Galerie / HUB</small></span></button>'+
+        '<button data-marketing-template="collective"><i class="mk-artist"></i><span><b>Collectif / 93</b><small>Communauté / territoire</small></span></button>'+
         '<button data-marketing-template="partnership"><i class="mk-partner"></i><span><b>Partenariat</b><small>Pro / institutionnel</small></span></button>'+
       '</div></div>'+
       '<div class="studio-tool-panel" data-tool-panel="structure"><div class="studio-panel-title"><small>STRUCTURE</small><strong>Hiérarchie du contenu</strong></div>'+
@@ -3949,7 +3981,15 @@ const CREATION_V161_STYLES=[
 {id:'electric',name:'Electric',sub:'PLUG ART énergie',layout:'poster',theme:'night',accent:'violet',pattern:'ribbon',bg:'#171522',preview:'radial-gradient(circle at 46% 48%,#fff 0 5%,#76dde5 6% 12%,#8d5dec 13% 24%,#e75ea8 25% 33%,#171522 54%)'},
 {id:'photo-frame',name:'Photo Frame',sub:'Photographie',layout:'split',theme:'editorial',accent:'black',pattern:'frame',bg:'#f5f4f0',preview:'linear-gradient(90deg,#242424 0 46%,#f5f4f0 46% 100%)'},
 {id:'hospitality',name:'Hospitality',sub:'Hôtel / restaurant',layout:'editorial',theme:'soft',accent:'pink',pattern:'blocks',bg:'#f6eee7',preview:'linear-gradient(145deg,#b5967b,#eadbd0 48%,#f8f2ed 49%)'},
-{id:'future-white',name:'Future White',sub:'3D minimal',layout:'minimal',theme:'ultra',accent:'cyan',pattern:'orbit',bg:'#fbfbfc',preview:'radial-gradient(circle at 55% 48%,#fdfdfd 0 18%,#dcecf1 19% 31%,#f9dcea 32% 40%,#fff 58%)'}];
+{id:'future-white',name:'Future White',sub:'3D minimal',layout:'minimal',theme:'ultra',accent:'cyan',pattern:'orbit',bg:'#fbfbfc',preview:'radial-gradient(circle at 55% 48%,#fdfdfd 0 18%,#dcecf1 19% 31%,#f9dcea 32% 40%,#fff 58%)'},
+{id:'curatorial-red',name:'Curatorial Red',sub:'Affiche curatoriale',layout:'poster',theme:'editorial',accent:'red',pattern:'frame',bg:'#f2eee7',preview:'linear-gradient(90deg,#e83d4f 0 14%,#f4f0e9 14% 72%,#16171b 72%)'},
+{id:'gallery-glass',name:'Gallery Glass',sub:'Verre + espace',layout:'split',theme:'ultra',accent:'cyan',pattern:'orbit',bg:'#f4f8f8',preview:'radial-gradient(circle at 72% 34%,rgba(74,213,222,.7) 0 14%,rgba(119,87,255,.25) 15% 28%,transparent 29%),linear-gradient(135deg,#fff,#e8f5f5)'},
+{id:'vernissage-night',name:'Opening Night',sub:'Vernissage / soirée',layout:'poster',theme:'night',accent:'cyan',pattern:'signal',bg:'#111318',preview:'radial-gradient(circle at 72% 30%,#4bdbe6 0 9%,#815cff 10% 20%,transparent 35%),linear-gradient(#111318,#241d33)'},
+{id:'atelier-paper',name:'Atelier Paper',sub:'Atelier / médiation',layout:'editorial',theme:'soft',accent:'pink',pattern:'paper-grain',bg:'#f3ede4',preview:'linear-gradient(150deg,#f0e6d8 0 60%,#e974aa 61% 76%,#7558e5 77%)'},
+{id:'territory-93',name:'Territoire 93',sub:'Collectif / banlieue',layout:'editorial',theme:'ultra',accent:'violet',pattern:'blocks',bg:'#edf0ff',preview:'linear-gradient(135deg,#15161c 0 26%,#7657ff 27% 49%,#50d4dc 50% 61%,#eef1ff 62%)'},
+{id:'photo-journal',name:'Photo Journal',sub:'Reportage culturel',layout:'split',theme:'editorial',accent:'black',pattern:'grid',bg:'#f3f1eb',preview:'linear-gradient(90deg,#28282b 0 56%,#f3f1eb 56%),linear-gradient(#fff,#eee)'},
+{id:'type-monument',name:'Type Monument',sub:'Typographie forte',layout:'minimal',theme:'ultra',accent:'black',pattern:'frame',bg:'#ffffff',preview:'linear-gradient(180deg,#111318 0 16%,#fff 16% 78%,#7657ff 79%)'},
+{id:'soft-volume',name:'Soft Volume',sub:'Relief contemporain',layout:'split',theme:'soft',accent:'violet',pattern:'gradient-mesh',bg:'#f6f0ff',preview:'radial-gradient(ellipse at 28% 42%,#f3c7df 0 18%,transparent 19%),radial-gradient(ellipse at 66% 58%,#a68bea 0 22%,transparent 23%),#f5effb'}];
 function installCreationV161(){
  const view=$('#view-creation');if(!view||$('#creationV161Rail'))return;setCreationMode('carousel');
  const panel=$('#carouselCreationPanel');if(!panel)return;
@@ -4435,7 +4475,8 @@ const CREATION_TEMPLATES_V167=[
   ['open-call-deadline','Deadline'],['open-call-minimal-black','Minimal black'],['open-call-pop','Pop'],['open-call-institutional','Institutionnel'],
   ['plug-exhibition-archive','Archive expo'],['plug-atelier-13','Atelier 13e'],['plug-vernissage-week','Vernissages semaine'],
   ['plug-art-magazine','Magazine art'],['plug-architecture','Architecture'],['plug-chromatic','Chromatique'],
-  ['plug-photo-led','Photo + typo'],['plug-cultural-city','Culture / mairie'],['plug-experimental','Expérimental'],['plug-luxury-gallery','Galerie luxe']
+  ['plug-photo-led','Photo + typo'],['plug-cultural-city','Culture / mairie'],['plug-experimental','Expérimental'],['plug-luxury-gallery','Galerie luxe'],
+  ['plug-opening-night','Opening night'],['plug-workshop-editorial','Atelier éditorial'],['plug-collective-93','Collectif 93'],['plug-curatorial-poster','Affiche curatoriale'],['plug-glass-volume','Glass volume'],['plug-paper-collage','Paper collage'],['plug-type-monument','Type monument'],['plug-photo-reportage','Photo reportage']
 ];
 const CREATION_PATTERNS_V167=[
   ['grid-fine','Grille fine'],['grid-large','Grille large'],['dots','Points'],['dots-sparse','Points espacés'],
@@ -4465,6 +4506,20 @@ function addPremiumElementV169(index){
   const wide=['gradient-ribbon','deadline-sticker','glass-card','direction-arrow','paint-swipe'].includes(item[0]);
   addCanvasLayer('image',{src:premiumElementDataV169(item[2]),w:wide?44:25,h:wide?18:25});
   toast(item[1]+' ajouté');
+}
+
+let vectorAssetSearchTimerV170=null;
+async function searchVectorAssetsV170(force=false){
+  const input=$('#vectorAssetQueryV170'),box=$('#vectorAssetResultsV170');if(!input||!box)return;
+  const q=clean(input.value)||'gallery art';box.innerHTML='<div class="asset-loading-v170">Recherche vectorielle…</div>';
+  try{
+    const out=await api('/api/v169/assets/search?q='+encodeURIComponent(q)+'&limit=48',{noMemCache:force,cacheTtl:60000,timeout:12000});
+    const icons=Array.isArray(out.icons)?out.icons:[];box.innerHTML=icons.map(name=>{
+      const src='/api/v169/assets/svg?icon='+encodeURIComponent(name)+'&color=%23111318';
+      return '<article class="vector-asset-v170"><button data-vector-add-v170="'+esc(name)+'"><img src="'+src+'" loading="lazy" decoding="async" alt=""><span>'+esc(name.split(':').pop().replaceAll('-',' '))+'</span></button><a href="/api/v169/assets/svg?download=true&icon='+encodeURIComponent(name)+'&color=%23111318" target="_blank" rel="noopener">SVG</a></article>';
+    }).join('')||'<div class="empty">Aucun élément trouvé.</div>';
+    $$('[data-vector-add-v170]',box).forEach(b=>b.onclick=()=>{const name=b.dataset.vectorAddV170,src='/api/v169/assets/svg?icon='+encodeURIComponent(name)+'&color=%237657ff';addCanvasLayer('image',{src,w:20,h:20});toast('Élément vectoriel ajouté')});
+  }catch(e){box.innerHTML='<div class="empty">Bibliothèque vectorielle indisponible.</div>'}
 }
 
 function v167DateISO(d){const x=new Date(d);return isNaN(x)?'':x.toISOString().slice(0,10)}
@@ -4613,8 +4668,8 @@ function renderEventsV167(){
     return '<article class="event-card-v167">'+
       '<div class="event-visual-v167"><img src="'+image+'" alt="" loading="lazy" decoding="async" onerror="this.style.display=\'none\'"><span>'+esc((e.event_type||'vernissage').replaceAll('_',' '))+'</span></div>'+
       '<div class="event-copy-v167"><div class="event-date-v167"><strong>'+esc(v167FmtDate(e.starts_at))+'</strong><small>'+esc(e.city||e.country||'')+'</small></div><h3>'+esc(e.title)+'</h3><p>'+esc(e.venue_name||'Lieu à confirmer')+'</p>'+
-      '<div class="event-tags-v167">'+(e.is_free?'<span>Gratuit</span>':'')+(e.verified?'<span>✓ Vérifié</span>':'')+(e.rsvp_url?'<span>RSVP</span>':'')+'</div>'+
-      '<div class="event-actions-v167"><button data-event-create="'+e.id+'">✦ Créer</button><button data-event-agenda="'+e.id+'">Agenda</button><button data-event-map="'+e.id+'">Map</button><button data-event-fav="'+e.id+'">'+(e.favorite?'★':'☆')+'</button><a href="'+esc(e.source_url)+'" target="_blank" rel="noopener">Source ↗</a></div></div></article>';
+      '<div class="event-tags-v167">'+(e.is_free?'<span>Gratuit</span>':'')+(e.verified?'<span>✓ Vérifié</span>':'')+(e.rsvp_url?'<span>RSVP</span>':'')+(e.social_handle?'<span class="social">Instagram · '+esc(e.social_handle)+'</span>':'')+'</div>'+
+      '<div class="event-actions-v167"><button data-event-create="'+e.id+'">✦ Créer</button><button data-event-agenda="'+e.id+'">Agenda</button><button data-event-map="'+e.id+'">Map</button><button data-event-fav="'+e.id+'">'+(e.favorite?'★':'☆')+'</button>'+(e.social_url?'<a class="social-link" href="'+esc(e.social_url)+'" target="_blank" rel="noopener">Instagram ↗</a>':'')+'<a href="'+esc(e.source_url)+'" target="_blank" rel="noopener">Source ↗</a></div></div></article>';
   }).join('');
   $$('[data-event-create]',box).forEach(b=>b.onclick=()=>eventToCreationV167(Number(b.dataset.eventCreate)));
   $$('[data-event-agenda]',box).forEach(b=>b.onclick=async()=>{try{await api('/api/v167/events/'+b.dataset.eventAgenda+'/to-agenda',{method:'POST',body:'{}'});toast('Vernissage préparé pour l’agenda')}catch{toast('Ajout agenda impossible')}});
@@ -4643,7 +4698,15 @@ function v167ApplyDesign(slide,key='open-call-side-rail'){
     'plug-photo-led':{theme:'editorial',layout:'poster',accent:'black',backgroundColor:'#ffffff',pattern:'corner-accent',imageOpacity:96},
     'plug-cultural-city':{theme:'ultra',layout:'editorial',accent:'blue',backgroundColor:'#f3f6fb',pattern:'cross-grid',imageOpacity:72},
     'plug-experimental':{theme:'night',layout:'split',accent:'pink',backgroundColor:'#161218',pattern:'sparks',imageOpacity:74},
-    'plug-luxury-gallery':{theme:'ultra',layout:'minimal',accent:'violet',backgroundColor:'#f7f4ef',pattern:'rings',imageOpacity:68}
+    'plug-luxury-gallery':{theme:'ultra',layout:'minimal',accent:'violet',backgroundColor:'#f7f4ef',pattern:'rings',imageOpacity:68},
+    'plug-opening-night':{theme:'night',layout:'poster',accent:'cyan',backgroundColor:'#111318',pattern:'signal',imageOpacity:88},
+    'plug-workshop-editorial':{theme:'soft',layout:'editorial',accent:'pink',backgroundColor:'#f3ede4',pattern:'paper-grain',imageOpacity:78},
+    'plug-collective-93':{theme:'ultra',layout:'editorial',accent:'violet',backgroundColor:'#edf0ff',pattern:'blocks',imageOpacity:80},
+    'plug-curatorial-poster':{theme:'editorial',layout:'poster',accent:'red',backgroundColor:'#f2eee7',pattern:'frame',imageOpacity:86},
+    'plug-glass-volume':{theme:'ultra',layout:'split',accent:'cyan',backgroundColor:'#f3f8f8',pattern:'gradient-mesh',imageOpacity:82},
+    'plug-paper-collage':{theme:'soft',layout:'split',accent:'pink',backgroundColor:'#efe8dc',pattern:'paint-light',imageOpacity:84},
+    'plug-type-monument':{theme:'ultra',layout:'minimal',accent:'black',backgroundColor:'#ffffff',pattern:'frame',imageOpacity:58},
+    'plug-photo-reportage':{theme:'editorial',layout:'split',accent:'black',backgroundColor:'#f4f1e9',pattern:'grid-fine',imageOpacity:96}
   };
   slide.design={...slideDesign(slide),...(maps[key]||maps['open-call-side-rail'])};return slide;
 }
@@ -4703,7 +4766,7 @@ function installCreationV167(){
     section.innerHTML='<div class="v167-library-head"><small>DA PLUG ART</small><strong>Templates sociaux</strong></div>'+
       '<div class="v167-template-grid">'+CREATION_TEMPLATES_V167.map(x=>'<button data-v167-template="'+x[0]+'"><i class="tpl-'+x[0]+'"></i><span>'+x[1]+'</span></button>').join('')+'</div>'+
       '<div class="v167-library-head"><small>MOTIFS</small><strong>Habillage</strong></div><div class="v167-pattern-grid">'+CREATION_PATTERNS_V167.map(x=>'<button data-v167-pattern="'+x[0]+'"><i data-pattern="'+x[0]+'"></i><span>'+x[1]+'</span></button>').join('')+'</div>'+
-      '<div class="v167-library-head"><small>ÉLÉMENTS PREMIUM</small><strong>Relief · verre · chrome</strong></div><div class="v169-element-grid">'+PREMIUM_ELEMENTS_V169.map((x,i)=>'<button data-v169-element="'+i+'" title="'+esc(x[1])+'"><img src="'+premiumElementDataV169(x[2])+'" alt=""><span>'+esc(x[1])+'</span></button>').join('')+'</div>'+
+      '<div class="v167-library-head"><small>ÉLÉMENTS PREMIUM</small><strong>Relief · verre · chrome</strong></div><div class="v169-element-grid">'+PREMIUM_ELEMENTS_V169.map((x,i)=>'<button data-v169-element="'+i+'" title="'+esc(x[1])+'"><img src="'+premiumElementDataV169(x[2])+'" alt=""><span>'+esc(x[1])+'</span></button>').join('')+'</div>'+      '<div class="v167-library-head"><small>BIBLIOTHÈQUE VECTORIELLE</small><strong>Rechercher · insérer · télécharger</strong></div><div class="vector-search-v170"><input id="vectorAssetQueryV170" value="gallery art" placeholder="ex. arrow, frame, star, camera…"><button id="vectorAssetSearchV170">Rechercher</button></div><div id="vectorAssetResultsV170" class="vector-results-v170"></div>'+
       '<div class="v167-library-head"><small>SIGNES TYPO</small><strong>Minimal</strong></div><div class="v167-symbol-grid">'+CREATION_SYMBOLS_V167.map(x=>'<button data-v167-symbol="'+esc(x)+'">'+esc(x)+'</button>').join('')+'</div>'+
       '<button class="v167-open-call-pack" id="openCallPackV167">✦ Générer Open Call · 5 slides</button>';
     lib.prepend(section);
@@ -4716,6 +4779,9 @@ function installCreationV167(){
   $$('[data-v167-pattern]').forEach(b=>b.onclick=()=>applyCreationPatternV167(b.dataset.v167Pattern));
   $$('[data-v167-symbol]').forEach(b=>b.onclick=()=>addCanvasLayer('text',{text:b.dataset.v167Symbol,size:48,weight:700,w:18,h:14,color:'#7657ff',align:'center'}));
   $$('[data-v169-element]').forEach(b=>b.onclick=()=>addPremiumElementV169(Number(b.dataset.v169Element)));
+  $('#vectorAssetSearchV170')?.addEventListener('click',()=>searchVectorAssetsV170(true));
+  $('#vectorAssetQueryV170')?.addEventListener('input',()=>{clearTimeout(vectorAssetSearchTimerV170);vectorAssetSearchTimerV170=setTimeout(()=>searchVectorAssetsV170(false),420)});
+  setTimeout(()=>searchVectorAssetsV170(false),60);
   $('#openCallPackV167')?.addEventListener('click',()=>generateOpenCallPackV167());
   $('#creationBlankV168')?.addEventListener('click',()=>{if(state.carousel.slides.length&&state.carousel.slides.some(s=>!s.blank&&(s.title||s.body||s.image||(s.layers||[]).length))&&!confirm('Créer un nouveau canvas vierge ?'))return;createBlankCanvasV168(true);toast('Canvas vierge prêt')});
   $('#creationFitV167')?.addEventListener('click',fitStudioCanvas);
@@ -4743,7 +4809,7 @@ function installBureauV167(){
     '<aside class="pdf-projects-v167"><div class="pdf-project-actions-v167"><button id="pdfNewV167">＋ Nouveau PDF</button><button id="pdfFromDocV167">Depuis le document</button></div><div id="pdfProjectListV167"></div><div class="pdf-imported-title-v167">PDF importés</div><div id="pdfImportedListV167"></div></aside>'+
     '<section class="pdf-reader-v167"><div class="pdf-reader-toolbar-v167"><button id="pdfPrevV167">←</button><span id="pdfPageInfoV167">Page 0 / 0</span><button id="pdfNextV167">→</button><button id="pdfZoomOutV167">−</button><span id="pdfZoomInfoV167">100%</span><button id="pdfZoomInV167">＋</button><button id="pdfFitV167">Ajuster</button><button id="pdfFullscreenV167">⛶</button></div><div id="pdfPageStripV169" class="pdf-page-strip-v169"></div><div class="pdf-canvas-wrap-v167" id="pdfCanvasWrapV167"><canvas id="pdfCanvasV167"></canvas><iframe id="pdfFallbackV167" title="Lecteur PDF" hidden></iframe></div></section>'+
     '<aside class="pdf-inspector-v167"><div class="v167-library-head"><small>PROJET PDF</small><strong id="pdfInspectorTitleV167">Aucun projet</strong></div><label>Titre<input id="pdfTitleV167"></label><label>Type<select id="pdfTypeV167"><option value="dossier_projet">Dossier projet</option><option value="dossier_artistique">Dossier artistique</option><option value="candidature">Candidature</option><option value="presentation">Présentation</option><option value="pdf_import">PDF importé éditable</option></select></label>'+
-    '<div class="pdf-rich-v168"><div class="v167-library-head"><small>DESIGN DE PAGE</small><strong>Composition</strong></div><label>Modèle<select id="pdfTemplateV168"><option value="">Libre</option><option value="cover">Couverture image</option><option value="editorial">Éditorial</option><option value="split">Split 50/50</option><option value="gallery">Galerie</option><option value="statement">Statement</option></select></label><label>Fond<input type="color" id="pdfBgV168" value="#ffffff"></label><div class="pdf-add-elements-v168"><button data-pdf-add-v168="title">Titre</button><button data-pdf-add-v168="text">Texte</button><button data-pdf-add-v168="image-upload">Photo</button><button data-pdf-add-v168="rect">Bloc</button><button data-pdf-add-v168="circle">Cercle</button><button data-pdf-add-v168="line">Ligne</button><button data-pdf-add-v168="band">Bandeau</button><button data-pdf-add-v168="quote">Citation</button><button data-pdf-add-v168="image">Image URL</button></div><input id="pdfImageUploadV168" type="file" accept="image/png,image/jpeg,image/webp" hidden><div id="pdfElementsV168"></div></div>'+
+    '<div class="pdf-rich-v168"><div class="v167-library-head"><small>DESIGN DE PAGE</small><strong>Composition</strong></div><label>Modèle<select id="pdfTemplateV168"><option value="">Libre</option><option value="cover">Couverture image</option><option value="editorial">Éditorial</option><option value="split">Split 50/50</option><option value="gallery">Galerie</option><option value="statement">Statement</option><option value="photo-cover">Photo cover</option><option value="moodboard">Moodboard</option><option value="timeline">Timeline projet</option><option value="proposal">Proposition</option><option value="portfolio-grid">Portfolio grid</option><option value="quote-page">Citation forte</option><option value="chapter">Ouverture chapitre</option></select></label><label>Fond<input type="color" id="pdfBgV168" value="#ffffff"></label><div class="pdf-add-elements-v168"><button data-pdf-add-v168="title">Titre</button><button data-pdf-add-v168="text">Texte</button><button data-pdf-add-v168="image-upload">Photo</button><button data-pdf-add-v168="rect">Bloc</button><button data-pdf-add-v168="circle">Cercle</button><button data-pdf-add-v168="line">Ligne</button><button data-pdf-add-v168="band">Bandeau</button><button data-pdf-add-v168="quote">Citation</button><button data-pdf-add-v168="image">Image URL</button></div><input id="pdfImageUploadV168" type="file" accept="image/png,image/jpeg,image/webp" hidden><div id="pdfElementsV168"></div><div id="pdfElementInspectorV170" class="pdf-element-inspector-v170"></div></div>'+
     '<label>Texte rapide<textarea id="pdfPageBodyV167" rows="7" placeholder="Texte principal de la page…"></textarea></label><div class="pdf-inspector-actions-v167"><button id="pdfAddPageV167">＋ Page</button><button id="pdfSaveV167">Enregistrer</button><button id="pdfExportV167">Générer PDF</button><button id="pdfCanvaV167">Canva ↗</button></div></aside>';
   view.appendChild(panel);
   $('#pdfNewV167').onclick=createPdfProjectV167;$('#pdfFromDocV167').onclick=createPdfFromBureauV167;
@@ -4833,6 +4899,29 @@ function ensurePdfLivePageV169(){
   let live=$('#pdfLivePageV169');if(!live){live=document.createElement('div');live.id='pdfLivePageV169';live.className='pdf-live-page-v169';wrap.appendChild(live)}
   return live;
 }
+let pdfSelectedElementV170=-1;
+function selectPdfElementV170(index){
+  pdfSelectedElementV170=Number(index);renderPdfElementInspectorV170();renderPdfLivePageV169();
+}
+function renderPdfElementInspectorV170(){
+  const box=$('#pdfElementInspectorV170'),e=pdfElementsV168()[pdfSelectedElementV170];if(!box)return;
+  if(!e){box.innerHTML='<div class="empty">Sélectionne un élément pour modifier sa position, sa taille et son style en direct.</div>';return}
+  const color=e.type==='line'?(e.stroke||'#111318'):e.type==='text'?(e.color||'#111318'):(e.fill||'#7657ff');
+  box.innerHTML='<div class="pdf-inspector-head-v170"><small>ÉLÉMENT SÉLECTIONNÉ</small><strong>'+esc(e.type||'élément')+'</strong></div>'+
+    (e.type==='text'?'<label>Texte<textarea data-pdf-el-field="text" rows="3">'+esc(e.text||'')+'</textarea></label><label>Taille<input data-pdf-el-field="fontSize" type="range" min="6" max="72" value="'+Number(e.fontSize||18)+'"></label>':'')+
+    (e.type==='image'?'<label>Recadrage<select data-pdf-el-field="position"><option>center</option><option>top</option><option>bottom</option><option>left</option><option>right</option></select></label>':'')+
+    '<div class="pdf-transform-grid-v170"><label>X<input data-pdf-el-field="x" type="number" min="0" max="100" step=".5" value="'+Number(e.x||0).toFixed(1)+'"></label><label>Y<input data-pdf-el-field="y" type="number" min="0" max="100" step=".5" value="'+Number(e.y||0).toFixed(1)+'"></label><label>Largeur<input data-pdf-el-field="w" type="number" min="2" max="100" step=".5" value="'+Number(e.w||20).toFixed(1)+'"></label><label>Hauteur<input data-pdf-el-field="h" type="number" min="2" max="100" step=".5" value="'+Number(e.h||10).toFixed(1)+'"></label></div>'+
+    '<div class="pdf-transform-grid-v170"><label>Rotation<input data-pdf-el-field="rotation" type="number" min="-180" max="180" step="1" value="'+Number(e.rotation||0)+'"></label><label>Opacité<input data-pdf-el-field="opacity" type="range" min="0" max="1" step=".05" value="'+Number(e.opacity??1)+'"></label><label>Couleur<input data-pdf-el-field="color" type="color" value="'+esc(color)+'"></label></div>'+
+    '<div class="pdf-element-actions-v170"><button id="pdfDuplicateElementV170">Dupliquer</button><button id="pdfDeleteElementV170">Supprimer</button></div>';
+  if(e.type==='image')box.querySelector('[data-pdf-el-field="position"]').value=e.position||'center';
+  $$('[data-pdf-el-field]',box).forEach(input=>input.oninput=()=>{
+    const field=input.dataset.pdfElField,val=['x','y','w','h','rotation','opacity','fontSize'].includes(field)?Number(input.value):input.value;
+    if(field==='color'){if(e.type==='line')e.stroke=val;else if(e.type==='text')e.color=val;else e.fill=val}else e[field]=val;
+    renderPdfLivePageV169();schedulePdfAutoSaveV169();
+  });
+  $('#pdfDuplicateElementV170').onclick=()=>{pdfElementsV168().splice(pdfSelectedElementV170+1,0,JSON.parse(JSON.stringify(e)));pdfSelectedElementV170++;renderPdfElementsV168();schedulePdfAutoSaveV169()};
+  $('#pdfDeleteElementV170').onclick=()=>{pdfElementsV168().splice(pdfSelectedElementV170,1);pdfSelectedElementV170=-1;renderPdfElementsV168();schedulePdfAutoSaveV169()};
+}
 function renderPdfLivePageV169(){
   const p=state.activePdfProjectV167,page=pdfActivePageV168(),live=ensurePdfLivePageV169(),canvas=$('#pdfCanvasV167'),iframe=$('#pdfFallbackV167');
   if(!p||!page||!live)return;renderPdfPageStripV169();
@@ -4847,7 +4936,11 @@ function renderPdfLivePageV169(){
     if(e.type==='line')return '<div class="pdf-live-el-v169 line" data-pdf-live-el="'+i+'" style="'+st+';background:'+esc(e.stroke||'#111318')+'"></div>';
     return '<div class="pdf-live-el-v169 shape '+esc(e.type)+'" data-pdf-live-el="'+i+'" style="'+st+';background:'+esc(e.fill||'#7657ff')+';border-radius:'+(e.type==='circle'?'50%':Number(e.radius||0)+'px')+'"></div>';
   }).join('');
-  $$('[data-pdf-live-el]',live).forEach(bindPdfLiveDragV169);
+  $$('[data-pdf-live-el]',live).forEach(el=>{
+    const idx=Number(el.dataset.pdfLiveEl);el.classList.toggle('selected',idx===pdfSelectedElementV170);el.onclick=()=>selectPdfElementV170(idx);
+    const handle=document.createElement('i');handle.className='pdf-resize-handle-v170';handle.dataset.pdfResize=String(idx);el.appendChild(handle);
+    bindPdfLiveDragV169(el);bindPdfResizeV170(handle);
+  });
 }
 function bindPdfLiveDragV169(el){
   el.onpointerdown=e=>{
@@ -4857,6 +4950,15 @@ function bindPdfLiveDragV169(el){
     const move=ev=>{obj.x=Math.max(0,Math.min(100-Number(obj.w||20),ox+(ev.clientX-sx)/r.width*100));obj.y=Math.max(0,Math.min(100-Number(obj.h||10),oy+(ev.clientY-sy)/r.height*100));el.style.left=obj.x+'%';el.style.top=obj.y+'%'};
     const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);renderPdfElementsV168();schedulePdfAutoSaveV169()};
     el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+  };
+}
+function bindPdfResizeV170(handle){
+  handle.onpointerdown=e=>{
+    e.preventDefault();e.stopPropagation();const idx=Number(handle.dataset.pdfResize),obj=pdfElementsV168()[idx],live=$('#pdfLivePageV169');if(!obj||!live)return;
+    selectPdfElementV170(idx);const r=live.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ow=Number(obj.w||20),oh=Number(obj.h||10);handle.setPointerCapture?.(e.pointerId);
+    const move=ev=>{obj.w=Math.max(2,Math.min(100-Number(obj.x||0),ow+(ev.clientX-sx)/r.width*100));obj.h=Math.max(2,Math.min(100-Number(obj.y||0),oh+(ev.clientY-sy)/r.height*100));const parent=handle.parentElement;if(parent){parent.style.width=obj.w+'%';parent.style.height=obj.h+'%'}};
+    const up=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',up);handle.removeEventListener('pointercancel',up);renderPdfElementsV168();renderPdfElementInspectorV170();schedulePdfAutoSaveV169()};
+    handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',up);handle.addEventListener('pointercancel',up);
   };
 }
 function pdfActivePageV168(){
@@ -4873,8 +4975,8 @@ function renderPdfElementsV168(){
   const els=pdfElementsV168();
   renderPdfLivePageV169();
   box.innerHTML=els.map((e,i)=>'<div class="pdf-element-row-v168"><button data-pdf-element-v168="'+i+'"><b>'+(e.type==='image'?'▧':e.type==='text'?'Aa':e.type==='circle'?'○':e.type==='line'?'—':'□')+'</b><span>'+esc(e.type==='text'?(e.text||'Texte').slice(0,30):e.type)+'</span></button><button data-pdf-remove-v168="'+i+'">×</button></div>').join('')||'<div class="empty">Page libre · ajoute du texte, une image ou une forme.</div>';
-  $$('[data-pdf-element-v168]',box).forEach(b=>b.onclick=()=>editPdfElementV168(Number(b.dataset.pdfElementV168)));
-  $$('[data-pdf-remove-v168]',box).forEach(b=>b.onclick=()=>{els.splice(Number(b.dataset.pdfRemoveV168),1);renderPdfElementsV168()});
+  $$('[data-pdf-element-v168]',box).forEach(b=>{b.onclick=()=>selectPdfElementV170(Number(b.dataset.pdfElementV168));b.ondblclick=()=>editPdfElementV168(Number(b.dataset.pdfElementV168))});
+  $$('[data-pdf-remove-v168]',box).forEach(b=>b.onclick=()=>{const i=Number(b.dataset.pdfRemoveV168);els.splice(i,1);if(pdfSelectedElementV170===i)pdfSelectedElementV170=-1;renderPdfElementsV168();schedulePdfAutoSaveV169()});renderPdfElementInspectorV170();
 }
 function addPdfElementV168(type){
   const els=pdfElementsV168();if(!state.activePdfProjectV167)return toast('Ouvre un projet PDF');
@@ -4903,13 +5005,20 @@ function editPdfElementV168(index){
 }
 function applyPdfTemplateV168(name){
   const page=pdfActivePageV168();if(!page||!name)return;const c=page.content=page.content||{};const title=$('#pdfTitleV167')?.value||state.activePdfProjectV167?.title||'PLUG ART';
-  const img=c.background_image||'';
+  const img=c.background_image||c.image||'';
   const presets={
     cover:[{type:'rect',x:0,y:0,w:100,h:100,fill:'#111318'},{type:'text',text:title,x:8,y:62,w:84,h:22,fontSize:42,weight:'bold',color:'#ffffff'},{type:'text',text:'DOSSIER · PLUG ART',x:8,y:88,w:50,h:5,fontSize:9,weight:'bold',color:'#b9b2ff'}],
     editorial:[{type:'rect',x:7,y:8,w:2,h:84,fill:'#7657ff'},{type:'text',text:title,x:13,y:10,w:76,h:20,fontSize:34,weight:'bold',color:'#111318'},{type:'text',text:'Texte éditorial à développer.',x:13,y:36,w:68,h:28,fontSize:13,color:'#555963',lineHeight:1.35}],
     split:[{type:'rect',x:0,y:0,w:47,h:100,fill:'#efeaff'},{type:'text',text:title,x:53,y:12,w:39,h:24,fontSize:30,weight:'bold',color:'#111318'},{type:'text',text:'Texte, données ou récit du projet.',x:53,y:44,w:37,h:30,fontSize:12,color:'#555963'}],
     gallery:[{type:'text',text:title,x:7,y:7,w:86,h:12,fontSize:28,weight:'bold',color:'#111318'},{type:'rect',x:7,y:23,w:41,h:30,fill:'#f0edf9'},{type:'rect',x:52,y:23,w:41,h:30,fill:'#e9f6f7'},{type:'rect',x:7,y:57,w:86,h:30,fill:'#f5f3ef'}],
-    statement:[{type:'text',text:'STATEMENT',x:8,y:9,w:84,h:6,fontSize:9,weight:'bold',color:'#7657ff'},{type:'text',text:title,x:8,y:19,w:84,h:18,fontSize:36,weight:'bold',color:'#111318'},{type:'text',text:'Développe ici une page très lisible, pensée comme un manifeste ou un texte de présentation.',x:8,y:46,w:72,h:32,fontSize:14,color:'#3f424a',lineHeight:1.4}]
+    statement:[{type:'text',text:'STATEMENT',x:8,y:9,w:84,h:6,fontSize:9,weight:'bold',color:'#7657ff'},{type:'text',text:title,x:8,y:19,w:84,h:18,fontSize:36,weight:'bold',color:'#111318'},{type:'text',text:'Développe ici une page très lisible, pensée comme un manifeste ou un texte de présentation.',x:8,y:46,w:72,h:32,fontSize:14,color:'#3f424a',lineHeight:1.4}],
+    'photo-cover':[{type:'image',src:img,x:0,y:0,w:100,h:62,crop:'cover',position:'center'},{type:'rect',x:0,y:58,w:100,h:42,fill:'#111318'},{type:'text',text:title,x:7,y:67,w:86,h:18,fontSize:36,weight:'bold',color:'#ffffff'},{type:'text',text:'PLUG ART · DOSSIER',x:7,y:90,w:60,h:5,fontSize:9,weight:'bold',color:'#b9b2ff'}],
+    moodboard:[{type:'rect',x:4,y:4,w:92,h:92,fill:'#f3efe7'},{type:'image',src:img,x:7,y:8,w:52,h:44,crop:'cover'},{type:'rect',x:63,y:8,w:30,h:20,fill:'#7657ff'},{type:'rect',x:63,y:31,w:30,h:21,fill:'#d9f4f5'},{type:'rect',x:7,y:57,w:28,h:31,fill:'#111318'},{type:'rect',x:39,y:57,w:54,h:31,fill:'#f1dbe7'},{type:'text',text:title,x:10,y:90,w:80,h:5,fontSize:14,weight:'bold',color:'#111318'}],
+    timeline:[{type:'text',text:title,x:8,y:7,w:84,h:12,fontSize:30,weight:'bold',color:'#111318'},{type:'line',x:16,y:25,w:2,h:62,stroke:'#7657ff',thickness:4},{type:'circle',x:12,y:28,w:10,h:7,fill:'#7657ff'},{type:'text',text:'01 · Recherche',x:26,y:27,w:55,h:8,fontSize:14,weight:'bold',color:'#111318'},{type:'circle',x:12,y:49,w:10,h:7,fill:'#45cbd7'},{type:'text',text:'02 · Production',x:26,y:48,w:55,h:8,fontSize:14,weight:'bold',color:'#111318'},{type:'circle',x:12,y:70,w:10,h:7,fill:'#e96cae'},{type:'text',text:'03 · Activation',x:26,y:69,w:55,h:8,fontSize:14,weight:'bold',color:'#111318'}],
+    proposal:[{type:'rect',x:0,y:0,w:100,h:18,fill:'#111318'},{type:'text',text:'PROPOSITION',x:7,y:6,w:50,h:6,fontSize:10,weight:'bold',color:'#ffffff'},{type:'text',text:title,x:7,y:26,w:72,h:18,fontSize:34,weight:'bold',color:'#111318'},{type:'rect',x:7,y:52,w:39,h:34,fill:'#eee9ff'},{type:'rect',x:51,y:52,w:42,h:34,fill:'#e9f7f7'}],
+    'portfolio-grid':[{type:'text',text:title,x:6,y:5,w:88,h:10,fontSize:26,weight:'bold',color:'#111318'},{type:'image',src:img,x:6,y:19,w:42,h:31,crop:'cover'},{type:'rect',x:52,y:19,w:42,h:31,fill:'#ece8f8'},{type:'rect',x:6,y:54,w:42,h:31,fill:'#e6f6f7'},{type:'rect',x:52,y:54,w:42,h:31,fill:'#f1e0e9'}],
+    'quote-page':[{type:'rect',x:0,y:0,w:100,h:100,fill:'#f2eee7'},{type:'text',text:'“',x:8,y:8,w:20,h:20,fontSize:72,weight:'bold',color:'#7657ff'},{type:'text',text:'Une phrase forte pour porter le projet et donner du rythme au dossier.',x:12,y:31,w:76,h:36,fontSize:28,weight:'bold',color:'#111318',align:'center',lineHeight:1.18},{type:'text',text:'PLUG ART',x:38,y:80,w:24,h:5,fontSize:9,weight:'bold',color:'#7657ff',align:'center'}],
+    chapter:[{type:'rect',x:0,y:0,w:34,h:100,fill:'#7657ff'},{type:'text',text:'01',x:7,y:10,w:20,h:12,fontSize:42,weight:'bold',color:'#ffffff'},{type:'text',text:title,x:42,y:28,w:49,h:30,fontSize:36,weight:'bold',color:'#111318'},{type:'line',x:42,y:66,w:45,h:2,stroke:'#111318',thickness:2}]
   };
   c.elements=(presets[name]||[]).map(x=>({...x}));if(img)c.background_image=img;renderPdfElementsV168();schedulePdfAutoSaveV169();toast('Modèle de page appliqué');
 }
