@@ -457,7 +457,9 @@ function syncPlugyHomeMount(){
   if(open){follower.classList.remove('visible');movePlugyModel(plugyDrawerStage());return}
   if(hero){
     follower.classList.remove('visible');movePlugyModel(plugyDashboardStage());
-    if(plugy3DRequested||customElements.get('model-viewer'))warmPlugy3D('dashboard').then(()=>playMotion('Idle',true)).catch(()=>{});
+    warmPlugy3D('dashboard').then(()=>playMotion('Idle',true)).catch(()=>{
+      document.documentElement.classList.add('plugy-3d-fallback');
+    });
   }else{
     follower.classList.add('visible');movePlugyModel(follower);
     warmPlugy3D('follow').then(()=>{if(!['Think','Charge','Listen','Speak'].includes(document.body.dataset.plugyMotion||''))playMotion('Idle',true)}).catch(()=>{});
@@ -841,6 +843,7 @@ function installSlideDashboard(){
     '<button class="slide-plugy-companion" id="slidePlugyCompanion" data-slide-plugy aria-label="Ouvrir PLUGY"><i></i><span><small>PLUGY</small><strong id="slidePlugyHint">Je reste avec toi</strong></span><b>↗</b></button>'+
     '<div class="slide-mobile-dots">'+dashboardSlideNames.map((_,i)=>'<button data-dash-slide="'+i+'" class="'+(i===0?'active':'')+'" aria-label="Slide '+(i+1)+'"></button>').join('')+'</div>';
   view.insertBefore(deck,legacy);
+  requestAnimationFrame(()=>document.documentElement.classList.add('dashboard-mounted'));
 
   const rail=$('#slideRail');
   $$('[data-dash-slide]',deck).forEach(b=>b.onclick=()=>goDashboardSlide(Number(b.dataset.dashSlide)));
@@ -4036,7 +4039,13 @@ function installImagePipelineV169(){
 installImagePipelineV169();
 
 addEventListener('beforeunload',()=>{if(state.view==='creation'&&state.creationDirty)saveLocalCreationBackup()});
-queueMicrotask(()=>{const initial=location.hash.slice(1)||'dashboard';history.replaceState({view:initial},'','#'+initial);route(initial,false);renderSuggestions();loadAll().finally(scheduleSmartPlugyWarm)});
+queueMicrotask(()=>{
+  const initial=location.hash.slice(1)||'dashboard';
+  history.replaceState({view:initial},'','#'+initial);
+  route(initial,false);renderSuggestions();
+  if(initial==='dashboard')setTimeout(()=>warmPlugy3D('first-paint').catch(()=>{}),80);
+  loadAll().finally(scheduleSmartPlugyWarm);
+});
 
 /* ---------------- V161 IMMERSIVE WORKSPACE ---------------- */
 const CREATION_V161_STYLES=[
