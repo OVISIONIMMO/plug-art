@@ -760,7 +760,7 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'169.4',
+      'version':'170.0',
       'ui':'plug-art-v169-2-studio',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
@@ -811,8 +811,8 @@ def ui_manifest_v128():
     expected='169.20260927.5'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'169.4',
-      'ui':'plug-art-v169-performance-radar',
+      'version':'170.0',
+      'ui':'plug-art-v170-social-radar',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
       'html_has_slide_css': bool(js_path.exists() and 'plugart_v160_slide.css?v=' in js_path.read_text(encoding='utf-8')),
@@ -3254,7 +3254,7 @@ def _v167_event_search_ai(body):
     types=[str(x).strip() for x in (body.get('types') or ['vernissage','opening','artist_talk']) if str(x).strip()][:10]
     date_from=str(body.get('date_from') or time.strftime('%Y-%m-%d'))[:10]
     date_to=str(body.get('date_to') or '')[:10]
-    query=str(body.get('q') or '').strip()[:500]
+    query=str(body.get('q') or '').strip()[:2500]
     prompt=("Tu es le moteur Radar Vernissages de PLUG ART. Effectue une recherche web ACTUELLE et trouve uniquement des événements artistiques à venir. "
       "Zones: "+', '.join(cities)+". Période: "+date_from+" à "+(date_to or "dans les 31 prochains jours")+". Types: "+', '.join(types)+". "
       "Requête additionnelle: "+(query or "aucune")+". Cherche dans plusieurs familles de sources : sites officiels de galeries, centres d'art, fondations, collectifs, mairies et hôtels de ville, écoles d'art, associations culturelles, tiers-lieux, hôtels, lieux hybrides et agendas culturels fiables. "
@@ -3278,6 +3278,41 @@ def _v167_event_search_ai(body):
     if not isinstance(events,list):events=[]
     print("PLUG_ART_V168_EVENT_SEARCH cities="+','.join(cities)+" found="+str(len(events))+" elapsed_ms="+str(int((time.time()-started)*1000)),flush=True)
     return events
+
+
+def _v170_social_event_search_ai(body=None):
+    """Dedicated public-social discovery pass so Instagram/TikTok/LinkedIn results are not diluted by general agenda sources."""
+    key=os.getenv('OPENAI_API_KEY','').strip()
+    if not key:raise HTTPException(503,'Recherche sociale IA non configurée')
+    body=body or {}
+    date_from=str(body.get('date_from') or date.today().isoformat())[:10]
+    date_to=str(body.get('date_to') or (date.today()+timedelta(days=35)).isoformat())[:10]
+    prompt=f"""Tu es la passe SOCIAL RADAR de PLUG ART. Recherche sur le web des publications SOCIALES PUBLIQUEMENT INDEXABLES annonçant des vernissages, openings, previews, expositions avec soirée d'ouverture, finissages ou rencontres artistes à venir entre {date_from} et {date_to}.
+Zone prioritaire : Paris, Aubervilliers, Saint-Denis, Saint-Ouen-sur-Seine, Pantin, Montreuil, Bagnolet, Romainville, Bobigny, Noisy-le-Sec, Les Lilas et proche Île-de-France.
+Effectue explicitement des recherches site:instagram.com, site:tiktok.com et site:linkedin.com avec : vernissage Paris, vernissage 93, opening Paris, exposition Paris, galerie Paris, vernissage Montreuil, Saint-Denis, Pantin, Aubervilliers, Saint-Ouen, Bagnolet, ainsi que #vernissage #vernissageparis #vernissage93 #vernissageidf #openingparis #expositionparis #galerieparis #parisart #artcontemporainparis #montreuilart #saintdenisart #aubervilliersart #pantinart.
+Priorise les comptes officiels de galeries, artistes, collectifs, centres d'art, tiers-lieux, écoles d'art, mairies, ateliers, hôtels et lieux hybrides. Ne retiens une publication sociale que si le texte indexé permet de confirmer une DATE et un LIEU précis. Recoupe avec un site officiel quand possible.
+N'utilise PAS Paris Sortie comme source principale de cette passe.
+Retourne UNIQUEMENT du JSON valide : {{"events":[{{"event_type":"vernissage","title":"","venue_name":"","venue_type":"gallery","city":"","address":"","country":"France","starts_at":"YYYY-MM-DDTHH:MM","ends_at":"","artists":[],"disciplines":[],"description":"","image_url":"","source_url":"https://...","source_type":"instagram_indexed","rsvp_url":"","price_text":"","is_free":false,"verified":false}}]}}.
+source_type doit être instagram_indexed, tiktok_indexed ou linkedin_indexed selon l'URL. verified=true seulement si le compte est officiel ou si date+lieu sont recoupés. Maximum 18 résultats. Ignore tout événement passé, non daté ou ambigu. Ne fabrique rien."""
+    payload={'model':_V167_EVENT_SEARCH_MODEL,'store':False,'tools':[{'type':'web_search','search_context_size':'high'}],
+      'tool_choice':'required','input':prompt,'max_output_tokens':5000,'text':{'verbosity':'low'}}
+    rr=requests.post('https://api.openai.com/v1/responses',
+      headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},json=payload,timeout=(8,55))
+    if not rr.ok:raise HTTPException(502,'Recherche sociale indisponible ('+str(rr.status_code)+')')
+    parsed=_v167_extract_json(_v167_output_text(rr.json()))
+    events=parsed.get('events') if isinstance(parsed,dict) else parsed
+    if not isinstance(events,list):events=[]
+    clean=[]
+    for item in events:
+        if not isinstance(item,dict):continue
+        url=str(item.get('source_url') or '').lower()
+        if 'instagram.com' in url:item['source_type']='instagram_indexed'
+        elif 'tiktok.com' in url:item['source_type']='tiktok_indexed'
+        elif 'linkedin.com' in url:item['source_type']='linkedin_indexed'
+        else:continue
+        clean.append(item)
+    print('PLUG_ART_V170_SOCIAL_EVENTS found='+str(len(clean)),flush=True)
+    return clean
 
 @app.get('/api/v167/events')
 def events_list_v167(q:str='',city:str='',date_from:str='',date_to:str='',event_type:str='',free:bool=False,rsvp:bool=False,venue:str='',verified:bool=False,favorite:bool=False):
@@ -3541,6 +3576,11 @@ def _v168_refresh_events():
     ids=_v167_upsert_events(curated);ai_error=''
     try:ids+=_v167_upsert_events(_v169_paris_open_data_events(start,end))
     except Exception as exc:print('PLUG_ART_V169_PARIS_DATA_UPSERT '+str(exc)[:180],flush=True)
+    social_error=''
+    try:ids+=_v167_upsert_events(_v170_social_event_search_ai({'date_from':start.isoformat(),'date_to':end.isoformat()}))
+    except Exception as exc:
+        social_error=type(exc).__name__+': '+str(exc)
+        print('PLUG_ART_V170_SOCIAL_FALLBACK '+social_error[:180],flush=True)
     body={
       'cities':['Paris','Aubervilliers','Saint-Denis','Saint-Ouen-sur-Seine','Pantin','Montreuil','Bagnolet','Romainville','Bobigny','Noisy-le-Sec','Les Lilas','Neuilly-sur-Marne'],
       'date_from':start.isoformat(),'date_to':end.isoformat(),
@@ -3552,8 +3592,9 @@ def _v168_refresh_events():
     except Exception as exc:
         ai_error=type(exc).__name__+': '+str(exc)
         print('PLUG_ART_V1681_EVENTS_FALLBACK '+ai_error[:180],flush=True)
-    ids=list(dict.fromkeys(ids));_v168_set_refresh_state('events',len(ids),ai_error)
-    return {'ok':True,'found':len(ids),'fallback':bool(ai_error),'items':events_list_v167(date_from=start.isoformat(),date_to=end.isoformat())}
+    ids=list(dict.fromkeys(ids));combined_error=' | '.join(x for x in (ai_error,social_error) if x)
+    _v168_set_refresh_state('events',len(ids),combined_error)
+    return {'ok':True,'found':len(ids),'fallback':bool(combined_error),'social_search':not bool(social_error),'items':events_list_v167(date_from=start.isoformat(),date_to=end.isoformat())}
 
 def _v169_prime_paris_data():
     time.sleep(2)
@@ -4154,7 +4195,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'169.4','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'170.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -4168,7 +4209,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'169.4','ui':'plug-art-v169-performance-radar',
+      'ok':True,'version':'170.0','ui':'plug-art-v170-social-radar',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4237,8 +4278,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'169.4',
-      'ui':'plug-art-v169-performance-radar',
+      'version':'170.0',
+      'ui':'plug-art-v170-social-radar',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -4265,7 +4306,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V169_4_READY performance=global_compact images=proxy_cache_resilient creator=storyboard pdf=realtime radar=paris_93_social",flush=True)
+print("PLUG_ART_V170_READY performance=global_compact images=proxy_cache_resilient creator=storyboard pdf=realtime radar=paris_93_social_dedicated",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
