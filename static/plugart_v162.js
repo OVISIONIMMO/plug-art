@@ -718,8 +718,9 @@ function deadline(v){
 function daysLeft(o){
   if(!o?.deadline)return 9999;const d=new Date(String(o.deadline)+'T12:00:00');return Math.ceil((d-new Date())/86400000);
 }
-function opportunityMedia(o){
-  const direct=clean(o?.thumbnail_url||o?.image_url||''),src=direct?mediaSrcV171(direct):(o?.id?('/api/v67/opportunities/'+encodeURIComponent(o.id)+'/thumbnail'):'');
+function opportunityMedia(o,allowLookup=true){
+  const direct=clean(o?.thumbnail_url||o?.image_url||'');
+  const src=direct?mediaSrcV171(direct):(allowLookup&&o?.id?('/api/v67/opportunities/'+encodeURIComponent(o.id)+'/thumbnail'):'');
   return src?'<img src="'+esc(src)+'" alt="" loading="lazy" decoding="async">':'<span class="opp-media-placeholder" aria-hidden="true">✦</span>';
 }
 function accessible(o){const f=String(o?.fee||'').toLowerCase();if(/gratuit|free|sans frais/.test(f))return true;const m=f.match(/(\d{1,4})\s*€/);return !!(m&&Number(m[1])<=400)}
