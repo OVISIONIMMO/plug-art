@@ -760,7 +760,7 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'172.0',
+      'version':'172.1',
       'ui':'plug-art-v169-2-studio',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
@@ -811,8 +811,8 @@ def ui_manifest_v128():
     expected='169.20260927.5'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'172.0',
-      'ui':'plug-art-v172-airy-final',
+      'version':'172.1',
+      'ui':'plug-art-v172-airy-final-smoke',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
       'html_has_slide_css': bool(js_path.exists() and 'plugart_v160_slide.css?v=' in js_path.read_text(encoding='utf-8')),
@@ -4156,6 +4156,64 @@ def qa_manifest_v167():
       'missing':[m+' '+p for m,p in required if (m,p) not in active]}
 
 
+@app.get('/api/v172/smoke')
+def smoke_v172():
+    checks={}
+    active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
+    expected=[
+      ('GET','/api/v124/dashboard-bootstrap'),
+      ('GET','/api/v167/events'),('POST','/api/v167/events/search'),
+      ('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),
+      ('GET','/api/v108/drafts'),('POST','/api/v108/drafts'),('PATCH','/api/v108/drafts/{draft_id}'),('DELETE','/api/v108/drafts/{draft_id}'),
+      ('POST','/api/v32/content/image')
+    ]
+    missing=[m+' '+p for m,p in expected if (m,p) not in active]
+    checks['routes']={'ok':not missing,'missing':missing,'count':len(expected)}
+    try:
+        db=core.conn()
+        db.execute('savepoint v172_creation_smoke')
+        marker='__plug_art_v172_smoke__'
+        cur=db.execute("""insert into content_drafts(kind,title,source_opportunity_id,payload_json,created_at,updated_at)
+                          values(?,?,?,?,?,?)""",('carousel',marker,'',json.dumps({'slides':[{'title':'smoke'}]}),_now_v85(),_now_v85()))
+        did=cur.lastrowid
+        db.execute('update content_drafts set title=? where id=?',(marker+'-updated',did))
+        row=db.execute('select title,payload_json from content_drafts where id=?',(did,)).fetchone()
+        db.execute('delete from content_drafts where id=?',(did,))
+        db.execute('rollback to v172_creation_smoke');db.execute('release v172_creation_smoke')
+        checks['creation_db']={'ok':bool(row and row[0]==marker+'-updated'),'roundtrip':True}
+        db.close()
+    except Exception as exc:
+        try:db.close()
+        except Exception:pass
+        checks['creation_db']={'ok':False,'detail':type(exc).__name__}
+    try:
+        future=date.today().isoformat()
+        opp=int((core.one("select count(*) n from opportunities where status in ('open','rolling')") or {}).get('n',0))
+        events=int((core.one("select count(*) n from art_events where status='active' and substr(starts_at,1,10)>=?",(future,)) or {}).get('n',0))
+        state_events=_v168_refresh_state('events');state_opps=_v168_refresh_state('opportunities_ai')
+        checks['radar']={'ok':opp>0 or events>0,'open_calls':opp,'future_events':events,
+          'event_last_run':state_events.get('updated_at',''),'opportunity_last_run':state_opps.get('updated_at','')}
+    except Exception as exc:
+        checks['radar']={'ok':False,'detail':type(exc).__name__}
+    try:
+        boot=dashboard_bootstrap_v124()
+        checks['bootstrap']={'ok':isinstance(boot,dict),'opportunities':len(boot.get('opportunities') or []),
+          'drafts':len(boot.get('drafts') or []),'leads':len(boot.get('leads') or [])}
+    except Exception as exc:
+        checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
+    checks['openai']={'configured':bool(os.getenv('OPENAI_API_KEY','').strip())}
+    ok=all(v.get('ok',True) for k,v in checks.items() if k!='openai')
+    return {'ok':ok,'version':'172.1','checks':checks}
+
+def _v172_startup_selftest():
+    try:
+        report=smoke_v172()
+        print('PLUG_ART_V172_SELFTEST '+json.dumps(report,ensure_ascii=False,separators=(',',':')),flush=True)
+    except Exception as exc:
+        print('PLUG_ART_V172_SELFTEST_ERROR '+type(exc).__name__+': '+str(exc)[:220],flush=True)
+
+_v172_startup_selftest()
+
 @app.get('/api/v163/diagnostics')
 def diagnostics_v163():
     started=time.perf_counter()
@@ -4196,7 +4254,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'172.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'172.1','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -4210,7 +4268,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'172.0','ui':'plug-art-v172-airy-final',
+      'ok':True,'version':'172.1','ui':'plug-art-v172-airy-final-smoke',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4279,8 +4337,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'172.0',
-      'ui':'plug-art-v172-airy-final',
+      'version':'172.1',
+      'ui':'plug-art-v172-airy-final-smoke',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -4307,7 +4365,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V172_READY ui=airy_responsive creation=adaptive_grid plugy=model_viewer_4_3_1_safe radar=paris_93_social_dedicated qa=creation_radar",flush=True)
+print("PLUG_ART_V172_1_READY ui=airy_responsive creation=adaptive_grid plugy=model_viewer_4_3_1_safe radar=paris_93_social_dedicated qa=startup_smoke",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
