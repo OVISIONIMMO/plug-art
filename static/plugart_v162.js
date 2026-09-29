@@ -970,7 +970,7 @@ function renderSlideDashboard(){
     else openOpportunity(id);
   });
 
-  $('#slideOpportunityList').innerHTML=priorities.map(o=>'<button data-slide-opp="'+o.id+'"><span class="slide-opp-thumb">'+opportunityMedia(o)+'</span><span><strong>'+esc(o.title)+'</strong><small>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</small></span><b>'+Number(o.radar_score??o.score??0)+'</b></button>').join('')||'<div class="slide-empty">Aucune opportunité active.</div>';
+  $('#slideOpportunityList').innerHTML=priorities.map(o=>'<button data-slide-opp="'+o.id+'"><span class="slide-opp-thumb">'+opportunityMedia(o,false)+'</span><span><strong>'+esc(o.title)+'</strong><small>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</small></span><b>'+Number(o.radar_score??o.score??0)+'</b></button>').join('')||'<div class="slide-empty">Aucune opportunité active.</div>';
   $$('[data-slide-opp]',deck).forEach(b=>b.onclick=()=>openOpportunity(Number(b.dataset.slideOpp)));
 
   const work=[
@@ -1074,7 +1074,7 @@ function renderDashboard(){
   const trackedIds=new Set(state.workflow.filter(x=>x.workflow_status!=='closed').map(x=>String(x.opportunity_id)));
   const opps=(b.opportunities||[]).slice().sort((a,b)=>Number(!!b.favorite)-Number(!!a.favorite)||Number(trackedIds.has(String(b.id)))-Number(trackedIds.has(String(a.id)))||Number(b.radar_score??b.score??0)-Number(a.radar_score??a.score??0)).slice(0,4);
   $('#statOpp').textContent=stats.opportunities??opps.length;$('#statUrgent').textContent=stats.urgent??0;$('#statArtists').textContent=stats.drafts??state.drafts.length;$('#statContacts').textContent=stats.contacts??state.leads.length;
-  const box=$('#dashboardCalls');box.innerHTML=opps.length?opps.map(o=>'<div class="priority-row"><div class="priority-thumb">'+opportunityMedia(o)+'</div><button data-dashboard-opp="'+o.id+'" style="border:0;background:transparent;text-align:left"><h3>'+esc(o.title)+'</h3><p>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</p></button><span class="score">'+Number(o.radar_score??o.score??0)+'/100</span></div>').join(''):'<div class="empty">Aucune opportunité active.</div>';
+  const box=$('#dashboardCalls');box.innerHTML=opps.length?opps.map(o=>'<div class="priority-row"><div class="priority-thumb">'+opportunityMedia(o,false)+'</div><button data-dashboard-opp="'+o.id+'" style="border:0;background:transparent;text-align:left"><h3>'+esc(o.title)+'</h3><p>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</p></button><span class="score">'+Number(o.radar_score??o.score??0)+'/100</span></div>').join(''):'<div class="empty">Aucune opportunité active.</div>';
   $$('[data-dashboard-opp]').forEach(x=>x.onclick=()=>openOpportunity(Number(x.dataset.dashboardOpp)));
   $('#dashboardBureau').innerHTML=state.bureau.slice(0,4).map(n=>'<button class="compact-row" data-dash-doc="'+n.id+'" style="border:0;background:transparent;text-align:left;width:100%"><strong>'+esc(n.title||'Sans titre')+'</strong><span>'+esc(n.folder||'Notes')+' · '+esc((n.updated_at||'').replace('T',' '))+'</span></button>').join('')||'<div class="empty">Aucun document.</div>';
   $$('[data-dash-doc]').forEach(b=>b.onclick=async()=>{const id=Number(b.dataset.dashDoc);route('bureau');try{await ensureViewData('bureau');selectDoc(id)}catch{}});
