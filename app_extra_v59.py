@@ -760,7 +760,7 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'171.0',
+      'version':'172.0',
       'ui':'plug-art-v169-2-studio',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
@@ -811,8 +811,8 @@ def ui_manifest_v128():
     expected='169.20260927.5'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'171.0',
-      'ui':'plug-art-v171-premium-cockpit',
+      'version':'172.0',
+      'ui':'plug-art-v172-airy-final',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
       'html_has_slide_css': bool(js_path.exists() and 'plugart_v160_slide.css?v=' in js_path.read_text(encoding='utf-8')),
@@ -4146,7 +4146,8 @@ def qa_manifest_v167():
       ('GET','/api/v167/events'),('POST','/api/v167/events/search'),
       ('GET','/api/v167/ideas/health'),('GET','/api/v167/pdf-projects'),
       ('POST','/api/v167/pdf-projects'),('GET','/api/v167/canva/config'),('GET','/api/v171/image'),
-      ('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),
+      ('GET','/api/v108/drafts'),('POST','/api/v108/drafts'),('PATCH','/api/v108/drafts/{draft_id}'),('DELETE','/api/v108/drafts/{draft_id}'),
+      ('POST','/api/v32/content/image'),('GET','/api/v168/radar/refresh-status'),('POST','/api/v168/events/refresh'),('POST','/api/v168/opportunities/refresh'),
       ('POST','/api/v168/pdf-projects/from-file/{file_id}'),('GET','/api/v168/bureau/files/{file_id}/page/{page_index}.png')
     ]
     active={(str(m).upper(),getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
@@ -4195,7 +4196,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'171.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'172.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -4209,7 +4210,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'171.0','ui':'plug-art-v171-premium-cockpit',
+      'ok':True,'version':'172.0','ui':'plug-art-v172-airy-final',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4278,8 +4279,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'171.0',
-      'ui':'plug-art-v171-premium-cockpit',
+      'version':'172.0',
+      'ui':'plug-art-v172-airy-final',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -4306,7 +4307,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V171_READY dashboard=restored_first_paint plugy=eager_3d performance=no_dashboard_thumbnail_fallback radar=paris_93_social_dedicated",flush=True)
+print("PLUG_ART_V172_READY ui=airy_responsive creation=adaptive_grid plugy=model_viewer_4_3_1_safe radar=paris_93_social_dedicated qa=creation_radar",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
