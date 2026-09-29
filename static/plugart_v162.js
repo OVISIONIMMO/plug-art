@@ -270,7 +270,7 @@ function ensureModelViewer(){
   if(customElements.get('model-viewer'))return Promise.resolve(true);
   if(modelViewerPromise)return modelViewerPromise;
   modelViewerPromise=new Promise((resolve,reject)=>{
-    const s=document.createElement('script');s.type='module';s.src='https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js';
+    const s=document.createElement('script');s.type='module';s.src='https://ajax.googleapis.com/ajax/libs/model-viewer/4.3.1/model-viewer.min.js';
     s.onload=()=>customElements.whenDefined('model-viewer').then(()=>resolve(true)).catch(()=>resolve(true));
     s.onerror=()=>{modelViewerPromise=null;reject(new Error('3D indisponible'))};
     document.head.appendChild(s);
@@ -349,7 +349,15 @@ function warmPlugy3D(reason='intent'){
   const mv=$('#plugyModel');if(mv)mv.setAttribute('loading','eager');
   if(plugyWarmPromise)return plugyWarmPromise;
   plugyWarmPromise=ensureModelViewer()
-    .then(()=>true)
+    .then(()=>new Promise(resolve=>{
+      const model=$('#plugyModel');
+      if(!model)return resolve(true);
+      if(model.loaded){requestAnimationFrame(()=>{applyPlugyFraming(model.parentElement);resolve(true)});return}
+      let done=false;
+      const finish=()=>{if(done)return;done=true;applyPlugyFraming(model.parentElement);resolve(true)};
+      model.addEventListener('load',finish,{once:true});
+      setTimeout(finish,5000);
+    }))
     .catch(err=>{plugyWarmPromise=null;plugy3DRequested=false;throw err});
   return plugyWarmPromise;
 }
@@ -422,12 +430,23 @@ function plugyFramingFor(target){
 }
 function applyPlugyFraming(target){
   const mv=$('#plugyModel');if(!mv)return;
-  const f=plugyFramingFor(target||mv.parentElement);
-  try{
-    mv.setAttribute('camera-target','0m 0m 0m');
-    mv.setAttribute('camera-orbit',f.orbit);
-    mv.setAttribute('field-of-view',f.fov);
-  }catch{}
+  const apply=()=>{
+    const liveTarget=target&&target.isConnected?target:mv.parentElement;
+    const f=plugyFramingFor(liveTarget);
+    try{
+      mv.setAttribute('camera-target','0m 0m 0m');
+      mv.setAttribute('camera-orbit',f.orbit);
+      mv.setAttribute('field-of-view',f.fov);
+    }catch{}
+  };
+  if(!customElements.get('model-viewer')||!mv.loaded){
+    if(mv.dataset.framingPending!=='1'){
+      mv.dataset.framingPending='1';
+      mv.addEventListener('load',()=>{mv.dataset.framingPending='0';requestAnimationFrame(apply)},{once:true});
+    }
+    return;
+  }
+  requestAnimationFrame(apply);
 }
 function movePlugyModel(target){
   const mv=$('#plugyModel');if(!mv||!target)return;
