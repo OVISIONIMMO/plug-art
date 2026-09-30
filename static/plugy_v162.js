@@ -1,7 +1,7 @@
 (()=>{'use strict';
 const $=s=>document.querySelector(s),$$=s=>Array.from(document.querySelectorAll(s));
 const STORAGE='plugart:plugy:v130:history';
-const PLUGY_STANDALONE_VERSION='174.20261001.1';
+const PLUGY_STANDALONE_VERSION='175.20261001.1';
 const state={mode:'fast',history:[],busy:false,listening:false,voiceReply:true,recognition:null,pressTimer:0,lastTap:0};
 const mv=$('#plugyStandaloneModel'),chat=$('#chatScroll'),input=$('#plugyStandaloneInput'),form=$('#plugyStandaloneForm');
 
@@ -81,16 +81,19 @@ function setState(name,label){
 }
 function tuneMaterials(){
   try{
+    try{mv.minimumRenderScale=1}catch{}
+    try{const Ctor=customElements.get('model-viewer');if(Ctor&&'minimumRenderScale' in Ctor)Ctor.minimumRenderScale=1}catch{}
     (mv?.model?.materials||[]).forEach(mat=>{
       const name=String(mat?.name||'').toLowerCase(),isMetal=/(metal|chrome|prong|pin|antenna|steel|silver)/.test(name),isFace=/(glass|screen|visor|face|black|display|eye)/.test(name),isBody=!isMetal&&!isFace;
-      try{mat.pbrMetallicRoughness?.setMetallicFactor?.(isMetal?.72:(isBody?.06:0))}catch{}
-      try{mat.pbrMetallicRoughness?.setRoughnessFactor?.(isMetal?.34:(isFace?.58:.42))}catch{}
-      try{mat.clearcoat?.setClearcoatFactor?.(isMetal?.18:(isBody?.34:.12))}catch{}
-      try{mat.clearcoat?.setClearcoatRoughnessFactor?.(isMetal?.38:(isBody?.48:.64))}catch{}
-      try{mat.specular?.setSpecularFactor?.(isMetal?.58:(isBody?.28:.16))}catch{}
-      try{mat.iridescence?.setIridescenceFactor?.(isBody?.055:0)}catch{}
+      try{mat.pbrMetallicRoughness?.setMetallicFactor?.(isMetal?.16:0)}catch{}
+      try{mat.pbrMetallicRoughness?.setRoughnessFactor?.(isMetal?.70:(isFace?.76:.84))}catch{}
+      try{mat.clearcoat?.setClearcoatFactor?.(isMetal?.04:(isBody?.025:.015))}catch{}
+      try{mat.clearcoat?.setClearcoatRoughnessFactor?.(.90)}catch{}
+      try{mat.specular?.setSpecularFactor?.(isMetal?.24:(isBody?.14:.10))}catch{}
+      try{mat.iridescence?.setIridescenceFactor?.(0)}catch{}
+      try{mat.transmission?.setTransmissionFactor?.(0)}catch{}
     });
-    mv.setAttribute('exposure','.78');mv.setAttribute('shadow-intensity','.16');mv.setAttribute('shadow-softness','.92');mv.dataset.finish='pearl-premium-v166';
+    mv.setAttribute('exposure','.68');mv.setAttribute('shadow-intensity','.07');mv.setAttribute('shadow-softness','1');mv.dataset.finish='soft-matte-v175';
   }catch{}
 }
 function saveHistory(){try{localStorage.setItem(STORAGE,JSON.stringify(state.history.slice(-30)))}catch{}}
