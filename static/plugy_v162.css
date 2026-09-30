@@ -748,3 +748,30 @@ body[data-plugy-state="charge"] #plugyStandaloneModel{
   .plugy-model-wrap{width:min(48vw,760px)!important;min-height:70svh!important;height:72svh!important}
   #plugyStandaloneModel{width:min(56vw,900px)!important;height:min(76svh,820px)!important}
 }
+
+
+/* ================= PLUGY V174 · MODEL RECOVERY + LIGHTER HERO ================= */
+#plugyStandaloneModel{
+  opacity:0;
+  transition:opacity .22s ease,transform .22s ease,filter .22s ease!important
+}
+html.plugy-model-ready-v174 #plugyStandaloneModel{opacity:1!important}
+html.plugy-model-fallback-v174 #plugyStandaloneModel{opacity:0!important}
+html.plugy-model-fallback-v174 .plugy-model-wrap:before{
+  content:"";display:block!important;position:absolute!important;left:50%!important;top:50%!important;
+  width:min(46vw,360px)!important;aspect-ratio:1!important;transform:translate(-50%,-50%)!important;
+  border-radius:44% 56% 60% 40%/48% 42% 58% 52%!important;
+  background:
+    radial-gradient(circle at 34% 28%,rgba(255,255,255,.96) 0 8%,transparent 23%),
+    radial-gradient(circle at 42% 38%,rgba(92,223,232,.9),transparent 36%),
+    radial-gradient(circle at 62% 56%,rgba(118,87,255,.78),transparent 46%),
+    radial-gradient(circle at 52% 70%,rgba(236,111,174,.58),transparent 55%),
+    #f0eef9!important;
+  filter:drop-shadow(0 24px 40px rgba(64,54,119,.15))!important
+}
+.plugy-top,.composer,.plugy-companion-v162{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.energy-field .orb{filter:blur(42px)!important}
+.ring{animation-duration:10s!important}
+@media(max-width:780px){
+  html.plugy-model-fallback-v174 .plugy-model-wrap:before{width:min(68vw,300px)!important}
+}
