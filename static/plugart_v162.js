@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='173.20260930.1';
+const VERSION='174.20261001.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -71,6 +71,7 @@ function installImageResilienceV171(){
     node.querySelectorAll?.('img').forEach(prep);
   }))).observe(document.body,{subtree:true,childList:true});
 }
+window.__PLUGART_V174_BOOT_STARTED=Date.now();
 const state={view:'dashboard',radarV167Mode:'events',eventsV167:[],eventsV167Loading:false,pdfProjectsV167:[],activePdfProjectV167:null,bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,projectMode:'millenaire',projectFiles:[],ideas:[],ideaProject:'',leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,voiceOutput:localStorage.getItem('plugart:plugy-voice')!=='0',recognition:null,plugyBusy:false,creationMode:'carousel',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:'',history:[]},canvasLayer:null,canvasTool:'templates',studioGuides:true,studioSafe:false,studioSnap:true};
 
 const viewMeta={
@@ -358,7 +359,7 @@ $('#plugyModel')?.addEventListener('dblclick',()=>{
 });
 
 
-let plugyWarmPromise=null,plugy3DRequested=false;
+var plugyWarmPromise=null,plugy3DRequested=false;
 function warmPlugy3D(reason='intent'){
   plugy3DRequested=true;
   const mv=$('#plugyModel');if(mv)mv.setAttribute('loading','eager');
@@ -1997,7 +1998,7 @@ function mapCityCoords(city){
   const hit=Object.entries(MAP_CITY_COORDS).find(([k])=>key===k.normalize('NFD').replace(/[\u0300-\u036f]/g,'')||key.includes(k.normalize('NFD').replace(/[\u0300-\u036f]/g,'')));
   return hit?.[1]||null;
 }
-let mapEventsV173=[],mapEventsLoadedV173=false,mapEventsPromiseV173=null;
+var mapEventsV173=[],mapEventsLoadedV173=false,mapEventsPromiseV173=null;
 function eventMapCoordsV173(e){
   const base=mapCityCoords(e?.city||e?.address||'');if(!base)return null;
   const seed=Math.abs(Number(e?.id||0))||1,angle=(seed%17)/17*Math.PI*2,radius=.0025+((seed%5)*.0007);
@@ -2116,6 +2117,7 @@ function renderMap(){
   $('#mapCount').textContent=rows.length+' point'+(rows.length>1?'s':'');renderMapList(rows);
   $('#mapLoading')?.classList.remove('hidden');
   ensureLeaflet().then(()=>renderLeafletMap(rows)).catch(()=>renderMapFallback(rows));
+  clearTimeout(renderMap.loadingGuard);renderMap.loadingGuard=setTimeout(()=>{if(state.view==='map'&&!$('#mapLoading')?.classList.contains('hidden'))renderMapFallback(rows)},2400);
 }
 $('#mapSearch')?.addEventListener('input',e=>{state.mapSearch=e.target.value;renderMap()});
 $$('[data-map-filter]').forEach(b=>b.addEventListener('click',()=>{
@@ -2389,7 +2391,7 @@ function renderAgenda(){
   $$('[data-agenda]',box).forEach(b=>b.onclick=()=>{const [kind,id]=b.dataset.agenda.split('-');if(kind==='crm'){route('prospection');setTimeout(()=>selectLead(Number(id)),30)}else openOpportunity(Number(id))});
 }
 
-const creationHistory=[],creationRedo=[];
+var creationHistory=[],creationRedo=[];
 function creationSnapshotLocal(){
   try{return JSON.parse(JSON.stringify(draftSnapshot()))}catch{return null}
 }
