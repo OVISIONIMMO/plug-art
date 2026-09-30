@@ -8,7 +8,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='169.4'
+app.version='173.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -17,7 +17,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='169.20260927.6'
+VERSION='173.20260930.1'
 
 @app.middleware("http")
 async def _v169_performance_headers(request: Request, call_next):
@@ -32,6 +32,8 @@ async def _v169_performance_headers(request: Request, call_next):
 
 MEDIA_CACHE={}
 MEDIA_BYTES_CACHE={}
+MEDIA_NEGATIVE_CACHE={}
+EVENT_MEDIA_META_CACHE={}
 REMOTE_IMAGE_CACHE={}
 
 def _safe_remote_image_url(raw:str):
@@ -760,7 +762,7 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'172.1',
+      'version':'173.0',
       'ui':'plug-art-v169-2-studio',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
@@ -808,15 +810,15 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='169.20260927.5'
+    expected='173.20260930.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'172.1',
-      'ui':'plug-art-v172-airy-final-smoke',
+      'version':'173.0',
+      'ui':'plug-art-v173-fast-guides-map-events',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
       'html_has_slide_css': bool(js_path.exists() and 'plugart_v160_slide.css?v=' in js_path.read_text(encoding='utf-8')),
-      'html_has_sidebar_version':'V164' in html,
+      'html_has_sidebar_version':'V173.0' in html,
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
@@ -1005,18 +1007,24 @@ def opportunity_media_v67(oid:int):
 
 @app.get('/api/v67/opportunities/{oid}/thumbnail')
 def opportunity_thumbnail_v67(oid:int):
-    item,url,media=_opportunity_media(oid);key=str(oid);now=time.time();cached=MEDIA_BYTES_CACHE.get(key)
+    key=str(oid);now=time.time();neg_key='opp-thumb:'+key
+    neg=MEDIA_NEGATIVE_CACHE.get(neg_key)
+    if neg and now-neg<1800:
+        return Response(status_code=404,headers={'Cache-Control':'public,max-age=900','X-PLUG-Image-Cache':'NEGATIVE'})
+    item,url,media=_opportunity_media(oid);cached=MEDIA_BYTES_CACHE.get(key)
     if cached and now-cached[0]<21600:return Response(content=cached[1],media_type=cached[2],headers={'Cache-Control':'public,max-age=86400,stale-while-revalidate=604800'})
     headers={'User-Agent':'Mozilla/5.0 PLUGART-Media/2.0','Referer':url or 'https://plug-art-live-production.up.railway.app/'}
-    for candidate in media[:6]:
+    for candidate in media[:4]:
         try:
-            rr=requests.get(candidate['url'],timeout=9,headers=headers,allow_redirects=True);ct=(rr.headers.get('content-type') or '').split(';')[0].lower()
+            rr=requests.get(candidate['url'],timeout=(3,6),headers=headers,allow_redirects=True);ct=(rr.headers.get('content-type') or '').split(';')[0].lower()
             if rr.ok and ct.startswith('image/') and 1200<len(rr.content)<9000000:
-                MEDIA_BYTES_CACHE[key]=(now,rr.content,ct)
+                MEDIA_BYTES_CACHE[key]=(now,rr.content,ct);MEDIA_NEGATIVE_CACHE.pop(neg_key,None)
                 if len(MEDIA_BYTES_CACHE)>96:MEDIA_BYTES_CACHE.pop(next(iter(MEDIA_BYTES_CACHE)))
                 return Response(content=rr.content,media_type=ct,headers={'Cache-Control':'public,max-age=86400,stale-while-revalidate=604800','X-PLUG-Image-Source':candidate['source']})
         except Exception:pass
-    return Response(status_code=404)
+    MEDIA_NEGATIVE_CACHE[neg_key]=now
+    if len(MEDIA_NEGATIVE_CACHE)>256:MEDIA_NEGATIVE_CACHE.pop(next(iter(MEDIA_NEGATIVE_CACHE)))
+    return Response(status_code=404,headers={'Cache-Control':'public,max-age=900'})
 
 
 @app.get('/api/v166/opportunities/{oid}/media/{index}')
@@ -3390,6 +3398,9 @@ def _v167_event_page_image(url):
 
 @app.get('/api/v167/events/{event_id}/media')
 def event_media_v167(event_id:int):
+    now=time.time();cached_meta=EVENT_MEDIA_META_CACHE.get(event_id)
+    if cached_meta and now-cached_meta[0]<21600:
+        return {'event_id':event_id,'media':cached_meta[1]}
     e=event_get_v167(event_id);items=[]
     if e.get('image_url'):
         items.append({'url':e['image_url'],'source':'event'})
@@ -3399,22 +3410,33 @@ def event_media_v167(event_id:int):
             items.append({'url':page,'source':'official_page'})
             try:_v165_db_write(lambda db: db.execute('update art_events set image_url=?,updated_at=? where id=?',(page,_now_v85(),event_id)))
             except Exception:pass
+    EVENT_MEDIA_META_CACHE[event_id]=(now,items[:8])
+    if len(EVENT_MEDIA_META_CACHE)>320:EVENT_MEDIA_META_CACHE.pop(next(iter(EVENT_MEDIA_META_CACHE)))
     return {'event_id':event_id,'media':items[:8]}
 
 @app.get('/api/v167/events/{event_id}/media/{index}')
 def event_media_asset_v167(event_id:int,index:int):
+    now=time.time();key='event167:'+str(event_id)+':'+str(index);neg_key='event-media:'+str(event_id)+':'+str(index)
+    neg=MEDIA_NEGATIVE_CACHE.get(neg_key)
+    if neg and now-neg<1800:raise HTTPException(404,'Média indisponible')
     items=event_media_v167(event_id).get('media') or []
-    if index<0 or index>=len(items):raise HTTPException(404,'Média introuvable')
-    url=items[index]['url'];key='event167:'+str(event_id)+':'+str(index);now=time.time();cached=MEDIA_BYTES_CACHE.get(key)
+    if index<0 or index>=len(items):
+        MEDIA_NEGATIVE_CACHE[neg_key]=now
+        raise HTTPException(404,'Média introuvable')
+    url=items[index]['url'];cached=MEDIA_BYTES_CACHE.get(key)
     if cached and now-cached[0]<21600:return Response(content=cached[1],media_type=cached[2],headers={'Cache-Control':'public,max-age=86400'})
     try:
-        rr=requests.get(url,timeout=10,headers={'User-Agent':'Mozilla/5.0 PLUGART-Media/167','Accept':'image/avif,image/webp,image/*,*/*;q=0.8'},allow_redirects=True)
+        rr=requests.get(url,timeout=(3,6),headers={'User-Agent':'Mozilla/5.0 PLUGART-Media/167','Accept':'image/avif,image/webp,image/*,*/*;q=0.8'},allow_redirects=True)
         ct=(rr.headers.get('content-type') or '').split(';')[0].lower()
         if not rr.ok or not ct.startswith('image/') or len(rr.content)<500:raise HTTPException(404,'Média indisponible')
-        MEDIA_BYTES_CACHE[key]=(now,rr.content,ct)
+        MEDIA_BYTES_CACHE[key]=(now,rr.content,ct);MEDIA_NEGATIVE_CACHE.pop(neg_key,None)
         return Response(content=rr.content,media_type=ct,headers={'Cache-Control':'public,max-age=86400,stale-while-revalidate=604800'})
-    except HTTPException:raise
-    except Exception:raise HTTPException(404,'Média indisponible')
+    except HTTPException:
+        MEDIA_NEGATIVE_CACHE[neg_key]=now
+        raise
+    except Exception:
+        MEDIA_NEGATIVE_CACHE[neg_key]=now
+        raise HTTPException(404,'Média indisponible')
 
 @app.post('/api/v167/events/{event_id}/to-content')
 def event_to_content_v167(event_id:int):
@@ -4203,7 +4225,7 @@ def smoke_v172():
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     checks['openai']={'configured':bool(os.getenv('OPENAI_API_KEY','').strip())}
     ok=all(v.get('ok',True) for k,v in checks.items() if k!='openai')
-    return {'ok':ok,'version':'172.1','checks':checks}
+    return {'ok':ok,'version':'173.0','checks':checks}
 
 def _v172_startup_selftest():
     try:
@@ -4254,7 +4276,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'172.1','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'173.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -4268,7 +4290,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'172.1','ui':'plug-art-v172-airy-final-smoke',
+      'ok':True,'version':'173.0','ui':'plug-art-v173-fast-guides-map-events',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4337,8 +4359,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'172.1',
-      'ui':'plug-art-v172-airy-final-smoke',
+      'version':'173.0',
+      'ui':'plug-art-v173-fast-guides-map-events',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -4365,7 +4387,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V172_1_READY ui=airy_responsive creation=adaptive_grid plugy=model_viewer_4_3_1_safe radar=paris_93_social_dedicated qa=startup_smoke",flush=True)
+print("PLUG_ART_V173_READY ui=non_overlapping creation=dynamic_guides_debounced map=vernissages lazy_media=viewport plugy=intent_only radar=paris_93_social_dedicated",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
