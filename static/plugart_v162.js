@@ -272,7 +272,7 @@ function prefetchRouteV164(id){
 function bindRoutePrefetchV164(){
   $$('[data-route]').forEach(el=>{
     const id=el.dataset.route;if(!id)return;
-    const start=()=>{clearTimeout(ROUTE_PREFETCH_TIMERS_V164.get(el));ROUTE_PREFETCH_TIMERS_V164.set(el,setTimeout(()=>prefetchRouteV164(id),90))};
+    const start=()=>{clearTimeout(ROUTE_PREFETCH_TIMERS_V164.get(el));ROUTE_PREFETCH_TIMERS_V164.set(el,setTimeout(()=>prefetchRouteV164(id),180))};
     const stop=()=>clearTimeout(ROUTE_PREFETCH_TIMERS_V164.get(el));
     el.addEventListener('pointerenter',start,{passive:true});el.addEventListener('focus',start,{passive:true});el.addEventListener('pointerleave',stop,{passive:true});
   });
@@ -509,8 +509,11 @@ function syncPlugyHomeMount(){
     follower.classList.remove('visible');movePlugyModel(plugyDashboardStage());
     if($('#plugyModel')?.loaded)playMotion('Idle',true);
   }else{
-    follower.classList.add('visible');movePlugyModel(follower);
-    if($('#plugyModel')?.loaded&&!['Think','Charge','Listen','Speak'].includes(document.body.dataset.plugyMotion||''))playMotion('Idle',true);
+    // V174.2: keep WebGL mounted in one stable hidden/home host instead of moving it on every route.
+    follower.classList.add('visible');
+    const home=plugyDashboardStage(),mv=$('#plugyModel');
+    if(home&&mv&&mv.parentElement!==home)movePlugyModel(home);
+    if(mv?.loaded&&!['Think','Charge','Listen','Speak'].includes(document.body.dataset.plugyMotion||''))playMotion('Idle',true);
   }
 }
 
