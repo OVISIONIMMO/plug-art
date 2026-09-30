@@ -64,12 +64,14 @@ function installImageResilienceV171(){
       img.classList.add('img-failed-v171');img.parentElement?.classList.add('media-failed-v171');
     },{passive:true});
   };
-  $('img').forEach(prep);
-  new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(node=>{
-    if(node.nodeType!==1)return;
-    if(node.matches?.('img'))prep(node);
-    node.querySelectorAll?.('img').forEach(prep);
-  }))).observe(document.body,{subtree:true,childList:true});
+  try{$$('img').forEach(prep)}catch(e){console.warn('[V174 media init]',e)}
+  try{
+    new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(node=>{
+      if(node.nodeType!==1)return;
+      if(node.matches?.('img'))prep(node);
+      node.querySelectorAll?.('img').forEach(prep);
+    }))).observe(document.body,{subtree:true,childList:true});
+  }catch(e){console.warn('[V174 media observer]',e)}
 }
 window.__PLUGART_V174_BOOT_STARTED=Date.now();
 const state={view:'dashboard',radarV167Mode:'events',eventsV167:[],eventsV167Loading:false,pdfProjectsV167:[],activePdfProjectV167:null,bootstrap:null,dataLoaded:{opportunities:false,artists:false,map:false,bureau:false,bureauMeta:false,leads:false,workflow:false,drafts:false},dataPromises:{},bureau:[],bureauTemplates:[],bureauPackages:[],bureauSources:[],bureauMode:'documents',bureauFolderFilter:'',activePackage:null,activeTemplate:null,projectMode:'millenaire',projectFiles:[],ideas:[],ideaProject:'',leads:[],workflow:[],drafts:[],currentDraft:null,activeDoc:null,activeLead:null,activeOpportunity:null,history:[],voice:false,voiceReply:false,voiceConversation:false,voiceOutput:localStorage.getItem('plugart:plugy-voice')!=='0',recognition:null,plugyBusy:false,creationMode:'carousel',creationDirty:false,radarPreset:'all',mapFilter:'all',mapSearch:'',uiConfig:null,carousel:{slides:[],active:0,format:'4:5'},visual:{url:'',prompt:'',history:[]},canvasLayer:null,canvasTool:'templates',studioGuides:true,studioSafe:false,studioSnap:true};
@@ -395,7 +397,7 @@ function scheduleSmartPlugyWarm(){
   return;
 }
 function bindPlugyWarmIntent(){
-  const targets=[$('#sidebarPlugy'),$('#topPlugy'),$('#dashboardPlugyMount'),$('.slide-plugy-zone'),...$('[data-open-plugy]')].filter(Boolean);
+  const targets=[$('#sidebarPlugy'),$('#topPlugy'),$('#dashboardPlugyMount'),$('.slide-plugy-zone'),...$$('[data-open-plugy]')].filter(Boolean);
   targets.forEach(el=>{
     el.addEventListener('pointerenter',()=>warmPlugy3D('hover').catch(()=>{}),{passive:true});
     el.addEventListener('pointerdown',()=>warmPlugy3D('press').catch(()=>{}),{passive:true});
@@ -4851,7 +4853,7 @@ function renderEventsV167(){
   }).join('');
   $$('[data-event-create]',box).forEach(b=>b.onclick=()=>eventToCreationV167(Number(b.dataset.eventCreate)));
   $$('[data-event-agenda]',box).forEach(b=>b.onclick=async()=>{try{await api('/api/v167/events/'+b.dataset.eventAgenda+'/to-agenda',{method:'POST',body:'{}'});toast('Vernissage préparé pour l’agenda')}catch{toast('Ajout agenda impossible')}});
-  $('[data-event-map]',box).forEach(b=>b.onclick=()=>{const e=rows.find(x=>Number(x.id)===Number(b.dataset.eventMap));if(!e)return;state.mapFilter='vernissage';state.mapSearch=clean(e.city||e.venue_name||'');route('map');setTimeout(()=>{if($('#mapSearch'))$('#mapSearch').value=state.mapSearch;$('[data-map-filter]').forEach(x=>x.classList.toggle('active',x.dataset.mapFilter==='vernissage'));ensureMapEventsV173(false).then(renderMap)},50)});
+  $$('[data-event-map]',box).forEach(b=>b.onclick=()=>{const e=rows.find(x=>Number(x.id)===Number(b.dataset.eventMap));if(!e)return;state.mapFilter='vernissage';state.mapSearch=clean(e.city||e.venue_name||'');route('map');setTimeout(()=>{if($('#mapSearch'))$('#mapSearch').value=state.mapSearch;$$('[data-map-filter]').forEach(x=>x.classList.toggle('active',x.dataset.mapFilter==='vernissage'));ensureMapEventsV173(false).then(renderMap)},50)});
   $$('[data-event-fav]',box).forEach(b=>b.onclick=async()=>{const e=rows.find(x=>Number(x.id)===Number(b.dataset.eventFav));if(!e)return;try{const saved=await api('/api/v167/events/'+e.id+'/favorite',{method:'POST',body:JSON.stringify({favorite:!e.favorite})});Object.assign(e,saved);renderEventsV167()}catch{toast('Favori impossible')}});
 }
 function v167EventImage(id){return '/api/v167/events/'+encodeURIComponent(id)+'/media/0'}
