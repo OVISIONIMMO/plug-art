@@ -11,8 +11,8 @@
 <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"></noscript>
 <meta name="description" content="PLUG ART Workspace — Radar, Open Calls, création, Bureau, prospection et PLUGY.">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-<link rel="preload" href="/static/plugart_v162.js?v=174.20261001.2" as="script">
-<link rel="stylesheet" href="/static/plugart_v162.css?v=174.20261001.2">
+<link rel="preload" href="/static/plugart_v162.js?v=175.20261001.1" as="script">
+<link rel="stylesheet" href="/static/plugart_v162.css?v=175.20261001.1">
 <script id="plugart-v160-diag">
 (function(){
   function send(data){
@@ -36,25 +36,25 @@
 
     <nav class="main-nav">
       <div class="nav-group">
-        <small>TRAVAIL</small>
+        <small>AU QUOTIDIEN</small>
         <button class="nav-item active" data-route="dashboard"><b>⌂</b><span>Dashboard</span></button>
-        <button class="nav-item" data-route="radar"><b>◉</b><span>Radar</span></button><button class="nav-item vernissage-nav" data-route="radar" data-radar-direct="events"><b>◷</b><span>Vernissages</span></button>
-        <button class="nav-item map-nav-direct" data-route="map"><b>⌖</b><span>Map</span><i>LIVE</i></button>
+        <button class="nav-item" data-route="radar"><b>◉</b><span>Radar</span></button>
+        <button class="nav-item vernissage-nav" data-route="radar" data-radar-direct="events"><b>◷</b><span>Vernissages</span></button>
         <button class="nav-item" data-route="opencalls"><b>◇</b><span>Open Calls</span></button>
         <button class="nav-item" data-route="creation"><b>✦</b><span>Création</span></button>
-        <button class="nav-item instagram-nav" data-route="social"><b>◎</b><span>Instagram</span><i>LIVE</i></button>
       </div>
       <div class="nav-group">
-        <small>ORGANISER</small>
+        <small>GÉRER</small>
         <button class="nav-item" data-route="bureau"><b>▤</b><span>Bureau</span></button>
-        <button class="nav-item" data-route="ideas"><b>✦</b><span>Nuage à idées</span></button>
+        <button class="nav-item" data-route="prospection"><b>◎</b><span>Prospection</span></button>
         <button class="nav-item" data-route="agenda"><b>◷</b><span>Agenda</span></button>
-        <button class="nav-item" data-route="prospection"><b>◎</b><span>Contacts & Prospection</span></button>
-        <button class="nav-item" data-route="network"><b>◌</b><span>Artistes</span></button>
+        <button class="nav-item instagram-nav" data-route="social"><b>◎</b><span>Instagram</span></button>
       </div>
-      <div class="nav-group nav-assistant-group">
-        <small>ASSISTANT</small>
-        <a class="nav-item nav-link" href="/plugy"><b>⌁</b><span>PLUGY plein écran</span></a>
+      <div class="nav-group">
+        <small>EXPLORER</small>
+        <button class="nav-item map-nav-direct" data-route="map"><b>⌖</b><span>Map</span></button>
+        <button class="nav-item" data-route="network"><b>◌</b><span>Artistes</span></button>
+        <button class="nav-item" data-route="ideas"><b>✦</b><span>Idées</span></button>
       </div>
     </nav>
 
@@ -66,24 +66,20 @@
       </button>
       <a class="plugy-full-link" href="/plugy">Plein écran ↗</a>
     </div>
-    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small id="sidebarVersion">V174.2</small></div>
+    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small id="sidebarVersion">V175.0</small></div>
   </aside>
 
   <main class="workspace">
     <header class="topbar">
       <div class="top-title">
         <small id="pageEyebrow">WORKSPACE</small>
-        <div class="top-title-line"><h1 id="pageTitle">Dashboard</h1><span class="build-pill" id="buildPill">V174.2</span></div>
+        <div class="top-title-line"><h1 id="pageTitle">Dashboard</h1><span class="build-pill" id="buildPill">V175.0</span></div>
       </div>
       <button class="global-search" id="globalSearch"><span>⌕</span><strong>Rechercher dans PLUG ART</strong><kbd>⌘ K</kbd></button>
       <div class="top-actions">
         <button class="icon-btn" id="refreshData" title="Actualiser">↻</button>
-        <button class="map-access-btn" data-route="map" title="Carte des opportunités">⌖ Map</button>
-        <button class="instagram-access-btn" data-route="social" title="Instagram">◎ Instagram</button>
-        <button class="ideas-access-btn" id="topIdeasV164" title="Nuage à idées">✦ Idées</button>
         <button class="primary-btn" id="newAction">＋ Nouveau</button>
         <button class="plugy-btn" id="topPlugy"><i></i> PLUGY</button>
-        <a class="plugy-solo-v160" href="/plugy" title="Ouvrir PLUGY seule"><span>⌁</span><strong>PLUGY seule</strong><b>↗</b></a>
       </div>
     </header>
 
@@ -338,7 +334,7 @@
   </div>
   <div class="plugy-stage">
     <div class="plugy-energy e1"></div><div class="plugy-energy e2"></div>
-    <model-viewer id="plugyModel" loading="lazy" src="/assets/plugy-v113-premium.glb?v=174.20261001.2" interaction-prompt="none" environment-image="neutral" tone-mapping="neutral" shadow-intensity=".16" shadow-softness=".92" exposure=".78" animation-crossfade-duration="80" camera-target="0m 0m 0m" camera-orbit="0deg 79deg 7.00m" field-of-view="44deg" alt="PLUGY"></model-viewer>
+    <model-viewer id="plugyModel" loading="lazy" src="/assets/plugy-v113-premium.glb?v=175.20261001.1" interaction-prompt="none" environment-image="neutral" tone-mapping="neutral" shadow-intensity=".07" shadow-softness="1" exposure=".68" animation-crossfade-duration="80" camera-target="0m 0m 0m" camera-orbit="0deg 79deg 7.00m" field-of-view="44deg" alt="PLUGY"></model-viewer>
     <div class="plugy-state" id="plugyState"><i></i><span>Prêt</span></div>
   </div>
   <div class="plugy-context" id="plugyContext">Contexte : Dashboard</div>
@@ -367,6 +363,6 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<script defer src="/static/plugart_v162.js?v=174.20261001.2"></script>
+<script defer src="/static/plugart_v162.js?v=175.20261001.1"></script>
 </body>
 </html>
