@@ -5001,3 +5001,50 @@ img[data-defer-src]{min-height:1px}
 .event-visual-v167,
 .opp-media,
 .open-media{contain:layout paint;background:#f1f2f5}
+
+
+/* ================= PLUG ART V174 · SMALL HOME PLUGY + FAST SURFACES ================= */
+body[data-view="dashboard"] .slide-plugy-zone{
+  height:clamp(190px,24vh,235px)!important;
+  min-height:190px!important;
+  max-height:235px!important;
+  align-self:center!important
+}
+body[data-view="dashboard"] #dashboardPlugyMount{
+  width:min(100%,300px)!important;
+  height:clamp(175px,22vh,220px)!important;
+  min-height:175px!important;
+  max-height:220px!important;
+  margin:auto!important
+}
+body[data-view="dashboard"] #dashboardPlugyMount #plugyModel{
+  width:min(100%,255px)!important;
+  max-width:255px!important;
+  height:100%!important;
+  max-height:220px!important
+}
+body[data-view="dashboard"] .slide-plugy-glow{width:min(78%,250px)!important;opacity:.42!important;filter:blur(18px)!important}
+body[data-view="dashboard"] .slide-plugy-label{bottom:0!important;font-size:8px!important;padding:6px 9px!important}
+html:not(.plugy-3d-ready) body[data-view="dashboard"] #dashboardPlugyMount:after{width:min(58%,155px)!important}
+
+/* Reduce costly compositing on large permanent chrome. */
+.topbar,.sidebar{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.workspace{scroll-behavior:auto!important}
+.view:not(.active){content-visibility:hidden!important}
+.view.active{content-visibility:visible!important}
+.card-grid,.open-grid,.event-grid-v167,.artist-grid,.map-list{will-change:auto!important}
+.map-workspace,.real-map{contain:layout paint!important}
+
+/* Keep route transitions instant instead of animating empty states. */
+body.route-switching .view.active{opacity:1!important;transform:none!important;transition:none!important}
+
+@media(max-width:1180px){
+  body[data-view="dashboard"] .slide-plugy-zone{height:205px!important;min-height:205px!important}
+  body[data-view="dashboard"] #dashboardPlugyMount{height:190px!important;min-height:190px!important;max-height:190px!important}
+  body[data-view="dashboard"] #dashboardPlugyMount #plugyModel{max-width:225px!important}
+}
+@media(max-width:820px){
+  body[data-view="dashboard"] .slide-plugy-zone{height:180px!important;min-height:180px!important}
+  body[data-view="dashboard"] #dashboardPlugyMount{height:165px!important;min-height:165px!important;max-height:165px!important}
+  body[data-view="dashboard"] #dashboardPlugyMount #plugyModel{max-width:200px!important}
+}
