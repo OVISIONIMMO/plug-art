@@ -1,8 +1,47 @@
 (()=>{'use strict';
 const $=s=>document.querySelector(s),$$=s=>Array.from(document.querySelectorAll(s));
 const STORAGE='plugart:plugy:v130:history';
+const PLUGY_STANDALONE_VERSION='174.20261001.1';
 const state={mode:'fast',history:[],busy:false,listening:false,voiceReply:true,recognition:null,pressTimer:0,lastTap:0};
 const mv=$('#plugyStandaloneModel'),chat=$('#chatScroll'),input=$('#plugyStandaloneInput'),form=$('#plugyStandaloneForm');
+
+let standaloneModelViewerPromise=null;
+function ensureStandaloneModelViewer(){
+  if(customElements.get('model-viewer'))return Promise.resolve(true);
+  if(standaloneModelViewerPromise)return standaloneModelViewerPromise;
+  const sources=[
+    'https://ajax.googleapis.com/ajax/libs/model-viewer/4.3.1/model-viewer.min.js',
+    'https://cdn.jsdelivr.net/npm/@google/model-viewer@4.3.1/dist/model-viewer.min.js',
+    'https://unpkg.com/@google/model-viewer@4.3.1/dist/model-viewer.min.js'
+  ];
+  standaloneModelViewerPromise=new Promise((resolve,reject)=>{
+    let i=0;
+    const next=()=>{
+      if(customElements.get('model-viewer')){customElements.whenDefined('model-viewer').then(()=>resolve(true));return}
+      if(i>=sources.length){document.documentElement.classList.add('plugy-model-fallback-v174');standaloneModelViewerPromise=null;reject(new Error('model-viewer indisponible'));return}
+      const s=document.createElement('script');s.type='module';s.src=sources[i++];s.dataset.plugyStandaloneLoader='1';
+      const timer=setTimeout(()=>{try{s.remove()}catch{};next()},4200);
+      s.onload=()=>{clearTimeout(timer);customElements.whenDefined('model-viewer').then(()=>resolve(true)).catch(next)};
+      s.onerror=()=>{clearTimeout(timer);try{s.remove()}catch{};next()};
+      document.head.appendChild(s);
+    };
+    next();
+  });
+  return standaloneModelViewerPromise;
+}
+function bootStandaloneModelV174(){
+  if(!mv)return;
+  const stateText=$('#plugyLiveState span'),topText=$('#topState');
+  if(stateText)stateText.textContent='Chargement 3D…';if(topText)topText.textContent='Chargement 3D…';
+  ensureStandaloneModelViewer().then(()=>{
+    mv.setAttribute('loading','eager');
+    mv.setAttribute('src','/assets/plugy-v113-premium.glb?v='+PLUGY_STANDALONE_VERSION);
+    if(mv.loaded){document.documentElement.classList.add('plugy-model-ready-v174');tuneMaterials();resetStandaloneFraming();setState('idle','Prêt')}
+  }).catch(()=>{
+    if(stateText)stateText.textContent='Mode léger';if(topText)topText.textContent='Mode léger';
+  });
+}
+
 
 function clean(v){return String(v??'').replace(/\s+/g,' ').trim()}
 function standaloneDistance(){
@@ -191,7 +230,9 @@ function modelInteract(){
   const react=Math.random()<.45?'wave':(Math.random()<.55?'explain':'curious');setState(react,react==='wave'?'Salut.':'Je t’écoute');
   setTimeout(()=>setState('idle','Prêt'),1100);
 }
-mv?.addEventListener('load',()=>{tuneMaterials();resetStandaloneFraming();setState('idle','Prêt')},{once:true});
+mv?.addEventListener('load',()=>{document.documentElement.classList.add('plugy-model-ready-v174');document.documentElement.classList.remove('plugy-model-fallback-v174');tuneMaterials();resetStandaloneFraming();setState('idle','Prêt')},{once:true});
+mv?.addEventListener('error',()=>{document.documentElement.classList.add('plugy-model-fallback-v174')});
+bootStandaloneModelV174();
 mv?.addEventListener('click',modelInteract);
 mv?.addEventListener('pointerenter',()=>{if(!state.busy&&!state.listening)mv?.classList.add('plugy-hovering')});
 mv?.addEventListener('pointerdown',()=>{clearTimeout(state.pressTimer);state.pressTimer=setTimeout(startVoice,650)});
