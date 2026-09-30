@@ -285,11 +285,23 @@ let modelViewerPromise=null;
 function ensureModelViewer(){
   if(customElements.get('model-viewer'))return Promise.resolve(true);
   if(modelViewerPromise)return modelViewerPromise;
+  const sources=[
+    'https://ajax.googleapis.com/ajax/libs/model-viewer/4.3.1/model-viewer.min.js',
+    'https://cdn.jsdelivr.net/npm/@google/model-viewer@4.3.1/dist/model-viewer.min.js',
+    'https://unpkg.com/@google/model-viewer@4.3.1/dist/model-viewer.min.js'
+  ];
   modelViewerPromise=new Promise((resolve,reject)=>{
-    const s=document.createElement('script');s.type='module';s.src='https://ajax.googleapis.com/ajax/libs/model-viewer/4.3.1/model-viewer.min.js';
-    s.onload=()=>customElements.whenDefined('model-viewer').then(()=>resolve(true)).catch(()=>resolve(true));
-    s.onerror=()=>{modelViewerPromise=null;reject(new Error('3D indisponible'))};
-    document.head.appendChild(s);
+    let i=0;
+    const next=()=>{
+      if(customElements.get('model-viewer')){customElements.whenDefined('model-viewer').then(()=>resolve(true));return}
+      if(i>=sources.length){modelViewerPromise=null;reject(new Error('3D indisponible'));return}
+      const s=document.createElement('script');s.type='module';s.src=sources[i++];s.dataset.plugyModelViewerV174='1';
+      const timer=setTimeout(()=>{try{s.remove()}catch{};next()},4200);
+      s.onload=()=>{clearTimeout(timer);customElements.whenDefined('model-viewer').then(()=>resolve(true)).catch(next)};
+      s.onerror=()=>{clearTimeout(timer);try{s.remove()}catch{};next()};
+      document.head.appendChild(s);
+    };
+    next();
   });
   return modelViewerPromise;
 }
@@ -4115,16 +4127,25 @@ function installImagePipelineV169(){
   })));
   obs.observe(document.body,{childList:true,subtree:true});
 }
-installImagePipelineV169();
+// V174: image pipeline unified in installImageResilienceV171().
 
 addEventListener('beforeunload',()=>{if(state.view==='creation'&&state.creationDirty)saveLocalCreationBackup()});
 queueMicrotask(()=>{
   const initial=location.hash.slice(1)||'dashboard';
   history.replaceState({view:initial},'','#'+initial);
   route(initial,false);renderSuggestions();
-  loadAll().finally(scheduleSmartPlugyWarm);
+  loadAll().finally(()=>{
+    scheduleSmartPlugyWarm();
+    setTimeout(()=>{
+      const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+      if(state.view==='dashboard'&&!conn?.saveData&&!['slow-2g','2g'].includes(String(conn?.effectiveType||''))){
+        warmPlugy3D('home-small').then(()=>syncPlugyHomeMount()).catch(()=>document.documentElement.classList.add('plugy-3d-fallback'));
+      }
+    },700);
+  });
 });
 
+window.__PLUGART_V174_RUNTIME_READY=true;
 /* ---------------- V161 IMMERSIVE WORKSPACE ---------------- */
 const CREATION_V161_STYLES=[
 {id:'editorial-white',name:'Editorial White',sub:'Magazine / galerie',layout:'editorial',theme:'editorial',accent:'black',pattern:'frame',bg:'#f7f6f1',preview:'linear-gradient(145deg,#faf9f5 0 64%,#15161b 64%)'},
