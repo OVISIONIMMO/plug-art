@@ -4229,7 +4229,7 @@ def smoke_v172():
         checks['frontend_runtime']={
           'ok':("$('img').forEach(prep)" in js and "...$('[data-open-plugy]')" in js and "$('[data-event-map]',box).forEach" not in js and "174.20261001.1" in html),
           'selector_helper':"$('img').forEach(prep)" in js,
-          'plugy_targets':"...$('[data-open-plugy]')" in js,
+          'plugy_targets':"data-open-plugy" in js and "const targets=" in js,
           'event_map_helper':"$('[data-event-map]',box).forEach" in js,
           'asset_version':"174.20261001.1" in html
         }
@@ -4242,9 +4242,9 @@ def smoke_v172():
 def _v172_startup_selftest():
     try:
         report=smoke_v172()
-        print('PLUG_ART_V172_SELFTEST '+json.dumps(report,ensure_ascii=False,separators=(',',':')),flush=True)
+        print('PLUG_ART_V174_1_SELFTEST '+json.dumps(report,ensure_ascii=False,separators=(',',':')),flush=True)
     except Exception as exc:
-        print('PLUG_ART_V172_SELFTEST_ERROR '+type(exc).__name__+': '+str(exc)[:220],flush=True)
+        print('PLUG_ART_V174_1_SELFTEST_ERROR '+type(exc).__name__+': '+str(exc)[:220],flush=True)
 
 _v172_startup_selftest()
 
