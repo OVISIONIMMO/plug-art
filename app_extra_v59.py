@@ -4227,13 +4227,15 @@ def smoke_v172():
         js=(BASE/'static'/'plugart_v162.js').read_text(encoding='utf-8')
         html=DASH.read_text(encoding='utf-8')
         selector_ok="[V174 media init]" in js and "querySelectorAll?.('img').forEach(prep)" in js
-        plugy_ok="bindPlugyWarmIntent" in js and "data-open-plugy" in js and "home-small" in js
+        plugy_ok="soft-matte-v175" in js and "mode==='dashboard'" in js and "home-small" in js
+        dashboard_ok="V175 · SIMPLE DAILY DASHBOARD" in js and "dashboardV175" in js and "MES OUTILS" in js
         event_map_ok="data-event-map" in js and "ensureMapEventsV173(false).then(renderMap)" in js
-        asset_ok="175.20261001.1" in html and "V174.2" in html
+        asset_ok="175.20261001.1" in html and "V175.0" in html
         checks['frontend_runtime']={
-          'ok':selector_ok and plugy_ok and event_map_ok and asset_ok,
+          'ok':selector_ok and plugy_ok and dashboard_ok and event_map_ok and asset_ok,
           'selector_helper':selector_ok,
-          'plugy_targets':plugy_ok,
+          'plugy_quality':plugy_ok,
+          'dashboard_simple':dashboard_ok,
           'event_map_helper':event_map_ok,
           'asset_version':asset_ok
         }
@@ -4403,7 +4405,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V175_READY runtime=selector_repaired pages=restored map=fail_safe plugy=multi_cdn_small_home performance=lazy_media_single_observer",flush=True)
+print("PLUG_ART_V175_READY dashboard=simple_daily_tools navigation=deduplicated plugy=soft_matte_fullbody render=full_resolution performance=lazy_media_single_observer",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
