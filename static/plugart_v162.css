@@ -4864,3 +4864,140 @@ body[data-view="creation"] .workspace{padding-left:20px!important;padding-right:
   .slide-tabs{gap:5px!important}
   .slide-tabs button{padding:8px 10px!important}
 }
+
+
+/* ================= PLUG ART V173 · PERFORMANCE + GUIDES + RESPONSIVE ACTIONS ================= */
+:root{--v173-guide:#735cff}
+
+/* Guides remain visible and now follow page + sibling layer alignment anchors. */
+#view-creation .canvas-guide{z-index:40!important}
+#view-creation .canvas-guide.guide-x{left:var(--guide-x,50%)!important;top:0!important;bottom:0!important;width:1px!important}
+#view-creation .canvas-guide.guide-y{top:var(--guide-y,50%)!important;left:0!important;right:0!important;height:1px!important}
+#view-creation .carousel-canvas.show-guides .canvas-guide{opacity:.22!important}
+#view-creation .carousel-canvas.snap-x .guide-x,
+#view-creation .carousel-canvas.snap-y .guide-y{
+  opacity:1!important;background:var(--v173-guide)!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.72),0 0 10px rgba(115,92,255,.32)!important
+}
+#view-creation .canvas-layer.selected{z-index:22!important;outline:2px solid var(--v173-guide)!important;outline-offset:2px!important}
+#view-creation .canvas-layer.layer-image.selected{overflow:visible!important}
+#view-creation .canvas-layer .layer-resize{z-index:4!important;pointer-events:auto!important}
+
+/* Action zones never overlap: they wrap into rows instead of piling on top of content. */
+.toolbar-actions,
+.editor-actions,
+.bureau-actions,
+.card-actions,
+.event-actions-v167,
+.creation-actions-v167,
+.creation-top-add-v166,
+.creation-top-actions-v166,
+.creation-top-bg-v166,
+.studio-stage-head,
+.lead-form-actions,
+.pdf-inspector-actions-v167{
+  min-width:0!important;max-width:100%!important;flex-wrap:wrap!important
+}
+.toolbar-actions{justify-content:flex-end!important}
+.toolbar-actions>*,
+.editor-actions>*,
+.bureau-actions>*,
+.card-actions>*,
+.event-actions-v167>*,
+.creation-actions-v167>*{
+  min-width:0!important;max-width:100%
+}
+.creation-top-tools-v166{
+  display:flex!important;flex-wrap:wrap!important;align-items:center!important;
+  gap:8px!important;overflow:visible!important
+}
+.creation-top-add-v166{flex:1 1 340px!important}
+.creation-top-bg-v166{flex:1 1 260px!important;justify-content:flex-start!important;overflow-x:auto!important;overflow-y:hidden!important}
+.creation-top-actions-v166{flex:0 1 auto!important;margin-left:auto!important;justify-content:flex-end!important}
+#view-creation .studio-stage-head{display:flex!important;gap:8px!important;align-items:center!important}
+#view-creation .studio-stage-head>*{min-width:0}
+#view-creation .canvas-context-toolbar{
+  width:auto!important;max-width:100%!important;flex-wrap:wrap!important;justify-content:center!important;overflow:visible!important
+}
+
+/* On laptop widths the inspector drops below the canvas instead of crushing four columns together. */
+@media(max-width:1500px) and (min-width:821px){
+  #view-creation .creation-v167.active{
+    grid-template-columns:58px minmax(200px,224px) minmax(0,1fr)!important;
+    gap:10px!important
+  }
+  #view-creation .creation-v167 #studioUnifiedTabs{grid-column:1!important;grid-row:1!important}
+  #view-creation .creation-v167 .studio-library{grid-column:2!important;grid-row:1!important}
+  #view-creation .creation-v167 .studio-stage{grid-column:3!important;grid-row:1!important;min-width:0!important}
+  #view-creation .creation-v167 .studio-inspector{
+    grid-column:2/4!important;grid-row:2!important;position:relative!important;top:auto!important;
+    max-height:none!important;overflow:visible!important;display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important
+  }
+  #view-creation .creation-v167 .studio-inspector>*{min-width:0}
+  .creation-top-actions-v166{flex:1 1 100%!important;justify-content:flex-start!important}
+}
+@media(max-width:1180px) and (min-width:821px){
+  #view-creation .creation-v167.active{grid-template-columns:54px minmax(185px,210px) minmax(0,1fr)!important}
+  #view-creation .creation-v167 .studio-canvas-frame{padding:18px!important;min-height:430px!important}
+  #view-creation .creation-v167 .studio-inspector{grid-template-columns:1fr!important}
+}
+@media(max-width:820px){
+  .toolbar-actions{width:100%!important;justify-content:flex-start!important}
+  .toolbar-actions>*{flex:1 1 auto}
+  .creation-top-add-v166,.creation-top-actions-v166,.creation-top-bg-v166{flex:1 1 100%!important}
+  #view-creation .canvas-context-toolbar{position:relative!important;top:auto!important}
+}
+
+/* Vernissage points are visually distinct on the map. */
+.map-list-item>i.vernissage{
+  background:#ec6fae!important;box-shadow:0 0 0 4px rgba(236,111,174,.12)!important
+}
+.plugart-leaflet-icon span.vernissage{
+  background:#ec6fae!important;
+  box-shadow:0 0 0 5px rgba(236,111,174,.13),0 8px 20px rgba(143,55,101,.24)!important
+}
+.map-filter-chips{scrollbar-width:none}
+.map-filter-chips::-webkit-scrollbar{display:none}
+
+/* Keep PLUGY visually present without forcing WebGL into first paint. */
+#dashboardPlugyMount{position:relative}
+html:not(.plugy-3d-ready) #dashboardPlugyMount:after{
+  content:"";position:absolute;left:50%;top:50%;width:min(62%,270px);aspect-ratio:1;
+  transform:translate(-50%,-50%);border-radius:46% 54% 58% 42%/46% 42% 58% 54%;
+  background:
+    radial-gradient(circle at 34% 26%,rgba(255,255,255,.96) 0 9%,transparent 24%),
+    radial-gradient(circle at 42% 36%,rgba(92,223,232,.86),transparent 37%),
+    radial-gradient(circle at 63% 58%,rgba(118,87,255,.76),transparent 46%),
+    radial-gradient(circle at 55% 68%,rgba(236,111,174,.55),transparent 54%),
+    rgba(244,243,251,.78);
+  filter:blur(.15px) drop-shadow(0 20px 38px rgba(71,62,130,.13));
+  opacity:.9;pointer-events:none;transition:opacity .22s ease
+}
+html.plugy-3d-ready #dashboardPlugyMount:after{opacity:0}
+
+/* Reduce expensive compositing on work surfaces while preserving the overall visual identity. */
+#view-creation .studio-library,
+#view-creation .studio-inspector,
+#view-creation .studio-stage,
+#view-creation .creation-top-tools-v166,
+#view-creation .carousel-storyboard-v1691,
+.event-search-v167,
+.event-card-v167,
+.map-sidebar,
+.map-detail,
+.slide-data-panel,
+.slide-today-card{
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important
+}
+#view-creation .studio-library,
+#view-creation .studio-inspector,
+#view-creation .studio-stage{contain:layout paint style}
+.event-grid-v167,.open-grid,.card-grid{contain:layout style}
+.route-switching .view.active{pointer-events:none}
+
+/* Media placeholders stay stable while true lazy loading waits for the viewport. */
+img[data-defer-src]{min-height:1px}
+.event-visual-v167,
+.opp-media,
+.open-media{contain:layout paint;background:#f1f2f5}
