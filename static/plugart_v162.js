@@ -5241,7 +5241,7 @@ function installCreationV177(){
       .map(k=>{const t=CREATION_TEMPLATES_V167.find(x=>x[0]===k);return t?'<button data-v177-template="'+k+'">'+templateMiniV1692(k,t[1])+'</button>':''}).join('')+
       '</div>';
     const base=$('#creationLibraryV167');library.insertBefore(spot,base||library.firstChild);
-    $('[data-v177-template]',spot).forEach(b=>b.onclick=()=>applyCreationTemplateV167(b.dataset.v177Template));
+    $$('[data-v177-template]',spot).forEach(b=>b.onclick=()=>applyCreationTemplateV167(b.dataset.v177Template));
   }
   const head=panel.querySelector('.studio-stage-head');
   if(head&&!$('#creationStatusV177')){
