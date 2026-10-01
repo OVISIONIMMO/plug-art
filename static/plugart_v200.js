@@ -17,19 +17,30 @@ function plugy(seed){
 function loc(o){return [o&&o.city,o&&o.country].filter(Boolean).join(' · ')||(o&&o.location)||'Lieu à confirmer'}
 function dt(o){return (o&&(o.deadline||o.event_date||o.date||o.start_date))||'Date à confirmer'}
 async function data(){
-  try{var r=await fetch('/api/v124/dashboard-bootstrap',{cache:'no-store'});if(r.ok)return await r.json()}catch(e){}
-  return {};
+  try{
+    var raw=sessionStorage.getItem('plugart:v124:dashboard-bootstrap');
+    if(raw){
+      var cached=JSON.parse(raw);
+      if(cached&&cached.boot&&Date.now()-Number(cached.savedAt||0)<600000)return cached.boot;
+    }
+  }catch(e){}
+  try{
+    var r=await fetch('/api/v124/dashboard-bootstrap',{cache:'no-store'});if(!r.ok)return {};
+    var d=await r.json();
+    try{sessionStorage.setItem('plugart:v124:dashboard-bootstrap',JSON.stringify({savedAt:Date.now(),boot:d}))}catch(e){}
+    return d;
+  }catch(e){return{}}
 }
 async function install(){
-  document.body.classList.add('plugart-v200','plugart-v201');
-  var bp=q('#buildPill'),sv=q('#sidebarVersion');if(bp)bp.textContent='V201';if(sv)sv.textContent='V201';
+  document.body.classList.add('plugart-v200','plugart-v201','plugart-v202');
+  var bp=q('#buildPill'),sv=q('#sidebarVersion');if(bp)bp.textContent='V202';if(sv)sv.textContent='V202';
   var view=q('#view-dashboard');if(!view||q('#dashboardV200'))return;
   qa('#view-dashboard > .dashboard-grid,#dashboardV176,#slideDashboard,#dashboardV175',view).forEach(function(x){x.hidden=true;x.setAttribute('aria-hidden','true')});
   var root=document.createElement('div');root.id='dashboardV200';
   root.innerHTML=
-  '<section class="v200-hero">'+
-   '<div class="v200-copy"><div><div class="v200-kicker"><i></i>PLUG ART · CREATIVE OPERATING SYSTEM</div><h2>Créer. Repérer.<br><em>Faire circuler l’art.</em></h2><p>Un poste de travail unique pour détecter les opportunités, fabriquer tes campagnes, structurer les projets et travailler avec PLUGY sans changer d’univers toutes les trente secondes.</p></div><div class="v200-actions"><button data-v200-go="creation">Créer une campagne</button><button data-v200-go="radar">Explorer le Radar</button><button data-v200-plugy>Parler à PLUGY</button></div></div>'+
-   '<div class="v200-plugy-stage"><div id="dashboardPlugyMountV201" class="v200-plugy-mount" role="button" tabindex="0" aria-label="Ouvrir PLUGY"></div><div class="v200-plugy-label"><i></i> PLUGY · DISPONIBLE</div></div>'+
+  '<section class="v202-overview">'+
+   '<div class="v202-overview-copy"><div><div class="v202-kicker">PLUG ART · CREATIVE WORKSPACE</div><h2>Moins de bruit.<br><em>Plus d’action.</em></h2><p>Radar, création, dossiers et prospection restent au même endroit, avec une lecture plus simple et moins d’éléments à charger au premier affichage.</p></div><div class="v202-overview-actions"><button data-v200-go="creation">Créer une campagne</button><button data-v200-go="radar">Ouvrir le Radar</button><button data-v200-go="bureau">Accéder au Bureau</button></div></div>'+
+   '<button class="v202-plugy-mini" data-v200-plugy aria-label="Ouvrir PLUGY"><span class="v202-plugy-orb" aria-hidden="true"></span><span><small>ASSISTANT</small><strong>PLUGY</strong><em>Ouvrir seulement quand nécessaire</em></span></button>'+
   '</section>'+
   '<section class="v200-commandbar">'+
    '<button class="v200-command" data-v200-go="radar"><b>◉</b><div><strong>Radar</strong><span>Open calls & vernissages</span></div></button>'+
@@ -46,18 +57,7 @@ async function install(){
     if(e.target.closest('[data-v200-plugy]'))plugy('Aide-moi à organiser mon travail PLUG ART.');
     var o=e.target.closest('[data-v200-opp]');if(o){go('creation');setTimeout(function(){if(window.PLUGART_V200&&window.PLUGART_V200.seedOpportunity)window.PLUGART_V200.seedOpportunity(o.getAttribute('data-v200-opp'))},300)}
   });
-  try{
-    var mount=q('#dashboardPlugyMountV201');
-    if(mount){
-      mount.addEventListener('click',function(){plugy('Je veux travailler avec toi sur PLUG ART.')});
-      mount.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();plugy('Je veux travailler avec toi sur PLUG ART.')}});
-    }
-    if(typeof ensureModelViewer==='function')await ensureModelViewer();
-    if(typeof movePlugyModel==='function'&&mount)movePlugyModel(mount);
-    if(typeof warmPlugy3D==='function')await warmPlugy3D('dashboard-v201');
-    if(typeof applyPlugyFraming==='function'&&mount)applyPlugyFraming(mount);
-    if(typeof playMotion==='function')playMotion('Idle',true);
-  }catch(e){console.warn('[PLUGY V201 stable mount]',e)}
+
   var d=await data(),opps=(d.opportunities||(d.data&&d.data.opportunities)||[]).slice(0,5),stats=d.stats||(d.data&&d.data.stats)||{};
   var list=q('#v200Opps');
   if(list)list.innerHTML=opps.length?opps.map(function(o,i){return '<article class="v200-opp"><div class="v200-index">'+String(i+1).padStart(2,'0')+'</div><div><strong>'+esc(o.title||'Opportunité')+'</strong><span>'+esc(loc(o))+' · '+esc(dt(o))+'</span></div><button data-v200-opp="'+esc(o.id||'')+'">Créer ↗</button></article>'}).join(''):'<div class="empty">Aucune opportunité chargée.</div>';
@@ -67,7 +67,7 @@ async function install(){
 }
 function boot(){
   install();
-  var ob=new MutationObserver(function(){document.body.classList.add('plugart-v200','plugart-v201');if(q('#view-dashboard')&&!q('#dashboardV200'))install()});
+  var ob=new MutationObserver(function(){document.body.classList.add('plugart-v200','plugart-v201','plugart-v202');if(q('#view-dashboard')&&!q('#dashboardV200'))install()});
   ob.observe(document.body,{childList:true,subtree:true});
   window.PLUGART_V200=window.PLUGART_V200||{};window.PLUGART_V200.go=go;
 }
