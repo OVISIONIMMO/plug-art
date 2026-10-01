@@ -10,7 +10,7 @@ from starlette.middleware.gzip import GZipMiddleware
 import app_extra_v59 as v59
 
 app = v59.app
-app.version = '201.0'
+app.version = '202.0'
 BASE = Path(__file__).resolve().parent
 app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 GENERATED = Path(os.getenv('PLUGART_GENERATED_DIR', '/data/generated-content-v179'))
@@ -340,8 +340,8 @@ def generated_v179(name: str):
 def status_v179():
     return {
         'ok': True,
-        'version': '201.0',
-        'ui': 'stability-performance-v201',
+        'version': '202.0',
+        'ui': 'black-fast-shell-v202',
         'text_stream': '/api/v179/plugy/stream',
         'image_generation': '/api/v179/content/image',
         'image_enabled': bool(os.getenv('OPENAI_API_KEY', '').strip()),
@@ -353,11 +353,13 @@ def status_v179():
 async def headers_v179(request: Request, call_next):
     response = await call_next(request)
     if request.url.path == '/':
-        response.headers['X-Plug-Art-Version'] = '201.0'
-        response.headers['X-Plug-Art-UI'] = 'stable-workspace-v201'
+        response.headers['X-Plug-Art-Version'] = '202.0'
+        response.headers['X-Plug-Art-UI'] = 'black-fast-shell-v202'
         response.headers['Cache-Control'] = 'no-store, max-age=0'
+    elif request.url.path.startswith('/static/') or request.url.path.startswith('/assets/'):
+        response.headers['Cache-Control'] = 'public,max-age=604800,stale-while-revalidate=2592000'
     elif request.url.path.startswith('/api/v179/'):
         response.headers['Cache-Control'] = 'no-store'
     return response
 
-print(f'PLUG_ART_V201_READY text={FAST_MODEL} image={DEFAULT_IMAGE_MODEL} generated={GENERATED}', flush=True)
+print(f'PLUG_ART_V202_READY text={FAST_MODEL} image={DEFAULT_IMAGE_MODEL} generated={GENERATED}', flush=True)
