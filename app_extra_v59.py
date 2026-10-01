@@ -8,7 +8,7 @@ import app as core
 import plugy_runtime_v127 as runtime_v127
 
 app=core.app
-app.version='175.0'
+app.version='176.0'
 BASE=Path(__file__).resolve().parent
 DASH=BASE/'static'/'plugart_v162.html'
 PLUGY_PAGE=BASE/'static'/'plugy_v162.html'
@@ -4225,6 +4225,7 @@ def smoke_v172():
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     try:
         js=(BASE/'static'/'plugart_v162.js').read_text(encoding='utf-8')
+        css=(BASE/'static'/'plugart_v162.css').read_text(encoding='utf-8')
         html=DASH.read_text(encoding='utf-8')
         selector_ok="[V174 media init]" in js and "querySelectorAll?.('img').forEach(prep)" in js
         plugy_ok="PLUGY_UNSAFE_ARM_MOTIONS_V176" in js and "dashboard-v176" in js and "dashboard-v176-plugy-mount" in css
