@@ -268,7 +268,8 @@ function prefetchRouteV164(id){
   (requiredFamilies(id)||[]).forEach(name=>ensureDataFamily(name,false).catch(()=>{}));
 }
 function bindRoutePrefetchV164(){
-  $$('[data-route]').forEach(el=>{
+  if(document.querySelector('script[src*="plugart_v200.js"]'))return;
+  $('[data-route]').forEach(el=>{
     const id=el.dataset.route;if(!id)return;
     const start=()=>{clearTimeout(ROUTE_PREFETCH_TIMERS_V164.get(el));ROUTE_PREFETCH_TIMERS_V164.set(el,setTimeout(()=>prefetchRouteV164(id),180))};
     const stop=()=>clearTimeout(ROUTE_PREFETCH_TIMERS_V164.get(el));
@@ -278,7 +279,7 @@ function bindRoutePrefetchV164(){
 }
 
 bindRoutePrefetchV164();
-installImageResilienceV171();
+if('requestIdleCallback' in window)requestIdleCallback(()=>installImageResilienceV171(),{timeout:1800});else setTimeout(installImageResilienceV171,900);
 addEventListener('popstate',()=>route(location.hash.slice(1)||'dashboard',false));
 
 let modelViewerPromise=null;

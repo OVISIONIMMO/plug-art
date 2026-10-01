@@ -1,6 +1,7 @@
 (function(){
 'use strict';
-var LEGACY='/static/plugart_v162.js?v=202.20261001.2';
+var LEGACY='/static/plugart_v162.js?v=202.20261001.3';
+var LEGACY_CSS='/static/plugart_v162.css?v=202.20261001.3';
 var legacyPromise=null;
 var simpleRoutes={dashboard:true,creation:true};
 
@@ -37,6 +38,9 @@ function loadLegacy(route){
   if(legacyPromise)return legacyPromise;
   if(route&&location.hash!=='#'+route)history.replaceState({view:route},'','#'+route);
   legacyPromise=new Promise(function(resolve,reject){
+    if(!document.querySelector('link[data-plugart-legacy-css-v202]')){
+      var l=document.createElement('link');l.rel='stylesheet';l.href=LEGACY_CSS;l.dataset.plugartLegacyCssV202='1';var theme=document.querySelector('link[href*="plugart_v200.css"]');if(theme&&theme.parentNode)theme.parentNode.insertBefore(l,theme);else document.head.appendChild(l);
+    }
     var s=document.createElement('script');
     s.src=LEGACY;s.async=true;s.dataset.plugartLegacyV202='1';
     s.onload=function(){window.__PLUGART_LEGACY_READY=true;document.documentElement.dataset.legacyReady='1';resolve(true)};
