@@ -170,7 +170,7 @@ function ensureRouteRuntime(id){
   if(routeRuntimeReady.has(id))return;
   if(id==='radar'){installRadarPresets();installMobileRadarControls();installRadarV167()}
   if(id==='opencalls')installOpenWorkflowFilters();
-  if(id==='creation'){ensureCreationCssV163().catch(()=>{});installCreationModes();installCreationV161();setTimeout(()=>{installCreationV162();installCreationV166();installCreationV167();installCreationV177();installCreationV178()},0);}
+  if(id==='creation'&&!document.querySelector('script[src*="plugart_v200.js"]')){ensureCreationCssV163().catch(()=>{});installCreationModes();installCreationV161();setTimeout(()=>{installCreationV162();installCreationV166();installCreationV167();installCreationV177();installCreationV178()},0);}
   if(id==='bureau'){installBureauWorkspace();ensureBureauBridge();installProjectWorkspaceV163();installBureauV167()}
   if(id==='ideas'){installIdeasV163();installIdeasV167();}
   if(id==='network')installArtistV161();
@@ -4161,6 +4161,7 @@ function renderDashboardV176Events(){
   });
 }
 function installSlideDashboard(){
+  if(document.querySelector('script[src*="plugart_v200.js"]'))return;
   if($('#dashboardV176'))return;
   const view=$('#view-dashboard'),legacy=view?.querySelector('.dashboard-grid');if(!view)return;
   if(legacy){legacy.hidden=true;legacy.setAttribute('aria-hidden','true')}
