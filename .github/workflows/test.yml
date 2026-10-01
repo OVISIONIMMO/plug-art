@@ -146,11 +146,14 @@ jobs:
         run: |
           test -s static/plugart_v200.css
           test -s static/plugart_v200.js
-          grep -q 'plugart_v162.js?v=202.20261001.1' static/plugart_v162.html
+          grep -q 'plugart_v202_boot.js?v=202.20261001.2' static/plugart_v162.html
           grep -q 'plugart_v200.css?v=202.20261001.1' static/plugart_v162.html
-          grep -q 'plugart_v200.js?v=202.20261001.1' static/plugart_v162.html
+          grep -q 'plugart_v200.js?v=202.20261001.2' static/plugart_v162.html
           ! grep -q 'fonts.googleapis.com' static/plugart_v162.html
           ! grep -q 'creation_v179.js' static/plugart_v162.html
+          ! grep -q '<script defer src="/static/plugart_v162.js' static/plugart_v162.html
+          test -s static/plugart_v202_boot.js
+          node --check static/plugart_v202_boot.js
           grep -q 'v202-plugy-mini' static/plugart_v200.js
           ! grep -q "warmPlugy3D('home-small')" static/plugart_v162.js
           grep -q 'requestIdleCallback(delayed' static/plugart_v162.js
