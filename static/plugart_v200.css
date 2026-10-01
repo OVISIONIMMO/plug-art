@@ -190,3 +190,167 @@ body.plugart-v200 .plugy-form input{background:rgba(255,255,255,.06);color:#fff;
  #creationV200 .c200-slide{flex-basis:86vw}
  #creationV200 .c200-empty{height:520px}
 }
+
+
+/* PLUG ART V201 — interaction, stability & performance */
+body.plugart-v201 button,
+body.plugart-v201 [role="button"]{
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  transition:background-color .16s ease,border-color .16s ease,color .16s ease,transform .16s ease,opacity .16s ease,box-shadow .16s ease;
+}
+body.plugart-v201 button:active,
+body.plugart-v201 [role="button"]:active{transform:translateY(1px) scale(.995)}
+body.plugart-v201 button:focus-visible,
+body.plugart-v201 [role="button"]:focus-visible,
+body.plugart-v201 input:focus-visible,
+body.plugart-v201 textarea:focus-visible,
+body.plugart-v201 select:focus-visible{
+  outline:3px solid rgba(96,92,255,.22);
+  outline-offset:2px;
+}
+body.plugart-v201 button:disabled,
+body.plugart-v201 button[aria-disabled="true"]{
+  cursor:not-allowed;
+  opacity:.46;
+  filter:saturate(.55);
+  transform:none!important;
+}
+body.plugart-v201 .primary-btn,
+body.plugart-v201 .secondary-btn,
+body.plugart-v201 .plugy-btn,
+body.plugart-v201 .icon-btn,
+body.plugart-v201 .nav-item{
+  min-height:42px;
+}
+body.plugart-v201 .primary-btn:hover{background:#24252a;box-shadow:0 10px 24px rgba(17,18,20,.12)}
+body.plugart-v201 .secondary-btn:hover,
+body.plugart-v201 .icon-btn:hover{background:#fff;border-color:rgba(17,18,20,.22)}
+body.plugart-v201 .plugy-btn:hover{background:rgba(96,92,255,.16);border-color:rgba(96,92,255,.34)}
+body.plugart-v201 .v200-command:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(17,18,20,.06)}
+body.plugart-v201 .c200-primary{min-height:50px;box-shadow:0 12px 28px rgba(17,18,20,.12)}
+body.plugart-v201 .c200-primary:hover{background:#24252a;box-shadow:0 16px 30px rgba(17,18,20,.15)}
+body.plugart-v201 .c200-secondary:hover,
+body.plugart-v201 .c200-stagebar button:hover,
+body.plugart-v201 .c200-pills button:hover{border-color:rgba(96,92,255,.30);background:#faf9f5}
+body.plugart-v201 .c200-pills button.on{box-shadow:0 7px 18px rgba(17,18,20,.12)}
+body.plugart-v201 .c200-thumb{min-height:72px}
+body.plugart-v201 .c200-thumb::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.12));
+  pointer-events:none;
+}
+body.plugart-v201 .media-failed-v171,
+body.plugart-v201 .img-failed-v171{
+  background:linear-gradient(135deg,#1b1d23,#6d68ff 58%,#65dfee)!important;
+}
+body.plugart-v201 img.img-failed-v171{object-fit:cover;opacity:.92}
+body.plugart-v201 .view:not(.active){display:none!important}
+body.plugart-v201 .v200-lower,
+body.plugart-v201 #creationV200 .c200-stage{
+  content-visibility:auto;
+  contain-intrinsic-size:700px;
+}
+
+/* Single stable PLUGY canvas */
+#dashboardV200 .v200-hero{min-height:540px;grid-template-columns:minmax(0,1fr) minmax(460px,.92fr)}
+#dashboardV200 .v200-plugy-stage{
+  min-height:540px;
+  overflow:hidden;
+  isolation:isolate;
+  contain:layout paint;
+}
+#dashboardPlugyMountV201{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  min-height:540px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  outline:none;
+}
+#dashboardPlugyMountV201 #plugyModel{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:540px!important;
+  display:block!important;
+  opacity:1!important;
+  transform:none!important;
+  filter:none!important;
+  pointer-events:auto;
+  --progress-bar-color:transparent;
+}
+#dashboardPlugyMountV201 + .v200-plugy-label{pointer-events:none}
+body.plugart-v201 .plugy-zone-transition-v166 #plugyModel{animation:none!important}
+body.plugart-v201 #plugyDrawer .plugy-stage{
+  min-height:360px;
+  overflow:hidden;
+}
+body.plugart-v201 #plugyDrawer #plugyModel{
+  width:100%!important;
+  height:100%!important;
+  min-height:360px!important;
+}
+body.plugart-v201 .plugy-drawer{
+  transform:translateZ(0);
+  will-change:transform;
+  contain:layout paint;
+}
+
+/* Keep the same functional structure across breakpoints */
+@media(max-width:1180px){
+  #dashboardV200 .v200-hero{min-height:500px;grid-template-columns:minmax(0,1fr) minmax(390px,.86fr)}
+  #dashboardV200 .v200-plugy-stage,
+  #dashboardPlugyMountV201,
+  #dashboardPlugyMountV201 #plugyModel{min-height:500px!important}
+  body.plugart-v201 .top-actions{display:flex;gap:7px}
+  body.plugart-v201 .top-actions .primary-btn{display:inline-flex}
+}
+@media(max-width:820px){
+  body.plugart-v201 .sidebar{overflow:hidden}
+  body.plugart-v201 .main-nav{scrollbar-width:none;padding-right:8px}
+  body.plugart-v201 .main-nav::-webkit-scrollbar{display:none}
+  body.plugart-v201 .nav-item{display:flex!important;flex:0 0 54px;min-width:54px}
+  body.plugart-v201 .nav-item:nth-of-type(n+8){display:flex!important}
+  body.plugart-v201 .topbar{height:68px;gap:8px}
+  body.plugart-v201 .top-title{min-width:0;flex:1}
+  body.plugart-v201 .top-title h1{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body.plugart-v201 .top-actions{display:flex;gap:5px;flex:0 0 auto}
+  body.plugart-v201 .top-actions .primary-btn{display:inline-flex;min-height:40px;padding:0 10px;font-size:0}
+  body.plugart-v201 .top-actions .primary-btn::before{content:"＋";font-size:18px}
+  body.plugart-v201 .plugy-btn{min-height:40px;padding:0 10px;font-size:0}
+  body.plugart-v201 .plugy-btn::after{content:"PLUGY";font-size:10px;font-weight:800}
+  #dashboardV200 .v200-hero{grid-template-columns:1fr;min-height:auto}
+  #dashboardV200 .v200-copy{padding:30px 24px 8px}
+  #dashboardV200 .v200-plugy-stage,
+  #dashboardPlugyMountV201,
+  #dashboardPlugyMountV201 #plugyModel{min-height:430px!important}
+  #dashboardV200 .v200-plugy-stage{height:430px}
+  #dashboardV200 .v200-commandbar{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #dashboardV200 .v200-command{min-height:72px}
+  #creationV200 .c200-grid{grid-template-columns:1fr}
+  #creationV200 .c200-stage{min-height:560px}
+  #creationV200 .c200-control{display:block!important;grid-column:auto}
+  #creationV200 .c200-slide{flex-basis:min(86vw,410px)}
+}
+@media(max-width:480px){
+  body.plugart-v201 .view{padding-left:10px;padding-right:10px}
+  #dashboardV200 h2{font-size:clamp(42px,15vw,64px)}
+  #dashboardV200 .v200-copy p{font-size:14px}
+  #dashboardV200 .v200-plugy-stage,
+  #dashboardPlugyMountV201,
+  #dashboardPlugyMountV201 #plugyModel{min-height:390px!important}
+  #dashboardV200 .v200-plugy-stage{height:390px}
+  #dashboardV200 .v200-commandbar{grid-template-columns:1fr 1fr}
+  #dashboardV200 .v200-command{padding:10px;gap:9px}
+  #dashboardV200 .v200-command b{width:32px;height:32px}
+  #creationV200 .c200-inline{grid-template-columns:1fr}
+  #creationV200 .c200-stagebar{align-items:flex-start;flex-direction:column}
+}

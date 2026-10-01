@@ -1,15 +1,18 @@
 from __future__ import annotations
 from pathlib import Path
-import base64, hashlib, json, os, re, time
+import base64, hashlib, json, os, re, time, html
+from urllib.parse import quote
 import requests
 from fastapi import Body, HTTPException, Request
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse, Response
+from starlette.middleware.gzip import GZipMiddleware
 
 import app_extra_v59 as v59
 
 app = v59.app
-app.version = '200.0'
+app.version = '201.0'
 BASE = Path(__file__).resolve().parent
+app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 GENERATED = Path(os.getenv('PLUGART_GENERATED_DIR', '/data/generated-content-v179'))
 GENERATED.mkdir(parents=True, exist_ok=True)
 
@@ -152,6 +155,96 @@ def _image_prompt(prompt: str, style: str):
         "Refined lighting, believable materials, strong contemporary editorial composition."
     )
 
+def _fallback_palette(seed: str):
+    digest = hashlib.sha256(str(seed or 'PLUG ART').encode('utf-8')).hexdigest()
+    colors = ['#'+digest[i:i+6] for i in (0, 6, 12)]
+    return colors
+
+def _fallback_svg(label: str, seed: str=''):
+    safe = html.escape(_clean(label or 'PLUG ART', 90))
+    c1, c2, c3 = _fallback_palette(seed or safe)
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1280" viewBox="0 0 1024 1280">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="{c1}"/>
+        <stop offset=".56" stop-color="{c2}"/>
+        <stop offset="1" stop-color="{c3}"/>
+      </linearGradient>
+      <radialGradient id="r" cx=".72" cy=".18" r=".72">
+        <stop offset="0" stop-color="#ffffff" stop-opacity=".72"/>
+        <stop offset=".42" stop-color="#ffffff" stop-opacity=".08"/>
+        <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="blur"><feGaussianBlur stdDeviation="42"/></filter>
+    </defs>
+    <rect width="1024" height="1280" fill="#101114"/>
+    <rect width="1024" height="1280" fill="url(#g)" opacity=".76"/>
+    <circle cx="790" cy="230" r="390" fill="url(#r)"/>
+    <circle cx="190" cy="1040" r="360" fill="#ffffff" opacity=".08" filter="url(#blur)"/>
+    <path d="M-80 870 C170 720 240 980 520 830 S900 690 1120 780 L1120 1380 L-80 1380 Z" fill="#0b0c0f" opacity=".55"/>
+    <g fill="none" stroke="#ffffff" stroke-opacity=".16">
+      <circle cx="780" cy="330" r="210"/><circle cx="780" cy="330" r="280"/>
+      <path d="M80 220H944M80 1020H944"/>
+    </g>
+    <text x="76" y="1050" fill="#ffffff" opacity=".62" font-family="Arial, Helvetica, sans-serif" font-size="28" letter-spacing="8">PLUG ART</text>
+    <text x="76" y="1120" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="52" font-weight="700">{safe[:42]}</text>
+    <text x="76" y="1180" fill="#ffffff" opacity=".58" font-family="Arial, Helvetica, sans-serif" font-size="22">VISUEL DE SECOURS · IMAGE SOURCE OU IA À REMPLACER</text>
+    </svg>'''
+    return svg.encode('utf-8')
+
+def _fallback_url(label: str, seed: str=''):
+    return '/api/v201/visual-fallback?label='+quote(_clean(label or 'PLUG ART', 90))+'&seed='+quote(_clean(seed or label or 'plug-art', 120))
+
+def _fallback_result(prompt: str, reason: str='fallback'):
+    label = _clean(prompt or 'PLUG ART', 90)
+    return {
+        'ok': True,
+        'url': _fallback_url(label, prompt),
+        'model': 'local-svg-fallback',
+        'bytes': 0,
+        'elapsed_ms': 0,
+        'fallback': True,
+        'fallback_reason': _clean(reason, 220),
+    }
+
+@app.get('/api/v201/visual-fallback')
+def visual_fallback_v201(label: str='PLUG ART', seed: str=''):
+    raw = _fallback_svg(label, seed)
+    return Response(content=raw, media_type='image/svg+xml', headers={
+        'Cache-Control':'public,max-age=604800,stale-while-revalidate=2592000',
+        'X-PLUG-Image-Fallback':'v201'
+    })
+
+@app.get('/api/v201/events/{event_id}/media')
+def event_media_safe_v201(event_id: int):
+    try:
+        return v59.event_media_asset_v167(event_id, 0)
+    except Exception:
+        try:
+            e = v59.event_get_v167(event_id)
+            label = e.get('title') or e.get('venue_name') or 'Vernissage'
+        except Exception:
+            label = 'Vernissage'
+        return Response(content=_fallback_svg(label, f'event:{event_id}'), media_type='image/svg+xml', headers={
+            'Cache-Control':'public,max-age=86400,stale-while-revalidate=604800',
+            'X-PLUG-Image-Fallback':'event-v201'
+        })
+
+@app.get('/api/v201/opportunities/{oid}/media')
+def opportunity_media_safe_v201(oid: int):
+    try:
+        return v59.opportunity_media_asset_v166(oid, 0)
+    except Exception:
+        try:
+            item = v59.core.one('select title from opportunities where id=?',(oid,))
+            label = (item or {}).get('title') or 'Open Call'
+        except Exception:
+            label = 'Open Call'
+        return Response(content=_fallback_svg(label, f'opportunity:{oid}'), media_type='image/svg+xml', headers={
+            'Cache-Control':'public,max-age=86400,stale-while-revalidate=604800',
+            'X-PLUG-Image-Fallback':'opportunity-v201'
+        })
+
 def _extract_image(data: dict):
     items = (data or {}).get('data') or []
     if not items:
@@ -181,7 +274,7 @@ def image_v179(payload: dict = Body(default={})):
     payload = payload or {}
     key = os.getenv('OPENAI_API_KEY', '').strip()
     if not key:
-        raise HTTPException(503, 'OPENAI_API_KEY absente')
+        return _fallback_result(payload.get('prompt') or 'PLUG ART', 'OPENAI_API_KEY absente')
     prompt = _clean(payload.get('prompt'), 4500)
     if not prompt:
         raise HTTPException(422, 'Décris le visuel à générer')
@@ -207,6 +300,9 @@ def image_v179(payload: dict = Body(default={})):
                     detail = ((response.json().get('error') or {}).get('message') or response.text[:260])
                 except Exception:
                     detail = response.text[:260]
+                if response.status_code == 429:
+                    print(f'PLUG_ART_V201_IMAGE_FALLBACK quota model={model}', flush=True)
+                    return _fallback_result(prompt, detail[:220] or 'quota')
                 raise RuntimeError(f'{model}: HTTP {response.status_code} — {detail[:260]}')
             raw, media_type = _extract_image(response.json())
             if len(raw) < 1000:
@@ -227,8 +323,8 @@ def image_v179(payload: dict = Body(default={})):
             }
         except Exception as exc:
             errors.append(str(exc))
-    print('PLUG_ART_V179_IMAGE_FAIL ' + ' | '.join(errors)[:1000], flush=True)
-    raise HTTPException(502, 'Génération image indisponible: ' + ' | '.join(errors)[:900])
+    print('PLUG_ART_V201_IMAGE_FALLBACK ' + ' | '.join(errors)[:1000], flush=True)
+    return _fallback_result(prompt, ' | '.join(errors)[:220] or 'image indisponible')
 
 @app.get('/api/v179/generated/{name}')
 def generated_v179(name: str):
@@ -244,23 +340,24 @@ def generated_v179(name: str):
 def status_v179():
     return {
         'ok': True,
-        'version': '200.0',
-        'ui': 'premium-restructure-campaign-builder',
+        'version': '201.0',
+        'ui': 'stability-performance-v201',
         'text_stream': '/api/v179/plugy/stream',
         'image_generation': '/api/v179/content/image',
         'image_enabled': bool(os.getenv('OPENAI_API_KEY', '').strip()),
         'image_model': DEFAULT_IMAGE_MODEL,
+        'local_fallback': '/api/v201/visual-fallback',
     }
 
 @app.middleware('http')
 async def headers_v179(request: Request, call_next):
     response = await call_next(request)
     if request.url.path == '/':
-        response.headers['X-Plug-Art-Version'] = '200.0'
-        response.headers['X-Plug-Art-UI'] = 'premium-workspace-v200'
+        response.headers['X-Plug-Art-Version'] = '201.0'
+        response.headers['X-Plug-Art-UI'] = 'stable-workspace-v201'
         response.headers['Cache-Control'] = 'no-store, max-age=0'
     elif request.url.path.startswith('/api/v179/'):
         response.headers['Cache-Control'] = 'no-store'
     return response
 
-print(f'PLUG_ART_V200_READY text={FAST_MODEL} image={DEFAULT_IMAGE_MODEL} generated={GENERATED}', flush=True)
+print(f'PLUG_ART_V201_READY text={FAST_MODEL} image={DEFAULT_IMAGE_MODEL} generated={GENERATED}', flush=True)

@@ -4236,7 +4236,7 @@ def smoke_v172():
         catalog_ok="creationCatalogBarV178" in js and "studio-swiss-signal" in js and "studio-type-sculpture" in js
         nav_ok='data-route="agenda"' not in html and html.count('data-route="creation"')>=1 and html.count('data-route="opencalls"')>=1
         event_map_ok="data-event-map" in js and "ensureMapEventsV173(false).then(renderMap)" in js
-        asset_ok=(("178.20261001.1" in html and "V178.0" in html) or ("plugart_v200.css?v=200.20261001.1" in html and "plugart_v200.js?v=200.20261001.1" in html and "V200" in html))
+        asset_ok=(("178.20261001.1" in html and "V178.0" in html) or ("plugart_v200.css?v=200.20261001.1" in html and "plugart_v200.js?v=200.20261001.1" in html and "V200" in html) or ("plugart_v200.css?v=201.20261001.1" in html and "plugart_v200.js?v=201.20261001.1" in html and "plugart_v162.js?v=201.20261001.1" in html and "V201" in html))
         image_runtime=(BASE/'app_extra_v32.py').read_text(encoding='utf-8')
         image_fallback_ok="PLUG_ART_IMAGE_V177_FALLBACK" in image_runtime and "plugart-fallback-v177" in image_runtime
         checks['frontend_runtime']={

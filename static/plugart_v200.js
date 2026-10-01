@@ -21,15 +21,15 @@ async function data(){
   return {};
 }
 async function install(){
-  document.body.classList.add('plugart-v200');
-  var bp=q('#buildPill'),sv=q('#sidebarVersion');if(bp)bp.textContent='V200';if(sv)sv.textContent='V200';
+  document.body.classList.add('plugart-v200','plugart-v201');
+  var bp=q('#buildPill'),sv=q('#sidebarVersion');if(bp)bp.textContent='V201';if(sv)sv.textContent='V201';
   var view=q('#view-dashboard');if(!view||q('#dashboardV200'))return;
   qa('#view-dashboard > .dashboard-grid,#dashboardV176,#slideDashboard,#dashboardV175',view).forEach(function(x){x.hidden=true;x.setAttribute('aria-hidden','true')});
   var root=document.createElement('div');root.id='dashboardV200';
   root.innerHTML=
   '<section class="v200-hero">'+
    '<div class="v200-copy"><div><div class="v200-kicker"><i></i>PLUG ART · CREATIVE OPERATING SYSTEM</div><h2>Créer. Repérer.<br><em>Faire circuler l’art.</em></h2><p>Un poste de travail unique pour détecter les opportunités, fabriquer tes campagnes, structurer les projets et travailler avec PLUGY sans changer d’univers toutes les trente secondes.</p></div><div class="v200-actions"><button data-v200-go="creation">Créer une campagne</button><button data-v200-go="radar">Explorer le Radar</button><button data-v200-plugy>Parler à PLUGY</button></div></div>'+
-   '<div class="v200-plugy-stage"><model-viewer id="dashboardPlugyV200" src="/assets/plugy-v113-premium.glb?v=200.20261001.1" loading="eager" reveal="auto" interaction-prompt="none" environment-image="neutral" tone-mapping="neutral" shadow-intensity=".02" exposure=".68" camera-target="0m 0m 0m" camera-orbit="0deg 79deg 8.9m" field-of-view="43deg" alt="PLUGY"></model-viewer><div class="v200-plugy-label"><i></i> PLUGY · DISPONIBLE</div></div>'+
+   '<div class="v200-plugy-stage"><div id="dashboardPlugyMountV201" class="v200-plugy-mount" role="button" tabindex="0" aria-label="Ouvrir PLUGY"></div><div class="v200-plugy-label"><i></i> PLUGY · DISPONIBLE</div></div>'+
   '</section>'+
   '<section class="v200-commandbar">'+
    '<button class="v200-command" data-v200-go="radar"><b>◉</b><div><strong>Radar</strong><span>Open calls & vernissages</span></div></button>'+
@@ -47,13 +47,17 @@ async function install(){
     var o=e.target.closest('[data-v200-opp]');if(o){go('creation');setTimeout(function(){if(window.PLUGART_V200&&window.PLUGART_V200.seedOpportunity)window.PLUGART_V200.seedOpportunity(o.getAttribute('data-v200-opp'))},300)}
   });
   try{
-    if(typeof ensureModelViewer==='function')await ensureModelViewer();
-    var mv=q('#dashboardPlugyV200');
-    if(mv){
-      mv.addEventListener('load',function(){try{var a=mv.availableAnimations||[];if(a.indexOf('Idle')>=0){mv.animationName='Idle';mv.play({repetitions:Infinity})}}catch(e){}},{once:true});
-      mv.addEventListener('click',function(){plugy('Je veux travailler avec toi sur PLUG ART.')});
+    var mount=q('#dashboardPlugyMountV201');
+    if(mount){
+      mount.addEventListener('click',function(){plugy('Je veux travailler avec toi sur PLUG ART.')});
+      mount.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();plugy('Je veux travailler avec toi sur PLUG ART.')}});
     }
-  }catch(e){}
+    if(typeof ensureModelViewer==='function')await ensureModelViewer();
+    if(typeof movePlugyModel==='function'&&mount)movePlugyModel(mount);
+    if(typeof warmPlugy3D==='function')await warmPlugy3D('dashboard-v201');
+    if(typeof applyPlugyFraming==='function'&&mount)applyPlugyFraming(mount);
+    if(typeof playMotion==='function')playMotion('Idle',true);
+  }catch(e){console.warn('[PLUGY V201 stable mount]',e)}
   var d=await data(),opps=(d.opportunities||(d.data&&d.data.opportunities)||[]).slice(0,5),stats=d.stats||(d.data&&d.data.stats)||{};
   var list=q('#v200Opps');
   if(list)list.innerHTML=opps.length?opps.map(function(o,i){return '<article class="v200-opp"><div class="v200-index">'+String(i+1).padStart(2,'0')+'</div><div><strong>'+esc(o.title||'Opportunité')+'</strong><span>'+esc(loc(o))+' · '+esc(dt(o))+'</span></div><button data-v200-opp="'+esc(o.id||'')+'">Créer ↗</button></article>'}).join(''):'<div class="empty">Aucune opportunité chargée.</div>';
@@ -63,7 +67,7 @@ async function install(){
 }
 function boot(){
   install();
-  var ob=new MutationObserver(function(){document.body.classList.add('plugart-v200');if(q('#view-dashboard')&&!q('#dashboardV200'))install()});
+  var ob=new MutationObserver(function(){document.body.classList.add('plugart-v200','plugart-v201');if(q('#view-dashboard')&&!q('#dashboardV200'))install()});
   ob.observe(document.body,{childList:true,subtree:true});
   window.PLUGART_V200=window.PLUGART_V200||{};window.PLUGART_V200.go=go;
 }
@@ -107,6 +111,18 @@ async function loadOpps(){
     if(s)s.innerHTML='<option value="">Brief libre</option>'+C.opps.slice(0,160).map(function(o,i){return '<option value="'+i+'">'+esc(o.title||'Sans titre')+'</option>'}).join('');
   }catch(e){}
 }
+async function sourceVisual(o){
+  if(!o||!o.id)return;
+  try{
+    var r=await fetch('/api/v67/opportunities/'+encodeURIComponent(o.id)+'/media',{cache:'force-cache'});
+    var d=r.ok?await r.json():null;
+    if(d&&d.media&&d.media.length){
+      var safe='/api/v201/opportunities/'+encodeURIComponent(o.id)+'/media';
+      C.visuals=[safe].concat(C.visuals.filter(function(x){return x!==safe}));
+      C.visualIndex=0;render();
+    }
+  }catch(e){}
+}
 function fill(o){
   if(!o)return;C.source=o;
   q('#c200Name').value=o.title||'';
@@ -114,6 +130,7 @@ function fill(o){
   q('#c200Date').value=o.event_date||o.start_date||o.deadline||'';
   q('#c200Brief').value=[o.summary||o.radar_reason||o.description||'',o.url?'Source liée au Radar':''].filter(Boolean).join('\n');
   status('Source Radar chargée');
+  sourceVisual(o);
 }
 function matchName(){
   var n=(q('#c200Name')&&q('#c200Name').value||'').trim().toLowerCase();if(!n)return;
@@ -169,7 +186,7 @@ async function visualSet(n,append){
   var done=await Promise.allSettled(jobs),urls=done.filter(function(x){return x.status==='fulfilled'}).map(function(x){return x.value});
   C.visuals=append?C.visuals.concat(urls):urls;if(!append)C.visualIndex=0;render();return urls.length;
 }
-function imgFor(i){if(!C.visuals.length)return'';return C.visuals[(C.visualIndex+i)%C.visuals.length]||C.visuals[C.visualIndex]||''}
+function imgFor(i){if(C.visuals.length)return C.visuals[(C.visualIndex+i)%C.visuals.length]||C.visuals[C.visualIndex]||'';var sl=C.slides[i]||C.slides[0]||{};var label=sl.title||facts().name||'PLUG ART';return '/api/v201/visual-fallback?label='+encodeURIComponent(String(label).slice(0,90))+'&seed='+encodeURIComponent(String(facts().name||label).slice(0,120))}
 function renderSlides(){
   var h=q('#c200Carousel');if(!h)return;
   if(!C.slides.length){h.innerHTML='<div class="c200-empty"><div><b>Le carrousel apparaîtra ici.</b><span>Entre simplement le nom de l’exposition. PLUGY compose ensuite le récit, les slides et les visuels.</span></div></div>';return}
