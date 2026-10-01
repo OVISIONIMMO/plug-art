@@ -17,7 +17,7 @@ RESULT={'animation':'Idle','material':'fallback-cached','official_base':'V113-pr
 print(f"PLUGY_V127_1_FALLBACK_READY bytes={GLB.stat().st_size if GLB.exists() else 0}",flush=True)
 PLUGY_REFERENCE_ANIMATIONS=[RESULT.get('animation','Idle')]
 PLUGY_REFERENCE_SHA256=hashlib.sha256(GLB.read_bytes()).hexdigest() if GLB.exists() else ''
-VERSION='175.20261001.1'
+VERSION='176.20261001.1'
 
 @app.middleware("http")
 async def _v169_performance_headers(request: Request, call_next):
@@ -762,7 +762,7 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'175.0',
+      'version':'176.0',
       'ui':'plug-art-v169-2-studio',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
@@ -810,15 +810,15 @@ def ui_manifest_v128():
     html=DASH.read_text(encoding='utf-8') if DASH.exists() else ''
     js_path=BASE/'static'/'plugart_v162.js'
     css_path=BASE/'static'/'plugart_v160_slide.css'
-    expected='175.20261001.1'
+    expected='176.20261001.1'
     return {
       'ok': bool(html and js_path.exists() and css_path.exists() and PLUGY_PAGE.exists() and (BASE/'static'/'plugy_v162.js').exists() and (BASE/'static'/'plugy_v162.css').exists() and (BASE/'static'/'hub_v160_assets.js').exists()),
-      'version':'175.0',
-      'ui':'plug-art-v175-simple-dashboard',
+      'version':'176.0',
+      'ui':'plug-art-v176-unified-glass-dashboard',
       'asset_version':expected,
       'html_has_js':f'plugart_v162.js?v={expected}' in html,
       'html_has_slide_css': bool(js_path.exists() and 'plugart_v160_slide.css?v=' in js_path.read_text(encoding='utf-8')),
-      'html_has_sidebar_version':'V175.0' in html,
+      'html_has_sidebar_version':'V176.0' in html,
       'js_bytes':js_path.stat().st_size if js_path.exists() else 0,
       'slide_css_bytes':css_path.stat().st_size if css_path.exists() else 0,
       'features':[
@@ -4227,15 +4227,17 @@ def smoke_v172():
         js=(BASE/'static'/'plugart_v162.js').read_text(encoding='utf-8')
         html=DASH.read_text(encoding='utf-8')
         selector_ok="[V174 media init]" in js and "querySelectorAll?.('img').forEach(prep)" in js
-        plugy_ok="soft-matte-v175" in js and "mode==='dashboard'" in js and "home-small" in js
-        dashboard_ok="V175 · SIMPLE DAILY DASHBOARD" in js and "dashboardV175" in js and "MES OUTILS" in js
+        plugy_ok="PLUGY_UNSAFE_ARM_MOTIONS_V176" in js and "dashboard-v176" in js and "dashboard-v176-plugy-mount" in css
+        dashboard_ok="V176 · UNIFIED LIVING DASHBOARD" in js and "dashboardV176" in js and "CENTRE DE CONTRÔLE" in js
+        nav_ok='data-route="agenda"' not in html and html.count('data-route="creation"')>=1 and html.count('data-route="opencalls"')>=1
         event_map_ok="data-event-map" in js and "ensureMapEventsV173(false).then(renderMap)" in js
-        asset_ok="175.20261001.1" in html and "V175.0" in html
+        asset_ok="176.20261001.1" in html and "V176.0" in html
         checks['frontend_runtime']={
-          'ok':selector_ok and plugy_ok and dashboard_ok and event_map_ok and asset_ok,
+          'ok':selector_ok and plugy_ok and dashboard_ok and nav_ok and event_map_ok and asset_ok,
           'selector_helper':selector_ok,
-          'plugy_quality':plugy_ok,
-          'dashboard_simple':dashboard_ok,
+          'plugy_visible_safe':plugy_ok,
+          'dashboard_unified':dashboard_ok,
+          'navigation_deduplicated':nav_ok,
           'event_map_helper':event_map_ok,
           'asset_version':asset_ok
         }
@@ -4243,14 +4245,14 @@ def smoke_v172():
         checks['frontend_runtime']={'ok':False,'detail':type(exc).__name__}
     checks['openai']={'configured':bool(os.getenv('OPENAI_API_KEY','').strip())}
     ok=all(v.get('ok',True) for k,v in checks.items() if k!='openai')
-    return {'ok':ok,'version':'175.0','checks':checks}
+    return {'ok':ok,'version':'176.0','checks':checks}
 
 def _v172_startup_selftest():
     try:
         report=smoke_v172()
-        print('PLUG_ART_V175_SELFTEST '+json.dumps(report,ensure_ascii=False,separators=(',',':')),flush=True)
+        print('PLUG_ART_V176_SELFTEST '+json.dumps(report,ensure_ascii=False,separators=(',',':')),flush=True)
     except Exception as exc:
-        print('PLUG_ART_V175_SELFTEST_ERROR '+type(exc).__name__+': '+str(exc)[:220],flush=True)
+        print('PLUG_ART_V176_SELFTEST_ERROR '+type(exc).__name__+': '+str(exc)[:220],flush=True)
 
 _v172_startup_selftest()
 
@@ -4294,7 +4296,7 @@ def diagnostics_v163():
     except Exception as exc:
         checks['bootstrap']={'ok':False,'detail':type(exc).__name__}
     ok=all(v.get('ok',v.get('configured',True)) for k,v in checks.items() if k not in ('openai','meta','railway'))
-    return {'ok':ok,'version':'175.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
+    return {'ok':ok,'version':'176.0','elapsed_ms':round((time.perf_counter()-started)*1000,1),'checks':checks}
 
 @app.get('/api/v164/status')
 @app.get('/api/v163/status')
@@ -4308,7 +4310,7 @@ def diagnostics_v163():
 @app.get('/api/v156/status')
 def status_v156():
     return {
-      'ok':True,'version':'175.0','ui':'plug-art-v175-simple-dashboard',
+      'ok':True,'version':'176.0','ui':'plug-art-v176-unified-glass-dashboard',
       'plugy':'full-body-safe-frame-sticky-natural-voice',
       'creation':'live-editor-fast-lazy-assets',
       'bureau':'documents-projects-pdf-library-packages-templates-hub',
@@ -4377,8 +4379,8 @@ def status_v90():
     raw=GLB.read_bytes() if GLB.exists() else b''
     return {
       'ok':bool(raw and raw[:4]==b'glTF' and DASH.exists()),
-      'version':'175.0',
-      'ui':'plug-art-v175-simple-dashboard',
+      'version':'176.0',
+      'ui':'plug-art-v176-unified-glass-dashboard',
       'reference_direction':'V151 PLUG ART: unified Canva-like content Studio with Structure, Text, Media, Elements, Colors and Layers, semantic typography scales, PLUG ART palettes, compact full-body PLUGY and fully calm miniature eyes',
       'marketing_blocks':False,
       'internal_workspace':True,
@@ -4405,7 +4407,7 @@ def status_v90():
       'background':'free translucent internal workspace with standalone PLUGY, free canvas Creation, HUB project workspace, functional opportunity map, social studio and integrated creative tools'
     }
 
-print("PLUG_ART_V175_READY dashboard=simple_daily_tools navigation=deduplicated plugy=soft_matte_fullbody render=full_resolution performance=lazy_media_single_observer",flush=True)
+print("PLUG_ART_V176_READY dashboard=unified_glass navigation=single_entry plugy=visible_fullbody_safe_arm fullscreen=smaller_matte performance=lazy_media",flush=True)
 
 def _v127_runtime_smoke():
     required_routes={
