@@ -775,3 +775,52 @@ html.plugy-model-fallback-v174 .plugy-model-wrap:before{
 @media(max-width:780px){
   html.plugy-model-fallback-v174 .plugy-model-wrap:before{width:min(68vw,300px)!important}
 }
+
+
+/* ================= PLUGY V176 · SMALLER FULL-BODY / ARM-SAFE STAGE ================= */
+.plugy-hero{
+  min-height:88svh!important;
+  grid-template-columns:minmax(320px,.92fr) minmax(430px,1.08fr)!important;
+  gap:clamp(18px,3vw,44px)!important
+}
+.plugy-hero .plugy-model-wrap{
+  width:min(46vw,560px)!important;
+  height:min(68svh,620px)!important;
+  min-height:500px!important;
+  max-height:620px!important;
+  padding:22px!important;
+  overflow:visible!important
+}
+.plugy-hero #plugyStandaloneModel{
+  width:min(40vw,500px)!important;
+  height:min(64svh,590px)!important;
+  min-height:470px!important;
+  max-height:590px!important;
+  filter:none!important;
+  transform:none!important;
+  image-rendering:auto!important
+}
+body[data-plugy-state] .plugy-hero #plugyStandaloneModel{
+  transform:none!important;
+  filter:none!important
+}
+.plugy-hero .plugy-model-wrap:before{width:58%!important;filter:blur(16px)!important;opacity:.58!important}
+.plugy-hero .plugy-model-wrap:after{width:min(42vw,500px)!important;opacity:.28!important;animation-duration:16s!important}
+.plugy-hero .plugy-live-state{bottom:3%!important}
+.energy-field .orb{opacity:.09!important;filter:blur(54px)!important}
+.energy-field .ring{opacity:.55!important}
+
+@media(max-width:900px){
+  .plugy-hero{min-height:88svh!important;grid-template-columns:1fr!important;padding-top:68px!important}
+  .plugy-hero .plugy-model-wrap{
+    width:100%!important;height:min(49svh,460px)!important;min-height:350px!important;max-height:460px!important;padding:10px!important
+  }
+  .plugy-hero #plugyStandaloneModel{
+    width:min(76vw,360px)!important;height:min(46svh,430px)!important;min-height:330px!important;max-height:430px!important
+  }
+  .plugy-hero .plugy-model-wrap:after{width:min(72vw,360px)!important}
+}
+@media(max-width:520px){
+  .plugy-hero .plugy-model-wrap{height:40svh!important;min-height:300px!important;max-height:370px!important}
+  .plugy-hero #plugyStandaloneModel{width:68vw!important;height:38svh!important;min-height:290px!important;max-height:350px!important}
+}
