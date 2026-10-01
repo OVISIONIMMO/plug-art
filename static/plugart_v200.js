@@ -6,6 +6,7 @@ var q=function(s,r){return (r||document).querySelector(s)};
 var qa=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
 var esc=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]})};
 function go(route){
+  if(window.PLUGART_V202_ROUTE){window.PLUGART_V202_ROUTE(route,true);return}
   var el=q('.nav-item[data-route="'+route+'"]');
   if(el){el.click();return}
   try{if(typeof showView==='function')showView(route)}catch(e){}
