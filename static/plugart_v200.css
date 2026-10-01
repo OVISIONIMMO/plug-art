@@ -784,3 +784,110 @@ body.plugart-v202 #plugyFollower{display:none!important}
   #dashboardV200 .v200-command{min-height:68px!important}
   #dashboardV200 .v200-feed,#dashboardV200 .v200-radar-card{padding:20px!important}
 }
+
+
+/* V202 LIGHT CORE — replaces the 386 KB legacy stylesheet on Dashboard / Creation */
+html,body{min-height:100%;margin:0}
+*,*::before,*::after{box-sizing:border-box}
+body.plugart-v202{min-width:0;overflow-x:hidden}
+body.plugart-v202 button,
+body.plugart-v202 input,
+body.plugart-v202 textarea,
+body.plugart-v202 select{font:inherit}
+body.plugart-v202 button{appearance:none}
+body.plugart-v202 .app-shell{position:relative;min-height:100vh}
+body.plugart-v202 .sidebar{
+  position:fixed;
+  inset:0 auto 0 0;
+  z-index:60;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+body.plugart-v202 .brand-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+body.plugart-v202 .brand{
+  border:0;background:transparent;padding:0;display:inline-flex;align-items:center;gap:4px;min-height:38px;
+}
+body.plugart-v202 .brand i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#817cff;box-shadow:0 0 16px rgba(129,124,255,.65)}
+body.plugart-v202 .sidebar-collapse{width:30px;height:30px;border-radius:9px}
+body.plugart-v202 .main-nav{display:flex;flex:1;flex-direction:column;overflow:auto;padding:20px 0 10px;scrollbar-width:none}
+body.plugart-v202 .main-nav::-webkit-scrollbar{display:none}
+body.plugart-v202 .nav-group{display:grid;gap:5px}
+body.plugart-v202 .nav-group+ .nav-group{margin-top:8px}
+body.plugart-v202 .nav-group small{padding:0 10px;margin-bottom:4px;font-size:9px}
+body.plugart-v202 .nav-item{
+  width:100%;border:0;padding:0 10px;display:flex;align-items:center;gap:10px;text-align:left;background:transparent;
+}
+body.plugart-v202 .nav-item b{width:22px;flex:0 0 22px;text-align:center}
+body.plugart-v202 .sidebar-foot{padding:14px 10px 4px;display:grid;grid-template-columns:8px 1fr auto;gap:7px;align-items:center;font-size:9px}
+body.plugart-v202 .sidebar-foot i{width:6px;height:6px;border-radius:50%;background:#6ee7a8}
+body.plugart-v202 .workspace{min-height:100vh;min-width:0}
+body.plugart-v202 .topbar{
+  position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;
+}
+body.plugart-v202 .top-title{min-width:150px}
+body.plugart-v202 .top-title>small{display:block;font-size:8px;letter-spacing:.13em;margin-bottom:4px}
+body.plugart-v202 .top-title-line{display:flex;align-items:center;gap:8px}
+body.plugart-v202 .top-title h1{margin:0}
+body.plugart-v202 .build-pill{display:inline-flex;align-items:center;min-height:20px;padding:0 7px;border-radius:999px;font-size:8px}
+body.plugart-v202 .global-search{
+  min-width:0;flex:1;height:40px;border-radius:12px;display:flex;align-items:center;gap:9px;padding:0 12px;text-align:left;
+}
+body.plugart-v202 .global-search strong{font-size:11px;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.plugart-v202 .global-search kbd{padding:3px 6px;border:1px solid;border-radius:6px;font-size:8px}
+body.plugart-v202 .top-actions{display:flex;align-items:center;gap:7px}
+body.plugart-v202 .icon-btn,
+body.plugart-v202 .primary-btn,
+body.plugart-v202 .secondary-btn,
+body.plugart-v202 .plugy-btn{
+  border:1px solid;border-radius:11px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+}
+body.plugart-v202 .icon-btn{width:40px;padding:0}
+body.plugart-v202 .plugy-btn i{width:6px;height:6px;border-radius:50%;background:#8b86ff}
+body.plugart-v202 .view{display:none;min-width:0}
+body.plugart-v202 .view.active{display:block}
+body.plugart-v202 .page-toolbar{display:flex;justify-content:space-between;gap:24px;align-items:flex-end}
+body.plugart-v202 .page-toolbar h2{margin:5px 0 5px}
+body.plugart-v202 .page-toolbar p{margin:0;line-height:1.5}
+body.plugart-v202 .toolbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+body.plugart-v202 .panel{border-radius:18px;min-width:0}
+body.plugart-v202 .empty{padding:22px;text-align:center;color:#6d737b;font-size:11px}
+body.plugart-v202 #view-dashboard>.dashboard-grid{display:none!important}
+body.plugart-v202 #view-creation>.page-toolbar,
+body.plugart-v202 #view-creation>.creation-studio-shell{display:none!important}
+
+/* lightweight creation shell */
+body.plugart-v202 #creationV200{min-width:0}
+body.plugart-v202 #creationV200 .c200-grid{min-width:0}
+body.plugart-v202 #creationV200 .c200-carousel{scrollbar-width:thin;scrollbar-color:#242830 transparent}
+body.plugart-v202 #creationV200 .c200-carousel::-webkit-scrollbar{height:6px}
+body.plugart-v202 #creationV200 .c200-carousel::-webkit-scrollbar-thumb{background:#242830;border-radius:999px}
+body.plugart-v202 #creationV200 .c200-slide{contain:layout paint style}
+body.plugart-v202 #creationV200 .c200-slide-bg{will-change:auto}
+
+/* route-loading state while advanced engine is fetched */
+html[data-route-loading="1"] body.plugart-v202 .view.active{opacity:.7}
+html[data-route-loading="1"] body.plugart-v202 .topbar::after{
+  content:"";position:absolute;left:0;bottom:-1px;width:28%;height:1px;background:#817cff;animation:v202load 1s ease-in-out infinite alternate;
+}
+@keyframes v202load{to{transform:translateX(250%)}}
+
+@media(max-width:1180px){
+ body.plugart-v202 .brand span,body.plugart-v202 .brand i,body.plugart-v202 .nav-item span,body.plugart-v202 .nav-group small,body.plugart-v202 .sidebar-foot span{display:none}
+ body.plugart-v202 .brand-row{justify-content:center}
+ body.plugart-v202 .nav-item{justify-content:center;padding:0}
+ body.plugart-v202 .sidebar-foot{grid-template-columns:1fr;justify-items:center}
+}
+@media(max-width:820px){
+ body.plugart-v202 .sidebar{
+   inset:auto 10px max(10px,env(safe-area-inset-bottom)) 10px!important;
+   width:auto!important;height:62px!important;border:1px solid var(--v202-line)!important;border-radius:17px!important;padding:6px!important;
+ }
+ body.plugart-v202 .brand-row,body.plugart-v202 .sidebar-foot{display:none!important}
+ body.plugart-v202 .main-nav{padding:0!important;display:flex!important;flex-direction:row!important;gap:3px!important;overflow-x:auto!important}
+ body.plugart-v202 .nav-group{display:contents!important}
+ body.plugart-v202 .nav-item{flex:0 0 52px!important;width:52px!important;height:48px!important;border-radius:12px!important}
+ body.plugart-v202 .workspace{padding-bottom:82px}
+ body.plugart-v202 .global-search{display:none}
+ body.plugart-v202 .page-toolbar{align-items:flex-start;flex-direction:column}
+}
