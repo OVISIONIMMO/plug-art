@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='177.20261001.1';
+const VERSION='177.20261001.2';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -513,15 +513,21 @@ function movePlugyModel(target){
   }
 }
 function syncPlugyHomeMount(){
-  const drawer=$('#plugyDrawer'),open=drawer?.classList.contains('open'),follower=ensurePlugyFollower();
-  if(open){follower.classList.remove('visible');return}
-  if(state.view==='dashboard'){
+  const drawer=$('#plugyDrawer'),open=drawer?.classList.contains('open'),follower=ensurePlugyFollower(),globalMv=$('#plugyModel'),dashMv=$('#dashboardPlugyV177');
+  if(open){
     follower.classList.remove('visible');
-    mountDashboardPlugyV177();
+    try{dashMv?.pause?.()}catch{}
+    if(globalMv?.loaded)playMotion('Idle',true);
     return;
   }
-  // V177: the main model-viewer remains permanently mounted in the drawer.
-  // Moving an active WebGL element between containers caused Chrome's isPresenting failures.
+  try{globalMv?.pause?.()}catch{}
+  if(state.view==='dashboard'){
+    follower.classList.remove('visible');
+    mountDashboardPlugyV177().then(()=>{const mv=$('#dashboardPlugyV177');if(mv?.loaded){try{mv.play?.({repetitions:Infinity})}catch{}}});
+    return;
+  }
+  try{dashMv?.pause?.()}catch{}
+  // Main WebGL stays mounted in the drawer; other routes use the lightweight CSS companion.
   follower.classList.add('visible');
 }
 
@@ -4252,7 +4258,8 @@ function plugySoftGaze(){
   plugyGazeTimer=setTimeout(()=>{applyPlugyFraming(mv.parentElement);mv.style.setProperty('--plugy-gaze-x','0px');mv.style.setProperty('--plugy-gaze-y','0px')},2600+Math.random()*1800);
 }
 function plugyIsVisible(){
-  const mv=$('#plugyModel');return !!(mv&&(plugyDrawerStage()?.contains(mv)||plugyDashboardStage()?.contains(mv)||$('#plugyFollower')?.contains(mv)));
+  const mv=$('#plugyModel'),drawer=$('#plugyDrawer');
+  return !!(mv&&drawer?.classList.contains('open')&&plugyDrawerStage()?.contains(mv));
 }
 let plugyRecentMotions=[];
 function choosePlugyMotion(pool){
