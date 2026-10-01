@@ -5287,7 +5287,7 @@ function creationTemplateFamilyV178(key=''){
 function filterCreationTemplatesV178(){
   const root=$('#creationLibraryV167');if(!root)return;
   const q=clean($('#creationTemplateSearchV178')?.value).toLowerCase(),family=$('[data-v178-family].active')?.dataset.v178Family||'all';
-  $('[data-v167-template]',root).forEach(btn=>{
+  $$('[data-v167-template]',root).forEach(btn=>{
     const key=btn.dataset.v167Template||'',label=(CREATION_TEMPLATES_V167.find(x=>x[0]===key)?.[1]||key).toLowerCase();
     const fam=creationTemplateFamilyV178(key),show=(!q||label.includes(q)||key.includes(q))&&(family==='all'||fam===family);
     btn.hidden=!show;
@@ -5305,7 +5305,7 @@ function installCreationV178(){
       '<div class="creation-catalog-filters-v178"><button class="active" data-v178-family="all">Tout</button><button data-v178-family="editorial">Éditorial</button><button data-v178-family="photo">Photo</button><button data-v178-family="event">Culture</button><button data-v178-family="experimental">Expérimental</button></div>';
     base.insertBefore(bar,base.firstChild);
     $('#creationTemplateSearchV178').oninput=filterCreationTemplatesV178;
-    $('[data-v178-family]',bar).forEach(b=>b.onclick=()=>{$('[data-v178-family]',bar).forEach(x=>x.classList.toggle('active',x===b));filterCreationTemplatesV178()});
+    $$('[data-v178-family]',bar).forEach(b=>b.onclick=()=>{$$('[data-v178-family]',bar).forEach(x=>x.classList.toggle('active',x===b));filterCreationTemplatesV178()});
   }
 
   if(stage&&!$('#creationGuideDockV178')){
