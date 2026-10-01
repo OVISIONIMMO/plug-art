@@ -5358,3 +5358,111 @@ html.plugy-3d-ready .dashboard-v176-plugy-mount:after{display:none}
   .dashboard-v176-row,.dashboard-v176-row.lower{grid-template-columns:1fr}
   .dashboard-v176-leads{grid-column:auto}
 }
+
+
+/* ================= PLUG ART V177 · MINIATURE LIVING DASHBOARD ================= */
+body[data-view="dashboard"] .workspace{
+  background:
+    radial-gradient(circle at 86% 12%,rgba(122,91,235,.12),transparent 22%),
+    radial-gradient(circle at 73% 66%,rgba(63,208,220,.10),transparent 25%),
+    radial-gradient(circle at 18% 86%,rgba(236,106,168,.08),transparent 22%),
+    linear-gradient(145deg,#f6f7fa 0%,#f1f5f6 54%,#f7f3f7 100%)!important;
+}
+#view-dashboard{max-width:1390px!important;padding-top:8px!important}
+.dashboard-v176{gap:12px!important}
+.dashboard-v176-hero{
+  min-height:130px!important;padding:18px 21px!important;border-radius:23px!important;
+  background:linear-gradient(135deg,rgba(255,255,255,.67),rgba(255,255,255,.37))!important;
+  border-color:rgba(255,255,255,.82)!important;
+  box-shadow:0 16px 42px rgba(31,34,49,.035)!important
+}
+.dashboard-v176-hero h2{
+  margin:5px 0 7px!important;font-size:clamp(31px,3.25vw,46px)!important;line-height:.98!important
+}
+.dashboard-v176-hero p{max-width:560px!important;font-size:10px!important;line-height:1.5!important}
+.dashboard-v176-health{min-width:145px!important;padding:9px 11px!important;border-radius:14px!important}
+.dashboard-v176-health span,.dashboard-v176-health strong{font-size:7px!important}
+.dashboard-v176-grid{grid-template-columns:minmax(0,1fr) 286px!important;gap:12px!important}
+.dashboard-v176-content{gap:11px!important}
+.dashboard-v176-stats{gap:7px!important}
+.dashboard-v176-stats>div{min-height:58px!important;padding:9px 11px!important;border-radius:15px!important}
+.dashboard-v176-stats>div>i{width:27px!important;height:27px!important;flex-basis:27px!important;border-radius:9px!important;font-size:10px!important}
+.dashboard-v176-stats strong{font-size:16px!important}
+.dashboard-v176-stats small{font-size:6.7px!important;margin-top:3px!important}
+.dashboard-v176-row{gap:10px!important}
+.dashboard-v176-row.lower{gap:10px!important}
+.dashboard-v176-card{padding:12px!important;border-radius:18px!important;box-shadow:0 10px 28px rgba(31,36,50,.025)!important}
+.dashboard-v176-card header{margin-bottom:6px!important}
+.dashboard-v176-card header h3{font-size:13px!important}
+.dashboard-v176-card header small,.dashboard-v176-card header>span{font-size:6.5px!important}
+.dashboard-v176-list>button{padding:8px 1px!important;gap:8px!important;min-height:45px!important}
+.dashboard-v176-list strong{
+  font-size:8.7px!important;line-height:1.25!important;
+  white-space:normal!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important
+}
+.dashboard-v176-list small{
+  font-size:6.8px!important;line-height:1.3!important;margin-top:3px!important;
+  white-space:normal!important;display:-webkit-box!important;-webkit-line-clamp:1!important;-webkit-box-orient:vertical!important;overflow:hidden!important
+}
+.dashboard-v176-list b{font-size:6.8px!important}
+.dashboard-v176-list.visual>button{grid-template-columns:24px minmax(0,1fr) auto!important}
+.dashboard-v176-list.visual>button>i{width:24px!important;height:24px!important;border-radius:8px!important;font-size:8px!important}
+
+/* Dedicated dashboard PLUGY. The global WebGL model stays in the drawer. */
+.dashboard-v176-plugy{
+  min-height:505px!important;grid-template-rows:auto 350px auto!important;
+  padding:13px!important;border-radius:22px!important;
+  background:
+    radial-gradient(circle at 50% 34%,rgba(121,100,229,.14),transparent 32%),
+    radial-gradient(circle at 52% 61%,rgba(77,211,222,.11),transparent 35%),
+    linear-gradient(150deg,rgba(255,255,255,.70),rgba(255,255,255,.39))!important;
+  border:1px solid rgba(255,255,255,.83)!important;box-shadow:0 16px 44px rgba(31,34,48,.04)!important
+}
+.dashboard-v176-plugy-top h3{font-size:13px!important}
+.dashboard-v176-plugy-top small,.dashboard-v176-plugy-top>span{font-size:6.5px!important}
+.dashboard-v176-plugy-stage{min-height:350px!important}
+.dashboard-v176-plugy-mount{
+  width:100%!important;height:350px!important;min-height:350px!important;max-height:350px!important;overflow:visible!important
+}
+#dashboardPlugyV177{
+  display:block!important;width:100%!important;max-width:245px!important;height:350px!important;
+  min-height:350px!important;max-height:350px!important;opacity:1!important;visibility:visible!important;
+  filter:none!important;transform:none!important;image-rendering:auto!important
+}
+.dashboard-v176-plugy-orbit.o1{width:72%!important;opacity:.7!important}
+.dashboard-v176-plugy-orbit.o2{width:54%!important;opacity:.7!important}
+.dashboard-v176-plugy-bottom p{font-size:7.4px!important;margin-bottom:7px!important}
+.dashboard-v176-plugy-bottom button{min-height:36px!important;border-radius:11px!important;font-size:7.5px!important}
+html:not(.dashboard-plugy-ready-v177) .dashboard-v176-plugy-mount:after{
+  content:"";position:absolute;left:50%;top:50%;width:105px;aspect-ratio:1;transform:translate(-50%,-50%);
+  border-radius:47% 53% 57% 43%/46% 43% 57% 54%;
+  background:
+    radial-gradient(circle at 34% 27%,rgba(255,255,255,.98) 0 8%,transparent 23%),
+    radial-gradient(circle at 42% 37%,rgba(115,224,232,.88),transparent 38%),
+    radial-gradient(circle at 63% 57%,rgba(121,96,231,.78),transparent 48%),
+    radial-gradient(circle at 54% 70%,rgba(236,116,176,.48),transparent 56%),
+    #efedf8;
+  filter:drop-shadow(0 16px 26px rgba(64,58,112,.08));pointer-events:none
+}
+html.dashboard-plugy-ready-v177 .dashboard-v176-plugy-mount:after{display:none!important}
+
+/* Daily-use polish: visual life without making the UI noisy. */
+.dashboard-v176-card:nth-child(odd){background:linear-gradient(145deg,rgba(255,255,255,.66),rgba(249,248,255,.50))!important}
+.dashboard-v176-card:nth-child(even){background:linear-gradient(145deg,rgba(255,255,255,.66),rgba(245,252,252,.48))!important}
+.dashboard-v176-aura{opacity:.22!important;filter:blur(58px)!important}
+.dashboard-v176-aura.a{width:210px!important;height:210px!important}
+.dashboard-v176-aura.b{width:235px!important;height:235px!important}
+.dashboard-v176-aura.c{width:190px!important;height:190px!important}
+
+@media(max-width:1240px){
+  .dashboard-v176-grid{grid-template-columns:minmax(0,1fr) 260px!important}
+  .dashboard-v176-plugy{min-height:465px!important;grid-template-rows:auto 320px auto!important}
+  .dashboard-v176-plugy-stage,.dashboard-v176-plugy-mount{height:320px!important;min-height:320px!important;max-height:320px!important}
+  #dashboardPlugyV177{height:320px!important;min-height:320px!important;max-height:320px!important;max-width:225px!important}
+}
+@media(max-width:980px){
+  .dashboard-v176-grid{grid-template-columns:1fr!important}
+  .dashboard-v176-plugy{position:relative!important;top:auto!important;min-height:420px!important;grid-template-rows:auto 285px auto!important}
+  .dashboard-v176-plugy-stage,.dashboard-v176-plugy-mount{height:285px!important;min-height:285px!important;max-height:285px!important}
+  #dashboardPlugyV177{height:285px!important;min-height:285px!important;max-height:285px!important;max-width:210px!important}
+}
