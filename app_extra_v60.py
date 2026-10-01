@@ -5,12 +5,14 @@ from urllib.parse import quote
 import requests
 from fastapi import Body, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse, Response
+from starlette.middleware.gzip import GZipMiddleware
 
 import app_extra_v59 as v59
 
 app = v59.app
 app.version = '201.0'
 BASE = Path(__file__).resolve().parent
+app.add_middleware(GZipMiddleware, minimum_size=900, compresslevel=5)
 GENERATED = Path(os.getenv('PLUGART_GENERATED_DIR', '/data/generated-content-v179'))
 GENERATED.mkdir(parents=True, exist_ok=True)
 
