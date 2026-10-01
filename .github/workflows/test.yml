@@ -142,19 +142,19 @@ jobs:
           grep -q 'Construire le sujet' static/studio_v21.js
           grep -q 'reorganizeAdvanced' static/studio_v21.js
 
-      - name: V201 stability performance
+      - name: V202 black fast shell
         run: |
           test -s static/plugart_v200.css
           test -s static/plugart_v200.js
-          grep -q 'plugart_v162.js?v=201.20261001.1' static/plugart_v162.html
-          grep -q 'plugart_v200.css?v=201.20261001.1' static/plugart_v162.html
-          grep -q 'plugart_v200.js?v=201.20261001.1' static/plugart_v162.html
+          grep -q 'plugart_v162.js?v=202.20261001.1' static/plugart_v162.html
+          grep -q 'plugart_v200.css?v=202.20261001.1' static/plugart_v162.html
+          grep -q 'plugart_v200.js?v=202.20261001.1' static/plugart_v162.html
+          ! grep -q 'fonts.googleapis.com' static/plugart_v162.html
           ! grep -q 'creation_v179.js' static/plugart_v162.html
-          grep -q 'dashboardPlugyMountV201' static/plugart_v200.js
-          grep -q '/api/v201/visual-fallback' static/plugart_v200.js
-          grep -q "app.version = '201.0'" app_extra_v60.py
+          grep -q 'v202-plugy-mini' static/plugart_v200.js
+          ! grep -q "warmPlugy3D('home-small')" static/plugart_v162.js
+          grep -q 'requestIdleCallback(delayed' static/plugart_v162.js
+          grep -q "app.version = '202.0'" app_extra_v60.py
+          grep -q "black-fast-shell-v202" app_extra_v60.py
+          grep -q "stale-while-revalidate=2592000" app_extra_v60.py
           grep -q 'GZipMiddleware' app_extra_v60.py
-          grep -q "def visual_fallback_v201" app_extra_v60.py
-          grep -q "def event_media_safe_v201" app_extra_v60.py
-          grep -q "leaflet-tile" static/plugart_v162.js
-          grep -q "\$\$('\[data-v178-family\]',bar).forEach" static/plugart_v162.js
