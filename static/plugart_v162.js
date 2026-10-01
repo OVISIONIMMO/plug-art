@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='175.20261001.1';
+const VERSION='176.20261001.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -308,7 +308,15 @@ function ensureModelViewer(){
   return modelViewerPromise;
 }
 
+const PLUGY_UNSAFE_ARM_MOTIONS_V176=new Set(['ArmHello','ArmExplain','ArmShrug','ArmStretch','ArmThink','Wave','Present','Happy','Travel']);
+const PLUGY_SAFE_MOTION_FALLBACK_V176={
+  ArmHello:'Curious',ArmExplain:'Attentive',ArmShrug:'SoftTurn',ArmStretch:'SoftTurn',ArmThink:'Think',Wave:'Curious',Present:'Attentive',Happy:'Curious',Travel:'SoftTurn'
+};
+function safePlugyMotionV176(name){
+  return PLUGY_UNSAFE_ARM_MOTIONS_V176.has(name)?(PLUGY_SAFE_MOTION_FALLBACK_V176[name]||'Idle'):name;
+}
 function playMotion(name='Idle',loop=false){
+  name=safePlugyMotionV176(name);
   const mv=$('#plugyModel');if(!mv)return;
   const mini=$('#plugyFollower')?.contains(mv)&&$('#plugyFollower')?.classList.contains('visible');
   if(mini&&['Blink','DoubleBlink','Wink','SoftEyes','EyeThink'].includes(name))name='Idle';
@@ -4048,101 +4056,107 @@ function installMobileShell(){
 }
 
 
-/* ================= V175 · SIMPLE DAILY DASHBOARD ================= */
+/* ================= V176 · UNIFIED LIVING DASHBOARD ================= */
+let dashboardEventsV176=[],dashboardEventsPromiseV176=null;
+function ensureDashboardEventsV176(){
+  if(dashboardEventsPromiseV176)return dashboardEventsPromiseV176;
+  const from=new Date().toISOString().slice(0,10),to=new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+  dashboardEventsPromiseV176=api('/api/v167/events?date_from='+from+'&date_to='+to,{cacheTtl:45000,timeout:7000})
+    .then(rows=>{dashboardEventsV176=(Array.isArray(rows)?rows:[]).slice(0,6);if(state.view==='dashboard')renderDashboardV176Events();return dashboardEventsV176})
+    .catch(()=>{dashboardEventsV176=[];return[]})
+    .finally(()=>{dashboardEventsPromiseV176=null});
+  return dashboardEventsPromiseV176;
+}
+function renderDashboardV176Events(){
+  const box=$('#dashboardEventsV176');if(!box)return;
+  const rows=dashboardEventsV176.slice(0,4);
+  box.innerHTML=rows.map(e=>
+    '<button data-v176-event="'+e.id+'"><i>◷</i><span><strong>'+esc(e.title||'Vernissage')+'</strong><small>'+esc([v167FmtDate(e.starts_at),e.city||e.venue_name].filter(Boolean).join(' · '))+'</small></span><b>→</b></button>'
+  ).join('')||'<div class="dashboard-v176-empty">Les prochains vernissages apparaîtront ici.</div>';
+  $$('[data-v176-event]',box).forEach(b=>b.onclick=()=>{
+    const e=rows.find(x=>String(x.id)===String(b.dataset.v176Event));if(!e)return;
+    route('radar');setTimeout(()=>{setRadarModeV167('events');if($('#eventQueryV167'))$('#eventQueryV167').value=e.title||'';loadEventsV167(false)},40);
+  });
+}
 function installSlideDashboard(){
-  if($('#dashboardV175'))return;
+  if($('#dashboardV176'))return;
   const view=$('#view-dashboard'),legacy=view?.querySelector('.dashboard-grid');if(!view)return;
   if(legacy){legacy.hidden=true;legacy.setAttribute('aria-hidden','true')}
-  $('#slideDashboard')?.remove();
+  $('#slideDashboard')?.remove();$('#dashboardV175')?.remove();
 
-  const deck=document.createElement('div');deck.id='dashboardV175';deck.className='dashboard-v175';
+  const deck=document.createElement('div');deck.id='dashboardV176';deck.className='dashboard-v176';
   deck.innerHTML=
-    '<section class="dashboard-v175-head">'+
-      '<div><span>PLUG ART · AUJOURD’HUI</span><h2>Ton espace de travail.</h2><p>Les outils utiles, les priorités et PLUGY. Rien de plus.</p></div>'+
-      '<div class="dashboard-v175-head-actions"><button data-v175-events>Vernissages</button><button data-route="radar">Radar</button><button class="primary" data-route="creation">Créer</button></div>'+
+    '<div class="dashboard-v176-aura a"></div><div class="dashboard-v176-aura b"></div><div class="dashboard-v176-aura c"></div>'+
+    '<section class="dashboard-v176-hero">'+
+      '<div class="dashboard-v176-hero-copy"><small>PLUG ART · CENTRE DE CONTRÔLE</small><h2>Tout ce qui compte,<br><em>au même endroit.</em></h2><p>La navigation à gauche reste ton unique accès aux rubriques. Ici, tu vois seulement ce qui mérite ton attention.</p></div>'+
+      '<div class="dashboard-v176-health"><span><i></i> Workspace actif</span><strong id="dashboardSignalV176">Synchronisé</strong></div>'+
     '</section>'+
-    '<section class="dashboard-v175-layout">'+
-      '<div class="dashboard-v175-main">'+
-        '<div class="dashboard-v175-metrics" id="slideMetrics"></div>'+
-        '<section class="dashboard-v175-section">'+
-          '<div class="dashboard-v175-section-head"><div><small>MES OUTILS</small><h3>Accès direct</h3></div></div>'+
-          '<div class="dashboard-v175-tools">'+
-            '<button data-route="radar"><i>◉</i><span><strong>Radar</strong><small>Trouver des opportunités</small></span></button>'+
-            '<button data-v175-events><i>◷</i><span><strong>Vernissages</strong><small>Événements à venir</small></span></button>'+
-            '<button data-route="opencalls"><i>◇</i><span><strong>Open Calls</strong><small>Suivi des candidatures</small></span></button>'+
-            '<button data-route="creation"><i>✦</i><span><strong>Création</strong><small>Carrousels & contenus</small></span></button>'+
-            '<button data-route="bureau"><i>▤</i><span><strong>Bureau</strong><small>Documents & dossiers</small></span></button>'+
-            '<button data-route="prospection"><i>◎</i><span><strong>Prospection</strong><small>Contacts & relances</small></span></button>'+
-            '<button data-route="map"><i>⌖</i><span><strong>Map</strong><small>Lieux & vernissages</small></span></button>'+
-            '<button data-route="social"><i>◌</i><span><strong>Instagram</strong><small>Contenu & publication</small></span></button>'+
-          '</div>'+
-        '</section>'+
-        '<div class="dashboard-v175-two">'+
-          '<section class="dashboard-v175-section"><div class="dashboard-v175-section-head"><div><small>À TRAITER</small><h3>Aujourd’hui</h3></div><button data-route="agenda">Agenda →</button></div><div id="slideTodayList" class="dashboard-v175-list"></div></section>'+
-          '<section class="dashboard-v175-section"><div class="dashboard-v175-section-head"><div><small>OPPORTUNITÉS</small><h3>Prioritaires</h3></div><button data-route="opencalls">Tout voir →</button></div><div id="slideOpportunityList" class="dashboard-v175-list"></div></section>'+
+    '<section class="dashboard-v176-grid">'+
+      '<div class="dashboard-v176-content">'+
+        '<div class="dashboard-v176-stats" id="slideMetrics"></div>'+
+        '<div class="dashboard-v176-row">'+
+          '<section class="dashboard-v176-card dashboard-v176-today"><header><div><small>AUJOURD’HUI</small><h3>À traiter</h3></div><span>Priorités</span></header><div id="slideTodayList" class="dashboard-v176-list"></div></section>'+
+          '<section class="dashboard-v176-card dashboard-v176-opps"><header><div><small>RADAR</small><h3>Opportunités prioritaires</h3></div><span>Score</span></header><div id="slideOpportunityList" class="dashboard-v176-list"></div></section>'+
         '</div>'+
-        '<div class="dashboard-v175-two compact">'+
-          '<section class="dashboard-v175-section"><div class="dashboard-v175-section-head"><div><small>À REPRENDRE</small><h3>Travail en cours</h3></div><button data-route="bureau">Bureau →</button></div><div id="slideWorkResume" class="dashboard-v175-list"></div></section>'+
-          '<section class="dashboard-v175-section"><div class="dashboard-v175-section-head"><div><small>RELANCES</small><h3>Prospection</h3></div><button data-route="prospection">Contacts →</button></div><div id="slideLeadList" class="dashboard-v175-list"></div></section>'+
+        '<div class="dashboard-v176-row lower">'+
+          '<section class="dashboard-v176-card dashboard-v176-events"><header><div><small>AGENDA ARTISTIQUE</small><h3>Vernissages à venir</h3></div><span>30 jours</span></header><div id="dashboardEventsV176" class="dashboard-v176-list visual"></div></section>'+
+          '<section class="dashboard-v176-card dashboard-v176-work"><header><div><small>EN COURS</small><h3>Reprendre ton travail</h3></div><span>Documents</span></header><div id="slideWorkResume" class="dashboard-v176-list"></div></section>'+
+          '<section class="dashboard-v176-card dashboard-v176-leads"><header><div><small>PROSPECTION</small><h3>Prochaines relances</h3></div><span>Contacts</span></header><div id="slideLeadList" class="dashboard-v176-list"></div></section>'+
         '</div>'+
       '</div>'+
-      '<aside class="dashboard-v175-plugy">'+
-        '<div class="dashboard-v175-plugy-copy"><small>PLUGY</small><h3>Assistant actif</h3><p>Parle-moi depuis n’importe quel outil.</p></div>'+
-        '<div id="dashboardPlugyMount" class="dashboard-v175-plugy-mount"></div>'+
-        '<button class="dashboard-v175-plugy-open" data-slide-plugy>Ouvrir PLUGY <b>↗</b></button>'+
+      '<aside class="dashboard-v176-plugy">'+
+        '<div class="dashboard-v176-plugy-top"><div><small>PLUGY</small><h3>Assistant contextuel</h3></div><span><i></i> prêt</span></div>'+
+        '<div class="dashboard-v176-plugy-stage"><div class="dashboard-v176-plugy-orbit o1"></div><div class="dashboard-v176-plugy-orbit o2"></div><div id="dashboardPlugyMount" class="dashboard-v176-plugy-mount"></div></div>'+
+        '<div class="dashboard-v176-plugy-bottom"><p>PLUGY garde le contexte de ce que tu fais dans PLUG ART.</p><button data-slide-plugy>Parler à PLUGY <b>↗</b></button></div>'+
       '</aside>'+
     '</section>';
-
   view.prepend(deck);
-  $('[data-route]',deck).forEach(b=>b.onclick=()=>route(b.dataset.route));
-  $('[data-v175-events]',deck).forEach(b=>b.onclick=()=>{route('radar');setTimeout(()=>{setRadarModeV167('events');refreshRadarStatusV168()},35)});
-  $('[data-slide-plugy]',deck).forEach(b=>b.onclick=()=>openPlugy());
+  $$('[data-slide-plugy]',deck).forEach(b=>b.onclick=()=>openPlugy());
   dashboardSlideIndex=0;
-  requestAnimationFrame(()=>document.documentElement.classList.add('dashboard-v175-mounted'));
-  syncPlugyHomeMount();
+  requestAnimationFrame(()=>document.documentElement.classList.add('dashboard-v176-mounted'));
   renderSlideDashboard();
+  queueMicrotask(()=>{
+    syncPlugyHomeMount();
+    setTimeout(()=>warmPlugy3D('dashboard-v176').then(()=>syncPlugyHomeMount()).catch(()=>document.documentElement.classList.add('plugy-3d-fallback')),420);
+    ensureDashboardEventsV176();
+  });
 }
-
 function renderSlideDashboard(){
-  const deck=$('#dashboardV175');if(!deck)return;
+  const deck=$('#dashboardV176');if(!deck)return;
   const stats=state.bootstrap?.stats||{},opps=(state.bootstrap?.opportunities||[]).slice();
   const tracked=new Set(state.workflow.filter(w=>w.workflow_status!=='closed').map(w=>String(w.opportunity_id)));
   const priorities=opps.sort((a,b)=>Number(!!b.favorite)-Number(!!a.favorite)||Number(tracked.has(String(b.id)))-Number(tracked.has(String(a.id)))||Number(b.radar_score??b.score??0)-Number(a.radar_score??a.score??0)).slice(0,4);
   const urgent=opps.filter(o=>{const d=daysLeft(o);return d>=0&&d<=7}).length;
-
   const metrics=[
-    ['Open Calls',stats.opportunities??opps.length,'opencalls'],
-    ['Urgents',stats.urgent??urgent,'urgent'],
-    ['Brouillons',stats.drafts??state.drafts.length,'creation'],
-    ['Contacts',stats.contacts??state.leads.length,'prospection']
+    ['Open Calls',stats.opportunities??opps.length,'◉'],
+    ['Urgents',stats.urgent??urgent,'!'],
+    ['Brouillons',stats.drafts??state.drafts.length,'✦'],
+    ['Contacts',stats.contacts??state.leads.length,'◎']
   ];
-  const m=$('#slideMetrics');if(m)m.innerHTML=metrics.map(([label,val,action])=>'<button data-v175-metric="'+action+'"><strong>'+esc(val)+'</strong><span>'+label+'</span></button>').join('');
-  $('[data-v175-metric]',deck).forEach(b=>b.onclick=()=>{
-    if(b.dataset.v175Metric==='urgent'){route('opencalls');setTimeout(()=>{if($('#openStatus')){$('#openStatus').value='urgent';renderOpenCalls()}},50)}
-    else route(b.dataset.v175Metric);
-  });
+  const m=$('#slideMetrics');if(m)m.innerHTML=metrics.map(([label,val,icon])=>'<div><i>'+icon+'</i><span><strong>'+esc(val)+'</strong><small>'+label+'</small></span></div>').join('');
 
   const today=[];
   state.workflow.filter(w=>w.workflow_status!=='closed').forEach(w=>{const o=opportunityById(w.opportunity_id);if(!o)return;today.push({title:o.title,sub:w.next_action||workflowLabel(w.workflow_status),date:w.next_date||o.deadline||'',id:o.id,kind:'call'})});
   state.leads.filter(l=>l.status!=='closed'&&l.next_date).forEach(l=>today.push({title:l.organization||l.name||'Contact',sub:l.next_action||'Relance',date:l.next_date,id:l.id,kind:'lead'}));
   today.sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
   const todayBox=$('#slideTodayList');
-  if(todayBox)todayBox.innerHTML=today.slice(0,4).map(x=>'<button data-v175-today-kind="'+x.kind+'" data-v175-today-id="'+x.id+'"><span><strong>'+esc(x.title)+'</strong><small>'+esc(x.sub)+'</small></span><b>'+esc(x.date||'À traiter')+'</b></button>').join('')||'<div class="slide-empty">Rien d’urgent aujourd’hui.</div>';
-  $('[data-v175-today-kind]',deck).forEach(b=>b.onclick=async()=>{const id=Number(b.dataset.v175TodayId);if(b.dataset.v175TodayKind==='lead'){route('prospection');try{await ensureViewData('prospection');selectLead(id)}catch{}}else openOpportunity(id)});
+  if(todayBox)todayBox.innerHTML=today.slice(0,4).map(x=>'<button data-v176-today-kind="'+x.kind+'" data-v176-today-id="'+x.id+'"><span><strong>'+esc(x.title)+'</strong><small>'+esc(x.sub)+'</small></span><b>'+esc(x.date||'À traiter')+'</b></button>').join('')||'<div class="dashboard-v176-empty">Rien d’urgent aujourd’hui.</div>';
+  $$('[data-v176-today-kind]',deck).forEach(b=>b.onclick=async()=>{const id=Number(b.dataset.v176TodayId);if(b.dataset.v176TodayKind==='lead'){route('prospection');try{await ensureViewData('prospection');selectLead(id)}catch{}}else openOpportunity(id)});
 
   const oppBox=$('#slideOpportunityList');
-  if(oppBox)oppBox.innerHTML=priorities.map(o=>'<button data-v175-opp="'+o.id+'"><span><strong>'+esc(o.title)+'</strong><small>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</small></span><b>'+Number(o.radar_score??o.score??0)+'</b></button>').join('')||'<div class="slide-empty">Aucune opportunité active.</div>';
-  $('[data-v175-opp]',deck).forEach(b=>b.onclick=()=>openOpportunity(Number(b.dataset.v175Opp)));
+  if(oppBox)oppBox.innerHTML=priorities.map(o=>'<button data-v176-opp="'+o.id+'"><span><strong>'+esc(o.title)+'</strong><small>'+esc([o.city,o.country,deadline(o.deadline)].filter(Boolean).join(' · '))+'</small></span><b>'+Number(o.radar_score??o.score??0)+'</b></button>').join('')||'<div class="dashboard-v176-empty">Aucune opportunité active.</div>';
+  $$('[data-v176-opp]',deck).forEach(b=>b.onclick=()=>openOpportunity(Number(b.dataset.v176Opp)));
 
   const work=[...state.drafts.slice(0,2).map(d=>({kind:'draft',id:d.id,title:d.title||'Brouillon',sub:'Création'})),...state.bureau.slice(0,2).map(n=>({kind:'doc',id:n.id,title:n.title||'Document',sub:n.folder||'Bureau'}))].slice(0,4);
   const workBox=$('#slideWorkResume');
-  if(workBox)workBox.innerHTML=work.map(x=>'<button data-v175-work="'+x.kind+'" data-v175-work-id="'+x.id+'"><span><strong>'+esc(x.title)+'</strong><small>'+esc(x.sub)+'</small></span><b>→</b></button>').join('')||'<div class="slide-empty">Aucun travail en cours.</div>';
-  $('[data-v175-work]',deck).forEach(b=>b.onclick=async()=>{const id=Number(b.dataset.v175WorkId);if(b.dataset.v175Work==='draft'){route('creation');try{await ensureViewData('creation');loadDraft(id)}catch{}}else{route('bureau');try{await ensureViewData('bureau');selectDoc(id)}catch{}}});
+  if(workBox)workBox.innerHTML=work.map(x=>'<button data-v176-work="'+x.kind+'" data-v176-work-id="'+x.id+'"><span><strong>'+esc(x.title)+'</strong><small>'+esc(x.sub)+'</small></span><b>→</b></button>').join('')||'<div class="dashboard-v176-empty">Aucun travail en cours.</div>';
+  $$('[data-v176-work]',deck).forEach(b=>b.onclick=async()=>{const id=Number(b.dataset.v176WorkId);if(b.dataset.v176Work==='draft'){route('creation');try{await ensureViewData('creation');loadDraft(id)}catch{}}else{route('bureau');try{await ensureViewData('bureau');selectDoc(id)}catch{}}});
 
   const leads=state.leads.slice().filter(l=>l.status!=='closed').sort((a,b)=>(a.next_date||'9999').localeCompare(b.next_date||'9999')).slice(0,4);
   const leadBox=$('#slideLeadList');
-  if(leadBox)leadBox.innerHTML=leads.map(l=>'<button data-v175-lead="'+l.id+'"><span><strong>'+esc(l.organization||l.name||'Contact')+'</strong><small>'+esc(l.next_action||leadStatusLabel(l.status))+'</small></span><b>'+esc(l.next_date||'À suivre')+'</b></button>').join('')||'<div class="slide-empty">Aucune relance planifiée.</div>';
-  $('[data-v175-lead]',deck).forEach(b=>b.onclick=async()=>{route('prospection');try{await ensureViewData('prospection');selectLead(Number(b.dataset.v175Lead))}catch{}});
+  if(leadBox)leadBox.innerHTML=leads.map(l=>'<button data-v176-lead="'+l.id+'"><span><strong>'+esc(l.organization||l.name||'Contact')+'</strong><small>'+esc(l.next_action||leadStatusLabel(l.status))+'</small></span><b>'+esc(l.next_date||'À suivre')+'</b></button>').join('')||'<div class="dashboard-v176-empty">Aucune relance planifiée.</div>';
+  $$('[data-v176-lead]',deck).forEach(b=>b.onclick=async()=>{route('prospection');try{await ensureViewData('prospection');selectLead(Number(b.dataset.v176Lead))}catch{}});
+  renderDashboardV176Events();
   requestAnimationFrame(syncPlugyHomeMount);
 }
 
@@ -4173,9 +4187,10 @@ function plugyIsVisible(){
 }
 let plugyRecentMotions=[];
 function choosePlugyMotion(pool){
-  const available=pool.filter(x=>plugyAvailable(x)&&!plugyRecentMotions.includes(x));
-  const candidates=available.length?available:pool.filter(plugyAvailable);
-  if(!candidates.length)return '';
+  const safePool=[...new Set((pool||[]).map(safePlugyMotionV176))];
+  const available=safePool.filter(x=>plugyAvailable(x)&&!plugyRecentMotions.includes(x));
+  const candidates=available.length?available:safePool.filter(plugyAvailable);
+  if(!candidates.length)return plugyAvailable('Idle')?'Idle':'';
   const pick=candidates[Math.floor(Math.random()*candidates.length)];
   plugyRecentMotions=[pick,...plugyRecentMotions.filter(x=>x!==pick)].slice(0,3);
   return pick;
