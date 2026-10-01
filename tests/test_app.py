@@ -19,7 +19,7 @@ def test_health_and_persistence_path_override():
     assert r.status_code==200
     data=r.json()
     assert data['ok'] is True
-    assert data['version']=='7.0'
+    assert data['version']=='8.0'
     assert data['database']==TEST_DB
 
 def test_stats_shape():
