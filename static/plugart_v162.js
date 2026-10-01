@@ -168,7 +168,7 @@ function ensureRouteRuntime(id){
   if(routeRuntimeReady.has(id))return;
   if(id==='radar'){installRadarPresets();installMobileRadarControls();installRadarV167()}
   if(id==='opencalls')installOpenWorkflowFilters();
-  if(id==='creation'){ensureCreationCssV163().catch(()=>{});installCreationModes();installCreationV161();setTimeout(()=>{installCreationV162();installCreationV166();installCreationV167();installCreationV177()},0);}
+  if(id==='creation'){ensureCreationCssV163().catch(()=>{});installCreationModes();installCreationV161();setTimeout(()=>{installCreationV162();installCreationV166();installCreationV167();installCreationV177();installCreationV178()},0);}
   if(id==='bureau'){installBureauWorkspace();ensureBureauBridge();installProjectWorkspaceV163();installBureauV167()}
   if(id==='ideas'){installIdeasV163();installIdeasV167();}
   if(id==='network')installArtistV161();
@@ -2481,6 +2481,7 @@ function renderStudioCanvasAids(){
   canvas.classList.toggle('show-guides',!!state.studioGuides);
   canvas.classList.toggle('show-safe',!!state.studioSafe);
   canvas.classList.toggle('snap-enabled',!!state.studioSnap);
+  canvas.dataset.guidesReady='1';
   const g=$('#stageGuidesToggle'),s=$('#stageSafeToggle'),n=$('#stageSnapToggle');
   if(g){g.classList.toggle('active',!!state.studioGuides);g.textContent=state.studioGuides?'Guides ✓':'Guides'}
   if(s)s.classList.toggle('active',!!state.studioSafe);
@@ -4852,7 +4853,9 @@ const CREATION_TEMPLATES_V167=[
   ['plug-night-opening','Opening nocturne'],['plug-chrome-poster','Chrome poster'],['plug-photo-contact','Planche photo'],['plug-city-program','Programme culturel'],
   ['plug-vernissage-map','Vernissage + map'],['plug-open-call-archive','Open Call archive'],['plug-exhibition-ticket','Ticket expo'],['plug-atelier-workshop','Atelier / workshop'],['plug-gallery-grid','Galerie grid'],['plug-museum-label','Cartel musée'],
   ['studio-neo-gallery','Neo Gallery'],['studio-soft-brutal','Soft Brutal'],['studio-color-field','Color Field'],['studio-art-fair','Art Fair Grid'],
-  ['studio-kinetic-type','Kinetic Type'],['studio-glass-culture','Glass Culture'],['studio-dark-mono','Dark Mono'],['studio-editorial-poster','Editorial Poster']
+  ['studio-kinetic-type','Kinetic Type'],['studio-glass-culture','Glass Culture'],['studio-dark-mono','Dark Mono'],['studio-editorial-poster','Editorial Poster'],
+  ['studio-swiss-signal','Swiss Signal'],['studio-liquid-index','Liquid Index'],['studio-photo-manifesto','Photo Manifesto'],['studio-museum-future','Museum Future'],
+  ['studio-neon-archive','Neon Archive'],['studio-soft-grid','Soft Grid'],['studio-cultural-map','Cultural Map'],['studio-type-sculpture','Type Sculpture']
 ];
 const CREATION_PATTERNS_V167=[
   ['grid-fine','Grille fine'],['grid-large','Grille large'],['dots','Points'],['dots-sparse','Points espacés'],
@@ -5122,7 +5125,15 @@ function v167ApplyDesign(slide,key='open-call-side-rail'){
     'studio-kinetic-type':{theme:'night',layout:'poster',accent:'cyan',backgroundColor:'#101218',pattern:'diagonal',imageOpacity:62,fontFamily:'Space',titlePx:68,fontWeight:900,letterSpacing:-1.7},
     'studio-glass-culture':{theme:'soft',layout:'editorial',accent:'violet',backgroundColor:'#eef8fa',pattern:'rings',imageOpacity:72,fontFamily:'Inter',titlePx:52,fontWeight:700,letterSpacing:-.7},
     'studio-dark-mono':{theme:'night',layout:'minimal',accent:'pink',backgroundColor:'#101114',pattern:'dots-sparse',imageOpacity:50,fontFamily:'Mono',titlePx:48,fontWeight:800,letterSpacing:-.5},
-    'studio-editorial-poster':{theme:'editorial',layout:'poster',accent:'black',backgroundColor:'#fbfaf6',pattern:'editorial-rail',imageOpacity:88,fontFamily:'Serif',titlePx:58,fontWeight:700,letterSpacing:-1}
+    'studio-editorial-poster':{theme:'editorial',layout:'poster',accent:'black',backgroundColor:'#fbfaf6',pattern:'editorial-rail',imageOpacity:88,fontFamily:'Serif',titlePx:58,fontWeight:700,letterSpacing:-1},
+    'studio-swiss-signal':{theme:'ultra',layout:'split',accent:'red',backgroundColor:'#f7f5ef',pattern:'grid-large',imageOpacity:68,fontFamily:'Mono',titlePx:48,fontWeight:900,letterSpacing:-1.1},
+    'studio-liquid-index':{theme:'soft',layout:'minimal',accent:'violet',backgroundColor:'#eef7f7',pattern:'gradient-mesh',imageOpacity:56,fontFamily:'Space',titlePx:62,fontWeight:800,letterSpacing:-1.5},
+    'studio-photo-manifesto':{theme:'editorial',layout:'poster',accent:'black',backgroundColor:'#ffffff',pattern:'corner-accent',imageOpacity:100,fontFamily:'Space',titlePx:54,fontWeight:900,letterSpacing:-1.2},
+    'studio-museum-future':{theme:'ultra',layout:'editorial',accent:'blue',backgroundColor:'#eef1f6',pattern:'cross-grid',imageOpacity:72,fontFamily:'Serif',titlePx:50,fontWeight:700,letterSpacing:-.9},
+    'studio-neon-archive':{theme:'night',layout:'split',accent:'pink',backgroundColor:'#0d0f18',pattern:'star-field',imageOpacity:78,fontFamily:'Mono',titlePx:46,fontWeight:800,letterSpacing:-.7},
+    'studio-soft-grid':{theme:'soft',layout:'split',accent:'cyan',backgroundColor:'#f3f8f8',pattern:'grid-fine',imageOpacity:62,fontFamily:'Inter',titlePx:48,fontWeight:750,letterSpacing:-.8},
+    'studio-cultural-map':{theme:'editorial',layout:'split',accent:'orange',backgroundColor:'#f6f1e8',pattern:'cross-grid',imageOpacity:76,fontFamily:'Mono',titlePx:44,fontWeight:850,letterSpacing:-.6},
+    'studio-type-sculpture':{theme:'night',layout:'poster',accent:'cyan',backgroundColor:'#111218',pattern:'diagonal',imageOpacity:42,fontFamily:'Space',titlePx:72,fontWeight:900,letterSpacing:-2}
   };
   slide.design={...slideDesign(slide),...(maps[key]||maps['open-call-side-rail'])};
   if(key.startsWith('plug-'))applyTemplateDecorV169_1(slide,key);
@@ -5256,6 +5267,60 @@ function installCreationV177(){
     status.innerHTML='<i></i><span>Canvas temps réel</span><b>Guides actifs</b>';head.appendChild(status);
   }
   renderStudioCanvasAids();requestAnimationFrame(()=>{fitStudioCanvas();renderStudioCanvasAids()});
+}
+
+
+/* ---------- Creation V178 · compact live studio ---------- */
+function creationTemplateFamilyV178(key=''){
+  if(/photo|gallery|manifesto|contact/.test(key))return'photo';
+  if(/vernissage|opening|atelier|city|ticket|museum|cultural/.test(key))return'event';
+  if(/kinetic|experimental|chrome|neon|liquid|type-sculpture|color-field/.test(key))return'experimental';
+  if(/archive|editorial|curator|magazine|swiss|soft-grid/.test(key))return'editorial';
+  return'all';
+}
+function filterCreationTemplatesV178(){
+  const root=$('#creationLibraryV167');if(!root)return;
+  const q=clean($('#creationTemplateSearchV178')?.value).toLowerCase(),family=$('[data-v178-family].active')?.dataset.v178Family||'all';
+  $('[data-v167-template]',root).forEach(btn=>{
+    const key=btn.dataset.v167Template||'',label=(CREATION_TEMPLATES_V167.find(x=>x[0]===key)?.[1]||key).toLowerCase();
+    const fam=creationTemplateFamilyV178(key),show=(!q||label.includes(q)||key.includes(q))&&(family==='all'||fam===family);
+    btn.hidden=!show;
+  });
+}
+function installCreationV178(){
+  const panel=$('#carouselCreationPanel'),library=panel?.querySelector('.studio-library'),stage=panel?.querySelector('.studio-stage');
+  if(!panel||panel.dataset.v178==='1')return;
+  panel.dataset.v178='1';panel.classList.add('creation-v178');
+
+  const base=$('#creationLibraryV167');
+  if(library&&base&&!$('#creationCatalogBarV178')){
+    const bar=document.createElement('div');bar.id='creationCatalogBarV178';bar.className='creation-catalog-bar-v178';
+    bar.innerHTML='<div class="creation-catalog-search-v178"><span>⌕</span><input id="creationTemplateSearchV178" placeholder="Rechercher un style…"></div>'+
+      '<div class="creation-catalog-filters-v178"><button class="active" data-v178-family="all">Tout</button><button data-v178-family="editorial">Éditorial</button><button data-v178-family="photo">Photo</button><button data-v178-family="event">Culture</button><button data-v178-family="experimental">Expérimental</button></div>';
+    base.insertBefore(bar,base.firstChild);
+    $('#creationTemplateSearchV178').oninput=filterCreationTemplatesV178;
+    $('[data-v178-family]',bar).forEach(b=>b.onclick=()=>{$('[data-v178-family]',bar).forEach(x=>x.classList.toggle('active',x===b));filterCreationTemplatesV178()});
+  }
+
+  if(stage&&!$('#creationGuideDockV178')){
+    const dock=document.createElement('div');dock.id='creationGuideDockV178';dock.className='creation-guide-dock-v178';
+    dock.innerHTML='<button id="guideMiniV178" class="active" title="Guides"><i></i><span>Guides</span></button><button id="snapMiniV178" class="active" title="Aimant">⌁</button><button id="safeMiniV178" title="Zone sûre">□</button><output id="zoomMiniV178">100%</output>';
+    stage.appendChild(dock);
+    $('#guideMiniV178').onclick=()=>{state.studioGuides=!state.studioGuides;renderStudioCanvasAids();syncCreationMiniControlsV178()};
+    $('#snapMiniV178').onclick=()=>{state.studioSnap=!state.studioSnap;renderStudioCanvasAids();syncCreationMiniControlsV178()};
+    $('#safeMiniV178').onclick=()=>{state.studioSafe=!state.studioSafe;renderStudioCanvasAids();syncCreationMiniControlsV178()};
+  }
+
+  const quick=$('#creationQuickFlow');if(quick){quick.classList.add('compact-v178');quick.classList.remove('expanded-v177')}
+  syncCreationMiniControlsV178();
+  renderStudioCanvasAids();
+  requestAnimationFrame(()=>{fitStudioCanvas();renderStudioCanvasAids();syncCreationMiniControlsV178()});
+}
+function syncCreationMiniControlsV178(){
+  $('#guideMiniV178')?.classList.toggle('active',!!state.studioGuides);
+  $('#snapMiniV178')?.classList.toggle('active',!!state.studioSnap);
+  $('#safeMiniV178')?.classList.toggle('active',!!state.studioSafe);
+  const z=$('#zoomMiniV178'),range=$('#creationZoom');if(z)z.textContent=Math.round(Number(range?.value||1)*100)+'%';
 }
 
 /* ---------- Bureau PDF workspace ---------- */
