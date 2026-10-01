@@ -2,6 +2,7 @@ from pathlib import Path
 from fastapi import Body, HTTPException, Query, Request
 from fastapi.responses import FileResponse, StreamingResponse
 import base64, hashlib, json, os, re, time, requests
+from urllib.parse import quote
 
 import app_extra_v31 as v31
 import app as core
@@ -352,6 +353,36 @@ def image_status_v32():
     return {"ok": True, "enabled": bool(os.getenv("OPENAI_API_KEY", "").strip()), "provider": "openai", "model": DEFAULT_IMAGE_MODEL, "models": list(IMAGE_MODELS), "fallback": "/api/content/visual"}
 
 
+def _procedural_image_fallback_v177(prompt: str, style: str, ratio: str):
+    dims = {"1:1": (1080,1080), "9:16": (1080,1920), "16:9": (1920,1080), "4:5": (1080,1350)}
+    w,h = dims.get(ratio,(1080,1350))
+    seed = int(hashlib.sha256((prompt+"|"+style).encode()).hexdigest()[:8],16)
+    palettes = [
+      ("#735cff","#54d8df","#f178b1","#f7f6fb"),
+      ("#111318","#7b67eb","#51cad6","#f3f1e9"),
+      ("#f2dbea","#d9d1ff","#cceff2","#181a20"),
+      ("#f2e8d8","#ef9152","#785fe0","#15171c"),
+      ("#e7f1f3","#55c9d2","#816be4","#f07eb5"),
+    ]
+    p1,p2,p3,bg = palettes[seed % len(palettes)]
+    short = re.sub(r'\s+',' ',prompt).strip()[:58]
+    # Pure SVG keeps the editor responsive and gives a real visual placeholder instead of a broken button.
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="{p1}"/><stop offset=".52" stop-color="{p2}"/><stop offset="1" stop-color="{p3}"/></linearGradient>
+        <filter id="blur"><feGaussianBlur stdDeviation="{max(28,int(min(w,h)*.045))}"/></filter>
+      </defs>
+      <rect width="100%" height="100%" fill="{bg}"/>
+      <circle cx="{int(w*.79)}" cy="{int(h*.20)}" r="{int(min(w,h)*.25)}" fill="{p2}" opacity=".34" filter="url(#blur)"/>
+      <circle cx="{int(w*.22)}" cy="{int(h*.74)}" r="{int(min(w,h)*.29)}" fill="{p3}" opacity=".28" filter="url(#blur)"/>
+      <path d="M {-int(w*.1)} {int(h*.62)} C {int(w*.24)} {int(h*.40)}, {int(w*.52)} {int(h*.83)}, {int(w*1.08)} {int(h*.32)} L {int(w*1.08)} {int(h*.58)} C {int(w*.54)} {int(h*.98)}, {int(w*.24)} {int(h*.62)}, {-int(w*.1)} {int(h*.82)} Z" fill="url(#g)" opacity=".90"/>
+      <rect x="{int(w*.07)}" y="{int(h*.075)}" width="{int(w*.26)}" height="{max(5,int(w*.008))}" rx="5" fill="{p1}" opacity=".96"/>
+      <rect x="{int(w*.07)}" y="{int(h*.105)}" width="{int(w*.52)}" height="{max(3,int(w*.004))}" rx="4" fill="{p1}" opacity=".16"/>
+      <rect x="{int(w*.07)}" y="{int(h*.122)}" width="{int(w*.38)}" height="{max(3,int(w*.004))}" rx="4" fill="{p1}" opacity=".10"/>
+      <text x="{int(w*.07)}" y="{int(h*.91)}" fill="{p1}" opacity=".42" font-family="Arial,sans-serif" font-size="{max(18,int(w*.022))}" font-weight="700">PLUG ART · VISUEL DE SECOURS</text>
+    </svg>'''
+    return "data:image/svg+xml;charset=utf-8," + quote(svg), short
+
 @app.post("/api/v32/content/image")
 def image_v32(payload: dict = Body(default={})):
     key = os.getenv("OPENAI_API_KEY", "").strip()
@@ -378,7 +409,12 @@ def image_v32(payload: dict = Body(default={})):
         except Exception as exc:
             errors.append(str(exc)[:300])
     print("PLUG_ART_IMAGE_V32_ERROR " + " | ".join(errors)[:900], flush=True)
-    raise HTTPException(502, "Échec génération IA : " + " | ".join(errors)[:650])
+    fallback_url, fallback_label = _procedural_image_fallback_v177(prompt, style, ratio)
+    elapsed = int((time.time() - started) * 1000)
+    print(f"PLUG_ART_IMAGE_V177_FALLBACK elapsed_ms={elapsed} ratio={ratio} style={style}", flush=True)
+    return {"ok": True, "provider": "procedural", "model": "plugart-fallback-v177", "quality": "local",
+            "size": f"{ratio}", "url": fallback_url, "latency_ms": elapsed, "fallback": True,
+            "label": fallback_label, "provider_errors": errors[:2]}
 
 
 @app.get("/api/v32/content/generated/{filename}")
