@@ -21,7 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-dev.txt
       - name: Backend syntax
-        run: python -m py_compile app.py app_extra.py app_extra_v10.py app_extra_v11.py app_extra_v12.py app_extra_v14.py app_extra_v15.py app_extra_v16.py app_extra_v17.py app_extra_v19.py app_extra_v20.py app_extra_v21.py build_plugy_glb.py
+        run: python -m py_compile app.py app_extra.py app_extra_v10.py app_extra_v11.py app_extra_v12.py app_extra_v14.py app_extra_v15.py app_extra_v16.py app_extra_v17.py app_extra_v19.py app_extra_v20.py app_extra_v21.py app_extra_v60.py build_plugy_glb.py
       - name: Backend tests
         env:
           PLUGART_DB: /tmp/plugart_ci.db
@@ -63,6 +63,7 @@ jobs:
           node --check static/studio_v20.js
           node --check static/plugy_glb_runtime_v20.js
           node --check static/studio_v21.js
+          node --check static/plugart_v200.js
       - name: V11 assets
         run: |
           test -s static/content_studio_v11.css
@@ -140,3 +141,13 @@ jobs:
           grep -q 'plug-v21-advanced' static/studio_v21.css
           grep -q 'Construire le sujet' static/studio_v21.js
           grep -q 'reorganizeAdvanced' static/studio_v21.js
+
+      - name: V200 premium restructure
+        run: |
+          test -s static/plugart_v200.css
+          test -s static/plugart_v200.js
+          grep -q 'plugart_v200.css?v=200.20261001.1' static/plugart_v162.html
+          grep -q 'plugart_v200.js?v=200.20261001.1' static/plugart_v162.html
+          grep -q 'dashboardV200' static/plugart_v200.js
+          grep -q 'generateCampaign' static/plugart_v200.js
+          grep -q "app.version = '200.0'" app_extra_v60.py

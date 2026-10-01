@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 import app_extra_v59 as v59
 
 app = v59.app
-app.version = '179.0'
+app.version = '200.0'
 BASE = Path(__file__).resolve().parent
 GENERATED = Path(os.getenv('PLUGART_GENERATED_DIR', '/data/generated-content-v179'))
 GENERATED.mkdir(parents=True, exist_ok=True)
@@ -244,8 +244,8 @@ def generated_v179(name: str):
 def status_v179():
     return {
         'ok': True,
-        'version': '179.0',
-        'ui': 'approved-creative-studio',
+        'version': '200.0',
+        'ui': 'premium-restructure-campaign-builder',
         'text_stream': '/api/v179/plugy/stream',
         'image_generation': '/api/v179/content/image',
         'image_enabled': bool(os.getenv('OPENAI_API_KEY', '').strip()),
@@ -256,11 +256,11 @@ def status_v179():
 async def headers_v179(request: Request, call_next):
     response = await call_next(request)
     if request.url.path == '/':
-        response.headers['X-Plug-Art-Version'] = '179.0'
-        response.headers['X-Plug-Art-UI'] = 'creative-studio-v179'
+        response.headers['X-Plug-Art-Version'] = '200.0'
+        response.headers['X-Plug-Art-UI'] = 'premium-workspace-v200'
         response.headers['Cache-Control'] = 'no-store, max-age=0'
     elif request.url.path.startswith('/api/v179/'):
         response.headers['Cache-Control'] = 'no-store'
     return response
 
-print(f'PLUG_ART_V179_READY text={FAST_MODEL} image={DEFAULT_IMAGE_MODEL} generated={GENERATED}', flush=True)
+print(f'PLUG_ART_V200_READY text={FAST_MODEL} image={DEFAULT_IMAGE_MODEL} generated={GENERATED}', flush=True)
