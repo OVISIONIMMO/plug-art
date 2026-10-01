@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='176.20261001.1';
+const VERSION='176.20261001.2';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -84,7 +84,6 @@ const viewMeta={
  bureau:['ÉCRITURE & DOCUMENTS','Bureau','Think'],
  ideas:['IDÉATION','Nuage à idées','Curious'],
  prospection:['CONTACTS & PROSPECTION','Suivi des démarches','Attentive'],
- agenda:['AGENDA','Deadlines & relances','Attentive'],
  network:['RÉSEAU','Artistes','Happy'],
  social:['INSTAGRAM','Social Studio','Present'],
  map:['CARTE','Opportunités & expositions','Travel']
@@ -97,7 +96,6 @@ const contexts={
  bureau:{label:'Bureau',suggestions:['Réécris ce brouillon','Résume ce document','Transforme en candidature']},
  ideas:{label:'Nuage à idées',suggestions:['Développe cette idée','Relie cette idée à un projet','Transforme cette idée en contenu']},
  prospection:{label:'Prospection',suggestions:['Prépare une relance','Résume ce contact','Propose la prochaine action']},
- agenda:{label:'Agenda',suggestions:['Montre les urgences','Quelles deadlines arrivent ?','Quelles relances sont dues ?']},
  network:{label:'Artistes',suggestions:['Analyse ce profil','Propose des opportunités','Prépare une bio']},
  social:{label:'Instagram',suggestions:['Prépare une légende','Analyse mon feed','Propose le prochain post']},
  map:{label:'Carte',suggestions:['Trouve autour de Paris','Compare les villes','Montre les opportunités proches']}
@@ -168,7 +166,6 @@ function ensureCreationCssV163(){
 }
 function ensureRouteRuntime(id){
   if(routeRuntimeReady.has(id))return;
-  if(id==='agenda')installAgenda();
   if(id==='radar'){installRadarPresets();installMobileRadarControls();installRadarV167()}
   if(id==='opencalls')installOpenWorkflowFilters();
   if(id==='creation'){ensureCreationCssV163().catch(()=>{});installCreationModes();installCreationV161();setTimeout(()=>{installCreationV162();installCreationV166();installCreationV167()},0);}
@@ -220,14 +217,13 @@ function renderRouteView(id=state.view){
   if(id==='bureau'){installBureauWorkspace();installProjectWorkspaceV163();installBureauV167();setBureauMode(state.bureauMode||'documents');return}
   if(id==='ideas'){renderIdeasV163();installIdeasV167();return}
   if(id==='prospection')return renderLeads();
-  if(id==='agenda')return renderAgenda();
   if(id==='network')return renderArtists();
   if(id==='social')return renderInstagramStudio();
   if(id==='map')return renderMap();
 }
 
 function route(id,push=true){
-  const radarEventsAlias=id==='vernissages';if(radarEventsAlias)id='radar';
+  const radarEventsAlias=id==='vernissages'||id==='agenda';if(radarEventsAlias)id='radar';
   if(!viewMeta[id])id='dashboard';
   document.body.classList.add('route-switching');requestAnimationFrame(()=>requestAnimationFrame(()=>document.body.classList.remove('route-switching')));
   ensureRouteRuntime(id);
@@ -240,7 +236,7 @@ function route(id,push=true){
   renderSuggestions();playMotion(viewMeta[id][2],id==='dashboard');
   if(push&&location.hash!=='#'+id)history.pushState({view:id},'','#'+id);
   const mobileMore=$('#mobileMoreButton'),mobileSheet=$('#mobileMoreSheet');
-  if(mobileMore)mobileMore.classList.toggle('active',['creation','agenda','network','map','social'].includes(id));
+  if(mobileMore)mobileMore.classList.toggle('active',['creation','network','map','social'].includes(id));
   mobileSheet?.classList.remove('open');
   $('.workspace')?.scrollTo({top:0,behavior:'auto'});
   if(id!=='bureau')document.body.classList.remove('mobile-bureau-editing');
@@ -4026,7 +4022,7 @@ function installMobileShell(){
     '<button data-mobile-route="opencalls"><b>◇</b><span>Open Calls</span></button>'+
     '<button data-mobile-route="bureau"><b>▤</b><span>Bureau</span></button>'+
     '<button data-mobile-route="prospection"><b>◎</b><span>Contacts</span></button>'+
-    '<button data-mobile-route="agenda"><b>◷</b><span>Agenda</span></button>'+
+
     '<button data-mobile-route="network"><b>◌</b><span>Artistes</span></button>'+
     '<button data-mobile-route="map"><b>⌖</b><span>Carte</span></button>'+
     '<button data-mobile-action="search"><b>⌕</b><span>Recherche</span></button>'+
