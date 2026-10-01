@@ -1,7 +1,7 @@
 (()=>{'use strict';
 const $=s=>document.querySelector(s),$$=s=>Array.from(document.querySelectorAll(s));
 const STORAGE='plugart:plugy:v130:history';
-const PLUGY_STANDALONE_VERSION='175.20261001.1';
+const PLUGY_STANDALONE_VERSION='176.20261001.1';
 const state={mode:'fast',history:[],busy:false,listening:false,voiceReply:true,recognition:null,pressTimer:0,lastTap:0};
 const mv=$('#plugyStandaloneModel'),chat=$('#chatScroll'),input=$('#plugyStandaloneInput'),form=$('#plugyStandaloneForm');
 
@@ -53,16 +53,16 @@ function standaloneDistance(){
     if(w>=1440)return '6.95';
     return '5.70';
   }
-  if(w<=390)return '5.85';
-  if(w<=780)return '5.70';
-  if(w<=1180)return h<900?'6.10':'5.90';
-  if(w>=2200)return '7.00';
-  if(w>=1440)return '6.80';
-  return '6.55';
+  if(w<=390)return '7.20';
+  if(w<=780)return '7.05';
+  if(w<=1180)return h<900?'7.55':'7.30';
+  if(w>=2200)return '8.80';
+  if(w>=1440)return '8.45';
+  return '8.10';
 }
 function resetStandaloneFraming(){
   if(!mv)return;
-  const w=innerWidth||1200,fov=w<=780?'41deg':w<=1180?'40deg':w>=2200?'43deg':w>=1440?'43deg':'43deg';
+  const w=innerWidth||1200,fov=w<=780?'46deg':w<=1180?'45deg':w>=2200?'46deg':w>=1440?'46deg':'46deg';
   try{mv.setAttribute('camera-target','0m 0m 0m');mv.setAttribute('camera-orbit','0deg 79deg '+standaloneDistance()+'m');mv.setAttribute('field-of-view',fov)}catch{}
 }
 function setState(name,label){
@@ -70,7 +70,7 @@ function setState(name,label){
   if(innerWidth<=820&&['blink','doubleblink','wink','softeyes'].includes(name))name='idle';
   document.body.dataset.plugyState=name;
   $('#plugyLiveState span').textContent=label;$('#topState').textContent=label;
-  const animMap={idle:'Idle',listen:'Listen',think:'Think',speak:'Speak',happy:'Happy',curious:'Curious',wave:'ArmHello',charge:'Charge',blink:'Idle',doubleblink:'Idle',wink:'Idle',softeyes:'Idle',softturn:'SoftTurn',explain:'ArmExplain',shrug:'ArmShrug',stretch:'ArmStretch'};
+  const animMap={idle:'Idle',listen:'Listen',think:'Think',speak:'Speak',happy:'Curious',curious:'Curious',wave:'Curious',charge:'Think',blink:'Idle',doubleblink:'Idle',wink:'Idle',softeyes:'Idle',softturn:'SoftTurn',explain:'Attentive',shrug:'SoftTurn',stretch:'SoftTurn'};
   const target=animMap[name]||'Idle',run=()=>{
     try{
       const a=mv?.availableAnimations||[],pick=a.includes(target)?target:(a.includes('Idle')?'Idle':a[0]);
@@ -257,7 +257,7 @@ mv?.addEventListener('pointerleave',()=>softGaze(0,0));
 let recentAmbient=[];
 function pickAmbient(){
   const names=['explain','shrug','stretch','curious','softturn','happy','wave'];
-  const map={explain:'ArmExplain',shrug:'ArmShrug',stretch:'ArmStretch',curious:'Curious',softturn:'SoftTurn',happy:'Happy',wave:'ArmHello'};
+  const map={explain:'Attentive',shrug:'SoftTurn',stretch:'SoftTurn',curious:'Curious',softturn:'SoftTurn',happy:'Curious',wave:'Curious'};
   const candidates=names.filter(n=>hasAnim(map[n])&&!recentAmbient.includes(n)),pool=candidates.length?candidates:names.filter(n=>hasAnim(map[n]));
   if(!pool.length)return 'curious';const pick=pool[Math.floor(Math.random()*pool.length)];recentAmbient=[pick,...recentAmbient.filter(x=>x!==pick)].slice(0,3);return pick;
 }
