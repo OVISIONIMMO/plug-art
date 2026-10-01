@@ -522,6 +522,11 @@ function syncPlugyHomeMount(){
   }
   if(state.view==='dashboard'){
     follower.classList.remove('visible');
+    if(document.body.classList.contains('plugart-v202')){
+      try{globalMv?.pause?.()}catch{}
+      try{dashMv?.pause?.()}catch{}
+      return;
+    }
     try{dashMv?.pause?.()}catch{}
     const stable=plugyDashboardStage();
     if(stable){
@@ -2373,7 +2378,16 @@ async function loadAll(){
   if(cached){
     if(requiredFamilies(state.view).length)ensureViewData(state.view,false).then(()=>{if(state.view!=='dashboard')renderRouteView(state.view)}).catch(()=>{});
     const run=()=>syncBoot().catch(()=>{});
-    if('requestIdleCallback' in window)requestIdleCallback(run,{timeout:1800});else setTimeout(run,450);
+    if('requestIdleCallback' in window)requestIdleCallback(run,{timeout:3200});else setTimeout(run,1400);
+    return true;
+  }
+  if(state.view==='dashboard'&&document.querySelector('script[src*="plugart_v200.js"]')){
+    const delayed=()=>{
+      const fresh=readDashboardBootCache();
+      if(fresh){applyDashboardBoot(fresh);renderDashboard();renderNavBadges();return}
+      syncBoot().catch(()=>{});
+    };
+    if('requestIdleCallback' in window)requestIdleCallback(delayed,{timeout:3500});else setTimeout(delayed,1800);
     return true;
   }
   await syncBoot();
@@ -4344,15 +4358,8 @@ queueMicrotask(()=>{
   const initial=location.hash.slice(1)||'dashboard';
   history.replaceState({view:initial},'','#'+initial);
   route(initial,false);renderSuggestions();
-  loadAll().finally(()=>{
-    scheduleSmartPlugyWarm();
-    setTimeout(()=>{
-      const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
-      if(state.view==='dashboard'&&!conn?.saveData&&!['slow-2g','2g'].includes(String(conn?.effectiveType||''))){
-        warmPlugy3D('home-small').then(()=>syncPlugyHomeMount()).catch(()=>document.documentElement.classList.add('plugy-3d-fallback'));
-      }
-    },700);
-  });
+  loadAll().catch(()=>{});
+  scheduleSmartPlugyWarm();
 });
 
 window.__PLUGART_V174_RUNTIME_READY=true;
