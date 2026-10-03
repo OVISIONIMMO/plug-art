@@ -264,7 +264,8 @@ def discover_sources(max_details=18):
      u=urljoin(src['url'],href).split('#')[0]
      if u not in seen_urls:seen_urls.add(u);links.append((u,label,link_signal(u,label)))
    links.sort(key=lambda x:x[2],reverse=True)
-   rel=min(100,int(src['reliability'] or 60)+1);c.execute("update radar_sources set last_seen=?,last_run=?,failures=0,last_error='',reliability=? where id=?",(now,now,rel,src['id']))
+   rel=min(100,int(src['reliability'] or 60)+1);c.execute("update radar_sources set last_seen=?,last_run=?,failures=0,last_error='',reliability=? where id=?",(now,now,rel,src['id']));c.commit()
+   # Release SQLite's writer before fetching candidate pages.
    detail_cap=max(8,min(int(max_details),32))
    for u,label,signal in links[:detail_cap]:
     if c.execute('select 1 from opportunities where source_url=?',(u,)).fetchone() or c.execute('select 1 from radar_candidates where source_url=?',(u,)).fetchone():continue
@@ -276,12 +277,14 @@ def discover_sources(max_details=18):
      if score<38 and signal<8:continue
      before=c.total_changes;c.execute("INSERT OR IGNORE INTO radar_candidates(fingerprint,title,source_url,source_name,source_page,city,country,deadline,fee,summary,discovered_at,last_checked,confidence,candidate_score,state,reason,raw_excerpt) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'new',?,?)",(fp,d['title'],u,src['name'],src['url'],d['city'],d['country'],d['deadline'],d['fee'],d['summary'],now,now,d['confidence'],score,reason,d['raw_excerpt']))
      if c.total_changes>before:discovered+=1
+     c.commit()
     except Exception:errors+=1
-  except Exception as e:errors+=1;c.execute('update radar_sources set last_run=?,failures=failures+1,last_error=? where id=?',(now,str(e)[:180],src['id']))
+  except Exception as e:errors+=1;c.execute('update radar_sources set last_run=?,failures=failures+1,last_error=? where id=?',(now,str(e)[:180],src['id']));c.commit()
  finished=datetime.now().isoformat(timespec='seconds');c.execute("insert into radar_runs(kind,started_at,finished_at,checked,online,errors,discovered,notes) values('discover',?,?,?,?,?,?,?)",(started,finished,checked,online,errors,discovered,f'{len(seen_urls)} liens candidats'));c.commit();c.close();return {'checked_sources':checked,'online_sources':online,'discovered':discovered,'errors':errors,'links_seen':len(seen_urls),'at':finished}
 
 def verify_existing():
- started=datetime.now().isoformat(timespec='seconds');c=conn();rescore_all(c);data=c.execute('select * from opportunities').fetchall();checked=online=changed=expired=errors=0
+ started=datetime.now().isoformat(timespec='seconds');c=conn();rescore_all(c);c.commit();data=c.execute('select * from opportunities').fetchall();checked=online=changed=expired=errors=0
+ # No write transaction may span a slow source HTTP request.
  for rr in data:
   o=dict(rr);checked+=1;status='offline';body='';rel=int(o.get('reliability') or 60)
   try:
@@ -297,7 +300,7 @@ def verify_existing():
   except:pass
   newstatus=o.get('status')
   if days is not None and days<0 and newstatus=='open':newstatus='expired';expired+=1
-  conf=88 if status=='online' else 35;c.execute('update opportunities set last_checked=?,last_seen=?,source_status=?,content_hash=coalesce(?,content_hash),reliability=?,confidence=?,status=? where id=?',(now,now if status=='online' else o.get('last_seen'),status,h,rel,conf,newstatus,o['id']))
+  conf=88 if status=='online' else 35;c.execute('update opportunities set last_checked=?,last_seen=?,source_status=?,content_hash=coalesce(?,content_hash),reliability=?,confidence=?,status=? where id=?',(now,now if status=='online' else o.get('last_seen'),status,h,rel,conf,newstatus,o['id']));c.commit()
  rescore_all(c);finished=datetime.now().isoformat(timespec='seconds');c.execute("insert into radar_runs(kind,started_at,finished_at,checked,online,changed,expired,errors) values('verify',?,?,?,?,?,?,?)",(started,finished,checked,online,changed,expired,errors));c.commit();c.close();return {'checked':checked,'online':online,'changed':changed,'expired':expired,'errors':errors,'at':finished}
 
 def run_full_radar():

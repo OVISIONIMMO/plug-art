@@ -146,9 +146,9 @@ jobs:
         run: |
           test -s static/plugart_v200.css
           test -s static/plugart_v200.js
-          grep -q 'plugart_v202_boot.js?v=202.20261003.1' static/plugart_v162.html
-          grep -q 'plugart_v200.css?v=202.20261003.1' static/plugart_v162.html
-          grep -q 'plugart_v200.js?v=202.20261003.1' static/plugart_v162.html
+          grep -q 'plugart_v202_boot.js?v=202.20261003.2' static/plugart_v162.html
+          grep -q 'plugart_v200.css?v=202.20261003.2' static/plugart_v162.html
+          grep -q 'plugart_v200.js?v=202.20261003.2' static/plugart_v162.html
           ! grep -q 'fonts.googleapis.com' static/plugart_v162.html
           ! grep -q 'creation_v179.js' static/plugart_v162.html
           ! grep -q '<script defer src="/static/plugart_v162.js' static/plugart_v162.html
