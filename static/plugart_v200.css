@@ -117,7 +117,7 @@ filter:blur(2px);pointer-events:none}
 #creationV200 .c200-stagebar .c200-mini-actions{display:flex;gap:6px}
 #creationV200 .c200-stagebar button{border:1px solid var(--v200-line);background:#fff;border-radius:999px;padding:8px 11px;font-size:10px}
 #creationV200 .c200-carousel{display:flex;gap:14px;overflow-x:auto;padding:4px 4px 16px;scroll-snap-type:x mandatory}
-#creationV200 .c200-slide{position:relative;flex:0 0 min(430px,78vw);aspect-ratio:4/5;border-radius:25px;overflow:hidden;background:#111214;color:#fff;scroll-snap-align:start;box-shadow:0 20px 48px rgba(17,18,20,.12)}
+#creationV200 .c200-slide{position:relative;flex:0 0 min(430px,100%);max-width:100%;aspect-ratio:4/5;border-radius:25px;overflow:hidden;background:#111214;color:#fff;scroll-snap-align:start;box-shadow:0 20px 48px rgba(17,18,20,.12)}
 #creationV200 .c200-slide-bg{position:absolute;inset:0;background:#222 center/cover no-repeat;transform:scale(1.02)}
 #creationV200 .c200-slide::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.03),rgba(0,0,0,.75));pointer-events:none}
 #creationV200 .c200-slide-content{position:absolute;z-index:2;inset:auto 25px 25px;display:grid;gap:10px}
