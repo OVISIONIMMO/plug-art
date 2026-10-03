@@ -72,7 +72,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 var q=function(s,r){return (r||document).querySelector(s)};
 var qa=function(s,r){return Array.from((r||document).querySelectorAll(s))};
 var esc=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]})};
-var C={da:'editorial',layout:'editorial',ratio:'4:5',slides:[],caption:'',visuals:[],visualMeta:{},visualIndex:0,opps:[],drafts:[],busy:false,source:null,draftId:null};
+var C={da:'editorial',layout:'editorial',ratio:'4:5',slides:[],caption:'',visuals:[],visualMeta:{},visualIndex:0,opps:[],drafts:[],busy:false,source:null,draftId:null,autoMatch:true};
 var oppPromise=null,oppLoadedAt=0,draftPromise=null,run=null,recoveryTimer=null;
 var DA={
  editorial:{label:'Éditorial',style:'gallery',prompt:'magazine culturel contemporain, galerie européenne raffinée, lumière naturelle, composition éditoriale'},
@@ -117,7 +117,7 @@ function fill(o){
  q('#c200Name').value=o.title||'';q('#c200Place').value=[o.venue,o.city,o.country].filter(Boolean).join(' · ');q('#c200Date').value=o.event_date||o.start_date||o.deadline||'';
  q('#c200Brief').value=[o.summary||o.radar_reason||o.description||'',o.source_url||o.url||''].filter(Boolean).join('\n');status('Source Radar chargée',false);render();remember();return sourceVisual(o);
 }
-function matchName(){var n=facts().name.toLowerCase();if(!n||C.source)return;var o=C.opps.find(function(x){return String(x.title||'').trim().toLowerCase()===n});if(o)return fill(o)}
+function matchName(){var f=facts(),n=f.name.toLowerCase();if(!n||C.source||!C.autoMatch||f.brief||f.place||f.date)return;var o=C.opps.find(function(x){return String(x.title||'').trim().toLowerCase()===n});if(o)return fill(o)}
 function snapshot(){var f=facts();return {id:C.draftId,kind:'carousel',title:f.name||C.slides[0]?.title||'Campagne PLUG ART',source_opportunity_id:C.source?.id||'',payload:{editor:'v202',facts:f,slides:C.slides,format:C.ratio,brief:f.brief,instagram_caption:C.caption,da:C.da,layout:C.layout,visuals:C.visuals,visualMeta:C.visualMeta,visualIndex:C.visualIndex}}}
 function remember(){document.dispatchEvent(new CustomEvent('plugart:campaign',{detail:snapshot()}));clearTimeout(recoveryTimer);recoveryTimer=setTimeout(function(){try{localStorage.setItem('plugart:v202:campaign',JSON.stringify({draftId:C.draftId,snapshot:snapshot()}));q('#c200Recover').hidden=false}catch(_){status('Session trop volumineuse · enregistre le brouillon')}},300)}
 async function save(){
@@ -127,7 +127,7 @@ async function save(){
  finally{button.disabled=false}
 }
 function importDraft(d){
- install();cancel();var p=d.payload||{},f=p.facts||{};C.source=d.source_opportunity_id?{id:d.source_opportunity_id}:null;C.draftId=d.id||null;
+ install();cancel();C.autoMatch=false;var p=d.payload||{},f=p.facts||{};C.source=d.source_opportunity_id?{id:d.source_opportunity_id}:null;C.draftId=d.id||null;
  C.da=DA[p.da]?p.da:'editorial';C.layout=LAYOUTS[p.layout]?p.layout:'editorial';C.ratio=['1:1','9:16','4:5'].includes(p.format)?p.format:'4:5';
  C.slides=Array.isArray(p.slides)?p.slides.map(function(x){return Object.assign({},x)}):d.kind==='text'?[{kicker:'PLUG ART',title:d.title||'',body:p.body||p.brief||''}]:[];
  C.caption=p.instagram_caption||p.caption||'';C.visuals=Array.isArray(p.visuals)?p.visuals.slice():[];if(p.url&&!C.visuals.length)C.visuals=[p.url];C.visualMeta=p.visualMeta||{};C.visualIndex=Number(p.visualIndex)||0;
@@ -212,10 +212,10 @@ function install(){
     '<aside class="c200-control"><div><div class="c200-panel-title"><small>02 · DIRECTION</small><b>DA</b></div><div class="c200-pills" id="c200Da">'+Object.keys(DA).map(function(k){return '<button data-c200-da="'+k+'" class="'+(k===C.da?'on':'')+'">'+esc(DA[k].label)+'</button>'}).join('')+'</div></div><div style="margin-top:18px"><div class="c200-panel-title"><small>03 · STRUCTURE</small><b>Layout</b></div><div class="c200-pills">'+Object.keys(LAYOUTS).map(function(k){return '<button data-c200-layout="'+k+'" class="'+(k===C.layout?'on':'')+'">'+esc(LAYOUTS[k])+'</button>'}).join('')+'</div></div><div style="margin-top:18px"><div class="c200-panel-title"><small>04 · VISUELS</small><b>Variantes</b></div><div class="c200-media-note" id="c200MediaNote" role="status"></div><div class="c200-thumbgrid" id="c200Thumbs"></div><label class="c200-upload">＋ Importer mon image<input type="file" id="c200Upload" accept="image/*"></label><button class="c200-secondary" id="c200MoreVisuals">Générer 2 autres variantes</button></div><div class="c200-legend" id="c200Legend" contenteditable="true" role="textbox" aria-label="Légende Instagram"></div></aside>'+
    '</div>';
  view.appendChild(root);render();
- q('#c200Source').onchange=function(e){if(e.target.value===''){C.source=null;status('Brief libre · contenu conservé');remember();return}var i=Number(e.target.value);if(Number.isInteger(i)&&C.opps[i])fill(C.opps[i])};
+ q('#c200Source').onchange=function(e){if(e.target.value===''){C.source=null;C.autoMatch=false;status('Brief libre · contenu conservé');remember();return}var i=Number(e.target.value);if(Number.isInteger(i)&&C.opps[i])fill(C.opps[i])};
  q('#c200Generate').onclick=campaign;q('#c200MoreVisuals').onclick=more;q('#c200Cancel').onclick=cancel;
  q('#c200Save').onclick=save;q('#c200DraftPicker').onchange=function(e){var d=C.drafts.find(function(x){return String(x.id)===e.target.value});if(d)importDraft(d)};
- q('#c200New').onclick=function(){importDraft({title:'',payload:{facts:{name:''}}});q('#c200Name').value='';C.source=null;q('#c200Source').value='';render();status('Nouvelle campagne',false)};
+ q('#c200New').onclick=function(){importDraft({title:'',payload:{facts:{name:''}}});q('#c200Name').value='';C.source=null;C.autoMatch=true;q('#c200Source').value='';render();status('Nouvelle campagne',false)};
  q('#c200Recover').onclick=function(){try{var r=JSON.parse(localStorage.getItem('plugart:v202:campaign')||'null');if(r)importDraft(Object.assign({id:r.draftId},r.snapshot))}catch(_){status('Session non récupérable')}};
  try{q('#c200Recover').hidden=!localStorage.getItem('plugart:v202:campaign')}catch(_){}
  q('#c200CopyCaption').onclick=async function(){if(!C.caption){status('Aucune légende générée');return}try{await navigator.clipboard.writeText(C.caption);status('Légende copiée')}catch(_){status('Copie impossible · sélectionne la légende')}};

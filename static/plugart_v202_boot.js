@@ -75,7 +75,7 @@ async function renderSearch(value){
 window.PLUGART_V202_ROUTE=route;window.PLUGART_V202_LOAD_LEGACY=loadLegacy;window.PLUGART_DASHBOARD_DATA=dashboardData;window.PLUGART_NOTICE=notice;
 document.addEventListener('click',function(e){
  var nav=e.target.closest('[data-route]');
- if(nav){e.preventDefault();e.stopImmediatePropagation();route(nav.dataset.route,true);return}
+ if(nav){e.preventDefault();e.stopImmediatePropagation();route(nav.dataset.radarDirect==='events'?'vernissages':nav.dataset.route,true);return}
  var action=e.target.closest('#topPlugy,#sidebarPlugy,#globalSearch,#refreshData,#newAction,#sidebarCollapse');if(!action)return;
  if(action.id==='topPlugy'||action.id==='sidebarPlugy'){
   if(window.__PLUGART_LEGACY_READY)return;
