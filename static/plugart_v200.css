@@ -1088,3 +1088,57 @@ body.plugart-v202 .view:not(.active) *{
  body.plugart-v202 .ig-feed-grid{grid-template-columns:1fr!important}
  body.plugart-v202 .plugy-drawer{inset:8px!important;width:auto!important;border-radius:18px!important}
 }
+
+/* V202 runtime repairs: shell and functional states own their layout. */
+body.plugart-v202{margin:0;overflow:hidden}
+body.plugart-v202 [hidden]{display:none!important}
+body.plugart-v202 .app-shell{display:block!important;width:100%;height:100dvh;min-height:0}
+body.plugart-v202 .workspace{display:block!important;width:auto!important;min-width:0;max-width:none;margin-left:198px!important;padding:0!important;height:100dvh;min-height:0;overflow:auto;overscroll-behavior:contain}
+body.plugart-v202 .view{width:100%;min-width:0;box-sizing:border-box}
+body.plugart-v202 .sidebar{position:fixed;inset:0 auto 0 0;width:198px!important;height:100dvh;box-sizing:border-box}
+body.plugart-v202.sidebar-small .sidebar{width:76px!important}
+body.plugart-v202.sidebar-small .workspace{margin-left:76px!important}
+body.plugart-v202.sidebar-small .nav-item span,body.plugart-v202.sidebar-small .nav-group small,body.plugart-v202.sidebar-small .sidebar-foot span{display:none}
+body.plugart-v202 .overlay{position:fixed;inset:0;z-index:500;display:none!important;place-items:start center;padding:12vh 15px 20px;background:rgba(0,0,0,.65);overflow:auto}
+body.plugart-v202 .overlay.open{display:grid!important}
+body.plugart-v202 .overlay-card{width:min(620px,100%);padding:18px;border:1px solid var(--v202-line);border-radius:18px;background:#13161a;color:#f5f6f7}
+body.plugart-v202 .command-input{display:flex;align-items:center;gap:12px}
+body.plugart-v202 .command-input input{flex:1;min-width:0;padding:12px}
+body.plugart-v202 .command-results{display:grid;max-height:55vh;overflow:auto;padding-top:12px}
+body.plugart-v202 .command-result{padding:12px;text-align:left;background:transparent;border:0;color:#f5f6f7;border-radius:8px}
+body.plugart-v202 .command-result:hover{background:#252831}
+body.plugart-v202 .modal-head{display:flex;justify-content:space-between;align-items:start}
+body.plugart-v202 .create-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+body.plugart-v202 .create-grid button{padding:16px;text-align:left;background:#1b1e24;color:#fff;border:1px solid var(--v202-line);border-radius:12px}
+body.plugart-v202 .create-grid strong,body.plugart-v202 .create-grid span{display:block;margin-top:8px}
+body.plugart-v202 .plugy-drawer{position:fixed!important;z-index:400;top:10px;right:10px;bottom:10px;display:flex;flex-direction:column;overflow:hidden;transform:translateX(calc(100% + 30px))!important;visibility:hidden;pointer-events:none;transition:transform .2s ease,visibility .2s}
+body.plugart-v202 .plugy-drawer.open{transform:translateX(0)!important;visibility:visible;pointer-events:auto}
+body.plugart-v202 .toast{position:fixed;z-index:800;bottom:20px;left:50%;max-width:calc(100vw - 30px);transform:translate(-50%,20px);opacity:0;visibility:hidden;pointer-events:none;padding:12px 18px;background:#292632;color:#fff;border:1px solid #484258;border-radius:14px;transition:.2s}
+body.plugart-v202 .toast.show{transform:translate(-50%,0);opacity:1;visibility:visible}
+html[data-route-loading="1"] .top-title::after{content:'Chargement du module…';font-size:10px;color:#a5a0ff}
+#creationV200 .c200-stagebar{flex-wrap:wrap}
+#creationV200 .c200-mini-actions{flex-wrap:wrap}
+#creationV200 .c200-slide-bg{width:100%;height:100%;object-fit:cover;display:block}
+#creationV200 .c200-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+#creationV200 .c200-drafts{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+#creationV200 .c200-drafts select{max-width:260px;padding:8px;border-radius:10px}
+#creationV200 .c200-drafts button{padding:8px 12px;background:#191c22;color:#eee;border:1px solid var(--v202-line);border-radius:10px}
+#creationV200 .c200-media-note{font-size:10px;color:#aaa3c0;min-height:16px;margin:8px 0}
+#creationV200 .c200-legend{white-space:pre-wrap;outline:none}
+#creationV200 .c200-cancel{width:100%;margin-top:8px;padding:10px;background:#25222b;border:1px solid #595062;color:#fff;border-radius:10px}
+body.plugart-v202 .plugy-3d-fallback{display:grid;place-items:center;min-height:180px;text-align:center;color:#bcb5ff;font-size:13px;padding:20px}
+@media(max-width:1180px) and (min-width:821px){body.plugart-v202 .sidebar{width:86px!important}body.plugart-v202 .workspace{margin-left:86px!important}}
+@media(max-width:820px){
+ body.plugart-v202 .sidebar,body.plugart-v202.sidebar-small .sidebar{width:100%!important;height:72px!important;inset:auto 0 0!important;z-index:200;padding:8px!important;display:block!important;overflow-x:auto!important}
+ body.plugart-v202 .sidebar .brand-row,body.plugart-v202 .sidebar .sidebar-foot,body.plugart-v202 .sidebar .nav-group small{display:none!important}
+ body.plugart-v202 .main-nav{display:flex!important;flex-direction:row!important;gap:6px!important;margin:0!important;width:max-content}
+ body.plugart-v202 .nav-group{display:flex!important;gap:6px}
+ body.plugart-v202 .nav-item{min-width:54px!important;min-height:50px!important;justify-content:center;padding:0 8px!important}
+ body.plugart-v202 .nav-item span{display:none!important}
+ body.plugart-v202 .workspace,body.plugart-v202.sidebar-small .workspace{margin-left:0!important;height:calc(100dvh - 72px)!important}
+ body.plugart-v202 .view{padding:24px 14px 45px!important}
+}
+
+body.plugart-v202 .plugy-with-fallback model-viewer{visibility:hidden!important}body.plugart-v202 .plugy-3d-fallback{position:absolute;inset:0;z-index:4;pointer-events:none}
+
+#creationV200[data-layout="grid"] .c200-slide-bg{width:calc(100% - 32px);height:calc(56% - 16px)}

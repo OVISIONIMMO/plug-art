@@ -30,11 +30,25 @@ async def _v169_performance_headers(request: Request, call_next):
     response.headers.setdefault('X-Content-Type-Options','nosniff')
     return response
 
+class MediaByteCache(dict):
+    """Bound retained image bytes, including the shared opportunity/event cache."""
+    def __init__(self, max_bytes, max_entries=128):
+        super().__init__(); self.max_bytes=max_bytes; self.max_entries=max_entries
+        self.lock=threading.RLock()
+    @property
+    def bytes_used(self):
+        return sum(len(v[1]) for v in list(self.values()) if isinstance(v[1],bytes))
+    def __setitem__(self,key,value):
+        with self.lock:
+            super().__setitem__(key,value)
+            while len(self)>self.max_entries or self.bytes_used>self.max_bytes:
+                super().pop(next(iter(self)))
+
 MEDIA_CACHE={}
-MEDIA_BYTES_CACHE={}
+MEDIA_BYTES_CACHE=MediaByteCache(32_000_000)
 MEDIA_NEGATIVE_CACHE={}
 EVENT_MEDIA_META_CACHE={}
-REMOTE_IMAGE_CACHE={}
+REMOTE_IMAGE_CACHE=MediaByteCache(48_000_000)
 
 def _safe_remote_image_url(raw:str):
     raw=str(raw or '').strip()
@@ -762,8 +776,8 @@ def health_v124():
     backup_ready=bool(MIGRATION_BACKUP and MIGRATION_BACKUP.exists() and MIGRATION_BACKUP.stat().st_size>0)
     return {
       'ok':db_ok,
-      'version':'178.0',
-      'ui':'plug-art-v169-2-studio',
+      'version':app.version,
+      'ui':'black-fast-shell-v202',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
@@ -1018,9 +1032,16 @@ def opportunity_thumbnail_v67(oid:int):
         try:
             rr=requests.get(candidate['url'],timeout=(3,6),headers=headers,allow_redirects=True);ct=(rr.headers.get('content-type') or '').split(';')[0].lower()
             if rr.ok and ct.startswith('image/') and 1200<len(rr.content)<9000000:
-                MEDIA_BYTES_CACHE[key]=(now,rr.content,ct);MEDIA_NEGATIVE_CACHE.pop(neg_key,None)
+                raw=rr.content
+                try:
+                    from PIL import Image,ImageOps
+                    with Image.open(io.BytesIO(raw)) as im:
+                        if im.width*im.height>40_000_000:raise ValueError('Image trop grande')
+                        im=ImageOps.exif_transpose(im);im.thumbnail((640,640),Image.Resampling.LANCZOS);out=io.BytesIO();im.convert('RGB').save(out,'WEBP',quality=80);raw=out.getvalue();ct='image/webp'
+                except Exception:pass
+                MEDIA_BYTES_CACHE[key]=(now,raw,ct);MEDIA_NEGATIVE_CACHE.pop(neg_key,None)
                 if len(MEDIA_BYTES_CACHE)>96:MEDIA_BYTES_CACHE.pop(next(iter(MEDIA_BYTES_CACHE)))
-                return Response(content=rr.content,media_type=ct,headers={'Cache-Control':'public,max-age=86400,stale-while-revalidate=604800','X-PLUG-Image-Source':candidate['source']})
+                return Response(content=raw,media_type=ct,headers={'Cache-Control':'public,max-age=86400,stale-while-revalidate=604800','X-PLUG-Image-Source':candidate['source']})
         except Exception:pass
     MEDIA_NEGATIVE_CACHE[neg_key]=now
     if len(MEDIA_NEGATIVE_CACHE)>256:MEDIA_NEGATIVE_CACHE.pop(next(iter(MEDIA_NEGATIVE_CACHE)))
@@ -2375,9 +2396,11 @@ def content_drafts_create_v108(body:dict):
     title=str(body.get('title') or 'Brouillon').strip()[:240]
     source=str(body.get('source_opportunity_id') or '').strip()[:120]
     payload=body.get('payload') if isinstance(body.get('payload'),dict) else {}
+    encoded=json.dumps(payload,ensure_ascii=False)
+    if len(encoded)>500000:raise HTTPException(413,'Brouillon trop volumineux : importe les images comme fichiers')
     now=_now_v85()
     c=core.conn();cur=c.execute("""insert into content_drafts(kind,title,source_opportunity_id,payload_json,created_at,updated_at)
-                                  values(?,?,?,?,?,?)""",(kind,title,source,json.dumps(payload,ensure_ascii=False)[:500000],now,now));c.commit();draft_id=cur.lastrowid;c.close()
+                                  values(?,?,?,?,?,?)""",(kind,title,source,encoded,now,now));c.commit();draft_id=cur.lastrowid;c.close()
     return _draft_row_v108(core.one('select * from content_drafts where id=?',(draft_id,)))
 
 @app.patch('/api/v108/drafts/{draft_id}')
@@ -2389,7 +2412,10 @@ def content_drafts_update_v108(draft_id:int,body:dict):
         kind=str(body.get('kind') or 'text').strip().lower();data['kind']=kind if kind in {'text','carousel','visual'} else 'text'
     if 'title' in body:data['title']=str(body.get('title') or 'Brouillon').strip()[:240]
     if 'source_opportunity_id' in body:data['source_opportunity_id']=str(body.get('source_opportunity_id') or '').strip()[:120]
-    if isinstance(body.get('payload'),dict):data['payload_json']=json.dumps(body['payload'],ensure_ascii=False)[:500000]
+    if isinstance(body.get('payload'),dict):
+        encoded=json.dumps(body['payload'],ensure_ascii=False)
+        if len(encoded)>500000:raise HTTPException(413,'Brouillon trop volumineux')
+        data['payload_json']=encoded
     data['updated_at']=_now_v85()
     sets=','.join(f"{k}=?" for k in data)
     c=core.conn();c.execute(f"update content_drafts set {sets} where id=?",(*data.values(),draft_id));c.commit();c.close()
@@ -2488,6 +2514,7 @@ def dashboard_bootstrap_v124():
             return row[0] if row else 0
         stats={
           'opportunities':scalar("select count(*) from opportunities where status in ('open','rolling')"),
+          'events':scalar("select count(*) from art_events where status='active' and substr(starts_at,1,10)>=?",(today,)),
           'urgent':scalar("select count(*) from opportunities where deadline is not null and deadline>=? and deadline<=date(?, '+14 day')",(today,today)),
           'drafts':scalar("select count(*) from content_drafts"),
           'contacts':scalar("select count(*) from crm_leads where coalesce(status,'')!='closed'")
@@ -2563,7 +2590,7 @@ def _v124_bootstrap_smoke():
     except Exception as exc:
         print(f"PLUG_ART_BOOTSTRAP_ERROR {type(exc).__name__}: {str(exc)[:180]}",flush=True)
 
-threading.Thread(target=_v124_bootstrap_smoke,daemon=True).start()
+# V202 startup checks the bootstrap after all schema migrations complete.
 
 
 # V115 rendered carousel exports for ZIP + Instagram publishing.
@@ -4213,7 +4240,7 @@ def smoke_v172():
         opp=int((core.one("select count(*) n from opportunities where status in ('open','rolling')") or {}).get('n',0))
         events=int((core.one("select count(*) n from art_events where status='active' and substr(starts_at,1,10)>=?",(future,)) or {}).get('n',0))
         state_events=_v168_refresh_state('events');state_opps=_v168_refresh_state('opportunities_ai')
-        checks['radar']={'ok':opp>0 or events>0,'open_calls':opp,'future_events':events,
+        checks['radar']={'ok':opp>=0 and events>=0,'open_calls':opp,'future_events':events,
           'event_last_run':state_events.get('updated_at',''),'opportunity_last_run':state_opps.get('updated_at','')}
     except Exception as exc:
         checks['radar']={'ok':False,'detail':type(exc).__name__}
@@ -4236,7 +4263,8 @@ def smoke_v172():
         catalog_ok="creationCatalogBarV178" in js and "studio-swiss-signal" in js and "studio-type-sculpture" in js
         nav_ok='data-route="agenda"' not in html and html.count('data-route="creation"')>=1 and html.count('data-route="opencalls"')>=1
         event_map_ok="data-event-map" in js and "ensureMapEventsV173(false).then(renderMap)" in js
-        asset_ok=(("178.20261001.1" in html and "V178.0" in html) or ("plugart_v200.css?v=200.20261001.1" in html and "plugart_v200.js?v=200.20261001.1" in html and "V200" in html) or ("plugart_v200.css?v=201.20261001.1" in html and "plugart_v200.js?v=201.20261001.1" in html and "plugart_v162.js?v=201.20261001.1" in html and "V201" in html) or ("plugart_v200.css?v=202.20261001.3" in html and "plugart_v202_boot.js?v=202.20261001.3" in html and "plugart_v200.js?v=202.20261001.3" in html and "V202" in html))
+        versions=re.findall(r'(?:plugart_v200\.(?:css|js)|plugart_v202_boot\.js)\?v=([^"\s]+)',html)
+        asset_ok=len(versions)==3 and len(set(versions))==1 and versions[0]=='202.20261003.1'
         image_runtime=(BASE/'app_extra_v32.py').read_text(encoding='utf-8')
         image_fallback_ok="PLUG_ART_IMAGE_V177_FALLBACK" in image_runtime and "plugart-fallback-v177" in image_runtime
         checks['frontend_runtime']={
@@ -4256,7 +4284,7 @@ def smoke_v172():
         checks['frontend_runtime']={'ok':False,'detail':type(exc).__name__}
     checks['openai']={'configured':bool(os.getenv('OPENAI_API_KEY','').strip())}
     ok=all(v.get('ok',True) for k,v in checks.items() if k!='openai')
-    return {'ok':ok,'version':'178.0','checks':checks}
+    return {'ok':ok,'version':app.version,'checks':checks,'scope':'server-and-source-checks','browser_runtime_validated':False}
 
 def _v172_startup_selftest():
     try:
@@ -4265,7 +4293,7 @@ def _v172_startup_selftest():
     except Exception as exc:
         print('PLUG_ART_V178_SELFTEST_ERROR '+type(exc).__name__+': '+str(exc)[:220],flush=True)
 
-_v172_startup_selftest()
+# The production entry point runs checks after all V202 routes are registered.
 
 @app.get('/api/v163/diagnostics')
 def diagnostics_v163():
