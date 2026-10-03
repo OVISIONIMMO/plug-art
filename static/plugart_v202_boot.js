@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var REV='202.20261003.2',LEGACY='/static/plugart_v162.js?v='+REV,LEGACY_CSS='/static/plugart_v162.css?v='+REV;
+var REV='202.20261003.3',LEGACY='/static/plugart_v162.js?v='+REV,LEGACY_CSS='/static/plugart_v162.css?v='+REV;
 var legacyPromise=null,routeSequence=0,bootPromise=null,bootGeneration=0;
 var simpleRoutes={dashboard:true,creation:true};
 var routes={dashboard:['WORKSPACE','Dashboard'],creation:['LABO CRÉATION','Création'],radar:['VEILLE ACTIVE','Radar'],opencalls:['SÉLECTION DE TRAVAIL','Open Calls'],bureau:['BUREAU','Bureau'],prospection:['CRM','Prospection'],social:['INSTAGRAM','Social Studio'],map:['CARTE','Map'],network:['RÉSEAU','Artistes'],ideas:['IDÉES','Nuage à idées']};
@@ -105,7 +105,7 @@ function media(){
   var src=img.getAttribute('src')||'',deferred=img.dataset.deferSrc;
   if(/^https?:/i.test(src)&&!src.startsWith(location.origin+'/'))img.src='/api/v171/image?url='+encodeURIComponent(src);
   img.addEventListener('load',function(){img.classList.add('img-ready-v171');img.classList.remove('img-failed-v171')});
-  function failed(){if(img.dataset.fallbackV202)return;img.dataset.fallbackV202='1';img.classList.add('img-failed-v171');img.src='/api/v201/visual-fallback?label='+encodeURIComponent(img.alt||'PLUG ART')}
+  function failed(){if(img.dataset.fallbackV202)return;img.dataset.fallbackV202='1';img.classList.add('img-failed-v171');img.src='/api/v201/visual-fallback?label='+encodeURIComponent(img.alt||'PLUG ART')+(img.closest('#creationV200')?'&background=1':'');document.dispatchEvent(new CustomEvent('plugart:media-fallback',{detail:{source:src}}))}
   img.addEventListener('error',failed);
   if(deferred){img.loading='lazy';if(observer)observer.observe(img);else{delete img.dataset.deferSrc;img.src=deferred}}
   else if(img.complete){if(img.naturalWidth>0)img.classList.add('img-ready-v171');else if(src)failed()}

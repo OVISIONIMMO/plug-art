@@ -4264,7 +4264,7 @@ def smoke_v172():
         nav_ok='data-route="agenda"' not in html and html.count('data-route="creation"')>=1 and html.count('data-route="opencalls"')>=1
         event_map_ok="data-event-map" in js and "ensureMapEventsV173(false).then(renderMap)" in js
         versions=re.findall(r'(?:plugart_v200\.(?:css|js)|plugart_v202_boot\.js)\?v=([^"\s]+)',html)
-        asset_ok=len(versions)==3 and len(set(versions))==1 and versions[0]=='202.20261003.2'
+        asset_ok=len(versions)==3 and len(set(versions))==1 and versions[0]=='202.20261003.3'
         image_runtime=(BASE/'app_extra_v32.py').read_text(encoding='utf-8')
         image_fallback_ok="PLUG_ART_IMAGE_V177_FALLBACK" in image_runtime and "plugart-fallback-v177" in image_runtime
         checks['frontend_runtime']={
