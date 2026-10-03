@@ -122,7 +122,7 @@ function snapshot(){var f=facts();return {id:C.draftId,kind:'carousel',title:f.n
 function remember(){document.dispatchEvent(new CustomEvent('plugart:campaign',{detail:snapshot()}));clearTimeout(recoveryTimer);recoveryTimer=setTimeout(function(){try{localStorage.setItem('plugart:v202:campaign',JSON.stringify({draftId:C.draftId,snapshot:snapshot()}));q('#c200Recover').hidden=false}catch(_){status('Session trop volumineuse · enregistre le brouillon')}},300)}
 async function save(){
  var button=q('#c200Save');if(button.disabled)return;button.disabled=true;var id=C.draftId;
- try{var d=await request('/api/v108/drafts'+(id?'/'+id:''),{method:id?'PATCH':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(snapshot())});C.draftId=d.id;C.drafts=C.drafts.filter(function(x){return x.id!==d.id});C.drafts.unshift(d);renderDrafts();remember();status('Brouillon enregistré');if(window.PLUGART_V200.refreshDashboard)window.PLUGART_V200.refreshDashboard()}
+ try{var d=await request('/api/v108/drafts'+(id?'/'+id:''),{method:id?'PATCH':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(snapshot())});C.draftId=d.id;C.drafts=C.drafts.filter(function(x){return x.id!==d.id});C.drafts.unshift(d);renderDrafts();remember();status('Brouillon enregistré');if(window.PLUGART_V200.refreshDashboard)window.PLUGART_V200.refreshDashboard().catch(function(){})}
  catch(_){status('Enregistrement impossible · session conservée localement');remember()}
  finally{button.disabled=false}
 }

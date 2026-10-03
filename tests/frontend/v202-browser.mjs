@@ -35,8 +35,7 @@ try{
  await page.locator('.nav-item[data-route="map"]').click();await visible('#realMap');await width('#realMap',400);
  await page.locator('.nav-item[data-route="social"]').click();await visible('#igConnectionState');await page.locator('#igConnect').filter({hasText:'Configuration Meta requise'}).waitFor();assert.equal(await page.locator('#igPublish').isDisabled(),true);
  await page.setViewportSize({width:390,height:844});await page.locator('.nav-item[data-route="creation"]').click();await visible('#creationV200');await width('#creationV200',330);await page.screenshot({path:'test-results/mobile-creation.png',fullPage:true});
- // WebGL failures depend on the runner. Application JS errors must remain absent.
- const applicationErrors=errors.filter(e=>!/(WebGL|isPresenting|requestAnimationFrame|context)/i.test(e));assert.deepEqual(applicationErrors,[]);
+ assert.deepEqual(errors,[],'application JavaScript errors must remain absent');
  await writeFile('test-results/browser-checks.json',JSON.stringify({ok:true,initialWidth,requests:requests.length,errors},null,2));console.log('V202 browser journeys passed: light boot, refresh, widths, routes, drawer, imports, drafts, export, mobile.');
 }catch(error){await page.screenshot({path:'test-results/failure.png',fullPage:true});await writeFile('test-results/errors.json',JSON.stringify({message:error.message,errors},null,2));throw error}
 finally{await context.tracing.stop({path:'test-results/trace.zip'});await browser.close()}
