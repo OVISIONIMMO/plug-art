@@ -178,9 +178,12 @@ def _fallback_palette(seed: str):
     colors = ['#'+digest[i:i+6] for i in (0, 6, 12)]
     return colors
 
-def _fallback_svg(label: str, seed: str=''):
+def _fallback_svg(label: str, seed: str='', background: bool=False):
     safe = html.escape(_clean(label or 'PLUG ART', 90))
     c1, c2, c3 = _fallback_palette(seed or safe)
+    labels = '' if background else f'''<text x="76" y="1050" fill="#ffffff" opacity=".62" font-family="Arial, Helvetica, sans-serif" font-size="28" letter-spacing="8">PLUG ART</text>
+    <text x="76" y="1120" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="52" font-weight="700">{safe[:42]}</text>
+    <text x="76" y="1180" fill="#ffffff" opacity=".58" font-family="Arial, Helvetica, sans-serif" font-size="22">VISUEL DE SECOURS · IMAGE SOURCE OU IA À REMPLACER</text>'''
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1280" viewBox="0 0 1024 1280">
     <defs>
       <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
@@ -204,9 +207,7 @@ def _fallback_svg(label: str, seed: str=''):
       <circle cx="780" cy="330" r="210"/><circle cx="780" cy="330" r="280"/>
       <path d="M80 220H944M80 1020H944"/>
     </g>
-    <text x="76" y="1050" fill="#ffffff" opacity=".62" font-family="Arial, Helvetica, sans-serif" font-size="28" letter-spacing="8">PLUG ART</text>
-    <text x="76" y="1120" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="52" font-weight="700">{safe[:42]}</text>
-    <text x="76" y="1180" fill="#ffffff" opacity=".58" font-family="Arial, Helvetica, sans-serif" font-size="22">VISUEL DE SECOURS · IMAGE SOURCE OU IA À REMPLACER</text>
+    {labels}
     </svg>'''
     return svg.encode('utf-8')
 
@@ -226,8 +227,8 @@ def _fallback_result(prompt: str, reason: str='fallback'):
     }
 
 @app.get('/api/v201/visual-fallback')
-def visual_fallback_v201(label: str='PLUG ART', seed: str=''):
-    raw = _fallback_svg(label, seed)
+def visual_fallback_v201(label: str='PLUG ART', seed: str='', background: bool=False):
+    raw = _fallback_svg(label, seed, background)
     return Response(content=raw, media_type='image/svg+xml', headers={
         'Cache-Control':'public,max-age=604800,stale-while-revalidate=2592000',
         'X-PLUG-Image-Fallback':'v201'

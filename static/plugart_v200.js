@@ -166,7 +166,7 @@ async function visualSet(n,append,job){
  async function worker(){while(next<n&&!job.controller.signal.aborted){var i=next++;try{var x=await makeVisual(base+i+1,job);if(run!==job)return;if(!x.url)throw new Error('Image absente');C.visuals.push(x.url);C.visualMeta[x.url]={kind:x.fallback?'fallback':'ai',fallback:!!x.fallback};done[x.fallback?'fallback':'ai']++;render();remember()}catch(err){if(job.controller.signal.aborted)return;done.failed++}if(run===job)status('Visuels : '+done.ai+' image(s) IA · '+done.fallback+' remplacement(s)',true)}}
  await Promise.all(Array.from({length:Math.min(2,n)},worker));return done;
 }
-function imgFor(i){var slide=C.slides[i]||{};return slide.image||C.visuals[(C.visualIndex+i)%C.visuals.length]||fallback(slide.title)}
+function imgFor(i){var slide=C.slides[i]||{},url=slide.image||C.visuals[(C.visualIndex+i)%C.visuals.length]||fallback(slide.title);return url.includes('/api/v201/visual-fallback')&&!/[?&]background=/.test(url)?url+(url.includes('?')?'&':'?')+'background=1':url}
 function renderSlides(){
  var h=q('#c200Carousel');if(!h)return;
  if(!C.slides.length){h.innerHTML='<div class="c200-empty"><div><b>Le carrousel apparaîtra ici.</b><span>Renseigne le brief ou importe une idée. Les textes apparaissent avant la fin des visuels.</span></div></div>';return}
