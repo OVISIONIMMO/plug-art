@@ -1142,3 +1142,5 @@ body.plugart-v202 .plugy-3d-fallback{display:grid;place-items:center;min-height:
 body.plugart-v202 .plugy-with-fallback model-viewer{visibility:hidden!important}body.plugart-v202 .plugy-3d-fallback{position:absolute;inset:0;z-index:4;pointer-events:none}
 
 #creationV200[data-layout="grid"] .c200-slide-bg{width:calc(100% - 32px);height:calc(56% - 16px)}
+
+#creationV200 .c200-status{white-space:normal;max-width:320px;line-height:1.5}#creationV200 .c200-intro>div{min-width:0}

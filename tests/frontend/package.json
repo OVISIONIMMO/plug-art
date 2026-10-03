@@ -2,8 +2,8 @@
   "name": "plug-art-runtime-tests",
   "private": true,
   "scripts": {
-    "test:runtime": "node --test tests/frontend/v202-runtime.cjs",
-    "test:browser": "node tests/frontend/v202-browser.mjs"
+    "test:runtime": "node --test v202-runtime.cjs",
+    "test:browser": "cd ../.. && node tests/frontend/v202-browser.mjs"
   },
   "devDependencies": {
     "jsdom": "26.1.0",
