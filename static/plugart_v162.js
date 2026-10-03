@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='202.20261003.1';
+const VERSION='202.20261003.2';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -83,7 +83,7 @@ const viewMeta={
  dashboard:['WORKSPACE','Dashboard','Idle'],
  radar:['VEILLE ACTIVE','Radar','Attentive'],
  opencalls:['SÉLECTION DE TRAVAIL','Open Calls','Curious'],
- creation:['CRÉATION','Studio de contenu','Present'],
+ creation:['LABO CRÉATION','Création','Present'],
  bureau:['ÉCRITURE & DOCUMENTS','Bureau','Think'],
  ideas:['IDÉATION','Nuage à idées','Curious'],
  prospection:['CONTACTS & PROSPECTION','Suivi des démarches','Attentive'],
@@ -4622,9 +4622,9 @@ function installCreationV166(){
 async function syncRuntimeVersionBadge(){
   const pill=$('#buildPill'),side=$('#sidebarVersion');
   const apply=v=>{const label='V'+String(v||'162.3').replace(/^V/i,'');if(pill)pill.textContent=label;if(side)side.textContent=label;document.documentElement.dataset.runtimeVersion=label};
-  apply('168.1');
+  apply('202.0');
   try{
-    const r=await fetch('/api/v163/status',{cache:'no-store',headers:{'Accept':'application/json'}});
+    const r=await fetch('/api/v179/status',{cache:'no-store',headers:{'Accept':'application/json'}});
     if(r.ok){const data=await r.json();if(data?.version)apply(data.version)}
   }catch{}
 }

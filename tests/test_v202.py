@@ -3,6 +3,8 @@ import asyncio
 import base64
 import io
 import os
+import sqlite3
+from types import SimpleNamespace
 from pathlib import Path
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
@@ -10,6 +12,7 @@ os.environ.setdefault('PLUGART_AUTORADAR','0')
 os.environ.setdefault('PLUGART_EVENT_AUTORADAR','0')
 os.environ.setdefault('PLUGART_GENERATED_DIR','/tmp/plugart-v202-test-generated')
 import httpx
+import pytest
 from PIL import Image
 from fastapi.testclient import TestClient
 import app_extra_v60 as current
@@ -23,7 +26,7 @@ def test_current_assets_and_endpoint_manifest():
     with TestClient(current.app) as session:
         root=session.get('/')
         assert root.status_code==200
-        assert '202.20261003.1' in root.text
+        assert '202.20261003.2' in root.text
         assert '<script defer src="/static/plugart_v162.js' not in root.text
         health=session.get('/api/health').json()
         assert health['ok'] and health['version']=='202.0'
@@ -115,3 +118,36 @@ def test_ndjson_bypasses_gzip_buffering(monkeypatch):
     response=client.post('/api/v179/plugy/stream',json={'message':'Test flux'},headers={'accept-encoding':'gzip'})
     assert 'content-encoding' not in response.headers
     assert '"fallback": true' in response.text
+
+@pytest.mark.parametrize('scan',['discover','verify'])
+def test_radar_releases_database_writer_during_network_requests(monkeypatch,tmp_path,scan):
+    core=current.v59.core
+    isolated=tmp_path/'radar.db'
+    source=core.conn()
+    with sqlite3.connect(isolated) as target:source.backup(target)
+    source.close()
+    monkeypatch.setattr(core,'DB',isolated)
+    with core.conn() as db:
+        db.execute('delete from radar_sources')
+        db.execute('delete from radar_candidates')
+        db.execute('delete from opportunities')
+        for i in range(2):
+            db.execute('insert into radar_sources(name,url,reliability,enabled) values(?,?,80,1)',('Fixture',f'https://example.test/source/{i}'))
+            db.execute("insert into opportunities(title,source_url,status,summary,fee) values(?,?,'open','Exposition collective pour artistes émergents','Gratuit')",('Open Call fixture',f'https://example.test/exhibition/{i}'))
+    checks=[]
+    def writable():
+        with sqlite3.connect(isolated,timeout=.05) as writer:
+            writer.execute('begin immediate')
+            writer.rollback()
+        checks.append(True)
+    def fetch(url,*args):
+        writable()
+        return SimpleNamespace(ok=True,text=f'<a href="{url}/open-call-artists">Open Call artists exhibition</a>')
+    def detail(url,label):
+        writable()
+        return {'title':label,'deadline':None,'city':'Paris','country':'France','fee':'Gratuit','summary':'Collective exhibition for emerging artists','raw_excerpt':'Painting exhibition','confidence':90}
+    monkeypatch.setattr(core,'fetch_page',fetch)
+    monkeypatch.setattr(core,'extract_detail',detail)
+    result=core.discover_sources() if scan=='discover' else core.verify_existing()
+    assert len(checks)>=2
+    assert result['errors']==0

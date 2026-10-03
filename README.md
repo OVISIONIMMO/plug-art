@@ -10,4 +10,4 @@ Healthcheck: `/api/health`
 
 Site de production : https://plug-art-live-production.up.railway.app/
 
-Révision interface : `202.20261003.1`. Les routes `/api/v202/smoke` et `/api/health` contrôlent le serveur ; les parcours navigateur sont vérifiés dans la CI.
+Révision interface : `202.20261003.2`. Les routes `/api/v202/smoke` et `/api/health` contrôlent le serveur ; les parcours navigateur sont vérifiés dans la CI.
