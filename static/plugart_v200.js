@@ -110,7 +110,7 @@ async function sourceVisual(o){
  if(!o?.id)return;var safe='/api/v201/opportunities/'+encodeURIComponent(o.id)+'/media';
  C.visuals=[safe];C.visualIndex=0;C.visualMeta[safe]={kind:'source',pending:true};render();
  try{var ctrl=new AbortController(),timer=setTimeout(function(){ctrl.abort()},18000);try{var r=await fetch(safe,{signal:ctrl.signal,cache:'force-cache'});if(!r.ok)throw new Error('Image indisponible');await r.blob();C.visualMeta[safe]={kind:r.headers.get('X-PLUG-Image-Fallback')?'fallback':'source',fallback:!!r.headers.get('X-PLUG-Image-Fallback')}}finally{clearTimeout(timer)}}catch(_){C.visualMeta[safe]={kind:'fallback',fallback:true}}
- if(C.source===o)renderControls();
+ if(C.visuals.includes(safe))renderControls();
 }
 function fill(o){
  if(!o)return;cancel();C.source=o;C.draftId=null;C.slides=[];C.caption='';C.visuals=[];
@@ -153,20 +153,24 @@ async function stream(message,job){
  if(!output.trim())throw new Error('Réponse vide');return {text:output.trim(),fallback:fallbackUsed};
 }
 function parse(raw){var t=raw.trim().replace(/^\x60\x60\x60(?:json)?/i,'').replace(/\x60\x60\x60$/,'').trim();var j=JSON.parse(t);if(!Array.isArray(j.slides)||!j.slides.length)throw new Error('Carrousel incomplet');return {slides:j.slides.slice(0,5).map(function(s){return {kicker:String(s.kicker||'PLUG ART'),title:String(s.title||''),body:String(s.body||'')}}),caption:String(j.caption||'')}}
+function localCampaign(f){
+ var practical=[f.place,f.date].filter(Boolean).join(' · '),context=f.brief.split('\n').filter(function(line){return !/^https?:\/\//.test(line.trim())}).join(' ').slice(0,220);
+ return {fallback:true,slides:[{kicker:'EXPOSITION',title:f.name,body:practical},{kicker:'PRÉSENTATION',title:'Le projet',body:context||'Ajoute une présentation de l’exposition.'},{kicker:'REGARD ARTISTIQUE',title:'À découvrir',body:'Précise ici l’angle artistique et les œuvres présentées.'},{kicker:'INFOS PRATIQUES',title:'Préparer sa visite',body:practical||'Complète le lieu et la date avant publication.'},{kicker:'PLUG ART',title:'En savoir plus',body:'Commente PLUG 🔌 pour recevoir le lien.'}],caption:[f.name,practical,context,'Commente PLUG 🔌 pour recevoir le lien.'].filter(Boolean).join('\n\n')};
+}
 async function generateCopy(job){
  var f=facts(),m=['Tu es directeur éditorial de PLUG ART. Crée un carrousel Instagram de 5 slides.','Utilise uniquement les faits fournis. N’invente aucune date, lieu, artiste ou prix.','Nom : '+f.name,'Lieu : '+(f.place||'non renseigné'),'Date : '+(f.date||'non renseignée'),'Contexte : '+(f.brief||'non renseigné'),'Structure : couverture, présentation, angle artistique, informations pratiques connues, CTA.','Retourne uniquement du JSON valide sans markdown : {"slides":[{"kicker":"","title":"","body":""}],"caption":""}. Titres courts. Corps de slide sous 220 caractères.'].join('\n');
- var out=await stream(m,job);if(out.fallback)throw new Error('IA texte indisponible · réessaie ou complète les slides manuellement');return parse(out.text);
+ var out=await stream(m,job);return out.fallback?localCampaign(f):parse(out.text);
 }
 async function makeVisual(v,job){
  var f=facts(),d=DA[C.da]||DA.editorial,prompt=['Exposition : '+f.name,f.place,f.brief.slice(0,850),d.prompt,'Variation '+v+' avec une composition distincte','Aucun texte lisible, aucun logo, aucune interface.'].filter(Boolean).join('. ');
  return request('/api/v179/content/image',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,style:d.style,ratio:C.ratio,quality:'medium'}),signal:job.controller.signal},85000);
 }
 async function visualSet(n,append,job){
- if(!append){C.visuals=[];C.visualIndex=0}var next=0,done={ai:0,fallback:0,failed:0},base=C.visuals.length;
- async function worker(){while(next<n&&!job.controller.signal.aborted){var i=next++;try{var x=await makeVisual(base+i+1,job);if(run!==job)return;if(!x.url)throw new Error('Image absente');C.visuals.push(x.url);C.visualMeta[x.url]={kind:x.fallback?'fallback':'ai',fallback:!!x.fallback};done[x.fallback?'fallback':'ai']++;render();remember()}catch(err){if(job.controller.signal.aborted)return;done.failed++}if(run===job)status('Visuels : '+done.ai+' image(s) IA · '+done.fallback+' remplacement(s)',true)}}
+ var retained=C.visuals.filter(function(u){return !C.visualMeta[u]?.fallback&&!u.includes('/visual-fallback')});if(!append){C.visuals=retained;C.visualIndex=0}var next=0,done={ai:0,fallback:0,failed:0},base=C.visuals.length;
+ async function worker(){while(next<n&&!job.controller.signal.aborted){var i=next++;try{var x=await makeVisual(base+i+1,job);if(run!==job)return;if(!x.url)throw new Error('Image absente');if(!x.fallback||!retained.length){C.visuals.push(x.url);C.visualMeta[x.url]={kind:x.fallback?'fallback':'ai',fallback:!!x.fallback}}done[x.fallback?'fallback':'ai']++;render();remember()}catch(err){if(job.controller.signal.aborted)return;done.failed++}if(run===job)status('Visuels : '+done.ai+' image(s) IA · '+done.fallback+' remplacement(s)',true)}}
  await Promise.all(Array.from({length:Math.min(2,n)},worker));return done;
 }
-function imgFor(i){var slide=C.slides[i]||{},url=slide.image||C.visuals[(C.visualIndex+i)%C.visuals.length]||fallback(slide.title);return url.includes('/api/v201/visual-fallback')&&!/[?&]background=/.test(url)?url+(url.includes('?')?'&':'?')+'background=1':url}
+function imgFor(i){var slide=C.slides[i]||{},url=slide.image||C.visuals[(C.visualIndex+i)%C.visuals.length]||fallback(slide.title);if(C.visualMeta[url]?.fallback&&!url.includes('/visual-fallback'))url=fallback(slide.title);return url.includes('/api/v201/visual-fallback')&&!/[?&]background=/.test(url)?url+(url.includes('?')?'&':'?')+'background=1':url}
 function renderSlides(){
  var h=q('#c200Carousel');if(!h)return;
  if(!C.slides.length){h.innerHTML='<div class="c200-empty"><div><b>Le carrousel apparaîtra ici.</b><span>Renseigne le brief ou importe une idée. Les textes apparaissent avant la fin des visuels.</span></div></div>';return}
@@ -177,7 +181,7 @@ function renderControls(){
  qa('[data-c200-da]',root).forEach(function(b){b.classList.toggle('on',b.dataset.c200Da===C.da)});qa('[data-c200-layout]',root).forEach(function(b){b.classList.toggle('on',b.dataset.c200Layout===C.layout)});
  q('#c200Thumbs').innerHTML=C.visuals.map(function(u,i){return '<button class="c200-thumb '+(i===C.visualIndex?'on':'')+'" data-c200-visual="'+i+'" aria-label="Choisir le visuel '+(i+1)+'"><img src="'+esc(u)+'" alt="Variante '+(i+1)+'" decoding="async"><span>'+(i+1)+'</span></button>'}).join('');
  if(document.activeElement!==q('#c200Legend'))q('#c200Legend').textContent=C.caption;
- var replacements=C.visuals.filter(function(u){return C.visualMeta[u]?.fallback}).length,pending=C.visuals.some(function(u){return C.visualMeta[u]?.pending});q('#c200MediaNote').textContent=pending?'Vérification de l’image source…':replacements?replacements+' visuel(s) de secours · à remplacer':C.visuals.length?'Images disponibles':'';
+ var media=Array.from(new Set(C.visuals.concat(C.slides.map(function(s){return s.image}).filter(Boolean)))),replacements=media.filter(function(u){return C.visualMeta[u]?.fallback}).length,pending=media.some(function(u){return C.visualMeta[u]?.pending});q('#c200MediaNote').textContent=pending?'Vérification de l’image source…':replacements?replacements+' visuel(s) de secours · à remplacer':C.visuals.length?'Images disponibles':'';
  q('.c200-stagebar strong').textContent='Carrousel · '+C.ratio+' · '+C.slides.length+' slide(s)';
 }
 function render(){renderSlides();renderControls();document.dispatchEvent(new CustomEvent('plugart:campaign',{detail:snapshot()}))}
@@ -186,17 +190,19 @@ function startJob(){var job={controller:new AbortController()};job.timer=setTime
 async function campaign(){
  if(C.busy)return;await matchName();if(!facts().name){status('Ajoute le nom de l’exposition',false);q('#c200Name').focus();return}
  var job=startJob();status('PLUGY prépare les textes et les images…',true);
+ var starter=localCampaign(facts());C.slides=starter.slides;C.caption=starter.caption;render();
  var copy=generateCopy(job).then(function(x){if(run===job){C.slides=x.slides;C.caption=x.caption;render();remember()}return x});
  var outcomes=await Promise.allSettled([copy,visualSet(3,false,job)]);
  if(run!==job)return;clearTimeout(job.timer);run=null;
  var images=outcomes[1].status==='fulfilled'?outcomes[1].value:{ai:0,fallback:0,failed:3};
- status(job.controller.signal.aborted?'Délai atteint · contenu reçu conservé':outcomes[0].status==='fulfilled'?'Campagne prête · '+images.ai+' image(s) IA · '+images.fallback+' secours · '+images.failed+' échec(s)':String(outcomes[0].reason?.message||'Texte indisponible · visuels conservés'),false);
+ var local=outcomes[0].status==='fulfilled'&&outcomes[0].value.fallback;
+ status(job.controller.signal.aborted?'Délai atteint · contenu reçu conservé':outcomes[0].status==='fulfilled'?(local?'IA texte indisponible · modèle local à compléter':'Campagne prête')+' · '+images.ai+' image(s) IA · '+images.fallback+' secours · '+images.failed+' échec(s)':String(outcomes[0].reason?.message||'Texte indisponible · modèle éditable conservé'),false);
  remember();
 }
 async function more(){if(C.busy)return;var job=startJob();status('Création des variantes…',true);try{var out=await visualSet(2,true,job);if(run===job)status('Variantes : '+out.ai+' image(s) IA · '+out.fallback+' secours',false)}finally{if(run===job){clearTimeout(job.timer);run=null;status(q('#c200Status').textContent,false)}}}
 async function exportCarousel(){
  if(!C.slides.length){status('Crée ou charge des slides à exporter');return}var b=q('#c200Download');b.disabled=true;
- try{if(!window.PLUGART_EXPORT_V202)await new Promise(function(resolve,reject){var s=document.createElement('script'),timer=setTimeout(function(){s.remove();reject(new Error('Export indisponible'))},12000);s.src='/static/plugart_v202_export.js?v=202.20261003.2';s.onload=function(){clearTimeout(timer);resolve()};s.onerror=function(){clearTimeout(timer);s.remove();reject(new Error('Export indisponible'))};document.body.appendChild(s)});await window.PLUGART_EXPORT_V202(snapshot(),C.slides.map(function(_,i){return imgFor(i)}));status('Carrousel exporté · slides PNG et légende')}
+ try{if(!window.PLUGART_EXPORT_V202)await new Promise(function(resolve,reject){var s=document.createElement('script'),timer=setTimeout(function(){s.remove();reject(new Error('Export indisponible'))},12000);s.src='/static/plugart_v202_export.js?v=202.20261003.3';s.onload=function(){clearTimeout(timer);resolve()};s.onerror=function(){clearTimeout(timer);s.remove();reject(new Error('Export indisponible'))};document.body.appendChild(s)});await window.PLUGART_EXPORT_V202(snapshot(),C.slides.map(function(_,i){var img=q('#c200Carousel [data-slide="'+i+'"] .c200-slide-bg');return img?.currentSrc||img?.src||imgFor(i)}));status('Carrousel exporté · slides PNG et légende')}
  catch(err){status(err.message||'Export interrompu')}
  finally{b.disabled=false}
 }
@@ -226,6 +232,7 @@ function install(){
 }
 async function seedOpportunity(id){install();var rows=await loadOpps(),o=rows.find(function(x){return String(x.id)===String(id)});if(!o)throw new Error('Source indisponible');return fill(o)}
 function boot(){install();if(document.body.dataset.view==='creation')activate();}
+document.addEventListener('plugart:media-fallback',function(e){var src=e.detail?.source;if(src&&(C.visuals.includes(src)||C.slides.some(function(s){return s.image===src}))){C.visualMeta[src]={kind:'fallback',fallback:true};renderControls()}});
 window.PLUGART_V200=Object.assign(window.PLUGART_V200||{},{activate:activate,opportunitiesData:loadOpps,seedOpportunity:seedOpportunity,generateCampaign:campaign,importSource:importSource,importDraft:importDraft,importSlides:importSlides,snapshot:snapshot,saveDraft:save,exportCarousel:exportCarousel,cancel:cancel,newCampaign:function(){q('#c200New').click()},setCaption:function(value){C.caption=String(value||'');renderControls();remember()}});
 document.addEventListener('plugart:route',function(e){if(e.detail.route==='creation')activate()});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
