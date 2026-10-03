@@ -119,6 +119,7 @@ async function api(url,opt={}){
   const method=String(opt.method||'GET').toUpperCase(),useCache=method==='GET'&&!opt.noMemCache;
   const ttl=Number(opt.cacheTtl??apiCacheTtl(url)),now=Date.now(),cached=useCache?API_MEM_CACHE.get(url):null;
   if(useCache&&cached&&now-cached.at<ttl)return cached.data;
+  if(method==='GET'&&url==='/api/opportunities'&&window.PLUGART_V200?.opportunitiesData){const data=await window.PLUGART_V200.opportunitiesData(!!opt.noMemCache);API_MEM_CACHE.set(url,{at:Date.now(),data});return data}
   const timeoutMs=Number(opt.timeout||(
     url.includes('/content/image')?90000:
     url.includes('/plugy')?60000:

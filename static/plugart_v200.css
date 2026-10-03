@@ -1111,8 +1111,8 @@ body.plugart-v202 .modal-head{display:flex;justify-content:space-between;align-i
 body.plugart-v202 .create-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 body.plugart-v202 .create-grid button{padding:16px;text-align:left;background:#1b1e24;color:#fff;border:1px solid var(--v202-line);border-radius:12px}
 body.plugart-v202 .create-grid strong,body.plugart-v202 .create-grid span{display:block;margin-top:8px}
-body.plugart-v202 .plugy-drawer{position:fixed!important;z-index:400;top:10px;right:10px;bottom:10px;display:flex;flex-direction:column;overflow:hidden;transform:translateX(calc(100% + 30px))!important;visibility:hidden;pointer-events:none;transition:transform .2s ease,visibility .2s}
-body.plugart-v202 .plugy-drawer.open{transform:translateX(0)!important;visibility:visible;pointer-events:auto}
+body.plugart-v202 .plugy-drawer{position:fixed!important;z-index:400;top:10px;right:10px;bottom:10px;display:flex;flex-direction:column;overflow:hidden;transform:translateX(calc(100% + 30px))!important;visibility:hidden!important;pointer-events:none;transition:transform .2s ease!important}
+body.plugart-v202 .plugy-drawer.open{transform:translateX(0)!important;visibility:visible!important;pointer-events:auto}
 body.plugart-v202 .toast{position:fixed;z-index:800;bottom:20px;left:50%;max-width:calc(100vw - 30px);transform:translate(-50%,20px);opacity:0;visibility:hidden;pointer-events:none;padding:12px 18px;background:#292632;color:#fff;border:1px solid #484258;border-radius:14px;transition:.2s}
 body.plugart-v202 .toast.show{transform:translate(-50%,0);opacity:1;visibility:visible}
 html[data-route-loading="1"] .top-title::after{content:'Chargement du module…';font-size:10px;color:#a5a0ff}

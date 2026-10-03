@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 var REV='202.20261003.1',LEGACY='/static/plugart_v162.js?v='+REV,LEGACY_CSS='/static/plugart_v162.css?v='+REV;
-var legacyPromise=null,routeSequence=0,bootPromise=null;
+var legacyPromise=null,routeSequence=0,bootPromise=null,bootGeneration=0;
 var simpleRoutes={dashboard:true,creation:true};
 var routes={dashboard:['WORKSPACE','Dashboard'],creation:['LABO CRÉATION','Création'],radar:['VEILLE ACTIVE','Radar'],opencalls:['SÉLECTION DE TRAVAIL','Open Calls'],bureau:['BUREAU','Bureau'],prospection:['CRM','Prospection'],social:['INSTAGRAM','Social Studio'],map:['CARTE','Map'],network:['RÉSEAU','Artistes'],ideas:['IDÉES','Nuage à idées']};
 function qs(s,r){return (r||document).querySelector(s)}
@@ -34,9 +34,9 @@ function loadLegacy(){
  if(legacyPromise)return legacyPromise;
  window.__PLUGART_V202_MANAGED_BOOT=true;
  legacyPromise=(async function(){
-  if(!qs('link[data-plugart-legacy-css-v202]'))await asset('link',LEGACY_CSS,'plugartLegacyCssV202');
-  if(!window.__PLUGART_V202_RUNTIME_READY)await asset('script',LEGACY,'plugartLegacyV202');
-  if(!window.__PLUGART_V202_RUNTIME_READY||typeof window.PLUGART_ROUTE!=='function')throw new Error('Initialisation du module interrompue. Recharge la page.');
+  if(window.__PLUGART_V202_INIT_FAILED)throw new Error('Initialisation interrompue. Recharge la page.');
+  await Promise.all([qs('link[data-plugart-legacy-css-v202]')?Promise.resolve():asset('link',LEGACY_CSS,'plugartLegacyCssV202'),window.__PLUGART_V202_RUNTIME_READY?Promise.resolve():asset('script',LEGACY,'plugartLegacyV202')]);
+  if(!window.__PLUGART_V202_RUNTIME_READY||typeof window.PLUGART_ROUTE!=='function'){window.__PLUGART_V202_INIT_FAILED=true;throw new Error('Initialisation du module interrompue. Recharge la page.');}
   window.__PLUGART_LEGACY_READY=true;document.documentElement.dataset.legacyReady='1';return true;
  })().catch(function(err){legacyPromise=null;notice(err.message);throw err});
  return legacyPromise;
@@ -55,12 +55,13 @@ async function route(r,push){
  finally{if(sequence===routeSequence)delete document.documentElement.dataset.routeLoading}
 }
 async function dashboardData(force){
- if(force){bootPromise=null;try{sessionStorage.removeItem('plugart:v124:dashboard-bootstrap')}catch(_){}}
+ if(force){bootGeneration++;bootPromise=null;try{sessionStorage.removeItem('plugart:v124:dashboard-bootstrap')}catch(_){}}
  if(bootPromise)return bootPromise;
+ var generation=bootGeneration;
  bootPromise=(async function(){
   if(!force){try{var saved=JSON.parse(sessionStorage.getItem('plugart:v124:dashboard-bootstrap')||'null');if(saved&&saved.boot&&Date.now()-saved.savedAt<60000)return saved.boot}catch(_){}}
   var controller=new AbortController(),timer=setTimeout(function(){controller.abort()},12000);
-  try{var r=await fetch('/api/v124/dashboard-bootstrap',{cache:'no-store',signal:controller.signal});if(!r.ok)throw new Error('Données indisponibles');var d=await r.json();try{sessionStorage.setItem('plugart:v124:dashboard-bootstrap',JSON.stringify({savedAt:Date.now(),boot:d}))}catch(_){}return d}
+  try{var r=await fetch('/api/v124/dashboard-bootstrap',{cache:'no-store',signal:controller.signal});if(!r.ok)throw new Error('Données indisponibles');var d=await r.json();try{if(generation===bootGeneration)sessionStorage.setItem('plugart:v124:dashboard-bootstrap',JSON.stringify({savedAt:Date.now(),boot:d}))}catch(_){}return d}
   finally{clearTimeout(timer)}
  })();
  var current=bootPromise;try{return await current}finally{if(bootPromise===current)bootPromise=null}
