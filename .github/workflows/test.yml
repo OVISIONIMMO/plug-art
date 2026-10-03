@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -26,7 +26,7 @@ jobs:
         env:
           PLUGART_DB: /tmp/plugart_ci.db
           PLUGART_AUTORADAR: '0'
-        run: pytest -q
+        run: pytest -q --ignore=tests/test_v202.py
       - name: Frontend integrity
         run: |
           python - <<'PY'
@@ -146,15 +146,15 @@ jobs:
         run: |
           test -s static/plugart_v200.css
           test -s static/plugart_v200.js
-          grep -q 'plugart_v202_boot.js?v=202.20261001.3' static/plugart_v162.html
-          grep -q 'plugart_v200.css?v=202.20261001.3' static/plugart_v162.html
-          grep -q 'plugart_v200.js?v=202.20261001.3' static/plugart_v162.html
+          grep -q 'plugart_v202_boot.js?v=202.20261003.1' static/plugart_v162.html
+          grep -q 'plugart_v200.css?v=202.20261003.1' static/plugart_v162.html
+          grep -q 'plugart_v200.js?v=202.20261003.1' static/plugart_v162.html
           ! grep -q 'fonts.googleapis.com' static/plugart_v162.html
           ! grep -q 'creation_v179.js' static/plugart_v162.html
           ! grep -q '<script defer src="/static/plugart_v162.js' static/plugart_v162.html
           ! grep -q '<link rel="stylesheet" href="/static/plugart_v162.css' static/plugart_v162.html
           grep -q 'LEGACY_CSS' static/plugart_v202_boot.js
-          grep -q 'insertBefore(l,theme)' static/plugart_v202_boot.js
+          grep -q 'insertBefore(el,theme)' static/plugart_v202_boot.js
           test -s static/plugart_v202_boot.js
           node --check static/plugart_v202_boot.js
           grep -q 'v202-plugy-mini' static/plugart_v200.js
@@ -164,3 +164,53 @@ jobs:
           grep -q "black-fast-shell-v202" app_extra_v60.py
           grep -q "stale-while-revalidate=2592000" app_extra_v60.py
           grep -q 'GZipMiddleware' app_extra_v60.py
+
+      - name: V202 backend runtime
+        env:
+          PLUGART_DB: /tmp/plugart_v202_ci.db
+          PLUGART_GENERATED_DIR: /tmp/plugart_v202_generated
+          PLUGART_AUTORADAR: '0'
+          PLUGART_EVENT_AUTORADAR: '0'
+        run: pytest -q tests/test_v202.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tests/frontend/package-lock.json
+      - name: V202 interaction tests
+        run: |
+          npm ci --prefix tests/frontend --ignore-scripts
+          npm run --prefix tests/frontend test:runtime
+          npm exec --prefix tests/frontend -- playwright install --with-deps chromium
+      - name: V202 real browser journeys
+        env:
+          PLUGART_DB: /tmp/plugart_v202_browser.db
+          PLUGART_GENERATED_DIR: /tmp/plugart_v202_browser_generated
+          PLUGART_AUTORADAR: '0'
+          PLUGART_EVENT_AUTORADAR: '0'
+        run: |
+          uvicorn app_extra_v60:app --host 127.0.0.1 --port 8765 > /tmp/v202-server.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/api/health > /dev/null; then break; fi
+            sleep 1
+          done
+          npm run --prefix tests/frontend test:browser
+          python - <<'PYZIP'
+          import io, json, zipfile
+          from PIL import Image
+          with zipfile.ZipFile('test-results/carrousel.zip') as z:
+              pngs=[name for name in z.namelist() if name.endswith('.png')]
+              assert len(pngs)==5
+              for name in pngs:
+                  image=Image.open(io.BytesIO(z.read(name)))
+                  assert image.size==(1080,1350)
+                  image.verify()
+              snap=json.loads(z.read('campagne.json'))
+              assert snap['payload']['slides'][0]['title']=='Titre modifié'
+              assert z.read('legende.txt').decode()=='Légende vérifiée'
+          PYZIP
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v202-browser-validation
+          path: test-results

@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-const VERSION='178.20261001.1';
+const VERSION='202.20261003.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -19,6 +19,7 @@ function cssMediaV171(src){return mediaSrcV171(src).replace(/"/g,'%22')}
 function visualFallbackV201(label='PLUG ART',seed=''){return '/api/v201/visual-fallback?label='+encodeURIComponent(String(label||'PLUG ART').slice(0,90))+'&seed='+encodeURIComponent(String(seed||label||'plug-art').slice(0,120))}
 let mediaObserverV173=null;
 function installImageResilienceV171(){
+  if(window.__PLUGART_MEDIA_V202)return;
   if(document.documentElement.dataset.imagesV171==='1')return;
   document.documentElement.dataset.imagesV171='1';
   const root=$('.workspace')||null;
@@ -118,6 +119,7 @@ async function api(url,opt={}){
   const method=String(opt.method||'GET').toUpperCase(),useCache=method==='GET'&&!opt.noMemCache;
   const ttl=Number(opt.cacheTtl??apiCacheTtl(url)),now=Date.now(),cached=useCache?API_MEM_CACHE.get(url):null;
   if(useCache&&cached&&now-cached.at<ttl)return cached.data;
+  if(method==='GET'&&url==='/api/opportunities'&&window.PLUGART_V200?.opportunitiesData){const data=await window.PLUGART_V200.opportunitiesData(!!opt.noMemCache);API_MEM_CACHE.set(url,{at:Date.now(),data});return data}
   const timeoutMs=Number(opt.timeout||(
     url.includes('/content/image')?90000:
     url.includes('/plugy')?60000:
@@ -181,7 +183,7 @@ async function ensureDataFamily(name,force=false){
   if(state.dataPromises[name])return state.dataPromises[name];
   const endpoints={opportunities:'/api/opportunities',artists:'/api/artists',map:'/api/map',bureau:'/api/v107/bureau',bureauMeta:'/api/v120/bureau/bootstrap',leads:'/api/v86/crm',workflow:'/api/v107/open-calls/workflow',drafts:'/api/v108/drafts'};
   const endpoint=endpoints[name];if(!endpoint)return true;
-  state.dataPromises[name]=api(endpoint,{timeout:22000}).then(data=>{
+  state.dataPromises[name]=api(endpoint,{timeout:22000,noMemCache:force}).then(data=>{
     state.bootstrap=state.bootstrap||{stats:{},opportunities:[],artists:[],map:[]};
     if(name==='opportunities'){
       state.bootstrap.opportunities=(Array.isArray(data)?data:[]).filter(o=>!/\b(competition|contest|concours|award|awards|prize|prix|récompense|recompense|trophy)\b/i.test([o.title,o.type,o.summary,o.eligibility].filter(Boolean).join(' ')));
@@ -244,16 +246,18 @@ function route(id,push=true){
   if(id!=='bureau')document.body.classList.remove('mobile-bureau-editing');
   if(id!=='creation')closeMobileStudioSheet();
   if(id!=='prospection')$('#leadDetail')?.classList.remove('mobile-open');
-  const missing=requiredFamilies(id).some(name=>!state.dataLoaded[name]);
   setTimeout(syncPlugyHomeMount,0);
-  if(missing&&state.bootstrap){
-    renderRouteView(id);
-    ensureViewData(id).then(()=>{if(state.view===id)renderRouteView(id)}).catch(()=>{if(state.view===id)toast('Données momentanément indisponibles')});
-  }else renderRouteView(id);
+  document.dispatchEvent(new CustomEvent('plugart:route',{detail:{route:id}}));
+  renderRouteView(id);
+  const ready=ensureViewData(id).then(()=>{if(state.view===id)renderRouteView(id)}).catch(err=>{if(state.view===id)toast('Données momentanément indisponibles');throw err});
   if(radarEventsAlias)setTimeout(()=>{setRadarModeV167('events');refreshRadarStatusV168()},40);
+  // Existing module callers may ignore the promise; the shell awaits it.
+  ready.catch(()=>{});return ready;
 }
 $$('[data-route]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();route(b.dataset.route);if(b.dataset.radarDirect==='events')setTimeout(()=>{setRadarModeV167('events');refreshRadarStatusV168()},40)}));
+document.addEventListener('plugart:campaign',e=>{const snap=e.detail,p=snap.payload||{};state.currentDraft=snap.id||null;state.carousel={slides:p.slides||[],active:0,format:p.format||'4:5'};state.creationMode='carousel';if($('#contentTitle'))$('#contentTitle').value=snap.title||'';if($('#contentBrief'))$('#contentBrief').value=p.brief||'';if($('#carouselCaption'))$('#carouselCaption').value=p.instagram_caption||'';if($('#carouselBrief'))$('#carouselBrief').value=p.brief||'';if($('#carouselSource'))$('#carouselSource').value=snap.source_opportunity_id||'';});
 window.PLUGART_ROUTE=route;
+window.PLUGART_REFRESH_V202=async()=>{API_MEM_CACHE.clear();Object.keys(state.dataLoaded).forEach(k=>state.dataLoaded[k]=false);await ensureViewData(state.view,true);if(state.view==='radar')await loadEventsV167(true);if(state.view==='social')await renderInstagramStudio(true);if(state.view==='map')await ensureMapEventsV173(true);renderRouteView(state.view)};
 
 const ROUTE_PREFETCH_TIMERS_V164=new WeakMap();
 function prefetchRouteV164(id){
@@ -269,7 +273,7 @@ function prefetchRouteV164(id){
 }
 function bindRoutePrefetchV164(){
   if(document.querySelector('script[src*="plugart_v200.js"]'))return;
-  $('[data-route]').forEach(el=>{
+  $$('[data-route]').forEach(el=>{
     const id=el.dataset.route;if(!id)return;
     const start=()=>{clearTimeout(ROUTE_PREFETCH_TIMERS_V164.get(el));ROUTE_PREFETCH_TIMERS_V164.set(el,setTimeout(()=>prefetchRouteV164(id),180))};
     const stop=()=>clearTimeout(ROUTE_PREFETCH_TIMERS_V164.get(el));
@@ -280,10 +284,12 @@ function bindRoutePrefetchV164(){
 
 bindRoutePrefetchV164();
 if('requestIdleCallback' in window)requestIdleCallback(()=>installImageResilienceV171(),{timeout:1800});else setTimeout(installImageResilienceV171,900);
-addEventListener('popstate',()=>route(location.hash.slice(1)||'dashboard',false));
+addEventListener('popstate',()=>{if(!window.PLUGART_V202_ROUTE)route(location.hash.slice(1)||'dashboard',false)});
 
 let modelViewerPromise=null;
 function ensureModelViewer(){
+  if(!ensureModelViewer.checked){const canvas=document.createElement('canvas');let gl=null;try{gl=canvas.getContext('webgl2')||canvas.getContext('webgl')}catch{}ensureModelViewer.checked=true;ensureModelViewer.available=!!gl;try{gl?.getExtension('WEBGL_lose_context')?.loseContext()}catch{}}
+  if(!ensureModelViewer.available)return Promise.reject(new Error('3D non disponible sur ce navigateur'));
   if(customElements.get('model-viewer'))return Promise.resolve(true);
   if(modelViewerPromise)return modelViewerPromise;
   const sources=[
@@ -383,6 +389,11 @@ $('#plugyModel')?.addEventListener('dblclick',()=>{
 });
 
 
+function plugy3DFallback(message){
+  const stage=$('#plugyModel')?.parentElement;if(!stage)return;
+  let fallback=stage.querySelector('.plugy-3d-fallback');if(!fallback){fallback=document.createElement('div');fallback.className='plugy-3d-fallback';fallback.setAttribute('role','status');stage.appendChild(fallback)}
+  fallback.textContent=message||'PLUGY · assistant disponible en mode texte';stage.classList.add('plugy-with-fallback');
+}
 var plugyWarmPromise=null,plugy3DRequested=false;
 function warmPlugy3D(reason='intent'){
   plugy3DRequested=true;
@@ -394,11 +405,12 @@ function warmPlugy3D(reason='intent'){
       if(!model)return resolve(true);
       if(model.loaded){requestAnimationFrame(()=>{applyPlugyFraming(model.parentElement);resolve(true)});return}
       let done=false;
-      const finish=()=>{if(done)return;done=true;applyPlugyFraming(model.parentElement);resolve(true)};
+      const finish=()=>{if(done)return;done=true;model.parentElement?.classList.remove('plugy-with-fallback');applyPlugyFraming(model.parentElement);resolve(true)};
       model.addEventListener('load',finish,{once:true});
-      setTimeout(finish,5000);
+      model.addEventListener('error',()=>{plugy3DFallback('PLUGY · assistant texte disponible, modèle 3D indisponible');resolve(false)},{once:true});
+      setTimeout(()=>{if(!done){done=true;plugy3DFallback('PLUGY · assistant texte disponible pendant le chargement 3D');resolve(false)}},7000);
     }))
-    .catch(err=>{plugyWarmPromise=null;plugy3DRequested=false;throw err});
+    .catch(err=>{plugyWarmPromise=null;plugy3DRequested=false;plugy3DFallback('PLUGY · assistant disponible en mode texte');throw err});
   return plugyWarmPromise;
 }
 function scheduleSmartPlugyWarm(){
@@ -1128,6 +1140,7 @@ function renderDashboardResume(){
 }
 
 function renderDashboard(){
+  if(document.querySelector('#dashboardV200'))return;
   const b=state.bootstrap||{},stats=b.stats||{};
   const trackedIds=new Set(state.workflow.filter(x=>x.workflow_status!=='closed').map(x=>String(x.opportunity_id)));
   const opps=(b.opportunities||[]).slice().sort((a,b)=>Number(!!b.favorite)-Number(!!a.favorite)||Number(trackedIds.has(String(b.id)))-Number(trackedIds.has(String(a.id)))||Number(b.radar_score??b.score??0)-Number(a.radar_score??a.score??0)).slice(0,4);
@@ -1225,7 +1238,7 @@ $('#radarRun')?.addEventListener('click',async e=>{const b=e.currentTarget,old=b
 function renderContentSources(){
   const sel=$('#contentSource'),cur=sel.value,opps=state.bootstrap?.opportunities||[];sel.innerHTML='<option value="">Brief libre</option>'+opps.slice(0,80).map(o=>'<option value="'+o.id+'">'+esc(o.title)+'</option>').join('');if(cur)sel.value=cur;
 }
-$('#contentSource')?.addEventListener('change',e=>{const o=(state.bootstrap?.opportunities||[]).find(x=>String(x.id)===e.target.value);if(o){$('#contentObjective').value='Présenter cette opportunité clairement';$('#contentBrief').value=[o.title,o.summary,o.city,o.country,o.deadline?'Deadline : '+o.deadline:'',o.fee?'Frais : '+o.fee:''].filter(Boolean).join('\n')}});
+$('#contentSource')?.addEventListener('change',e=>{if(window.PLUGART_V200?.seedOpportunity&&e.target.value){window.PLUGART_V200.seedOpportunity(e.target.value).catch(()=>toast('Source indisponible'));return}const o=(state.bootstrap?.opportunities||[]).find(x=>String(x.id)===e.target.value);if(o){$('#contentObjective').value='Présenter cette opportunité clairement';$('#contentBrief').value=[o.title,o.summary,o.city,o.country,o.deadline?'Deadline : '+o.deadline:'',o.fee?'Frais : '+o.fee:''].filter(Boolean).join('\n')}});
 async function generateContent(mode='generate'){
   const type=$('#contentType').value,objective=$('#contentObjective').value,brief=$('#contentBrief').value,body=$('#contentBody').value;
   let prompt=mode==='improve'?'Structure et améliore ce brief sans inventer de faits : '+brief:mode==='regenerate'?'Réécris ce contenu en version plus forte et plus claire, sans inventer : '+body:'Crée un '+type+' pour PLUG ART. Objectif : '+objective+'. Brief : '+brief+'. Réponse directement exploitable, sans commentaire méta.';
@@ -1609,6 +1622,7 @@ async function createPackageStarterPack(){
 }
 
 async function packageToCreation(p){
+  if(window.PLUGART_V200?.importSource){const docs=(p.document_ids||[]).map(id=>state.bureau.find(n=>Number(n.id)===Number(id))).filter(Boolean);if(!docs.length)return toast('Crée d’abord au moins un document dans ce dossier');route('creation');window.PLUGART_V200.importSource({title:p.title,body:docs.map(n=>(n.title||'')+'\n'+(n.body||'')).join('\n\n')},'document');return}
   const docs=(p.document_ids||[]).map(id=>state.bureau.find(n=>Number(n.id)===Number(id))).filter(Boolean);
   if(!docs.length)return toast('Crée d’abord au moins un document dans ce dossier');
   route('creation');setCreationMode('text');
@@ -1754,6 +1768,7 @@ async function saveCurrentDocAsTemplate(){
 }
 
 function sendCurrentBureauToCreation(){
+  if(window.PLUGART_V200?.importSource){const n=state.bureau.find(x=>Number(x.id)===Number(state.activeDoc));if(n){route('creation');window.PLUGART_V200.importSource(n,'document')}return}
   const n=state.bureau.find(x=>Number(x.id)===Number(state.activeDoc));if(!n)return;
   route('creation');setCreationMode('text');
   setTimeout(()=>{if($('#contentTitle'))$('#contentTitle').value=n.title||'';if($('#contentBrief'))$('#contentBrief').value=n.body||'';if(n.source_type==='opportunity'&&n.source_id&&$('#contentSource')){$('#contentSource').value=String(n.source_id);$('#contentSource').dispatchEvent(new Event('change'))}toast('Document chargé dans Création')},50);
@@ -1956,15 +1971,15 @@ async function renderInstagramStudio(force=false){
   const statusBox=$('#igConnectionState');if(!statusBox)return;
   try{
     const status=await api('/api/v88/instagram/status',{timeout:16000});
-    const connected=!!status.connected;
+    const connected=!!status.connected;if($('#igPublish'))$('#igPublish').disabled=!connected;
     statusBox.textContent=connected?'Connecté':'Non connecté';
     $('#igUsername').textContent=status.username?'@'+status.username:'@plugart';
     $('#igFollowers').textContent=connected?Number(status.followers_count||0).toLocaleString('fr-FR'):'—';
     $('#igMediaCount').textContent=connected?Number(status.media_count||0).toLocaleString('fr-FR'):'—';
     const avatar=$('#igAvatar');if(avatar)avatar.innerHTML=status.profile_picture_url?'<img src="'+esc(mediaSrcV171(status.profile_picture_url))+'" decoding="async" alt="">':'<span>IG</span>';
-    const connect=$('#igConnect');if(connect){connect.textContent=connected?'Compte connecté':'Connecter Instagram';connect.disabled=connected}
+    const connect=$('#igConnect');if(connect){connect.textContent=connected?'Compte connecté':status.configured?'Connecter Instagram':'Configuration Meta requise';connect.disabled=connected||!status.configured;connect.title=status.configured?'':'Renseigne META_APP_ID et META_APP_SECRET pour connecter Instagram'}
     if(!connected){
-      $('#igFeedGrid').innerHTML='<div class="ig-connect-empty"><strong>Connecte ton compte Instagram professionnel.</strong><span>Le feed et les outils de publication apparaîtront ici.</span></div>';
+      $('#igFeedGrid').innerHTML=status.configured?'<div class="ig-connect-empty"><strong>Connecte ton compte Instagram professionnel.</strong><span>Le feed et les outils de publication apparaîtront ici.</span></div>':'<div class="ig-connect-empty"><strong>Connexion Instagram à configurer.</strong><span>Les identifiants de l’application Meta doivent être renseignés avant la connexion. La création et l’export de contenus restent disponibles.</span></div>';
       $('#igFeedStatus').textContent=status.configured?'Prêt à connecter':'Configuration Meta requise';instagramStudioLoaded=true;return;
     }
     if(force||!instagramStudioLoaded){
@@ -3300,6 +3315,7 @@ function clearLocalCreationBackup(){
   refreshLocalDraftRecovery();
 }
 function applyCreationSnapshot(snap){
+  if(window.PLUGART_V200?.importDraft){window.PLUGART_V200.importDraft(snap);return}
   if(!snap)return;
   const mode=snap.kind||'text',p=snap.payload||{};state.currentDraft=null;state.creationDirty=true;setCreationMode(mode);
   if(mode==='carousel'){
@@ -3333,11 +3349,13 @@ function renderDraftPicker(){
   p.innerHTML='<option value="">Brouillons</option>'+state.drafts.map(d=>'<option value="'+d.id+'">'+esc((d.title||'Brouillon')+' · '+d.kind)+'</option>').join('');p.value=String(cur||'');
 }
 function draftSnapshot(){
+  if(window.PLUGART_V200?.snapshot)return window.PLUGART_V200.snapshot();
   if(state.creationMode==='carousel')return{kind:'carousel',title:state.carousel.slides[0]?.title||'Carrousel PLUG ART',source_opportunity_id:$('#carouselSource')?.value||'',payload:{slides:state.carousel.slides,active:state.carousel.active,format:state.carousel.format,brief:$('#carouselBrief')?.value||'',instagram_caption:$('#carouselCaption')?.value||''}};
   if(state.creationMode==='visual')return{kind:'visual',title:'Visuel PLUG ART',source_opportunity_id:'',payload:{url:state.visual.url,prompt:$('#visualPrompt')?.value||state.visual.prompt||'',style:$('#visualStyle')?.value||'gallery',ratio:$('#visualRatio')?.value||'4:5'}};
   return{kind:'text',title:$('#contentTitle')?.value||$('#contentType')?.value||'Texte PLUG ART',source_opportunity_id:$('#contentSource')?.value||'',payload:{type:$('#contentType')?.value||'',objective:$('#contentObjective')?.value||'',brief:$('#contentBrief')?.value||'',body:$('#contentBody')?.value||''}};
 }
 async function saveDraft(silent=false){
+  if(window.PLUGART_V200?.saveDraft)return window.PLUGART_V200.saveDraft();
   const snap=draftSnapshot();saveStatus('Sauvegarde brouillon…','saving');
   try{
     let d;if(state.currentDraft)d=await api('/api/v108/drafts/'+state.currentDraft,{method:'PATCH',body:JSON.stringify(snap)});
@@ -3346,6 +3364,7 @@ async function saveDraft(silent=false){
   }catch{saveStatus('Erreur brouillon','error');if(!silent)toast('Enregistrement du brouillon impossible')}
 }
 function loadDraft(id){
+  if(window.PLUGART_V200?.importDraft){const d=state.drafts.find(x=>Number(x.id)===Number(id));if(d)window.PLUGART_V200.importDraft(d);return}
   const d=state.drafts.find(x=>Number(x.id)===Number(id));if(!d)return;state.currentDraft=d.id;state.creationDirty=false;setCreationMode(d.kind||'text');
   const p=d.payload||{};
   if(d.kind==='carousel'){state.carousel={slides:Array.isArray(p.slides)?p.slides:[],active:Number(p.active||0),format:p.format||'4:5'};if($('#carouselSource'))$('#carouselSource').value=d.source_opportunity_id||'';if($('#carouselBrief'))$('#carouselBrief').value=p.brief||'';if($('#carouselCaption'))$('#carouselCaption').value=p.instagram_caption||'';if($('#carouselFormat'))$('#carouselFormat').value=state.carousel.format;renderCarousel()}
@@ -3498,6 +3517,7 @@ function renderStoryboardV169_1(){
   $$('[data-story-delete-v1691]',box).forEach(b=>b.onclick=()=>{state.carousel.active=Number(b.dataset.storyDeleteV1691);deleteCarouselSlideManual()});
 }
 function renderCarousel(){
+  if(window.PLUGART_V200?.importSlides){window.PLUGART_V200.importSlides(state.carousel.slides,{format:state.carousel.format,sourceId:$('#carouselSource')?.value,brief:$('#carouselBrief')?.value,caption:$('#carouselCaption')?.value});return}
   const slides=state.carousel.slides,s=slides[state.carousel.active]||{},d=slideDesign(s);$('#carouselCounter').textContent=slides.length+' slide'+(slides.length>1?'s':'')+(slides.length===5?' · carrousel complet':'');
   $('#carouselSlides').innerHTML=slides.map((x,i)=>{const dx=slideDesign(x),bg=x.image?'background-image:url(&quot;'+esc(cssMediaV171(x.image))+'&quot;)':'background:'+esc(dx.backgroundColor||'#f4f3ef');return '<button class="carousel-slide-thumb v169-slide-thumb '+(i===state.carousel.active?'active':'')+'" draggable="true" data-carousel-slide="'+i+'"><em>'+(i+1)+'</em><i style="'+bg+'" data-pattern="'+esc(dx.pattern||'')+'"></i><span><b>'+esc(x.kicker||'SLIDE '+(i+1))+'</b><strong>'+esc((x.title||'Sans titre').slice(0,38))+'</strong></span></button>'}).join('')||'<div class="empty">Aucune slide.</div>';
   $$('[data-carousel-slide]').forEach(b=>{
@@ -3745,7 +3765,7 @@ async function prepareInstagramCaption(){
   try{
     const out=await api('/api/v32/plugy',{method:'POST',timeout:60000,body:JSON.stringify({message:prompt,page:'content',mode:'deep'})});
     const caption=String(out.answer||'').trim();if(!caption)throw new Error('Légende vide');
-    $('#carouselCaption').value=caption;scheduleDraftAutosave();toast('Légende préparée');
+    $('#carouselCaption').value=caption;if(window.PLUGART_V200?.setCaption)window.PLUGART_V200.setCaption(caption);scheduleDraftAutosave();toast('Légende préparée');
   }catch(e){console.warn('[PLUG ART caption]',e);toast('PLUGY n’a pas pu préparer la légende')}
   finally{b.disabled=false;b.textContent=old}
 }
@@ -4019,7 +4039,7 @@ function handleLocalPlugy(message){
     }
   }
   if(/(ouvre|va|aller|affiche).*(radar)/.test(m))return go('radar','J’ouvre le Radar.');
-  if(/(nouveau|crée|cree).*(carrousel)/.test(m)){route('creation');setCreationMode('carousel');state.currentDraft=null;return 'Nouveau carrousel prêt.'}
+  if(/(nouveau|crée|cree).*(carrousel)/.test(m)){route('creation');if(window.PLUGART_V200?.newCampaign)window.PLUGART_V200.newCampaign();setCreationMode('carousel');state.currentDraft=null;return 'Nouveau carrousel prêt.'}
   if(/(nouveau|crée|cree).*(visuel|image)/.test(m)){route('creation');setCreationMode('visual');state.currentDraft=null;return 'Nouveau visuel prêt.'}
   if(/(brouillons?|drafts?)/.test(m)){route('creation');if(state.drafts[0])setTimeout(()=>loadDraft(state.drafts[0].id),30);return state.drafts.length?'J’ouvre le dernier brouillon.':'Il n’y a pas encore de brouillon.'}
   if(/(favoris|favorites)/.test(m)){route('opencalls');setTimeout(()=>{$('#openStatus').value='favorites';renderOpenCalls()},30);return 'J’affiche tes Open Calls favoris.'}
@@ -4356,6 +4376,7 @@ function installImagePipelineV169(){
 
 addEventListener('beforeunload',()=>{if(state.view==='creation'&&state.creationDirty)saveLocalCreationBackup()});
 queueMicrotask(()=>{
+  if(window.__PLUGART_V202_MANAGED_BOOT)return;
   const initial=location.hash.slice(1)||'dashboard';
   history.replaceState({view:initial},'','#'+initial);
   route(initial,false);renderSuggestions();
@@ -4413,7 +4434,7 @@ async function generatePlugyVisualV161(message){
   try{const doc=await api('/api/v107/bureau',{method:'POST',body:JSON.stringify({title:'Visuel PLUGY · '+message.slice(0,70),body:'Prompt : '+message+'\n\nVisuel : '+r.url,folder:'Visuels générés',tags:'visuel, PLUGY, généré, design'})});if(doc)state.bureau.unshift(doc)}catch{}
   wait.remove();const box=$('#plugyStream'),node=document.createElement('div');node.className='msg bot plugy-visual-msg-v161';
   node.innerHTML='<img src="'+esc(mediaSrcV171(r.url))+'" decoding="async" alt="Visuel généré par PLUGY"><div><strong>Visuel généré</strong><span>Classé dans Bureau → Visuels générés</span><div class="plugy-visual-actions-v161"><button data-v161-visual-studio>Ouvrir dans le Labo</button><button data-v161-visual-bureau>Voir dans Bureau</button></div></div>';
-  box.appendChild(node);box.scrollTop=box.scrollHeight;node.querySelector('[data-v161-visual-studio]').onclick=()=>{route('creation');setTimeout(()=>{setCreationMode('visual');if($('#visualImage')){$('#visualImage').style.backgroundImage='url("'+cssMediaV171(r.url)+'")';$('#visualImage').innerHTML=''}},100)};node.querySelector('[data-v161-visual-bureau]').onclick=()=>route('bureau');renderCreationV161History();playMotion('Happy');$('#plugyState span').textContent='Prêt';return r.url;
+  box.appendChild(node);box.scrollTop=box.scrollHeight;node.querySelector('[data-v161-visual-studio]').onclick=()=>{route('creation');if(window.PLUGART_V200?.importDraft){window.PLUGART_V200.importDraft({kind:'visual',title:'Visuel PLUG ART',payload:{url:r.url,prompt:r.prompt||''}});return}setTimeout(()=>{setCreationMode('visual');if($('#visualImage')){$('#visualImage').style.backgroundImage='url("'+cssMediaV171(r.url)+'")';$('#visualImage').innerHTML=''}},100)};node.querySelector('[data-v161-visual-bureau]').onclick=()=>route('bureau');renderCreationV161History();playMotion('Happy');$('#plugyState span').textContent='Prêt';return r.url;
  }catch(e){wait.textContent='Je n’ai pas pu générer ce visuel : '+String(e.message||'erreur').slice(0,120);playMotion('SoftTurn')}finally{setPlugyBusy(false)}
 }
 function installArtistV161(){
@@ -4451,6 +4472,7 @@ function ensureCreationPreviewV162(force=true){
   panel.classList.add('preview-ready-v162');
 }
 async function createPublicationFromOpportunityV162(id){
+  if(window.PLUGART_V200?.seedOpportunity){route('creation');await window.PLUGART_V200.seedOpportunity(id);return true}
   const o=opportunityById(id);if(!o)return false;
   route('creation');state.currentDraft=null;
   try{await ensureViewData('creation')}catch{}
@@ -5666,6 +5688,7 @@ function installIdeasV167(){
 async function ideaToBureauV167(id){try{await api('/api/v167/ideas/'+id+'/to-bureau',{method:'POST',body:'{}'});toast('Idée envoyée au Bureau')}catch{toast('Envoi Bureau impossible')}}
 async function ideaToPdfV167(id){try{const p=await api('/api/v167/ideas/'+id+'/to-pdf',{method:'POST',body:'{}'});state.bureauMode='pdf';route('bureau');setTimeout(()=>{setBureauMode('pdf');openPdfProjectV167(p.id)},80)}catch{toast('Création PDF impossible')}}
 function ideaToCreationV167(id){
+  if(window.PLUGART_V200?.importSource){const i=state.ideas.find(x=>Number(x.id)===Number(id));if(i){route('creation');window.PLUGART_V200.importSource(i,'idea')}return}
   const i=state.ideas.find(x=>Number(x.id)===Number(id));if(!i)return;route('creation');setTimeout(()=>{setCreationMode('carousel');ensureCreationSlideV166();const s=state.carousel.slides[state.carousel.active];s.kicker='IDÉE';s.title=i.title||'Concept';s.body=i.body||'';if(i.image_url)s.image=i.image_url;renderCarousel();fitStudioCanvas()},80)
 }
 async function linkIdeaV167(id){
@@ -5687,4 +5710,6 @@ setTimeout(()=>{try{qaVisibleButtonsV167()}catch{}},1800);
 $('#dashboardProjectsV164')?.addEventListener('click',()=>{state.bureauMode='projects';route('bureau');setTimeout(()=>setBureauMode('projects'),0)});
 $('#dashboardIdeasV164')?.addEventListener('click',()=>route('ideas'));
 $('#topIdeasV164')?.addEventListener('click',()=>route('ideas'));
+if(window.PLUGART_V200?.snapshot)document.dispatchEvent(new CustomEvent('plugart:campaign',{detail:window.PLUGART_V200.snapshot()}));
+window.__PLUGART_V202_RUNTIME_READY=true;
 })();
