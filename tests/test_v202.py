@@ -27,9 +27,11 @@ def test_current_assets_and_endpoint_manifest():
         root=session.get('/')
         assert root.status_code==200
         assert '202.20261006.1' in root.text
+        assert 'plugart_v204_prod.css?v=204.20261006.1' in root.text
+        assert 'plugart_v204_prod.js?v=204.20261006.1' in root.text
         assert '<script defer src="/static/plugart_v162.js' not in root.text
         health=session.get('/api/health').json()
-        assert health['ok'] and health['version']=='202.0'
+        assert health['ok'] and health['version']=='204.0'
         smoke=session.get('/api/v202/smoke').json()
         assert smoke['ok'] and smoke['browser_runtime_validated'] is False
         for asset in smoke['checks']['v202_assets']['files']:
