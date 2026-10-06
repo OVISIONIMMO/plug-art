@@ -142,7 +142,7 @@ jobs:
           grep -q 'Construire le sujet' static/studio_v21.js
           grep -q 'reorganizeAdvanced' static/studio_v21.js
 
-      - name: V202 black fast shell
+      - name: V204 white workspace
         run: |
           test -s static/plugart_v200.css
           test -s static/plugart_v200.js
@@ -160,8 +160,14 @@ jobs:
           grep -q 'v202-plugy-mini' static/plugart_v200.js
           ! grep -q "warmPlugy3D('home-small')" static/plugart_v162.js
           grep -q 'requestIdleCallback' static/plugart_v162.js
-          grep -q "app.version = '202.0'" app_extra_v60.py
-          grep -q "black-fast-shell-v202" app_extra_v60.py
+          test -s static/plugart_v204_prod.css
+          test -s static/plugart_v204_prod.js
+          grep -q 'plugart_v204_prod.css?v=204.20261006.1' static/plugart_v162.html
+          grep -q 'plugart_v204_prod.js?v=204.20261006.1' static/plugart_v162.html
+          node --check static/plugart_v204_prod.js
+          grep -q 'background:#fff' static/plugart_v162.html
+          grep -q "app.version = '204.0'" app_extra_v60.py
+          grep -q "white-workspace-v204" app_extra_v60.py
           grep -q "stale-while-revalidate=2592000" app_extra_v60.py
           grep -q 'GZipMiddleware' app_extra_v60.py
 
