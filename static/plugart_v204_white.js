@@ -52,7 +52,7 @@ async function refreshArtists(){
   try{
     const r=await fetch('/api/artists',{cache:'no-store'});if(!r.ok)throw new Error();
     const data=await r.json();grid.innerHTML=(Array.isArray(data)?data:[]).map(artistCard).join('')||'<div class="empty">Aucun profil artiste.</div>';
-    grid.addEventListener('click',e=>{const c=e.target.closest('.pa204-artist');if(c)c.classList.toggle('expanded')},{once:false});
+    grid.onclick=e=>{const card=e.target.closest('.pa204-artist');if(card)card.classList.toggle('expanded')};
   }catch(_){}
 }
 function installArtists(){
@@ -132,9 +132,22 @@ function installCreationPalette(){
 }
 function installRadarNetwork(){
   const v=q('#workspace');if(!v||q('#pa204RadarNetworks'))return;
-  const names=['Instagram','Facebook Events','Eventbrite','LinkedIn','ArtConnect','On the Move','OpenCallArtist','FindArt','CNAP','Mairies','Tiers-lieux','Galeries','Hôtels / restaurants','Centres commerciaux'];
+  const networks=[
+    ['Instagram','https://www.instagram.com/explore/tags/vernissage/'],
+    ['Instagram · Open Call','https://www.instagram.com/explore/tags/opencallforartists/'],
+    ['Facebook Events','https://www.facebook.com/events/'],
+    ['LinkedIn','https://www.linkedin.com/search/results/content/?keywords=appel%20%C3%A0%20candidatures%20artiste'],
+    ['ArtConnect','https://www.artconnect.com/opportunities/opencalls'],
+    ['On the Move','https://on-the-move.org/'],
+    ['OpenCallArtist','https://www.opencallartist.com/opportunities/europe?sort=newest&type=open_call'],
+    ['FindArt','https://www.findartplatform.com/opportunities/regions/europe'],
+    ['TransArtists','https://www.transartists.org/en/call-artists'],
+    ['Slash Paris','https://slash-paris.com/fr/vernissages'],
+    ['L’Officiel','https://www.offi.fr/expositions-musees/galeries/vernissages.html'],
+    ['CNAP','https://www.cnap.fr/annonces']
+  ];
   const row=document.createElement('div');row.id='pa204RadarNetworks';row.className='pa204-radar-networks';
-  row.innerHTML=names.map((n,i)=>'<span class="pa204-network">'+(i<4?'<b>'+n+'</b>':n)+'</span>').join('');
+  row.innerHTML=networks.map((n,i)=>'<a class="pa204-network" href="'+esc(n[1])+'" target="_blank" rel="noopener">'+(i<4?'<b>'+esc(n[0])+'</b>':esc(n[0]))+'</a>').join('');
   q('.radar-layout',v)?.before(row);
   const hero=q('.page-hero',v);if(hero)hero.innerHTML='<small>RADAR</small><h1>Recherche opportunités</h1><p>Open calls, expositions collectives, vernissages et lieux à prospecter.</p>';
 }
