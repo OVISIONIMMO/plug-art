@@ -451,7 +451,7 @@ def smoke_v202():
     report['checks']['v202_assets']={'ok':all(x['ok'] for x in assets),'files':assets}
     report['checks']['v202_routes']={'ok':all(x in active for x in required),'missing':[m+' '+p for m,p in required if (m,p) not in active]}
     report['ok']=all(x.get('ok',True) for x in report['checks'].values())
-    report['revision']='202.20261006.1'
+    report['revision']='204.20261006.1'
     report['browser_runtime_validated']=False
     report['scope']='server-routes-database-assets; browser journeys run in CI'
     return report
