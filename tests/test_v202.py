@@ -26,7 +26,7 @@ def test_current_assets_and_endpoint_manifest():
     with TestClient(current.app) as session:
         root=session.get('/')
         assert root.status_code==200
-        assert '202.20261003.4' in root.text
+        assert '202.20261006.1' in root.text
         assert '<script defer src="/static/plugart_v162.js' not in root.text
         health=session.get('/api/health').json()
         assert health['ok'] and health['version']=='202.0'
