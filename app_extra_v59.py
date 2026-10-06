@@ -777,7 +777,7 @@ def health_v124():
     return {
       'ok':db_ok,
       'version':app.version,
-      'ui':'black-fast-shell-v202',
+      'ui':'white-workspace-v204',
       'database':str(db_path),
       'persistent':str(db_path).startswith('/data/'),
       'db_bytes':db_path.stat().st_size if db_path.exists() else 0,
