@@ -1,6 +1,6 @@
 (function(){
 'use strict';
-var REV='202.20261003.4',LEGACY='/static/plugart_v162.js?v='+REV,LEGACY_CSS='/static/plugart_v162.css?v='+REV;
+var REV='202.20261006.1',LEGACY='/static/plugart_v162.js?v='+REV,LEGACY_CSS='/static/plugart_v162.css?v='+REV;
 var legacyPromise=null,routeSequence=0,bootPromise=null,bootGeneration=0;
 var simpleRoutes={dashboard:true,creation:true};
 var routes={dashboard:['WORKSPACE','Dashboard'],creation:['LABO CRÉATION','Création'],radar:['VEILLE ACTIVE','Radar'],opencalls:['SÉLECTION DE TRAVAIL','Open Calls'],bureau:['BUREAU','Bureau'],prospection:['CRM','Prospection'],social:['INSTAGRAM','Social Studio'],map:['CARTE','Map'],network:['RÉSEAU','Artistes'],ideas:['IDÉES','Nuage à idées']};
