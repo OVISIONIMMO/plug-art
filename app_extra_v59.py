@@ -3674,12 +3674,13 @@ Priorité géographique :
 3) Europe proche : Espagne (Madrid, Barcelone, Valence), Italie (Milan, Rome, Florence, Bologne), Portugal (Lisbonne, Porto), Belgique (Bruxelles, Anvers), Pays-Bas (Amsterdam, Rotterdam), Royaume-Uni (Londres), Suisse (Genève, Bâle), Allemagne (Berlin), Autriche (Vienne) et Danemark (Copenhague).
 Critères PLUG ART : artistes émergents ou toutes carrières, expositions collectives, peinture, photographie, arts visuels, mixed media et sculpture. Préférer candidature gratuite ou coût total inférieur ou égal à 400 EUR. Les petites galeries, associations, collectifs, hôtels, mairies, centres culturels, pop-up et lieux hybrides sont pertinents.
 EXCLURE strictement concours, prix, awards, competitions, jobs, formations et opportunités dont la deadline est passée.
-Cherche des sources officielles et des plateformes fiables comme ArtConnect, CuratorSpace, CNAP, Artagon, CENTQUATRE, Cité internationale des arts, Ville de Paris, ResArtis, On the Move, TransArtists, Callfor, ArtFond, galeries, collectifs, centres d’art, hôtels, mairies, pop-up et pages officielles des lieux. Priorise les expositions physiques collectives accessibles aux artistes émergents.
+Cherche des sources officielles et des plateformes fiables comme ArtConnect, CuratorSpace, CNAP, Artagon, CENTQUATRE, Cité internationale des arts, Ville de Paris, ResArtis, On the Move, TransArtists, FindArt, OpenCallArtist, Callfor, ArtFond, galeries, artist-run spaces, project spaces, collectifs, centres d’art, hôtels, restaurants, cafés, concept stores, centres commerciaux, coworkings, tiers-lieux, mairies, pop-up et pages officielles des lieux. Priorise les expositions physiques collectives accessibles aux artistes émergents.
+Fais aussi une passe "mines cachées" avec des recherches publiquement indexables du type site:instagram.com "open call" artist Paris, site:instagram.com "appel à candidatures" artiste, site:instagram.com "group exhibition" open call, site:linkedin.com "appel à candidatures" artiste, ainsi que #opencall #opencallforartists #appelacandidature #artistesemergents #groupexhibition #artistrunspace #projectspace. Ne retiens une publication sociale que si la candidature, la deadline et le lieu sont vérifiables ou recoupables.
 Retourne UNIQUEMENT du JSON valide :
 {{"opportunities":[{{"title":"","organizer":"","city":"","country":"","deadline":"YYYY-MM-DD","fee":"","eligibility":"","summary":"","source_url":"https://...","source_name":"","confidence":85}}]}}
-Maximum 35 résultats. Ne fabrique aucune deadline, aucun prix ni aucun frais."""
+Maximum 45 résultats. Ne fabrique aucune deadline, aucun prix ni aucun frais."""
     payload={'model':_V167_EVENT_SEARCH_MODEL,'store':False,'tools':[{'type':'web_search','search_context_size':'high'}],
-      'tool_choice':'required','input':prompt,'max_output_tokens':9000,'text':{'verbosity':'low'}}
+      'tool_choice':'required','input':prompt,'max_output_tokens':11000,'text':{'verbosity':'low'}}
     rr=requests.post('https://api.openai.com/v1/responses',
       headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},json=payload,timeout=(8,70))
     if not rr.ok:raise HTTPException(502,'Recherche Open Calls indisponible ('+str(rr.status_code)+')')
@@ -3793,7 +3794,7 @@ def _v168_live_radar_loop():
     while True:
         try:
             if _v168_should_refresh('events',float(os.getenv('PLUGART_EVENT_INTERVAL_HOURS','4'))):_v168_run_refresh('events')
-            if _v168_should_refresh('opportunities_ai',float(os.getenv('PLUGART_OPPORTUNITY_AI_INTERVAL_HOURS','18'))):_v168_run_refresh('opportunities')
+            if _v168_should_refresh('opportunities_ai',float(os.getenv('PLUGART_OPPORTUNITY_AI_INTERVAL_HOURS','12'))):_v168_run_refresh('opportunities')
         except Exception as exc:print('PLUG_ART_V168_LOOP_ERROR '+str(exc)[:240],flush=True)
         time.sleep(900)
 
