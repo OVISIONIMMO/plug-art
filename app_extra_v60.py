@@ -20,7 +20,7 @@ class SelectiveGZipMiddleware(GZipMiddleware):
 import app_extra_v59 as v59
 
 app = v59.app
-app.version = '202.0'
+app.version = '204.0'
 BASE = Path(__file__).resolve().parent
 app.user_middleware=[m for m in app.user_middleware if not issubclass(m.cls,GZipMiddleware)]
 app.add_middleware(SelectiveGZipMiddleware, minimum_size=900, compresslevel=5)
@@ -407,9 +407,9 @@ def generated_v179(name: str):
 def status_v179():
     return {
         'ok': True,
-        'version': '202.0',
-        'revision': '202.20261006.1',
-        'ui': 'black-fast-shell-v202',
+        'version': '204.0',
+        'revision': '204.20261006.1',
+        'ui': 'white-workspace-v204',
         'text_stream': '/api/v179/plugy/stream',
         'image_generation': '/api/v179/content/image',
         'image_enabled': bool(os.getenv('OPENAI_API_KEY', '').strip()),
@@ -423,8 +423,8 @@ def status_v179():
 async def headers_v179(request: Request, call_next):
     response = await call_next(request)
     if request.url.path == '/':
-        response.headers['X-Plug-Art-Version'] = '202.0'
-        response.headers['X-Plug-Art-UI'] = 'black-fast-shell-v202'
+        response.headers['X-Plug-Art-Version'] = '204.0'
+        response.headers['X-Plug-Art-UI'] = 'white-workspace-v204'
         response.headers['Cache-Control'] = 'no-store, max-age=0'
     elif request.url.path.startswith('/static/') or request.url.path.startswith('/assets/'):
         response.headers['Cache-Control'] = 'public,max-age=604800,stale-while-revalidate=2592000'
@@ -434,13 +434,13 @@ async def headers_v179(request: Request, call_next):
         response.headers['Cache-Control'] = 'no-store'
     return response
 
-print(f'PLUG_ART_V202_READY text={FAST_MODEL} image={DEFAULT_IMAGE_MODEL} generated={GENERATED}', flush=True)
+print(f'PLUG_ART_V204_READY text={FAST_MODEL} image={DEFAULT_IMAGE_MODEL} generated={GENERATED}', flush=True)
 
 
 @app.get('/api/v202/smoke')
 def smoke_v202():
     report=v59.smoke_v172()
-    files=['plugart_v162.html','plugart_v200.css','plugart_v200.js','plugart_v202_boot.js','plugart_v162.css','plugart_v162.js','plugart_v202_export.js']
+    files=['plugart_v162.html','plugart_v200.css','plugart_v200.js','plugart_v202_boot.js','plugart_v162.css','plugart_v162.js','plugart_v202_export.js','plugart_v204_prod.css','plugart_v204_prod.js']
     assets=[]
     for name in files:
         path=BASE/'static'/name
@@ -461,4 +461,4 @@ def startup_v202():
     report=smoke_v202()
     if not report['checks']['v202_assets']['ok'] or not report['checks']['v202_routes']['ok'] or not report['checks']['frontend_runtime']['asset_version']:
         raise RuntimeError('Assets ou routes V202 incomplets')
-    print('PLUG_ART_V202_SELFTEST '+json.dumps(report,ensure_ascii=False,separators=(',',':')),flush=True)
+    print('PLUG_ART_V204_SELFTEST '+json.dumps(report,ensure_ascii=False,separators=(',',':')),flush=True)
