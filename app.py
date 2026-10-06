@@ -18,7 +18,7 @@ DISCOVERY_SOURCES=[
  ('ArtConnect — Europe','https://www.artconnect.com/opportunities/europe',88),
  ('ArtConnect — Open Calls','https://www.artconnect.com/opportunities/opencalls?types=OPEN_CALL',86),
  ('ArtConnect — France','https://www.artconnect.com/opportunities/france?country=FR&sortBy=-deadline',88),
- ('ArtConnect — Paris','https://www.artconnect.com/opportunities?city=Paris&country=FR',90),
+ ('ArtConnect — Paris','https://www.artconnect.com/opportunities?organizationCity=Paris&organizationCountry=FR&page=1&sortBy=-deadline',90),
  ('CuratorSpace — Upcoming','https://www.curatorspace.com/opportunities/?orderBy=deadline&search=0',84),
  ('CuratorSpace — Latest','https://www.curatorspace.com/opportunities?orderBy=latest&search=1',82),
  ('Callfor — Art Open Calls','https://www.callfor.org/',76),
@@ -46,11 +46,28 @@ DISCOVERY_SOURCES=[
  ('MONAD — Paris submissions','https://www.monadnyc.com/paris',80),
  ('Full Circle — emerging artists','https://fullcircle.eu/opencall',84),
  ('Boomer Gallery — calls','https://boomergallery.net/',76),
- ('Gallery46 — open calls','https://gallery46.co.uk/exhibitions/',78)
+ ('Gallery46 — open calls','https://gallery46.co.uk/exhibitions/',78),
+ ('On the Move — Open Calls','https://on-the-move.org/',90),
+ ('TransArtists — Call for Artists','https://www.transartists.org/en/call-artists',89),
+ ('TransArtists — Opportunities','https://www.transartists.org/en/find-ta',86),
+ ('FindArt — Europe','https://www.findartplatform.com/opportunities/regions/europe',88),
+ ('FindArt — Exhibitions','https://www.findartplatform.com/opportunities/topics/exhibition',88),
+ ('FindArt — Emerging Artists','https://www.findartplatform.com/opportunities/topics/emerging-artists',87),
+ ('OpenCallArtist — Europe','https://www.opencallartist.com/opportunities/europe?sort=newest&type=open_call',84),
+ ('L’Officiel — Vernissages Paris','https://www.offi.fr/expositions-musees/galeries/vernissages.html',90),
+ ('Slash Paris — Vernissages','https://slash-paris.com/fr/vernissages',92)
 ]
-LINK_HINTS=('opportun','open-call','open_call','opencall','call-for','appel','candid','exhibition','exposition','expo','artist','artiste','collective','collectif','emerging','emergent','residen','culture','programmation','agenda','lieu','galerie','gallery','pop-up','popup','photograph','photographie','photographer','photographe','hotel','hôtel','restaurant','cafe','café','hospitality','venue')
+LINK_HINTS=('opportun','open-call','open_call','opencall','call-for','appel','candid','submission','exhibition','exposition','expo','vernissage','opening','private-view','private view','artist','artiste','collective','collectif','emerging','emergent','residen','culture','programmation','agenda','lieu','galerie','gallery','artist-run','project-space','project space','art-space','art space','pop-up','popup','photograph','photographie','photographer','photographe','hotel','hôtel','restaurant','cafe','café','hospitality','venue')
 BAD_LINK_HINTS=('login','register','privacy','terms','contact','about','newsletter','facebook','instagram','cookie','press','shop')
-POSITIVE_LINK_HINTS=('open call','appel à candid','appel a candid','appel à projets','appel a projets','exhibition','exposition','collective','collectif','emerging','émergent','emergent','painting','peinture','photography','photographie','photographer','photographe','visual art','arts visuels','artist opportunity','art contemporain','galerie','gallery','programmation culturelle','résidence','residence','lieu culturel','tiers-lieu','hotel exhibition','hôtel','restaurant','café','cafe','hospitality','partner venue')
+RADAR_SOCIAL_HUNTS=[
+ {'network':'Instagram','label':'Vernissages Paris','query':'#vernissage #vernissageparis #expositionparis #galerieparis','mode':'social_discovery'},
+ {'network':'Instagram','label':'Open calls artistes','query':'#opencall #opencallforartists #appelacandidature #artistesemergents','mode':'social_discovery'},
+ {'network':'Instagram','label':'Galeries & artist-run spaces','query':'#artistrunspace #projectspace #galleryopening #groupexhibition','mode':'social_discovery'},
+ {'network':'Facebook Events','label':'Vernissages & expositions','query':'vernissage exposition galerie Paris Île-de-France','mode':'event_discovery'},
+ {'network':'LinkedIn','label':'Appels culture & lieux','query':'appel à candidatures artiste exposition programmation culturelle','mode':'professional_discovery'}
+]
+
+POSITIVE_LINK_HINTS=('open call','appel à candid','appel a candid','appel à projets','appel a projets','submission','submissions','exhibition','exposition','vernissage','gallery opening','opening reception','private view','collective','collectif','group exhibition','emerging','émergent','emergent','painting','peinture','photography','photographie','photographer','photographe','visual art','arts visuels','artist opportunity','art contemporain','galerie','gallery','artist-run','project space','art space','programmation culturelle','résidence','residence','lieu culturel','tiers-lieu','hotel exhibition','hôtel','restaurant','café','cafe','hospitality','partner venue')
 NEGATIVE_LINK_HINTS=('competition','contest','concours','award','awards','prize','prix','récompense','recompense','trophy','job','workshop','formation','webinar')
 BLOCKED_OPPORTUNITY_HINTS=('competition','contest','concours','award','awards','prize','prix','récompense','recompense','trophy')
 def blocked_opportunity_text(text):
@@ -225,7 +242,8 @@ def fetch_page(url,timeout=10):return requests.get(url,timeout=timeout,headers={
 def link_signal(url,label=''):
  low=norm((url or '')+' '+(label or '')).lower();score=0
  score+=sum(7 for h in POSITIVE_LINK_HINTS if h in low);score-=sum(10 for h in NEGATIVE_LINK_HINTS if h in low)
- if any(h in low for h in ('collective','collectif','group exhibition')):score+=8
+ if any(h in low for h in ('collective','collectif','group exhibition','group show')):score+=8
+ if any(h in low for h in ('vernissage','opening reception','private view','gallery opening')):score+=9
  if any(h in low for h in ('emerging','émergent','emergent','young artist')):score+=8
  if any(h in low for h in ('painting','peinture','photography','photographie')):score+=5
  if any(h in low for h in ('restaurant','brasserie','café','cafe','hotel','hôtel','mairie','centre commercial','shopping centre','shopping center','médiathèque','mediatheque','tiers-lieu','concept store','boutique','centre culturel')):score+=5
@@ -266,7 +284,7 @@ def discover_sources(max_details=18):
    links.sort(key=lambda x:x[2],reverse=True)
    rel=min(100,int(src['reliability'] or 60)+1);c.execute("update radar_sources set last_seen=?,last_run=?,failures=0,last_error='',reliability=? where id=?",(now,now,rel,src['id']));c.commit()
    # Release SQLite's writer before fetching candidate pages.
-   detail_cap=max(8,min(int(max_details),32))
+   detail_cap=max(10,min(int(max_details),40))
    for u,label,signal in links[:detail_cap]:
     if c.execute('select 1 from opportunities where source_url=?',(u,)).fetchone() or c.execute('select 1 from radar_candidates where source_url=?',(u,)).fetchone():continue
     try:
@@ -305,7 +323,7 @@ def verify_existing():
 
 def run_full_radar():
  if not RADAR_LOCK.acquire(blocking=False):return {'ok':False,'busy':True,'message':'Un scan Radar est déjà en cours.'}
- try:return {'ok':True,'discovery':discover_sources(int(os.getenv('PLUGART_DISCOVERY_MAX_DETAILS','18'))),'verification':verify_existing()}
+ try:return {'ok':True,'discovery':discover_sources(int(os.getenv('PLUGART_DISCOVERY_MAX_DETAILS','24'))),'verification':verify_existing()}
  finally:RADAR_LOCK.release()
 
 def scheduler_loop():
@@ -351,6 +369,8 @@ def patch_opportunity(oid:int,body:OppPatch):
  return get_opportunity(oid)
 @app.get('/api/radar/status')
 def radar_status():return {'last_run':one('select * from radar_runs order by id desc limit 1'),'runs':rows('select * from radar_runs order by id desc limit 10'),'sources':rows('select * from radar_sources order by reliability desc'),'candidate_counts':rows('select state,count(*) count from radar_candidates group by state'),'top':rows("select id,title,city,country,deadline,fee,radar_score,priority,radar_reason,source_status from opportunities where status in ('open','rolling') order by radar_score desc limit 10")}
+@app.get('/api/radar/social-hunts')
+def radar_social_hunts():return {'items':RADAR_SOCIAL_HUNTS,'note':'Pistes sociales à croiser avec les sources publiques du Radar; accès direct aux plateformes peut nécessiter authentification.'}
 @app.get('/api/radar/candidates')
 def radar_candidates(state:str='new',min_score:int=0):return rows('select * from radar_candidates where state=? and candidate_score>=? order by candidate_score desc,deadline',(state,min_score))
 @app.post('/api/radar/discover')
