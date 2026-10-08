@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<title>PLUG ART — Workspace V204</title>
+<title>PLUG ART — Workspace V205</title>
 <meta name="description" content="PLUG ART Workspace — Radar, Open Calls, création, Bureau, prospection et PLUGY.">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/static/favicon.svg">
@@ -21,9 +21,11 @@
   window.addEventListener('unhandledrejection',function(e){send({type:'rejection',message:String((e.reason&&e.reason.message)||e.reason||'')})});
 })();
 </script>
-<link rel="stylesheet" href="/static/plugart_v200.css?v=202.20261006.1">\n<link rel="stylesheet" href="/static/plugart_v204_prod.css?v=204.20261006.1">
+<link rel="stylesheet" href="/static/plugart_v200.css?v=202.20261006.1">
+<link rel="stylesheet" href="/static/plugart_v204_prod.css?v=204.20261006.1">
+<link rel="stylesheet" href="/static/plugart_v205_ios.css?v=205.20261008.1">
 </head>
-<body data-view="dashboard" data-plugy-motion="Idle">
+<body class="plugart-v205" data-view="dashboard" data-plugy-motion="Idle">
 <div class="app-shell">
   <aside class="sidebar">
     <div class="brand-row">
@@ -54,14 +56,14 @@
       </div>
     </nav>
 
-    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small id="sidebarVersion">V202</small></div>
+    <div class="sidebar-foot"><i></i><span>PLUG ART Workspace</span><small id="sidebarVersion">V205</small></div>
   </aside>
 
   <main class="workspace">
     <header class="topbar">
       <div class="top-title">
         <small id="pageEyebrow">WORKSPACE</small>
-        <div class="top-title-line"><h1 id="pageTitle">Dashboard</h1><span class="build-pill" id="buildPill">V202</span></div>
+        <div class="top-title-line"><h1 id="pageTitle">Dashboard</h1><span class="build-pill" id="buildPill">V205</span></div>
       </div>
       <button class="global-search" id="globalSearch"><span>⌕</span><strong>Rechercher dans PLUG ART</strong><kbd>⌘ K</kbd></button>
       <div class="top-actions">
@@ -352,6 +354,8 @@
 
 <div class="toast" id="toast"></div>
 <script defer src="/static/plugart_v202_boot.js?v=202.20261006.1"></script>
-<script defer src="/static/plugart_v200.js?v=202.20261006.1"></script>\n<script defer src="/static/plugart_v204_prod.js?v=204.20261006.1"></script>
+<script defer src="/static/plugart_v200.js?v=202.20261006.1"></script>
+<script defer src="/static/plugart_v204_prod.js?v=204.20261006.1"></script>
+<script defer src="/static/plugart_v205_ios.js?v=205.20261008.1"></script>
 </body>
 </html>
