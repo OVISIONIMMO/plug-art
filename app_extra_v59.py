@@ -3,6 +3,7 @@ from fastapi import Request, HTTPException
 from fastapi.responses import HTMLResponse, Response, RedirectResponse, FileResponse
 from urllib.parse import urljoin, urlencode, urlparse
 from datetime import date, timedelta
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib,re,time,html as html_lib,requests,json,threading,os,secrets,base64,hmac,math,struct,io,zipfile,sqlite3,shutil,socket,ipaddress
 import app as core
 import plugy_runtime_v127 as runtime_v127
@@ -3285,7 +3286,7 @@ def _v167_upsert_events(events):
 def _v167_event_search_ai(body):
     key=os.getenv('OPENAI_API_KEY','').strip()
     if not key:raise HTTPException(503,'Recherche web IA non configurée')
-    cities=[str(x).strip() for x in (body.get('cities') or ['Paris','Aubervilliers','Saint-Denis','Pantin','Montreuil','Boulogne-Billancourt','Ivry-sur-Seine','Vincennes']) if str(x).strip()][:12]
+    cities=[str(x).strip() for x in (body.get('cities') or ['Paris','Aubervilliers','Saint-Denis','Saint-Ouen-sur-Seine','Pantin','Montreuil','Bagnolet','Romainville','Bobigny','Noisy-le-Sec','Rosny-sous-Bois','Neuilly-sur-Marne','Vincennes','Ivry-sur-Seine','Vitry-sur-Seine','Clichy','Gennevilliers','Nanterre','Boulogne-Billancourt','Créteil']) if str(x).strip()][:24]
     types=[str(x).strip() for x in (body.get('types') or ['vernissage','opening','artist_talk']) if str(x).strip()][:10]
     date_from=str(body.get('date_from') or time.strftime('%Y-%m-%d'))[:10]
     date_to=str(body.get('date_to') or '')[:10]
@@ -3301,12 +3302,12 @@ def _v167_event_search_ai(body):
       "{\"events\":[{\"event_type\":\"vernissage\",\"title\":\"\",\"venue_name\":\"\",\"venue_type\":\"gallery\",\"city\":\"\",\"address\":\"\",\"country\":\"France\","
       "\"starts_at\":\"YYYY-MM-DDTHH:MM\",\"ends_at\":\"\",\"artists\":[],\"disciplines\":[],\"description\":\"\",\"image_url\":\"\",\"source_url\":\"https://...\","
       "\"source_type\":\"official_gallery\",\"rsvp_url\":\"\",\"price_text\":\"\",\"is_free\":false,\"verified\":true}]}. "
-      "Maximum 24 événements. Si l'heure manque, utilise YYYY-MM-DD. Ne fabrique aucune information.")
-    payload={'model':_V167_EVENT_SEARCH_MODEL,'store':False,'tools':[{'type':'web_search','search_context_size':'medium'}],
-      'tool_choice':'required','input':prompt,'max_output_tokens':6000,'text':{'verbosity':'low'}}
+      "Maximum 40 événements. Cherche aussi Slash Paris, L’Officiel des spectacles, Mains d’Œuvres, Le 6b, POUSH, centres d’art, galeries associatives et agendas municipaux. Si l'heure manque, utilise YYYY-MM-DD. Ne fabrique aucune information.")
+    payload={'model':_V167_EVENT_SEARCH_MODEL,'store':False,'tools':[{'type':'web_search','search_context_size':'high'}],
+      'tool_choice':'required','input':prompt,'max_output_tokens':8500,'text':{'verbosity':'low'}}
     started=time.time()
     rr=requests.post('https://api.openai.com/v1/responses',
-      headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},json=payload,timeout=(8,45))
+      headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},json=payload,timeout=(8,62))
     if not rr.ok:raise HTTPException(502,'Recherche web indisponible ('+str(rr.status_code)+')')
     parsed=_v167_extract_json(_v167_output_text(rr.json()))
     events=parsed.get('events') if isinstance(parsed,dict) else parsed
@@ -3321,16 +3322,16 @@ def _v170_social_event_search_ai(body=None):
     if not key:raise HTTPException(503,'Recherche sociale IA non configurée')
     body=body or {}
     date_from=str(body.get('date_from') or date.today().isoformat())[:10]
-    date_to=str(body.get('date_to') or (date.today()+timedelta(days=35)).isoformat())[:10]
+    date_to=str(body.get('date_to') or (date.today()+timedelta(days=60)).isoformat())[:10]
     prompt=f"""Tu es la passe SOCIAL RADAR de PLUG ART. Recherche sur le web des publications SOCIALES PUBLIQUEMENT INDEXABLES annonçant des vernissages, openings, previews, expositions avec soirée d'ouverture, finissages ou rencontres artistes à venir entre {date_from} et {date_to}.
 Zone prioritaire : Paris, Aubervilliers, Saint-Denis, Saint-Ouen-sur-Seine, Pantin, Montreuil, Bagnolet, Romainville, Bobigny, Noisy-le-Sec, Les Lilas et proche Île-de-France.
 Effectue explicitement des recherches site:instagram.com, site:tiktok.com et site:linkedin.com avec : vernissage Paris, vernissage 93, opening Paris, exposition Paris, galerie Paris, vernissage Montreuil, Saint-Denis, Pantin, Aubervilliers, Saint-Ouen, Bagnolet, ainsi que #vernissage #vernissageparis #vernissage93 #vernissageidf #openingparis #expositionparis #galerieparis #parisart #artcontemporainparis #montreuilart #saintdenisart #aubervilliersart #pantinart.
 Priorise les comptes officiels de galeries, artistes, collectifs, centres d'art, tiers-lieux, écoles d'art, mairies, ateliers, hôtels et lieux hybrides. Ne retiens une publication sociale que si le texte indexé permet de confirmer une DATE et un LIEU précis. Recoupe avec un site officiel quand possible.
 N'utilise PAS Paris Sortie comme source principale de cette passe.
 Retourne UNIQUEMENT du JSON valide : {{"events":[{{"event_type":"vernissage","title":"","venue_name":"","venue_type":"gallery","city":"","address":"","country":"France","starts_at":"YYYY-MM-DDTHH:MM","ends_at":"","artists":[],"disciplines":[],"description":"","image_url":"","source_url":"https://...","source_type":"instagram_indexed","rsvp_url":"","price_text":"","is_free":false,"verified":false}}]}}.
-source_type doit être instagram_indexed, tiktok_indexed ou linkedin_indexed selon l'URL. verified=true seulement si le compte est officiel ou si date+lieu sont recoupés. Maximum 18 résultats. Ignore tout événement passé, non daté ou ambigu. Ne fabrique rien."""
+source_type doit être instagram_indexed, tiktok_indexed ou linkedin_indexed selon l'URL. verified=true seulement si le compte est officiel ou si date+lieu sont recoupés. Maximum 30 résultats. Ignore tout événement passé, non daté ou ambigu. Ne fabrique rien."""
     payload={'model':_V167_EVENT_SEARCH_MODEL,'store':False,'tools':[{'type':'web_search','search_context_size':'high'}],
-      'tool_choice':'required','input':prompt,'max_output_tokens':5000,'text':{'verbosity':'low'}}
+      'tool_choice':'required','input':prompt,'max_output_tokens':7000,'text':{'verbosity':'low'}}
     rr=requests.post('https://api.openai.com/v1/responses',
       headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},json=payload,timeout=(8,55))
     if not rr.ok:raise HTTPException(502,'Recherche sociale indisponible ('+str(rr.status_code)+')')
@@ -3620,30 +3621,33 @@ def _v169_paris_open_data_events(start=None,end=None):
     return found
 
 def _v168_refresh_events():
-    start=date.today();end=start+timedelta(days=35)
+    start=date.today();end=start+timedelta(days=60)
     curated=[x for x in _v168_curated_events() if str(x.get('starts_at') or '')[:10]>=start.isoformat()]
-    ids=_v167_upsert_events(curated);ai_error=''
+    ids=_v167_upsert_events(curated);errors=[]
     try:ids+=_v167_upsert_events(_v169_paris_open_data_events(start,end))
     except Exception as exc:print('PLUG_ART_V169_PARIS_DATA_UPSERT '+str(exc)[:180],flush=True)
-    social_error=''
-    try:ids+=_v167_upsert_events(_v170_social_event_search_ai({'date_from':start.isoformat(),'date_to':end.isoformat()}))
-    except Exception as exc:
-        social_error=type(exc).__name__+': '+str(exc)
-        print('PLUG_ART_V170_SOCIAL_FALLBACK '+social_error[:180],flush=True)
     body={
-      'cities':['Paris','Aubervilliers','Saint-Denis','Saint-Ouen-sur-Seine','Pantin','Montreuil','Bagnolet','Romainville','Bobigny','Noisy-le-Sec','Les Lilas','Neuilly-sur-Marne'],
+      'cities':['Paris','Aubervilliers','Saint-Denis','Saint-Ouen-sur-Seine','Pantin','Montreuil','Bagnolet','Romainville','Bobigny','Noisy-le-Sec','Rosny-sous-Bois','Neuilly-sur-Marne','Vincennes','Ivry-sur-Seine','Vitry-sur-Seine','Clichy','Gennevilliers','Nanterre','Boulogne-Billancourt','Créteil'],
       'date_from':start.isoformat(),'date_to':end.isoformat(),
       'types':['vernissage','opening','artist_talk','finissage','preview','nocturne','rencontre_artiste','lancement_exposition'],
-      'q':"Paris et Île-de-France. Inclure galeries, collectifs, centres d'art, mairies, hôtels de ville, écoles d'art, fondations, tiers-lieux, hôtels, salons, ateliers collectifs et pages Instagram et TikTok publiquement indexables. Requêtes utiles: #vernissage #vernissageparis #vernissageidf #vernissage93 #saintdenisart #montreuilart #aubervilliersart #saintouen #bagnolet #parisart #galerieparis #expositionparis #openingparis #artcontemporainparis. Effectuer aussi des requêtes site:instagram.com vernissage Paris, site:instagram.com vernissage Saint-Denis, Montreuil, Pantin, Aubervilliers, Saint-Ouen, Bagnolet et site:tiktok.com vernissage Paris. Utiliser seulement les pages sociales publiquement indexables dont la date et le lieu peuvent être recoupés. Vérifier aussi les agendas Ville de Paris, OAM, L'Officiel des spectacles, Slash Paris, sites de galeries et plateformes d'événements."
+      'q':"Paris et Île-de-France au sens large. Inclure petites galeries, galeries associatives, collectifs, centres d'art, mairies, hôtels de ville, écoles d'art, fondations, tiers-lieux, hôtels, restaurants, cafés, concept stores, centres commerciaux, ateliers collectifs et pages Instagram/TikTok publiquement indexables. Chercher aussi Slash Paris, L'Officiel des spectacles, Le 6b, Mains d'Œuvres, POUSH, DOC!, Le Sample, Maison Populaire et agendas municipaux. Requêtes utiles: #vernissage #vernissageparis #vernissageidf #vernissage93 #saintdenisart #montreuilart #aubervilliersart #saintouen #bagnolet #parisart #galerieparis #expositionparis #openingparis #artcontemporainparis."
     }
-    try:
-        events=_v167_event_search_ai(body);ids+=_v167_upsert_events(events)
-    except Exception as exc:
-        ai_error=type(exc).__name__+': '+str(exc)
-        print('PLUG_ART_V1681_EVENTS_FALLBACK '+ai_error[:180],flush=True)
-    ids=list(dict.fromkeys(ids));combined_error=' | '.join(x for x in (ai_error,social_error) if x)
+    jobs={}
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        jobs[pool.submit(_v170_social_event_search_ai,{'date_from':start.isoformat(),'date_to':end.isoformat()})]='social'
+        jobs[pool.submit(_v167_event_search_ai,body)]='general'
+        for fut in as_completed(jobs):
+            label=jobs[fut]
+            try:
+                found=fut.result() or []
+                ids+=_v167_upsert_events(found)
+                print('PLUG_ART_V206_EVENT_PASS label='+label+' found='+str(len(found)),flush=True)
+            except Exception as exc:
+                errors.append(label+':'+type(exc).__name__+': '+str(exc))
+                print('PLUG_ART_V206_EVENT_PASS_ERROR label='+label+' error='+type(exc).__name__+': '+str(exc)[:180],flush=True)
+    ids=list(dict.fromkeys(ids));combined_error=' | '.join(errors)
     _v168_set_refresh_state('events',len(ids),combined_error)
-    return {'ok':True,'found':len(ids),'fallback':bool(combined_error),'social_search':not bool(social_error),'items':events_list_v167(date_from=start.isoformat(),date_to=end.isoformat())}
+    return {'ok':True,'found':len(ids),'fallback':bool(combined_error),'social_search':not any(x.startswith('social:') for x in errors),'items':events_list_v167(date_from=start.isoformat(),date_to=end.isoformat())}
 
 def _v169_prime_paris_data():
     time.sleep(2)
@@ -3663,28 +3667,78 @@ def _v168_extract_opportunities(raw):
     items=parsed.get('opportunities') if isinstance(parsed,dict) else parsed
     return items if isinstance(items,list) else []
 
-def _v168_search_opportunities_ai():
+def _v205_search_opportunity_pass(label,scope,max_results=30):
     key=os.getenv('OPENAI_API_KEY','').strip()
     if not key:raise HTTPException(503,'Recherche Open Calls IA non configurée')
     today=date.today().isoformat()
-    prompt=f"""Tu es le Radar Open Calls de PLUG ART. Recherche sur le web des opportunités D'EXPOSITION encore ouvertes au {today}.
-Priorité géographique :
-1) Paris, Île-de-France, Seine-Saint-Denis et proche banlieue ;
-2) France : Lyon, Marseille/Aix, Bordeaux, Lille, Nantes, Toulouse, Montpellier, Nice, Strasbourg, Rennes, Avignon ;
-3) Europe proche : Espagne (Madrid, Barcelone, Valence), Italie (Milan, Rome, Florence, Bologne), Portugal (Lisbonne, Porto), Belgique (Bruxelles, Anvers), Pays-Bas (Amsterdam, Rotterdam), Royaume-Uni (Londres), Suisse (Genève, Bâle), Allemagne (Berlin), Autriche (Vienne) et Danemark (Copenhague).
-Critères PLUG ART : artistes émergents ou toutes carrières, expositions collectives, peinture, photographie, arts visuels, mixed media et sculpture. Préférer candidature gratuite ou coût total inférieur ou égal à 400 EUR. Les petites galeries, associations, collectifs, hôtels, mairies, centres culturels, pop-up et lieux hybrides sont pertinents.
-EXCLURE strictement concours, prix, awards, competitions, jobs, formations et opportunités dont la deadline est passée.
-Cherche des sources officielles et des plateformes fiables comme ArtConnect, CuratorSpace, CNAP, Artagon, CENTQUATRE, Cité internationale des arts, Ville de Paris, ResArtis, On the Move, TransArtists, FindArt, OpenCallArtist, Callfor, ArtFond, galeries, artist-run spaces, project spaces, collectifs, centres d’art, hôtels, restaurants, cafés, concept stores, centres commerciaux, coworkings, tiers-lieux, mairies, pop-up et pages officielles des lieux. Priorise les expositions physiques collectives accessibles aux artistes émergents.
-Fais aussi une passe "mines cachées" avec des recherches publiquement indexables du type site:instagram.com "open call" artist Paris, site:instagram.com "appel à candidatures" artiste, site:instagram.com "group exhibition" open call, site:linkedin.com "appel à candidatures" artiste, ainsi que #opencall #opencallforartists #appelacandidature #artistesemergents #groupexhibition #artistrunspace #projectspace. Ne retiens une publication sociale que si la candidature, la deadline et le lieu sont vérifiables ou recoupables.
+    prompt=f"""Tu es une passe spécialisée du Radar PLUG ART. Recherche sur le web des opportunités artistiques encore ouvertes au {today}.
+
+OBJECTIF PLUG ART
+- Priorité aux expositions physiques collectives, open calls, appels à candidatures, appels à projets d'exposition, résidences avec restitution/exposition, programmations de galeries et lieux accueillant des artistes émergents.
+- Médiums prioritaires : peinture, photographie, arts visuels, mixed media, sculpture, installation.
+- Préférer candidature gratuite ou coût total inférieur ou égal à 400 EUR.
+- Accepter les candidatures permanentes / rolling calls si elles sont clairement encore ouvertes.
+- Inclure petites galeries, associations, collectifs, artist-run spaces, project spaces, centres d'art, tiers-lieux, hôtels, restaurants, cafés, concept stores, centres commerciaux, coworkings, médiathèques et lieux municipaux lorsqu'ils exposent réellement des artistes.
+- EXCLURE concours, awards, prizes, competitions, jobs, formations, workshops et deadlines passées.
+- Ne fabrique aucune information. Une opportunité doit avoir une URL source consultable.
+
+PASSE: {label}
+ZONE / ANGLE:
+{scope}
+
+SOURCES À PRIVILÉGIER SELON LA PASSE
+ArtConnect, CuratorSpace, CIPAC, CNAP, La Maison des Artistes, ArtRabbit, FindArt, OpenCallArtist, On the Move, TransArtists, Artagon, Ville de Paris, Région Île-de-France, centres d'art, FRAC, mairies, galeries, artist-run spaces et sites officiels des lieux.
+Pour les pistes plus discrètes, effectue aussi des recherches publiquement indexables site:instagram.com et site:linkedin.com avec open call, appel à candidatures, group exhibition, exposition collective, artistes émergents, artist-run space et project space. N'utilise une publication sociale que si l'appel, le lieu et la candidature sont vérifiables.
+
 Retourne UNIQUEMENT du JSON valide :
 {{"opportunities":[{{"title":"","organizer":"","city":"","country":"","deadline":"YYYY-MM-DD","fee":"","eligibility":"","summary":"","source_url":"https://...","source_name":"","confidence":85}}]}}
-Maximum 45 résultats. Ne fabrique aucune deadline, aucun prix ni aucun frais."""
+Maximum {int(max_results)} résultats pour cette passe."""
     payload={'model':_V167_EVENT_SEARCH_MODEL,'store':False,'tools':[{'type':'web_search','search_context_size':'high'}],
-      'tool_choice':'required','input':prompt,'max_output_tokens':11000,'text':{'verbosity':'low'}}
+      'tool_choice':'required','input':prompt,'max_output_tokens':6500,'text':{'verbosity':'low'}}
     rr=requests.post('https://api.openai.com/v1/responses',
-      headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},json=payload,timeout=(8,70))
+      headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},json=payload,timeout=(8,62))
     if not rr.ok:raise HTTPException(502,'Recherche Open Calls indisponible ('+str(rr.status_code)+')')
-    return _v168_extract_opportunities(_v167_output_text(rr.json()))
+    items=_v168_extract_opportunities(_v167_output_text(rr.json()))
+    print('PLUG_ART_V206_OPP_PASS label='+label.replace(' ','_')+' found='+str(len(items)),flush=True)
+    return items
+
+def _v168_search_opportunities_ai():
+    passes=[
+      ('Paris_IDF',
+       "Paris, Seine-Saint-Denis, Hauts-de-Seine, Val-de-Marne et proche Île-de-France. "
+       "Cherche particulièrement Paris, Aubervilliers, Saint-Denis, Saint-Ouen, Pantin, Montreuil, Bagnolet, Romainville, Bobigny, Noisy-le-Sec, Rosny-sous-Bois, Neuilly-sur-Marne, Vincennes, Ivry, Vitry, Clichy, Gennevilliers, Nanterre, Boulogne, Créteil. "
+       "Priorise expositions collectives accessibles, petites galeries, associations, mairies, centres culturels, Le 6b, Mains d'Œuvres, lieux hybrides et candidatures permanentes."),
+      ('France',
+       "France entière avec priorité Lyon, Marseille/Aix, Bordeaux, Lille, Nantes, Toulouse, Montpellier, Nice, Strasbourg, Rennes, Rouen, Grenoble et Avignon. "
+       "Explorer CIPAC, CNAP, Maison des Artistes, FRAC, centres d'art, associations, galeries et collectivités. Chercher aussi les appels locaux peu relayés nationalement."),
+      ('Europe',
+       "Europe proche : Espagne (Madrid, Barcelone, Valence), Italie (Milan, Rome, Florence, Bologne, Turin), Portugal (Lisbonne, Porto), Belgique (Bruxelles, Anvers), Pays-Bas (Amsterdam, Rotterdam), Royaume-Uni (Londres), Suisse (Genève, Bâle), Allemagne (Berlin), Autriche (Vienne), Danemark (Copenhague). "
+       "Priorise group exhibitions, emerging artists, open exhibitions et appels physiques avec coût raisonnable."),
+      ('Mines_cachees',
+       "Recherche transversale de petites opportunités et candidatures peu visibles : artist-run spaces, project spaces, hôtels, restaurants, cafés, concept stores, coworkings, centres commerciaux, pop-ups, médiathèques, tiers-lieux et galeries indépendantes. "
+       "Cherche des pages 'submit your work', 'artists submissions', 'exposez chez nous', 'appel aux artistes', 'candidature spontanée', 'group show' et publications publiques Instagram/LinkedIn. Priorité France et Europe.")
+    ]
+    merged=[];errors=[]
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        futures={pool.submit(_v205_search_opportunity_pass,label,scope,30):label for label,scope in passes}
+        for fut in as_completed(futures):
+            label=futures[fut]
+            try:merged.extend(fut.result() or [])
+            except Exception as exc:
+                errors.append(label+':'+type(exc).__name__)
+                print('PLUG_ART_V206_OPP_PASS_ERROR label='+label+' error='+type(exc).__name__+': '+str(exc)[:180],flush=True)
+    dedup=[];seen=set()
+    for raw in merged:
+        if not isinstance(raw,dict):continue
+        url=str(raw.get('source_url') or '').strip()
+        title=str(raw.get('title') or '').strip()
+        key=(url.split('#')[0].rstrip('/').lower() if url else '') or re.sub(r'\W+',' ',title.lower()).strip()
+        if not key or key in seen:continue
+        seen.add(key);dedup.append(raw)
+    dedup.sort(key=lambda x:int(x.get('confidence') or 0),reverse=True)
+    print('PLUG_ART_V206_OPP_MULTI raw='+str(len(merged))+' unique='+str(len(dedup))+' errors='+str(len(errors)),flush=True)
+    if not dedup and errors:raise HTTPException(502,'Recherche Open Calls indisponible')
+    return dedup[:100]
 
 def _v168_upsert_opportunities(items):
     today=date.today();saved=[]
@@ -3753,8 +3807,11 @@ _v169_seed_verified_floor()
 
 @app.post('/api/v168/radar/refresh-all')
 def radar_refresh_all_v169(body:dict={}):
-    events=_v168_refresh_events()
-    opportunities=_v168_refresh_opportunities()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        ev_future=pool.submit(_v168_refresh_events)
+        op_future=pool.submit(_v168_refresh_opportunities)
+        events=ev_future.result()
+        opportunities=op_future.result()
     return {'ok':True,'found':int(events.get('found') or 0)+int(opportunities.get('found') or 0),
       'events':events,'opportunities':opportunities}
 
@@ -3794,7 +3851,7 @@ def _v168_live_radar_loop():
     while True:
         try:
             if _v168_should_refresh('events',float(os.getenv('PLUGART_EVENT_INTERVAL_HOURS','4'))):_v168_run_refresh('events')
-            if _v168_should_refresh('opportunities_ai',float(os.getenv('PLUGART_OPPORTUNITY_AI_INTERVAL_HOURS','12'))):_v168_run_refresh('opportunities')
+            if _v168_should_refresh('opportunities_ai',float(os.getenv('PLUGART_OPPORTUNITY_AI_INTERVAL_HOURS','8'))):_v168_run_refresh('opportunities')
         except Exception as exc:print('PLUG_ART_V168_LOOP_ERROR '+str(exc)[:240],flush=True)
         time.sleep(900)
 
