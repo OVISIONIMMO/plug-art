@@ -29,7 +29,7 @@ async function install(){
 function boot(){
   install();
   document.addEventListener('plugart:route',()=>setTimeout(install,120));
-  const mo=new MutationObserver(()=>{if((document.body?.dataset.view==='radar'||q('#view-radar.active'))&&!q('#radarDepthV206'))install()});
+  const mo=new MutationObserver(()=>{const bp=q('#buildPill'),sv=q('#sidebarVersion');if(bp&&bp.textContent!=='V206')bp.textContent='V206';if(sv&&sv.textContent!=='V206')sv.textContent='V206';if((document.body?.dataset.view==='radar'||q('#view-radar.active'))&&!q('#radarDepthV206'))install()});
   mo.observe(document.body,{childList:true,subtree:true});
   console.info('[PLUG ART] Radar V206',REV);
 }
