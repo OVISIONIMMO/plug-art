@@ -142,7 +142,7 @@ jobs:
           grep -q 'Construire le sujet' static/studio_v21.js
           grep -q 'reorganizeAdvanced' static/studio_v21.js
 
-      - name: V205 white liquid-glass workspace
+      - name: V206 radar + white liquid-glass workspace
         run: |
           test -s static/plugart_v200.css
           test -s static/plugart_v200.js
@@ -172,8 +172,12 @@ jobs:
           grep -q 'plugart_v205_ios.js?v=205.20261008.1' static/plugart_v162.html
           node --check static/plugart_v205_ios.js
           grep -q 'class="plugart-v205"' static/plugart_v162.html
-          grep -q "app.version = '205.0'" app_extra_v60.py
+          grep -q "app.version = '206.0'" app_extra_v60.py
           grep -q "white-liquid-glass-v205" app_extra_v60.py
+          test -s static/plugart_v206_radar.js
+          grep -q 'plugart_v206_radar.js?v=206.20261008.1' static/plugart_v162.html
+          node --check static/plugart_v206_radar.js
+          grep -q "app.version = '206.0'" app_extra_v60.py
           grep -q "stale-while-revalidate=2592000" app_extra_v60.py
           grep -q 'GZipMiddleware' app_extra_v60.py
 
