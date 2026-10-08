@@ -3836,6 +3836,23 @@ def _v168_start_refresh(kind):
 def radar_refresh_status_v168():
     return {'events':_v168_refresh_state('events'),'opportunities':_v168_refresh_state('opportunities_ai'),'running':sorted(_v168_refresh_running)}
 
+@app.get('/api/v206/radar/config')
+def radar_config_v206():
+    try:
+        source_count=int((core.one('select count(*) n from radar_sources where enabled=1') or {}).get('n',0))
+    except Exception:source_count=0
+    return {
+      'ok':True,
+      'version':'206.0',
+      'opportunity_passes':['Paris / IDF','France','Europe','Mines cachées'],
+      'event_horizon_days':60,
+      'opportunity_refresh_hours':8,
+      'event_refresh_hours':4,
+      'discovery_sources':source_count,
+      'max_ai_opportunities':100,
+      'candidate_detail_default':32
+    }
+
 @app.post('/api/v168/events/refresh')
 def events_refresh_v168(body:dict={}):
     if bool((body or {}).get('force',True)):return _v168_refresh_events()
