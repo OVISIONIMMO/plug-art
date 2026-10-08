@@ -55,7 +55,15 @@ DISCOVERY_SOURCES=[
  ('FindArt — Emerging Artists','https://www.findartplatform.com/opportunities/topics/emerging-artists',87),
  ('OpenCallArtist — Europe','https://www.opencallartist.com/opportunities/europe?sort=newest&type=open_call',84),
  ('L’Officiel — Vernissages Paris','https://www.offi.fr/expositions-musees/galeries/vernissages.html',90),
- ('Slash Paris — Vernissages','https://slash-paris.com/fr/vernissages',92)
+ ('Slash Paris — Vernissages','https://slash-paris.com/fr/vernissages',92),
+ ('Slash Paris — Tous les événements','https://slash-paris.com/fr/evenements/',90),
+ ('ArtConnect — Toutes opportunités','https://www.artconnect.com/opportunities',86),
+ ('CuratorSpace — Toutes opportunités','https://www.curatorspace.com/opportunities',86),
+ ('ArtRabbit — Artist Opportunities Europe','https://www.artrabbit.com/artist-opportunities?location=Europe',84),
+ ('CIPAC — Appels à candidatures','https://cipac.net/annonces/appels',94),
+ ('Maison des Artistes — Appels à candidature','https://www.lamaisondesartistes.fr/site/les-petites-annonces-de-la-maison-des-artistes/les-annonces/188/appels-a-candidature/?results=100%2F1000',92),
+ ('Le 6b — Programmation','https://www.le6b.fr/une-programmation/',87),
+ ('Mains d’Œuvres — Agenda','https://www.mainsdoeuvres.org/agenda',86)
 ]
 LINK_HINTS=('opportun','open-call','open_call','opencall','call-for','appel','candid','submission','exhibition','exposition','expo','vernissage','opening','private-view','private view','artist','artiste','collective','collectif','emerging','emergent','residen','culture','programmation','agenda','lieu','galerie','gallery','artist-run','project-space','project space','art-space','art space','pop-up','popup','photograph','photographie','photographer','photographe','hotel','hôtel','restaurant','cafe','café','hospitality','venue')
 BAD_LINK_HINTS=('login','register','privacy','terms','contact','about','newsletter','facebook','instagram','cookie','press','shop')
@@ -284,7 +292,7 @@ def discover_sources(max_details=18):
    links.sort(key=lambda x:x[2],reverse=True)
    rel=min(100,int(src['reliability'] or 60)+1);c.execute("update radar_sources set last_seen=?,last_run=?,failures=0,last_error='',reliability=? where id=?",(now,now,rel,src['id']));c.commit()
    # Release SQLite's writer before fetching candidate pages.
-   detail_cap=max(10,min(int(max_details),40))
+   detail_cap=max(12,min(int(max_details),50))
    for u,label,signal in links[:detail_cap]:
     if c.execute('select 1 from opportunities where source_url=?',(u,)).fetchone() or c.execute('select 1 from radar_candidates where source_url=?',(u,)).fetchone():continue
     try:
@@ -292,7 +300,7 @@ def discover_sources(max_details=18):
      if blocked_opportunity_text(' '.join([d.get('title') or '',d.get('summary') or '',d.get('raw_excerpt') or ''])):continue
      if len(d['title'])<7 or d['title'].lower() in ('opportunities','open calls','calls for artists'):continue
      fp=candidate_fingerprint(u,d['title']);item={**d,'source_url':u,'source_name':src['name'],'source_page':src['url'],'reliability':rel};score,reason=score_candidate(item)
-     if score<38 and signal<8:continue
+     if score<30 and signal<5:continue
      before=c.total_changes;c.execute("INSERT OR IGNORE INTO radar_candidates(fingerprint,title,source_url,source_name,source_page,city,country,deadline,fee,summary,discovered_at,last_checked,confidence,candidate_score,state,reason,raw_excerpt) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'new',?,?)",(fp,d['title'],u,src['name'],src['url'],d['city'],d['country'],d['deadline'],d['fee'],d['summary'],now,now,d['confidence'],score,reason,d['raw_excerpt']))
      if c.total_changes>before:discovered+=1
      c.commit()
@@ -323,7 +331,7 @@ def verify_existing():
 
 def run_full_radar():
  if not RADAR_LOCK.acquire(blocking=False):return {'ok':False,'busy':True,'message':'Un scan Radar est déjà en cours.'}
- try:return {'ok':True,'discovery':discover_sources(int(os.getenv('PLUGART_DISCOVERY_MAX_DETAILS','24'))),'verification':verify_existing()}
+ try:return {'ok':True,'discovery':discover_sources(int(os.getenv('PLUGART_DISCOVERY_MAX_DETAILS','32'))),'verification':verify_existing()}
  finally:RADAR_LOCK.release()
 
 def scheduler_loop():
@@ -376,7 +384,7 @@ def radar_candidates(state:str='new',min_score:int=0):return rows('select * from
 @app.post('/api/radar/discover')
 def radar_discover():
  if not RADAR_LOCK.acquire(blocking=False):return {'ok':False,'busy':True}
- try:return {'ok':True,**discover_sources(int(os.getenv('PLUGART_DISCOVERY_MAX_DETAILS','18')))}
+ try:return {'ok':True,**discover_sources(int(os.getenv('PLUGART_DISCOVERY_MAX_DETAILS','32')))}
  finally:RADAR_LOCK.release()
 @app.post('/api/radar/run')
 def radar_run():return run_full_radar()
