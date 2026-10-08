@@ -1,0 +1,775 @@
+/* PLUG ART V205 · White Liquid Glass UI · 2026-10-08 */
+:root{
+  --pa205-bg:#f7f9fc;
+  --pa205-bg-2:#fbfcfe;
+  --pa205-surface:rgba(255,255,255,.72);
+  --pa205-surface-strong:rgba(255,255,255,.90);
+  --pa205-solid:#fff;
+  --pa205-ink:#131720;
+  --pa205-ink-2:#343b47;
+  --pa205-muted:#747d8b;
+  --pa205-faint:#9ba3af;
+  --pa205-line:rgba(28,39,60,.095);
+  --pa205-line-strong:rgba(28,39,60,.15);
+  --pa205-blue:#315dff;
+  --pa205-blue-2:#5d7cff;
+  --pa205-blue-soft:rgba(49,93,255,.10);
+  --pa205-violet:#795cff;
+  --pa205-green:#1ba96b;
+  --pa205-glass-shadow:0 10px 30px rgba(28,39,60,.075);
+  --pa205-card-shadow:0 18px 52px rgba(28,39,60,.075);
+  --pa205-radius:20px;
+  --pa205-radius-sm:14px;
+}
+
+/* Hard light reset. This deliberately beats V162/V200 legacy selectors. */
+html,
+html body,
+html body.plugart-v200,
+html body.plugart-v201,
+html body.plugart-v202,
+html body.plugart-v205,
+html body .app-shell,
+html body .workspace,
+html body .view,
+html body .main-shell,
+html body .dashboard-shell{
+  background-color:var(--pa205-bg)!important;
+  color:var(--pa205-ink)!important;
+  color-scheme:light!important;
+}
+html{background:#fff!important}
+html body{margin:0!important;background:
+  radial-gradient(circle at 75% -10%,rgba(86,119,255,.075),transparent 31%),
+  radial-gradient(circle at 5% 105%,rgba(121,92,255,.045),transparent 30%),
+  linear-gradient(180deg,#fbfcfe 0%,#f6f8fc 100%)!important;
+}
+html body::before,
+html body.plugart-v200::before,
+html body.plugart-v201::before,
+html body.plugart-v202::before{
+  content:""!important;
+  position:fixed!important;
+  inset:0!important;
+  z-index:-2!important;
+  pointer-events:none!important;
+  background:
+    radial-gradient(circle at 78% 2%,rgba(49,93,255,.055),transparent 27%),
+    linear-gradient(180deg,#fbfcfe,#f7f9fc)!important;
+}
+html body::after{background:none!important}
+
+/* Shell + workspace */
+html body .app-shell{min-height:100vh!important;background:transparent!important}
+html body .workspace{
+  min-height:100vh!important;
+  background:transparent!important;
+}
+html body .view{
+  background:transparent!important;
+  color:var(--pa205-ink)!important;
+}
+
+/* Sidebar: white glass, never black. */
+html body.plugart-v200 .sidebar,
+html body.plugart-v201 .sidebar,
+html body.plugart-v202 .sidebar,
+html body .sidebar{
+  background:rgba(255,255,255,.86)!important;
+  color:var(--pa205-ink)!important;
+  border-right:1px solid rgba(28,39,60,.08)!important;
+  box-shadow:12px 0 42px rgba(28,39,60,.045)!important;
+  backdrop-filter:blur(28px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(28px) saturate(150%)!important;
+}
+html body .brand-row{
+  border-bottom:1px solid var(--pa205-line)!important;
+}
+html body .brand,
+html body .brand-plug,
+html body .brand-art{
+  color:var(--pa205-ink)!important;
+}
+html body .brand-art{color:var(--pa205-blue)!important}
+html body .brand i{box-shadow:0 0 0 4px rgba(49,93,255,.10)!important}
+html body .nav-group small,
+html body .sidebar-foot,
+html body .sidebar-foot span,
+html body .sidebar-foot small{
+  color:#858e9c!important;
+  opacity:1!important;
+}
+html body .sidebar-foot{
+  border-top:1px solid var(--pa205-line)!important;
+}
+
+/* Topbar: white glass. */
+html body.plugart-v200 .topbar,
+html body.plugart-v201 .topbar,
+html body.plugart-v202 .topbar,
+html body .topbar{
+  background:rgba(255,255,255,.78)!important;
+  border-bottom:1px solid rgba(28,39,60,.075)!important;
+  color:var(--pa205-ink)!important;
+  box-shadow:0 10px 34px rgba(28,39,60,.035)!important;
+  backdrop-filter:blur(28px) saturate(155%)!important;
+  -webkit-backdrop-filter:blur(28px) saturate(155%)!important;
+}
+html body .top-title h1,
+html body .top-title small,
+html body .page-toolbar h2,
+html body .page-toolbar small,
+html body .panel-head h2,
+html body .panel-head small{
+  color:var(--pa205-ink)!important;
+  opacity:1!important;
+}
+html body .top-title small,
+html body .page-toolbar small,
+html body .panel-head small{
+  color:#7d8694!important;
+}
+html body .build-pill,
+html body .live-pill{
+  background:rgba(255,255,255,.70)!important;
+  color:#596271!important;
+  border:1px solid rgba(28,39,60,.09)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+
+/* Liquid-glass control system */
+html body .v205-glass,
+html body .nav-item,
+html body .sidebar-collapse,
+html body .global-search,
+html body .icon-btn,
+html body .text-btn,
+html body .primary-btn,
+html body .secondary-btn,
+html body .plugy-btn,
+html body .plugy-inline,
+html body .toolbar-actions button,
+html body .bureau-actions button,
+html body .editor-actions button,
+html body .copy-format-toolbar button,
+html body .map-filter-chips button,
+html body .content-mode-tabs button,
+html body .segment button,
+html body .format-row button,
+html body .c200-drafts button,
+html body .c200-mini-actions button,
+html body .c200-secondary,
+html body .c200-upload,
+html body #creationV200 [data-c200-layout],
+html body #creationV200 [data-c200-da],
+html body .bureau-mode-bar button,
+html body [data-bureau-mode],
+html body .pdf-project-actions-v167 button,
+html body .pdf-reader-toolbar-v167 button,
+html body .pdf-inspector-actions-v167 button,
+html body .pdf-add-elements-v168 button,
+html body .pdf-template-gallery-v1692 button,
+html body .command-result,
+html body .create-grid button{
+  position:relative!important;
+  isolation:isolate;
+  overflow:hidden;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.88),rgba(255,255,255,.58))!important;
+  color:var(--pa205-ink-2)!important;
+  border:1px solid rgba(255,255,255,.78)!important;
+  border-radius:16px!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.98),
+    inset 0 -1px 0 rgba(42,58,88,.025),
+    0 8px 24px rgba(28,39,60,.075)!important;
+  backdrop-filter:blur(20px) saturate(155%)!important;
+  -webkit-backdrop-filter:blur(20px) saturate(155%)!important;
+  opacity:1!important;
+  visibility:visible!important;
+  filter:none!important;
+  transition:transform .16s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease,color .18s ease!important;
+}
+html body .v205-glass::before,
+html body .nav-item::before,
+html body .primary-btn::before,
+html body .secondary-btn::before,
+html body .icon-btn::before,
+html body .plugy-btn::before,
+html body .toolbar-actions button::before,
+html body .c200-drafts button::before,
+html body #creationV200 [data-c200-layout]::before,
+html body #creationV200 [data-c200-da]::before{
+  content:""!important;
+  position:absolute!important;
+  inset:1px 5% auto!important;
+  height:45%!important;
+  border-radius:999px!important;
+  z-index:-1!important;
+  pointer-events:none!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.58),rgba(255,255,255,0))!important;
+  opacity:.85!important;
+}
+html body button:hover,
+html body .v205-glass:hover{
+  transform:translateY(-1px)!important;
+  border-color:rgba(92,118,205,.18)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 12px 30px rgba(28,39,60,.10)!important;
+}
+html body button:active,
+html body .v205-glass:active{
+  transform:translateY(1px) scale(.985)!important;
+  box-shadow:
+    inset 0 2px 5px rgba(34,47,72,.055),
+    0 4px 12px rgba(28,39,60,.06)!important;
+}
+html body button:focus-visible,
+html body [role="button"]:focus-visible,
+html body input:focus-visible,
+html body select:focus-visible,
+html body textarea:focus-visible{
+  outline:3px solid rgba(49,93,255,.16)!important;
+  outline-offset:2px!important;
+}
+html body button:disabled,
+html body button[aria-disabled="true"]{
+  opacity:.55!important;
+  color:#89919e!important;
+  cursor:not-allowed!important;
+  transform:none!important;
+}
+html body button,
+html body button span,
+html body button strong,
+html body button b,
+html body .nav-item span,
+html body .nav-item b,
+html body .text-btn,
+html body .primary-btn,
+html body .secondary-btn{
+  opacity:1!important;
+  visibility:visible!important;
+}
+html body button span,
+html body button strong,
+html body button b{color:inherit!important}
+
+/* Active/selected glass bubbles */
+html body .nav-item.active,
+html body button.active,
+html body button.on,
+html body button[aria-selected="true"],
+html body .v205-glass.active,
+html body .map-filter-chips button.active,
+html body #creationV200 [data-c200-layout].on,
+html body #creationV200 [data-c200-da].on,
+html body .bureau-mode-bar button.active,
+html body [data-bureau-mode].active{
+  background:
+    linear-gradient(180deg,rgba(227,234,255,.94),rgba(238,242,255,.72))!important;
+  color:#2448c8!important;
+  border-color:rgba(88,113,225,.20)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.98),
+    0 9px 24px rgba(49,93,255,.10)!important;
+}
+html body .nav-item{
+  min-height:44px!important;
+  color:#4f5866!important;
+  border:1px solid rgba(28,39,60,.055)!important;
+  background:rgba(255,255,255,.56)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.96),
+    0 4px 14px rgba(28,39,60,.035)!important;
+}
+html body .nav-item:hover{
+  color:#253047!important;
+  background:rgba(255,255,255,.88)!important;
+  transform:translateX(1px)!important;
+}
+html body .nav-item b{
+  display:grid!important;
+  place-items:center!important;
+  width:25px!important;
+  height:25px!important;
+  flex:0 0 25px!important;
+  border-radius:9px!important;
+  background:rgba(247,249,253,.92)!important;
+  border:1px solid rgba(28,39,60,.075)!important;
+  color:#687283!important;
+}
+html body .nav-item.active b{
+  background:rgba(255,255,255,.9)!important;
+  color:var(--pa205-blue)!important;
+  border-color:rgba(49,93,255,.14)!important;
+}
+html body .sidebar-collapse{
+  width:34px!important;height:34px!important;border-radius:12px!important;
+}
+
+/* Primary buttons: blue glass, never black. */
+html body .primary-btn,
+html body .c200-primary,
+html body .action-primary{
+  background:
+    linear-gradient(180deg,rgba(72,107,255,.94),rgba(49,93,255,.84))!important;
+  color:#fff!important;
+  border:1px solid rgba(49,93,255,.38)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.30),
+    0 10px 25px rgba(49,93,255,.20)!important;
+}
+html body .primary-btn:hover,
+html body .c200-primary:hover{
+  background:
+    linear-gradient(180deg,rgba(84,117,255,.98),rgba(49,93,255,.90))!important;
+  color:#fff!important;
+}
+
+/* Search and inputs */
+html body .global-search,
+html body input,
+html body select,
+html body textarea,
+html body .search-strip,
+html body .map-search-row,
+html body .command-input{
+  background:rgba(255,255,255,.72)!important;
+  color:var(--pa205-ink)!important;
+  border-color:var(--pa205-line)!important;
+}
+html body .global-search{
+  border:1px solid rgba(28,39,60,.085)!important;
+  border-radius:16px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 5px 18px rgba(28,39,60,.04)!important;
+}
+html body .global-search strong,
+html body .global-search span{color:#606a79!important}
+html body .global-search kbd{
+  color:#7d8695!important;
+  background:rgba(246,248,252,.86)!important;
+  border:1px solid var(--pa205-line)!important;
+}
+html body input,
+html body textarea,
+html body select{
+  border:1px solid rgba(28,39,60,.10)!important;
+  border-radius:13px!important;
+  box-shadow:inset 0 1px 2px rgba(28,39,60,.025)!important;
+  opacity:1!important;
+}
+html body input::placeholder,
+html body textarea::placeholder{color:#9aa2af!important;opacity:1!important}
+
+/* White cards and readable copy */
+html body .panel,
+html body .results-panel,
+html body .filter-panel,
+html body .open-card,
+html body .op-card,
+html body .lead-table-panel,
+html body .lead-detail,
+html body .map-workspace,
+html body .map-sidebar,
+html body .ig-profile-card,
+html body .ig-feed-panel,
+html body .ig-publisher,
+html body .bureau-list-panel,
+html body .bureau-editor,
+html body .studio-panel,
+html body .caption-box,
+html body .draft{
+  background:rgba(255,255,255,.82)!important;
+  color:var(--pa205-ink)!important;
+  border:1px solid rgba(28,39,60,.075)!important;
+  box-shadow:var(--pa205-card-shadow)!important;
+  backdrop-filter:blur(20px) saturate(135%)!important;
+  -webkit-backdrop-filter:blur(20px) saturate(135%)!important;
+}
+html body .panel p,
+html body .panel span,
+html body .panel label,
+html body .panel small,
+html body .page-toolbar p{
+  color:var(--pa205-muted)!important;
+}
+html body .panel h1,
+html body .panel h2,
+html body .panel h3,
+html body .panel h4,
+html body .panel strong{
+  color:var(--pa205-ink)!important;
+  opacity:1!important;
+}
+html body .empty{color:#89919e!important;opacity:1!important}
+
+/* Dashboard */
+html body #dashboardV200{
+  background:transparent!important;
+  color:var(--pa205-ink)!important;
+}
+html body #dashboardV200 .v202-overview{display:none!important}
+html body #dashboardV200 .v200-commandbar{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  gap:12px!important;
+}
+html body #dashboardV200 .v200-command{
+  min-height:114px!important;
+  padding:17px!important;
+  border-radius:22px!important;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.96),rgba(255,255,255,.64))!important;
+  border:1px solid rgba(255,255,255,.94)!important;
+  color:var(--pa205-ink)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    0 12px 32px rgba(28,39,60,.07)!important;
+  backdrop-filter:blur(24px) saturate(145%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(145%)!important;
+}
+html body #dashboardV200 .v200-command:hover{
+  border-color:rgba(67,98,214,.14)!important;
+  transform:translateY(-2px)!important;
+  box-shadow:0 16px 38px rgba(28,39,60,.095)!important;
+}
+html body #dashboardV200 .v200-command b{
+  width:34px!important;height:34px!important;border-radius:12px!important;
+  display:grid!important;place-items:center!important;
+  background:linear-gradient(180deg,rgba(241,245,255,.95),rgba(249,250,255,.88))!important;
+  border:1px solid rgba(49,93,255,.10)!important;
+  color:var(--pa205-blue)!important;
+}
+html body #dashboardV200 .v200-command strong{
+  color:#171c24!important;
+  font-size:14px!important;
+  letter-spacing:-.2px!important;
+}
+html body #dashboardV200 .v200-command span{display:none!important}
+html body #dashboardV200 .v200-lower{gap:12px!important}
+html body #dashboardV200 .v200-feed,
+html body #dashboardV200 .v200-radar-card{
+  background:rgba(255,255,255,.86)!important;
+  color:var(--pa205-ink)!important;
+  border:1px solid rgba(28,39,60,.075)!important;
+  border-radius:22px!important;
+  box-shadow:var(--pa205-card-shadow)!important;
+}
+html body #dashboardV200 .v200-note{display:none!important}
+html body #dashboardV200 .v200-section-head strong,
+html body #dashboardV200 .v200-section-head span,
+html body #dashboardV200 .v200-opp strong,
+html body #dashboardV200 .v200-opp span,
+html body #dashboardV200 .v200-signal b,
+html body #dashboardV200 .v200-signal span{
+  opacity:1!important;
+}
+html body #dashboardV200 .v200-section-head strong,
+html body #dashboardV200 .v200-opp strong,
+html body #dashboardV200 .v200-signal b{color:#1a202a!important}
+html body #dashboardV200 .v200-section-head span,
+html body #dashboardV200 .v200-opp span,
+html body #dashboardV200 .v200-signal span{color:#727b89!important}
+html body #dashboardV200 .v200-opp{
+  border-bottom:1px solid rgba(28,39,60,.065)!important;
+}
+html body #dashboardV200 .v200-index{
+  background:#f4f6fb!important;
+  color:#525c6b!important;
+  border:1px solid rgba(28,39,60,.075)!important;
+  box-shadow:none!important;
+}
+html body #dashboardV200 .v200-signal{
+  background:rgba(248,250,253,.96)!important;
+  border:1px solid rgba(28,39,60,.065)!important;
+}
+html body #dashboardV200 .v200-section-head button,
+html body #dashboardV200 .v200-opp button{
+  min-height:32px!important;
+  padding:6px 10px!important;
+  background:rgba(255,255,255,.74)!important;
+  color:#3152c7!important;
+  border:1px solid rgba(49,93,255,.12)!important;
+  border-radius:999px!important;
+  box-shadow:inset 0 1px 0 #fff,0 4px 12px rgba(28,39,60,.045)!important;
+}
+
+/* Creation */
+html body #creationV200,
+html body #view-creation{
+  background:transparent!important;
+  color:var(--pa205-ink)!important;
+}
+html body #creationV200 .c200-intro h2,
+html body #creationV200 .c200-panel-title b,
+html body #creationV200 .c200-stagebar strong{color:var(--pa205-ink)!important}
+html body #creationV200 .c200-intro p{display:none!important}
+html body #creationV200 .c200-intro small,
+html body #creationV200 .c200-field span,
+html body #creationV200 .c200-media-note{color:var(--pa205-muted)!important}
+html body #creationV200 .c200-drafts,
+html body #creationV200 .c200-brief,
+html body #creationV200 .c200-stage,
+html body #creationV200 .c200-control{
+  background:rgba(255,255,255,.84)!important;
+  border:1px solid rgba(28,39,60,.075)!important;
+  border-radius:20px!important;
+  box-shadow:var(--pa205-card-shadow)!important;
+}
+html body #creationV200 .c200-stagebar{
+  background:rgba(248,250,253,.88)!important;
+  border-bottom:1px solid rgba(28,39,60,.07)!important;
+}
+html body #creationV200 .c200-legend{
+  background:#fbfcfe!important;
+  color:#353c48!important;
+  border:1px solid rgba(28,39,60,.085)!important;
+}
+html body #creationV200 .c200-thumb{
+  background:#f5f7fb!important;
+  border-color:rgba(28,39,60,.08)!important;
+}
+html body #creationV200 .c200-thumb.on{
+  border-color:rgba(49,93,255,.40)!important;
+  box-shadow:0 0 0 3px rgba(49,93,255,.08)!important;
+}
+html body .v204-creation-shelf,
+html body .v205-creation-shelf{
+  background:rgba(255,255,255,.86)!important;
+  border-color:rgba(28,39,60,.075)!important;
+  box-shadow:0 10px 30px rgba(28,39,60,.06)!important;
+  backdrop-filter:blur(24px) saturate(150%)!important;
+}
+html body .v204-shelf-tab,
+html body .v204-shelf-choice{
+  background:rgba(255,255,255,.68)!important;
+  color:#3f4754!important;
+  border-color:rgba(28,39,60,.08)!important;
+}
+
+/* Bureau / PDF */
+html body #view-bureau,
+html body .bureau-mode-bar,
+html body .bureau-pdf-v167,
+html body .pdf-projects-v167,
+html body .pdf-reader-v167,
+html body .pdf-inspector-v167{
+  background:transparent!important;
+  color:var(--pa205-ink)!important;
+}
+html body .bureau-list-panel,
+html body .bureau-editor,
+html body .bureau-file-card,
+html body .pdf-project-card-v167,
+html body .pdf-reader-shell-v167,
+html body .pdf-inspector-v167{
+  background:rgba(255,255,255,.84)!important;
+  color:var(--pa205-ink)!important;
+  border-color:rgba(28,39,60,.075)!important;
+  box-shadow:var(--pa205-card-shadow)!important;
+}
+html body .pdf-template-gallery-v1692 button{
+  min-height:124px!important;
+  background:rgba(255,255,255,.82)!important;
+  color:#303744!important;
+}
+html body .pdf-template-mini-v1692{
+  background:#fff!important;
+  border:1px solid rgba(28,39,60,.08)!important;
+  box-shadow:0 8px 22px rgba(28,39,60,.07)!important;
+}
+html body .pdf-live-page-v169{
+  border:1px solid rgba(28,39,60,.08)!important;
+  box-shadow:0 18px 50px rgba(28,39,60,.11)!important;
+}
+
+/* Artist network */
+html body #view-network{background:transparent!important;color:var(--pa205-ink)!important}
+html body #artistGrid{gap:14px!important}
+html body .v204-artist-card,
+html body #artistGrid > article,
+html body #artistGrid > .artist-card{
+  background:rgba(255,255,255,.87)!important;
+  color:var(--pa205-ink)!important;
+  border:1px solid rgba(28,39,60,.075)!important;
+  box-shadow:var(--pa205-card-shadow)!important;
+}
+html body .v204-artist-body h3,
+html body #artistGrid h3{color:var(--pa205-ink)!important}
+html body .v204-artist-body p,
+html body #artistGrid p{color:var(--pa205-muted)!important}
+
+/* Radar / Open Calls / Prospection / Social */
+html body #view-radar,
+html body #view-opencalls,
+html body #view-prospection,
+html body #view-social,
+html body #view-map,
+html body #view-ideas{
+  background:transparent!important;
+  color:var(--pa205-ink)!important;
+}
+html body .radar-layout,
+html body .open-layout,
+html body .prospection-layout,
+html body .ig-shell,
+html body .map-shell{
+  background:transparent!important;
+}
+html body .op-card,
+html body .open-card,
+html body .lead-row,
+html body .event-card,
+html body .idea-card{
+  color:var(--pa205-ink)!important;
+  background:rgba(255,255,255,.85)!important;
+  border-color:rgba(28,39,60,.075)!important;
+}
+html body .op-card p,
+html body .open-card p,
+html body .lead-row p,
+html body .event-card p,
+html body .idea-card p{color:var(--pa205-muted)!important}
+
+/* Map surrounding chrome light. The cartography itself remains readable. */
+html body .map-sidebar,
+html body .map-workspace{background:rgba(255,255,255,.86)!important}
+html body .map-loading{
+  background:rgba(255,255,255,.86)!important;
+  color:#66707e!important;
+}
+html body .map-caption,
+html body .map-detail{
+  background:rgba(255,255,255,.86)!important;
+  color:var(--pa205-ink)!important;
+  border-color:rgba(28,39,60,.08)!important;
+  backdrop-filter:blur(20px)!important;
+  -webkit-backdrop-filter:blur(20px)!important;
+}
+
+/* PLUGY: white drawer + miniature glass launcher */
+html body.plugart-v200 .plugy-drawer,
+html body.plugart-v201 .plugy-drawer,
+html body.plugart-v202 .plugy-drawer,
+html body .plugy-drawer{
+  background:rgba(255,255,255,.92)!important;
+  color:var(--pa205-ink)!important;
+  border:1px solid rgba(28,39,60,.08)!important;
+  box-shadow:-18px 0 60px rgba(28,39,60,.12)!important;
+  backdrop-filter:blur(28px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(28px) saturate(150%)!important;
+}
+html body .plugy-drawer-head,
+html body .plugy-context,
+html body .plugy-form{
+  border-color:rgba(28,39,60,.075)!important;
+  color:var(--pa205-ink)!important;
+}
+html body .plugy-stage{
+  background:
+    radial-gradient(circle at 50% 55%,rgba(49,93,255,.10),transparent 48%),
+    linear-gradient(180deg,#fbfcff,#f4f7fd)!important;
+  border-color:rgba(28,39,60,.07)!important;
+}
+html body .plugy-stream{background:rgba(249,250,253,.86)!important}
+html body .msg.bot{
+  background:#f4f6fa!important;
+  color:#303744!important;
+}
+html body .msg.user{
+  background:#eef3ff!important;
+  color:#24418f!important;
+}
+html body .plugy-form{background:rgba(250,251,253,.90)!important}
+html body .plugy-form input{
+  background:#fff!important;
+  color:var(--pa205-ink)!important;
+  border-color:rgba(28,39,60,.09)!important;
+}
+html body .plugy-suggestions button{
+  background:rgba(255,255,255,.76)!important;
+  color:#3c4552!important;
+  border-color:rgba(28,39,60,.08)!important;
+}
+html body #v204PlugyMini,
+html body #v205PlugyMini,
+html body .v204-plugy-mini,
+html body .v205-plugy-mini{
+  background:rgba(255,255,255,.82)!important;
+  border:1px solid rgba(255,255,255,.94)!important;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 14px 38px rgba(28,39,60,.13)!important;
+  backdrop-filter:blur(24px) saturate(155%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(155%)!important;
+}
+
+/* Modals / command palette / toast */
+html body .overlay{
+  background:rgba(245,248,252,.76)!important;
+  backdrop-filter:blur(18px)!important;
+  -webkit-backdrop-filter:blur(18px)!important;
+}
+html body .overlay-card,
+html body .command-card,
+html body .create-card{
+  background:rgba(255,255,255,.92)!important;
+  color:var(--pa205-ink)!important;
+  border:1px solid rgba(28,39,60,.08)!important;
+  box-shadow:0 28px 80px rgba(28,39,60,.14)!important;
+}
+html body .toast{
+  background:rgba(255,255,255,.92)!important;
+  color:#303744!important;
+  border:1px solid rgba(28,39,60,.09)!important;
+  box-shadow:0 16px 42px rgba(28,39,60,.13)!important;
+  backdrop-filter:blur(20px)!important;
+}
+
+/* Broken media becomes intentional instead of an empty hole. */
+html body img.v205-media-fallback,
+html body .v205-media-fallback{
+  background:
+    radial-gradient(circle at 22% 18%,rgba(49,93,255,.23),transparent 32%),
+    radial-gradient(circle at 78% 76%,rgba(121,92,255,.18),transparent 34%),
+    linear-gradient(145deg,#f8faff,#edf2ff)!important;
+  border:1px solid rgba(49,93,255,.09)!important;
+}
+html body img.v205-media-fallback{object-fit:cover!important}
+
+/* Remove accidental dark utility backgrounds without touching artwork/canvas previews. */
+html body .sidebar [class*="dark"],
+html body .topbar [class*="dark"],
+html body .page-toolbar [class*="dark"],
+html body .panel [class*="dark"]:not(.c200-slide):not(.pdf-live-page-v169){
+  background-color:rgba(255,255,255,.78)!important;
+  color:var(--pa205-ink)!important;
+}
+
+/* Scrollbars */
+html body *{scrollbar-color:#cfd5df transparent}
+html body *::-webkit-scrollbar{width:10px;height:10px}
+html body *::-webkit-scrollbar-thumb{background:#d6dbe4;border:3px solid transparent;background-clip:padding-box;border-radius:999px}
+html body *::-webkit-scrollbar-track{background:transparent}
+
+/* Responsive */
+@media(max-width:1180px){
+  html body #dashboardV200 .v200-commandbar{gap:9px!important}
+  html body #artistGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:760px){
+  html body.plugart-v200 .sidebar,
+  html body.plugart-v201 .sidebar,
+  html body.plugart-v202 .sidebar,
+  html body .sidebar{
+    background:rgba(255,255,255,.90)!important;
+    border:1px solid rgba(28,39,60,.08)!important;
+    box-shadow:0 12px 34px rgba(28,39,60,.12)!important;
+  }
+  html body .topbar{background:rgba(255,255,255,.90)!important}
+  html body #dashboardV200 .v200-commandbar{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  html body #artistGrid{grid-template-columns:1fr!important}
+}
