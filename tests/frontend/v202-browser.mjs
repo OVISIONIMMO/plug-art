@@ -15,6 +15,12 @@ try{
  await page.goto(base);await visible('#dashboardV200');
  const shell=await page.evaluate(()=>({body:document.body.classList.contains('plugart-v205'),sidebar:getComputedStyle(document.querySelector('.sidebar')).backgroundColor,topbar:getComputedStyle(document.querySelector('.topbar')).backgroundColor}));
  assert.equal(shell.body,true,'V205 white shell must be active');
+ assert.equal(await page.locator('link[href*="/plugart_v207_core.css"]').count(),1,'one consolidated stylesheet');
+ assert.equal(await page.locator('script[src*="/plugart_v207_core.js"]').count(),1,'one consolidated UI runtime');
+ await page.waitForFunction(()=>window.__PLUGART_V207_READY===true);
+ assert.equal((await page.locator('#buildPill').textContent()).trim(),'V207','active build must be V207');
+ const legacyOverlayRequests=requests.filter(u=>/plugart_v20(4_prod|5_ios|6_radar)\.(js|css)/.test(u));
+ assert.equal(legacyOverlayRequests.length,0,'retired overlay assets must not be downloaded');
  assert.ok(!/13, 14, 17|7, 8, 9|0, 0, 0/.test(shell.sidebar),'sidebar must not use the dark legacy background');
  assert.ok(!/13, 14, 17|7, 8, 9|0, 0, 0/.test(shell.topbar),'topbar must not use the dark legacy background');
  assert.equal(await page.locator('.nav-item[data-route="dashboard"]').isVisible(),true,'navigation buttons must remain visible');await page.locator('#v200Opps .v200-opp').first().waitFor();
@@ -42,6 +48,6 @@ try{
  await page.locator('.nav-item[data-route="social"]').click();await visible('#igConnectionState');await page.locator('#igConnect').filter({hasText:'Configuration Meta requise'}).waitFor();assert.equal(await page.locator('#igPublish').isDisabled(),true);
  await page.setViewportSize({width:390,height:844});await page.locator('.nav-item[data-route="creation"]').click();await visible('#creationV200');await width('#creationV200',330);await fittedSlide();await page.screenshot({path:'test-results/mobile-creation.png',fullPage:true});
  assert.deepEqual(errors,[],'application JavaScript errors must remain absent');
- await writeFile('test-results/browser-checks.json',JSON.stringify({ok:true,initialWidth,requests:requests.length,errors},null,2));console.log('V205 browser journeys passed: white boot, functional dashboard, widths, routes, mini Plugy drawer, imports, drafts, export, mobile.');
+ await writeFile('test-results/browser-checks.json',JSON.stringify({ok:true,initialWidth,requests:requests.length,errors},null,2));console.log('V207 browser journeys passed: white boot, functional dashboard, widths, routes, mini Plugy drawer, imports, drafts, export, mobile.');
 }catch(error){await page.screenshot({path:'test-results/failure.png',fullPage:true});await writeFile('test-results/errors.json',JSON.stringify({message:error.message,errors},null,2));throw error}
 finally{await context.tracing.stop({path:'test-results/trace.zip'});await browser.close()}
