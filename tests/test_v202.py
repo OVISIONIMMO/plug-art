@@ -27,15 +27,17 @@ def test_current_assets_and_endpoint_manifest():
         root=session.get('/')
         assert root.status_code==200
         assert '202.20261006.1' in root.text
-        assert 'plugart_v204_prod.css?v=204.20261006.1' in root.text
-        assert 'plugart_v204_prod.js?v=204.20261006.1' in root.text
-        assert 'plugart_v205_ios.css?v=205.20261008.1' in root.text
-        assert 'plugart_v205_ios.js?v=205.20261008.1' in root.text
-        assert 'plugart_v206_radar.js?v=206.20261008.1' in root.text
+        assert 'plugart_v207_core.css?v=207.20261015.1' in root.text
+        assert 'plugart_v207_core.js?v=207.20261015.1' in root.text
+        assert 'plugart_v204_prod.css?v=' not in root.text
+        assert 'plugart_v205_ios.css?v=' not in root.text
+        assert 'plugart_v204_prod.js?v=' not in root.text
+        assert 'plugart_v205_ios.js?v=' not in root.text
+        assert 'plugart_v206_radar.js?v=' not in root.text
         assert 'class="plugart-v205"' in root.text
         assert '<script defer src="/static/plugart_v162.js' not in root.text
         health=session.get('/api/health').json()
-        assert health['ok'] and health['version']=='206.0'
+        assert health['ok'] and health['version']=='207.0'
         smoke=session.get('/api/v202/smoke').json()
         assert smoke['ok'] and smoke['browser_runtime_validated'] is False
         for asset in smoke['checks']['v202_assets']['files']:
