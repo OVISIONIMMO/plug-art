@@ -142,7 +142,7 @@ jobs:
           grep -q 'Construire le sujet' static/studio_v21.js
           grep -q 'reorganizeAdvanced' static/studio_v21.js
 
-      - name: V206 radar + white liquid-glass workspace
+      - name: V207 consolidated clean core
         run: |
           test -s static/plugart_v200.css
           test -s static/plugart_v200.js
@@ -160,24 +160,20 @@ jobs:
           grep -q 'v202-plugy-mini' static/plugart_v200.js
           ! grep -q "warmPlugy3D('home-small')" static/plugart_v162.js
           grep -q 'requestIdleCallback' static/plugart_v162.js
-          test -s static/plugart_v204_prod.css
-          test -s static/plugart_v204_prod.js
-          grep -q 'plugart_v204_prod.css?v=204.20261006.1' static/plugart_v162.html
-          grep -q 'plugart_v204_prod.js?v=204.20261006.1' static/plugart_v162.html
-          node --check static/plugart_v204_prod.js
-          grep -q 'background:#fff' static/plugart_v162.html
-          test -s static/plugart_v205_ios.css
-          test -s static/plugart_v205_ios.js
-          grep -q 'plugart_v205_ios.css?v=205.20261008.1' static/plugart_v162.html
-          grep -q 'plugart_v205_ios.js?v=205.20261008.1' static/plugart_v162.html
-          node --check static/plugart_v205_ios.js
-          grep -q 'class="plugart-v205"' static/plugart_v162.html
-          grep -q "app.version = '206.0'" app_extra_v60.py
-          grep -q "white-liquid-glass-v205" app_extra_v60.py
-          test -s static/plugart_v206_radar.js
-          grep -q 'plugart_v206_radar.js?v=206.20261008.1' static/plugart_v162.html
-          node --check static/plugart_v206_radar.js
-          grep -q "app.version = '206.0'" app_extra_v60.py
+          test -s static/plugart_v207_core.css
+          test -s static/plugart_v207_core.js
+          grep -q 'plugart_v207_core.css?v=207.20261015.1' static/plugart_v162.html
+          grep -q 'plugart_v207_core.js?v=207.20261015.1' static/plugart_v162.html
+          ! grep -q 'href="/static/plugart_v204_prod.css' static/plugart_v162.html
+          ! grep -q 'href="/static/plugart_v205_ios.css' static/plugart_v162.html
+          ! grep -q 'src="/static/plugart_v204_prod.js' static/plugart_v162.html
+          ! grep -q 'src="/static/plugart_v205_ios.js' static/plugart_v162.html
+          ! grep -q 'src="/static/plugart_v206_radar.js' static/plugart_v162.html
+          node --check static/plugart_v207_core.js
+          grep -q 'childList:true,subtree:true' static/plugart_v207_core.js
+          ! grep -q 'attributes:true,attributeFilter' static/plugart_v207_core.js
+          grep -q "app.version = '207.0'" app_extra_v60.py
+          grep -q 'white-clean-core-v207' app_extra_v60.py
           grep -q "stale-while-revalidate=2592000" app_extra_v60.py
           grep -q 'GZipMiddleware' app_extra_v60.py
 
