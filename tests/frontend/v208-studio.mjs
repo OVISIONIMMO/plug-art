@@ -33,11 +33,13 @@ try{
  assert.equal(await page.locator('[data-background]').count(),12,'12 background treatments');
  const beforeBg=await page.locator('#v208Canvas').evaluate(c=>c.toDataURL('image/png'));
  await page.locator('[data-background="grid"]').click();
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
  const gridBg=await page.locator('#v208Canvas').evaluate(c=>c.toDataURL('image/png'));
- assert.notEqual(beforeBg,gridBg,'Swiss grid must actually redraw the canvas');
+ assert.ok(beforeBg!==gridBg,'Swiss grid must actually redraw the canvas');
  await page.locator('[data-background="stripes"]').click();
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
  const stripesBg=await page.locator('#v208Canvas').evaluate(c=>c.toDataURL('image/png'));
- assert.notEqual(gridBg,stripesBg,'kinetic stripes distinct from Swiss grid');
+ assert.ok(gridBg!==stripesBg,'kinetic stripes distinct from Swiss grid');
  await page.locator('#v208Texture').evaluate(el=>{el.value='68';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal((await page.evaluate(()=>window.PLUGART_V208.snapshot().payload)).texture,68);
  await page.locator('[data-action="background-all"]').click();
