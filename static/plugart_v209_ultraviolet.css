@@ -8,7 +8,12 @@ html body.plugart-v209{
  --n9-text:#f7f5ff;--n9-muted:#aaa4d4;--n9-cyan:#19d9ff;--n9-blue:#3666ff;
  --n9-pink:#ef32ef;--n9-purple:#903aff;--n9-green:#31f2af;
  --n9-shadow:rgba(4,2,36,.32);
- background:#100a30!important;color:var(--n9-text)!important;color-scheme:dark!important;
+ background:
+ radial-gradient(ellipse 47% 62% at 100% 0%,rgba(46,29,178,.54),transparent 73%),
+ radial-gradient(ellipse 44% 55% at 0% 4%,rgba(120,16,109,.32),transparent 75%),
+ radial-gradient(ellipse 53% 48% at 65% 96%,rgba(36,24,165,.48),transparent 79%),
+ linear-gradient(115deg,#250a3f 0%,#101043 42%,#130839 100%)!important;
+ color:var(--n9-text)!important;color-scheme:dark!important;
 }
 html{background:#100a30!important;color-scheme:dark!important}
 html body.plugart-v209::before{
