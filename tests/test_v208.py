@@ -53,3 +53,35 @@ def test_studio_files_and_pages_are_mounted():
     assert "/static/plugart_v208_studio.js?v=208.20261022.2" in html
     assert "/static/plugart_v208_studio.css?v=208.20261022.2" in html
     assert client.get("/api/v202/smoke").json()["checks"]["v202_assets"]["ok"]
+
+
+def test_editorial_ai_generation_endpoint_and_errors(monkeypatch):
+    """The click target's real API contract is tested without external model charges."""
+    import json
+    import plugart_studio_v208 as studio
+    monkeypatch.setenv("OPENAI_API_KEY", "studio-test-key")
+    captured = []
+    class FakeReply:
+        ok = True
+        def json(self):
+            doc={"slides":[{"kicker":"PLUG ART","title":"APPEL OUVERT","body":"Paris, source officielle"}],"caption":"Commente PLUG"}
+            return {"output":[{"content":[{"type":"output_text","text":json.dumps(doc)}]}]}
+    def fake_post(url, json, headers, timeout):
+        captured.append((url,json,headers,timeout))
+        return FakeReply()
+    monkeypatch.setattr(studio.requests,"post",fake_post)
+    response=client.post("/api/v208/studio/copy",json={"facts":{"title":"Appel ouvert","city":"Paris"},"count":1})
+    assert response.status_code==200,response.text
+    assert response.json()["slides"][0]["title"]=="APPEL OUVERT"
+    assert response.json()["requires_review"] is True
+    assert captured and captured[0][0].endswith("/responses")
+    assert "Appel ouvert" in captured[0][1]["input"]
+    class ErrorReply:
+        ok=False
+        status_code=503
+    monkeypatch.setattr(studio.requests,"post",lambda *a,**k:ErrorReply())
+    unavailable=client.post("/api/v208/studio/copy",json={"facts":{"title":"Appel ouvert"},"count":1})
+    assert unavailable.status_code==502
+    monkeypatch.delenv("OPENAI_API_KEY")
+    unconfigured=client.post("/api/v208/studio/copy",json={"facts":{"title":"Appel ouvert"},"count":1})
+    assert unconfigured.status_code==503
