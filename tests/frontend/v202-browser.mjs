@@ -21,7 +21,7 @@ try{
  assert.equal(await page.locator('link[href*="/plugart_v207_core.css"]').count(),1,'one consolidated stylesheet');
  assert.equal(await page.locator('script[src*="/plugart_v207_core.js"]').count(),1,'one consolidated UI runtime');
  await page.waitForFunction(()=>window.__PLUGART_V207_READY===true);
- assert.equal((await page.locator('#buildPill').textContent()).trim(),'V207','active build must be V207');
+ assert.equal((await page.locator('#buildPill').textContent()).trim(),'V208','active build must be V208');
  const legacyOverlayRequests=requests.filter(u=>/plugart_v20(4_prod|5_ios|6_radar)\.(js|css)/.test(u));
  assert.equal(legacyOverlayRequests.length,0,'retired overlay assets must not be downloaded');
  assert.ok(!/13, 14, 17|7, 8, 9|0, 0, 0/.test(shell.sidebar),'sidebar must not use the dark legacy background');
@@ -31,7 +31,7 @@ try{
  assert.equal(await page.locator('#searchOverlay').isVisible(),false);assert.equal(await page.locator('#newOverlay').isVisible(),false);assert.equal(await page.locator('#plugyDrawer').isVisible(),false);
  mark('search and navigation');await page.locator('#globalSearch').click();await visible('#searchOverlay');await page.locator('#commandInput').fill('Bureau');await page.locator('#commandResults button').filter({hasText:'Bureau'}).waitFor();assert.equal(requests.some(u=>u.includes('/static/plugart_v162.js')),false);await page.keyboard.press('Escape');
  const bootBefore=requests.filter(u=>u.includes('dashboard-bootstrap')).length;await page.locator('#refreshData').click();await page.waitForFunction(()=>!document.querySelector('#refreshData').disabled);assert.ok(requests.filter(u=>u.includes('dashboard-bootstrap')).length>bootBefore);
- await page.locator('.nav-item[data-route="creation"]').click();await visible('#creationV200');await page.locator('#c200Source option').nth(2).waitFor({state:'attached'});const second=await page.locator('#c200Source option').nth(2).textContent();await page.locator('#c200Source').selectOption({index:2});await page.locator('#c200Source').selectOption('');assert.equal(await page.locator('#c200Name').inputValue(),second);
+ await page.locator('.nav-item[data-route="creation"]').click();await visible('#v208Studio');await page.locator('#v208LegacyToggle').click();await visible('#creationV200');await page.locator('#c200Source option').nth(2).waitFor({state:'attached'});const second=await page.locator('#c200Source option').nth(2).textContent();await page.locator('#c200Source').selectOption({index:2});await page.locator('#c200Source').selectOption('');assert.equal(await page.locator('#c200Name').inputValue(),second);
  mark('creation and responsive layout');const initialWidth=await width('#creationV200',900);
  await page.locator('.nav-item[data-route="radar"]:not([data-radar-direct])').click();await visible('#radarEventsV167');await page.waitForFunction(()=>document.documentElement.dataset.legacyReady==='1');await width('.workspace',1000);await width('#eventGridV167',800);
  await page.locator('.nav-item[data-route="dashboard"]').click();await page.locator('#dashboardV200 .v200-command[data-v200-go="bureau"]').click();await visible('#bureauModeBar');assert.match(await page.locator('#plugyContext').textContent(),/Bureau/);
