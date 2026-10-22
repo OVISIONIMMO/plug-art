@@ -20,12 +20,16 @@ class SelectiveGZipMiddleware(GZipMiddleware):
 import app_extra_v59 as v59
 
 app = v59.app
-app.version = '207.0'
+app.version = '208.0'
 BASE = Path(__file__).resolve().parent
 app.user_middleware=[m for m in app.user_middleware if not issubclass(m.cls,GZipMiddleware)]
 app.add_middleware(SelectiveGZipMiddleware, minimum_size=900, compresslevel=5)
 GENERATED = Path(os.getenv('PLUGART_GENERATED_DIR', '/data/generated-content-v179'))
 GENERATED.mkdir(parents=True, exist_ok=True)
+
+from plugart_studio_v208 import install as install_studio_v208
+install_studio_v208(app, GENERATED)
+
 
 OPENAI_RESPONSES = 'https://api.openai.com/v1/responses'
 OPENAI_IMAGES = 'https://api.openai.com/v1/images/generations'
@@ -407,9 +411,9 @@ def generated_v179(name: str):
 def status_v179():
     return {
         'ok': True,
-        'version': '207.0',
-        'revision': '207.20261015.1',
-        'ui': 'white-clean-core-v207',
+        'version': '208.0',
+        'revision': '208.20261022.1',
+        'ui': 'editorial-studio-v208',
         'text_stream': '/api/v179/plugy/stream',
         'image_generation': '/api/v179/content/image',
         'image_enabled': bool(os.getenv('OPENAI_API_KEY', '').strip()),
@@ -423,8 +427,8 @@ def status_v179():
 async def headers_v179(request: Request, call_next):
     response = await call_next(request)
     if request.url.path == '/':
-        response.headers['X-Plug-Art-Version'] = '207.0'
-        response.headers['X-Plug-Art-UI'] = 'white-clean-core-v207'
+        response.headers['X-Plug-Art-Version'] = '208.0'
+        response.headers['X-Plug-Art-UI'] = 'editorial-studio-v208'
         response.headers['Cache-Control'] = 'no-store, max-age=0'
     elif request.url.path.startswith('/static/') or request.url.path.startswith('/assets/'):
         response.headers['Cache-Control'] = 'public,max-age=3600,stale-while-revalidate=86400'
@@ -434,24 +438,24 @@ async def headers_v179(request: Request, call_next):
         response.headers['Cache-Control'] = 'no-store'
     return response
 
-print(f'PLUG_ART_V207_READY text={FAST_MODEL} image={DEFAULT_IMAGE_MODEL} generated={GENERATED}', flush=True)
+print(f'PLUG_ART_V208_READY text={FAST_MODEL} image={DEFAULT_IMAGE_MODEL} generated={GENERATED}', flush=True)
 
 
 @app.get('/api/v202/smoke')
 def smoke_v202():
     report=v59.smoke_v172()
-    files=['plugart_v162.html','plugart_v200.css','plugart_v200.js','plugart_v202_boot.js','plugart_v162.css','plugart_v162.js','plugart_v202_export.js','plugart_v207_core.css','plugart_v207_core.js']
+    files=['plugart_v162.html','plugart_v200.css','plugart_v200.js','plugart_v202_boot.js','plugart_v162.css','plugart_v162.js','plugart_v202_export.js','plugart_v207_core.css','plugart_v207_core.js','plugart_v208_studio.css','plugart_v208_studio.js']
     assets=[]
     for name in files:
         path=BASE/'static'/name
         raw=path.read_bytes() if path.is_file() else b''
         assets.append({'file':name,'ok':bool(raw),'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest() if raw else ''})
     active={(m,getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
-    required=[('POST','/api/v179/content/image'),('POST','/api/v179/plugy/stream'),('POST','/api/v202/content/upload'),('GET','/api/v201/opportunities/{oid}/media'),('GET','/api/v201/events/{event_id}/media')]
+    required=[('POST','/api/v179/content/image'),('POST','/api/v179/plugy/stream'),('POST','/api/v202/content/upload'),('GET','/api/v201/opportunities/{oid}/media'),('GET','/api/v201/events/{event_id}/media'),('GET','/api/v208/studio/projects'),('POST','/api/v208/studio/projects'),('POST','/api/v208/studio/export/pdf')]
     report['checks']['v202_assets']={'ok':all(x['ok'] for x in assets),'files':assets}
     report['checks']['v202_routes']={'ok':all(x in active for x in required),'missing':[m+' '+p for m,p in required if (m,p) not in active]}
     report['ok']=all(x.get('ok',True) for x in report['checks'].values())
-    report['revision']='207.20261015.1'
+    report['revision']='208.20261022.1'
     report['browser_runtime_validated']=False
     report['scope']='server-routes-database-assets; browser journeys run in CI'
     return report
@@ -461,4 +465,4 @@ def startup_v202():
     report=smoke_v202()
     if not report['checks']['v202_assets']['ok'] or not report['checks']['v202_routes']['ok'] or not report['checks']['frontend_runtime']['asset_version']:
         raise RuntimeError('Assets ou routes V202 incomplets')
-    print('PLUG_ART_V207_SELFTEST '+json.dumps(report,ensure_ascii=False,separators=(',',':')),flush=True)
+    print('PLUG_ART_V208_SELFTEST '+json.dumps(report,ensure_ascii=False,separators=(',',':')),flush=True)
