@@ -1,6 +1,9 @@
 """V208 studio integration smoke tests. No API calls to external model providers."""
 import base64
 import os
+import sys
+from pathlib import Path
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 os.environ.setdefault('PLUGART_GENERATED_DIR','/tmp/plugart-v208-test-generated')
 import io
 from PIL import Image
