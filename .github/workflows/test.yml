@@ -207,7 +207,7 @@ jobs:
         run: |
           npm ci --prefix tests/frontend --ignore-scripts
           npm run --prefix tests/frontend test:runtime
-          npm exec --prefix tests/frontend -- playwright install --with-deps chromium
+          timeout 180s npm exec --prefix tests/frontend -- playwright install chromium
       - name: V202 real browser journeys
         env:
           PLUGART_DB: /tmp/plugart_v202_browser.db
