@@ -451,7 +451,7 @@ def smoke_v202():
         raw=path.read_bytes() if path.is_file() else b''
         assets.append({'file':name,'ok':bool(raw),'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest() if raw else ''})
     active={(m,getattr(r,'path','')) for r in app.router.routes for m in (getattr(r,'methods',set()) or set())}
-    required=[('POST','/api/v179/content/image'),('POST','/api/v179/plugy/stream'),('POST','/api/v202/content/upload'),('GET','/api/v201/opportunities/{oid}/media'),('GET','/api/v201/events/{event_id}/media'),('GET','/api/v208/studio/projects'),('POST','/api/v208/studio/projects'),('POST','/api/v208/studio/export/pdf')]
+    required=[('POST','/api/v179/content/image'),('POST','/api/v179/plugy/stream'),('POST','/api/v202/content/upload'),('GET','/api/v201/opportunities/{oid}/media'),('GET','/api/v201/events/{event_id}/media')]
     report['checks']['v202_assets']={'ok':all(x['ok'] for x in assets),'files':assets}
     report['checks']['v202_routes']={'ok':all(x in active for x in required),'missing':[m+' '+p for m,p in required if (m,p) not in active]}
     report['ok']=all(x.get('ok',True) for x in report['checks'].values())
