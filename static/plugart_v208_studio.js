@@ -603,6 +603,12 @@ function install(){
  window.PLUGART_V208={activate:()=>{install();tab('brief')},snapshot:()=>snapshot(),applyRadar:fillFromRadar};
  console.info('[PLUG ART] V208 Studio initialized',VERSION);
 }
-function boot(){install();}
+function boot(){
+ if(document.body?.dataset.view==='creation')install();
+ document.addEventListener('plugart:route',e=>{if(e.detail?.route==='creation'||document.body?.dataset.view==='creation')install();});
+ document.addEventListener('click',e=>{
+   if(e.target.closest('[data-route="creation"],[data-v200-go="creation"]'))setTimeout(install,0);
+ },true);
+}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
