@@ -172,6 +172,8 @@ jobs:
           node --check static/plugart_v207_core.js
           test -s static/plugart_v208_studio.css
           test -s static/plugart_v208_studio.js
+          test -s static/plugart_v209_precision.css
+          grep -q 'plugart_v209_precision.css?v=209.20261022.2' static/plugart_v162.html
           test -s static/plugart_v209_ultraviolet.css
           test -s static/plugart_v209_dashboard.js
           node --check static/plugart_v209_dashboard.js
@@ -184,8 +186,8 @@ jobs:
           grep -q 'plugart_v208_studio.js?v=208.20261022.2' static/plugart_v162.html
           grep -q 'childList:true,subtree:true' static/plugart_v207_core.js
           ! grep -q 'attributes:true,attributeFilter' static/plugart_v207_core.js
-          grep -q "app.version = '209.0'" app_extra_v60.py
-          grep -q 'ultraviolet-glass-v209' app_extra_v60.py
+          grep -q "app.version = '209.1'" app_extra_v60.py
+          grep -q 'precision-glass-v209-1' app_extra_v60.py
           grep -q "stale-while-revalidate=2592000" app_extra_v60.py
           grep -q 'GZipMiddleware' app_extra_v60.py
 
@@ -228,6 +230,7 @@ jobs:
           npm run --prefix tests/frontend test:browser
           node tests/frontend/v208-studio.mjs
           node tests/frontend/v209-dashboard.mjs
+          node tests/frontend/v209-precision.mjs
           python - <<'PYZIP'
           import io, json, zipfile
           from PIL import Image
