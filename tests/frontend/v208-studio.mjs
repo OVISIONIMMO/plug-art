@@ -13,13 +13,9 @@ const mark=s=>console.log('[V208 E2E] '+s);
 try{
  mark('open studio');
  await page.goto(base,{waitUntil:'domcontentloaded'});
- await page.locator('#paThemeToggle').waitFor({state:'visible'});
- await page.locator('#paThemeToggle').click();
- await page.locator('[data-pa-theme-option="glacier"]').click();
- assert.equal(await page.locator('body').getAttribute('data-pa-theme'),'glacier','global theme selection');
- await page.locator('#paThemeToggle').click();
- await page.locator('[data-pa-theme-option="warm"]').click();
- assert.equal(await page.locator('body').getAttribute('data-pa-theme'),'warm','warm UI theme');
+ await page.locator('#v209Dashboard').waitFor({state:'visible'});
+ assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('plugart-v209')),true,'ultraviolet theme applied');
+ assert.ok(!(await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundColor)).includes('255, 255, 255'),'global shell must be dark');
  await page.locator('.nav-item[data-route="creation"]').click();
  await page.locator('#v208Canvas').waitFor({state:'visible'});
  assert.equal(await page.locator('[data-template]').count(),12,'12 editable editorial templates');
@@ -120,7 +116,7 @@ try{
  assert.equal(await page.locator('#v208ProjectName').inputValue(),'V208 QA Publication');
  assert.equal((await page.evaluate(()=>window.PLUGART_V208.snapshot().payload.assets)).length,1);
  assert.ok((await page.evaluate(()=>window.PLUGART_V208.snapshot().payload.slides)).every(d=>d.background),'saved background information');
- assert.equal(await page.locator('body').getAttribute('data-pa-theme'),'warm','theme persists across reload');
+ assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('plugart-v209')),true,'ultraviolet theme persists after reload');
 
  mark('PNG, ZIP, PDF exports');
  for(const [action,name] of [['png','single'],['zip','carrousel'],['pdf','pdf']]){
