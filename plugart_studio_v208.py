@@ -12,6 +12,9 @@ import re
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
+from io import BytesIO
+from PIL import Image, ImageOps
+from fastapi.responses import Response
 from typing import Any
 import requests
 from fastapi import APIRouter, Body, HTTPException
@@ -212,6 +215,33 @@ def create_editorial_copy(body: dict = Body(default={})):
         raise
     except Exception:
         raise HTTPException(502, "Impossible de produire le texte")
+
+
+@router.post("/api/v208/studio/export/pdf")
+def export_studio_pdf(body: dict = Body(default={})):
+    """Create a paginated PDF from the exact edited canvas, without AI rerendering."""
+    pages = (body or {}).get("pages")
+    if not isinstance(pages, list) or not 1 <= len(pages) <= 12:
+        raise HTTPException(422, "Entre 1 et 12 pages attendues")
+    images = []
+    try:
+        for encoded in pages:
+            if not isinstance(encoded, str) or not encoded.startswith("data:image/jpeg;base64,") or len(encoded) > 7_000_000:
+                raise ValueError("Image JPEG non conforme")
+            raw = base64.b64decode(encoded.split(",", 1)[1], validate=True)
+            image = Image.open(BytesIO(raw))
+            if image.width > 3000 or image.height > 4000 or image.width < 300 or image.height < 300:
+                raise ValueError("Dimensions de page non conformes")
+            images.append(ImageOps.exif_transpose(image).convert("RGB"))
+        result = BytesIO()
+        images[0].save(result, format="PDF", resolution=96, save_all=True, append_images=images[1:])
+        return Response(result.getvalue(), media_type="application/pdf",
+                        headers={"Content-Disposition": 'attachment; filename="PLUG_ART_Studio.pdf"', "Cache-Control": "no-store"})
+    except Exception:
+        raise HTTPException(422, "Impossible de créer ce PDF depuis les images fournies")
+    finally:
+        for image in images:
+            image.close()
 
 def install(app, generated_dir):
     global _DATA_DIR
