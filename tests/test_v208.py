@@ -52,6 +52,7 @@ def test_studio_files_and_pages_are_mounted():
     html = client.get("/").text
     assert "/static/plugart_v208_studio.js?v=208.20261022.2" in html
     assert "/static/plugart_v208_studio.css?v=208.20261022.2" in html
+    assert "/static/plugart_v209_dashboard.js?v=209.20261022.1" in html
     assert client.get("/api/v202/smoke").json()["checks"]["v202_assets"]["ok"]
 
 
