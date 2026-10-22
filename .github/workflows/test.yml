@@ -214,6 +214,7 @@ jobs:
             sleep 1
           done
           npm run --prefix tests/frontend test:browser
+          node tests/frontend/v208-studio.mjs
           python - <<'PYZIP'
           import io, json, zipfile
           from PIL import Image
