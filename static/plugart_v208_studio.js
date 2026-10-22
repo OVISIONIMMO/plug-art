@@ -378,6 +378,24 @@ function renderPalettes(){
   '<span class="v208-swatches">'+a.slice(1,6).map(c=>'<i style="background:'+c+'"></i>').join('')+'</span><b>'+esc(a[0])+'</b></button>').join('');
  q('#v208CustomColors',root).innerHTML=slots.map(s=>'<label><input type="color" aria-label="'+s[1]+'" data-color="'+s[0]+'" value="'+esc(S.colors[s[0]])+'"><span>'+s[1]+'</span></label>').join('');
 }
+function renderBackgrounds(){
+ const host=q('#v208Backgrounds',root);
+ if(!host)return;
+ const active=slide()?.background||S.background;
+ host.innerHTML=backgrounds.map(([id,label,detail])=>
+  '<button type="button" class="v208-bg-choice" data-background="'+id+'" aria-pressed="'+(active===id)+'" title="'+esc(detail)+'">'+
+  '<canvas data-background-preview="'+id+'" width="112" height="140" aria-hidden="true"></canvas>'+
+  '<strong>'+esc(label)+'</strong><small>'+esc(detail)+'</small></button>').join('');
+ const dims=canvasSize();
+ qa('[data-background-preview]',host).forEach(el=>{
+  const ctx=el.getContext('2d');if(!ctx)return;
+  ctx.save();ctx.scale(el.width/dims[0],el.height/dims[1]);
+  background(ctx,dims[0],dims[1],S.colors,el.dataset.backgroundPreview,slide()?.template||S.template);
+  ctx.restore();
+ });
+ const tx=q('#v208Texture',root);if(tx)tx.value=String(S.texture);
+ const txv=q('#v208TextureValue',root);if(txv)txv.textContent=String(S.texture)+' %';
+}
 function renderAssets(){
  q('#v208AssetList',root).innerHTML=S.assets.length?S.assets.map((a,i)=>
  '<button type="button" class="v208-asset-card" data-asset="'+i+'" aria-pressed="'+(i===S.activeAsset)+'">'+
@@ -471,37 +489,47 @@ async function extractFacts(){
  finally{button.disabled=false;}
 }
 async function generateCopy(){
- const b=q('#v208AICopy',root);b.disabled=true;notice('Préparation des textes éditoriaux…');
+ const b=q('#v208AICopy',root);if(b.disabled)return;
+ const originalLabel=b.textContent;
+ b.disabled=true;b.textContent='◌ IA en cours';b.setAttribute('aria-busy','true');
+ notice('Création des textes IA à partir des informations du brief…');
  try{
-   const d=await saveReq('/api/v208/studio/copy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({facts:S.facts,count:S.count})});
-   S.slides=Array.from({length:S.count},(_,i)=>{
-     const fresh=makeSlide(i,S.count),s=d.slides[i];
-     if(s){const titles=fresh.blocks.filter(b=>b.role==='title'),kick=fresh.blocks.find(b=>b.role==='kicker'),detail=fresh.blocks.find(b=>b.role==='detail');
-       if(titles[0])titles[0].text=s.title||titles[0].text;
-       if(kick)kick.text=s.kicker||kick.text;
-       if(detail)detail.text=s.body||detail.text;
-     }
-     return fresh;
+   const d=await saveReq('/api/v208/studio/copy',{
+     method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({facts:S.facts,count:S.slides.length})
    });
-   if(d.caption)S.caption=d.caption;S.active=0;S.selected=null;changed();refreshUI();
-   notice('Textes proposés par IA · vérification des faits obligatoire.');
- }catch(e){makeSlides();notice('Génération locale disponible. IA : '+e.message);}
- finally{b.disabled=false;}
+   if(!Array.isArray(d.slides)||!d.slides.length)throw Error('Aucune proposition reçue');
+   // Update editorial copy only: preserve official media, custom layers, position, size and background.
+   S.slides.forEach((doc,i)=>{
+     const suggestion=d.slides[i];if(!suggestion)return;
+     for(const [role,field] of [['title','title'],['kicker','kicker'],['detail','body']]){
+       const block=doc.blocks.find(b=>b.type==='text'&&b.role===role);
+       if(block&&typeof suggestion[field]==='string'&&suggestion[field].trim())block.text=suggestion[field].trim();
+     }
+   });
+   if(typeof d.caption==='string'&&d.caption.trim())S.caption=d.caption;
+   S.selected=null;changed();refreshUI();
+   notice('Textes IA intégrés. Visuels, calques et arrière-plans préservés · vérifie les informations.');
+ }catch(e){
+   // No destructive fallback: manual work is never reset when the AI is unavailable.
+   notice('IA momentanément indisponible : '+e.message+'. Les compositions et modifications sont conservées.');
+ }finally{
+   b.disabled=false;b.removeAttribute('aria-busy');b.textContent=originalLabel;
+ }
 }
-function variantDoc(t){const d=makeSlide(S.active,S.slides.length,t);const old=Object.fromEntries(slide().blocks.filter(b=>b.type==='text').map(b=>[b.role,b.text]));d.blocks.forEach(b=>{if(b.type==='text'&&old[b.role]!==undefined)b.text=old[b.role];});return d;}
+function variantDoc(t,bg){const d=makeSlide(S.active,S.slides.length,t);d.background=bg||slide().background||'auto';const old=Object.fromEntries(slide().blocks.filter(b=>b.type==='text').map(b=>[b.role,b.text]));d.blocks.forEach(b=>{if(b.type==='text'&&old[b.role]!==undefined)b.text=old[b.role];});return d;}
 function openVariants(){
  const m=q('#v208VariantModal',root);m.hidden=false;
- const choices=[0,1,2,3].map((x,i)=>({layout:templates[(templates.findIndex(t=>t[0]===slide().template)+i*3+1)%templates.length][0],scheme:(S.palette+i*3+1)%schemes.length}));
+ const choices=[0,1,2,3].map((x,i)=>({layout:templates[(templates.findIndex(t=>t[0]===slide().template)+i*3+1)%templates.length][0],scheme:(S.palette+i*3+1+schemes.length)%schemes.length,background:backgrounds[(backgrounds.findIndex(b=>b[0]===(slide().background||'auto'))+i*3+3)%backgrounds.length][0]}));
  q('#v208VariantGrid',root).innerHTML=choices.map((v,i)=>
  '<button type="button" class="v208-variant" data-variant="'+i+'"><canvas data-thumb="1"></canvas><span><b>'+esc(templates.find(x=>x[0]===v.layout)[1])+'</b><small>'+esc(schemes[v.scheme][0])+'</small></span></button>').join('');
  qa('[data-variant]',root).forEach(btn=>{
-   const v=choices[Number(btn.dataset.variant)];draw(q('canvas',btn),variantDoc(v.layout),pal(v.scheme));
+   const v=choices[Number(btn.dataset.variant)];draw(q('canvas',btn),variantDoc(v.layout,v.background),pal(v.scheme));
  });
  root._variantChoices=choices;
 }
 function applyVariant(i){
  const v=root._variantChoices[i];if(!v)return;
- S.palette=v.scheme;S.colors=pal(v.scheme);chooseTemplate(v.layout);q('#v208VariantModal',root).hidden=true;changed();
+ S.palette=v.scheme;S.colors=pal(v.scheme);chooseTemplate(v.layout);slide().background=v.background;S.background=v.background;q('#v208VariantModal',root).hidden=true;changed();refreshUI();
 }
 function download(blob,name){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),20000);}
 function blobOf(canvas,type='image/png',quality=.94){return new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Image impossible à encoder')),type,quality));}
@@ -563,7 +591,7 @@ function html(){
  return '<div class="v208-top"><div><div class="v208-kicker">PLUG ART / Production éditoriale · V208</div><h2 class="v208-heading">CRÉATION <span style="font-weight:360;color:#2854e8">STUDIO.</span></h2><div class="v208-deck">Typographie manifeste · Flyers officiels · Palettes libres · Composition éditable.</div></div>'+
  '<div class="v208-top-actions"><span class="v208-status" id="v208Status" role="status">Prêt à composer</span><button class="v208-btn" data-action="new">＋ Nouveau</button><select id="v208Projects" class="v208-select" aria-label="Projets sauvegardés"><option>Projets…</option></select><button class="v208-btn v208-btn-primary" data-action="save">Enregistrer</button></div></div>'+
  '<div class="v208-grid"><aside class="v208-side"><div class="v208-side-title"><strong>Direction & sources</strong><small>01 / 06</small></div>'+
- '<div class="v208-tabs" role="tablist">'+[['brief','Brief'],['sources','Sources'],['styles','DA'],['colors','Couleur'],['format','Format']].map(([key,label])=>
+ '<div class="v208-tabs" role="tablist">'+[['brief','Brief'],['sources','Sources'],['styles','DA'],['colors','Couleurs'],['backgrounds','Fonds'],['format','Format']].map(([key,label])=>
  '<button type="button" data-v208-tab="'+key+'" aria-selected="'+(key==='brief')+'">'+label+'</button>').join('')+'</div>'+
  '<div class="v208-tab-panel" data-v208-panel="brief">'+
  '<label class="v208-field">Projet<input id="v208ProjectName" placeholder="Nom du projet"></label>'+
@@ -581,7 +609,10 @@ function html(){
  '<div class="v208-tab-panel" data-v208-panel="colors" hidden><p class="v208-note">14 ambiances prêtes à utiliser. Personnalise chaque couleur, puis décline une composition.</p><div class="v208-palettes" id="v208Palettes"></div>'+
  '<div class="v208-subtitle">Nuancier libre</div><div class="v208-color-editor" id="v208CustomColors"></div>'+
  '<div class="v208-bottom-actions"><button class="v208-btn" data-action="random-palette">Palette surprise</button><button class="v208-btn" data-action="variants">4 propositions</button></div></div>'+
- '<div class="v208-tab-panel" data-v208-panel="format" hidden><label class="v208-field">Format<select id="v208Format"><option value="4:5">Instagram portrait 1080 × 1350</option><option value="1:1">Carré 1080 × 1080</option><option value="9:16">Story 1080 × 1920</option></select></label>'+
+ '<div class="v208-tab-panel" data-v208-panel="backgrounds" hidden><p class="v208-note">12 familles visuelles réellement différentes. Chaque slide peut avoir son propre arrière-plan.</p><div class="v208-background-grid" id="v208Backgrounds"></div>'+ 
+  '<label class="v208-field v208-texture-label">Texture de papier <span id="v208TextureValue">42 %</span><input id="v208Texture" type="range" min="0" max="100" step="1" value="42"></label>'+ 
+  '<button type="button" class="v208-btn" data-action="background-all">Appliquer ce fond à tout le carrousel</button></div>'+ 
+  '<div class="v208-tab-panel" data-v208-panel="format" hidden><label class="v208-field">Format<select id="v208Format"><option value="4:5">Instagram portrait 1080 × 1350</option><option value="1:1">Carré 1080 × 1080</option><option value="9:16">Story 1080 × 1920</option></select></label>'+
  '<label class="v208-field">Nombre de slides<select id="v208Count"><option value="1">1 publication</option><option value="3">3 slides</option><option value="5">5 slides</option><option value="7">7 slides</option></select></label>'+
  '<div class="v208-bottom-actions"><button class="v208-btn v208-btn-primary" data-action="regenerate">Recomposer</button><button class="v208-btn" data-action="variants">4 variantes</button></div></div></aside>'+
  '<section class="v208-stage"><div class="v208-stage-toolbar"><strong id="v208SlideInfo">Slide 1 / 5</strong><div><button class="v208-btn" data-action="variants">◈ Variantes</button><button class="v208-btn v208-btn-primary" data-action="ai-copy" id="v208AICopy">✦ Textes IA</button></div></div>'+
@@ -611,8 +642,9 @@ function install(){
  root.addEventListener('click',async e=>{
    const t=e.target.closest('[data-v208-tab]');if(t){tab(t.dataset.v208Tab);return;}
    const tmpl=e.target.closest('[data-template]');if(tmpl){chooseTemplate(tmpl.dataset.template);return;}
-   const palEl=e.target.closest('[data-palette]');if(palEl){S.palette=Number(palEl.dataset.palette);S.colors=pal(S.palette);changed();renderPalettes();return;}
-   const asset=e.target.closest('[data-asset]');if(asset){S.activeAsset=Number(asset.dataset.asset);slide().blocks.filter(b=>b.type==='image').forEach(b=>b.url=assetURL());changed();renderAssets();renderLayers();inspector();return;}
+   const palEl=e.target.closest('[data-palette]');if(palEl){S.palette=Number(palEl.dataset.palette);S.colors=pal(S.palette);changed();renderPalettes();renderBackgrounds();return;}
+   const bg=e.target.closest('[data-background]');if(bg){slide().background=bg.dataset.background;S.background=bg.dataset.background;changed();renderBackgrounds();return;}
+    const asset=e.target.closest('[data-asset]');if(asset){S.activeAsset=Number(asset.dataset.asset);slide().blocks.filter(b=>b.type==='image').forEach(b=>b.url=assetURL());changed();renderAssets();renderLayers();inspector();return;}
    const thumb=e.target.closest('[data-v208-thumb]');if(thumb){S.active=Number(thumb.dataset.v208Thumb);S.selected=null;refreshUI();return;}
    const layer=e.target.closest('[data-layer]');if(layer){selectLayer(layer.dataset.layer);return;}
    const v=e.target.closest('[data-variant]');if(v){applyVariant(Number(v.dataset.variant));return;}
@@ -625,7 +657,8 @@ function install(){
      case 'ai-copy':await generateCopy();break;
      case 'variants':openVariants();break;
      case 'close-modal':q('#v208VariantModal',root).hidden=true;break;
-     case 'random-palette':S.palette=Math.floor(Math.random()*schemes.length);S.colors=pal(S.palette);changed();renderPalettes();break;
+     case 'background-all':S.slides.forEach(d=>d.background=slide().background||S.background);changed();refreshUI();notice('Arrière-plan appliqué à toutes les slides.');break;
+      case 'random-palette':S.palette=Math.floor(Math.random()*schemes.length);S.colors=pal(S.palette);changed();renderPalettes();renderBackgrounds();break;
      case 'add-text':addLayer('text');break;
      case 'add-image':addLayer('image');break;
      case 'add-shape':addLayer('shape');break;
@@ -643,7 +676,8 @@ function install(){
    const f=e.target.dataset.v208Fact;if(f){S.facts[f]=e.target.value;changed();return;}
    if(e.target.id==='v208ProjectName'){S.title=e.target.value;changed();return;}
    if(e.target.id==='v208Caption'){S.caption=e.target.value;changed();return;}
-   const slot=e.target.dataset.color;if(slot){S.colors[slot]=e.target.value;S.palette=-1;changed();return;}
+   if(e.target.id==='v208Texture'){S.texture=clamp(e.target.value,0,100);q('#v208TextureValue',root).textContent=S.texture+' %';changed();return;}
+    const slot=e.target.dataset.color;if(slot){S.colors[slot]=e.target.value;S.palette=-1;changed();return;}
    const prop=e.target.dataset.property;
    if(prop){const b=slide().blocks.find(x=>x.id===S.selected);if(!b)return;
      if(['x','y','w','h','size','weight','opacity'].includes(prop))b[prop]=Number(e.target.value);
