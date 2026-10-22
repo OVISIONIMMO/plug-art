@@ -26,7 +26,7 @@ jobs:
         env:
           PLUGART_DB: /tmp/plugart_ci.db
           PLUGART_AUTORADAR: '0'
-        run: pytest -q --ignore=tests/test_v202.py
+        run: pytest -q --ignore=tests/test_v202.py --ignore=tests/test_v208.py
       - name: Frontend integrity
         run: |
           python - <<'PY'
@@ -184,6 +184,13 @@ jobs:
           grep -q "stale-while-revalidate=2592000" app_extra_v60.py
           grep -q 'GZipMiddleware' app_extra_v60.py
 
+      - name: V208 isolated backend runtime
+        env:
+          PLUGART_DB: /tmp/plugart_v208_ci.db
+          PLUGART_GENERATED_DIR: /tmp/plugart_v208_generated
+          PLUGART_AUTORADAR: '0'
+          PLUGART_EVENT_AUTORADAR: '0'
+        run: pytest -q tests/test_v208.py
       - name: V202 backend runtime
         env:
           PLUGART_DB: /tmp/plugart_v202_ci.db
