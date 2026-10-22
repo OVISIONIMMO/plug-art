@@ -72,6 +72,7 @@ try{
  await page.locator('#v208Canvas').waitFor();
  await page.locator('#v208Projects option[value="'+id+'"]').waitFor({state:'attached'});
  await page.locator('#v208Projects').selectOption(id);
+ await page.waitForFunction(()=>document.querySelector('#v208ProjectName')?.value==='V208 QA Publication');
  assert.equal(await page.locator('#v208ProjectName').inputValue(),'V208 QA Publication');
  assert.equal((await page.evaluate(()=>window.PLUGART_V208.snapshot().payload.assets)).length,1);
 
