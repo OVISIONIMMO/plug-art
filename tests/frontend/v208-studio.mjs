@@ -55,7 +55,7 @@ try{
  await page.locator('#v208Inspector textarea[data-property="text"]').fill('DEADLINE CONFIRMÉE');
  const text=await page.evaluate(()=>window.PLUGART_V208.snapshot().payload.slides[0].blocks.at(-1).text);
  assert.equal(text,'DEADLINE CONFIRMÉE');
- await page.locator('[data-action="variants"]').first().click();
+ await page.locator('.v208-stage-toolbar [data-action="variants"]').click();
  await page.locator('[data-variant="1"]').waitFor({state:'visible'});
  await page.locator('[data-variant="1"]').click();
  assert.equal(await page.locator('#v208VariantModal').isVisible(),false);
