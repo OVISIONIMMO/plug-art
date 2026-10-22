@@ -38,7 +38,7 @@ try{
  await page.locator('[data-background="stripes"]').click();
  const stripesBg=await page.locator('#v208Canvas').evaluate(c=>c.toDataURL('image/png'));
  assert.notEqual(gridBg,stripesBg,'kinetic stripes distinct from Swiss grid');
- await page.locator('#v208Texture').fill('68');
+ await page.locator('#v208Texture').evaluate(el=>{el.value='68';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal((await page.evaluate(()=>window.PLUGART_V208.snapshot().payload)).texture,68);
  await page.locator('[data-action="background-all"]').click();
  assert.ok((await page.evaluate(()=>window.PLUGART_V208.snapshot().payload.slides)).every(d=>d.background==='stripes'));
