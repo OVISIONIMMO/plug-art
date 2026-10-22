@@ -15,18 +15,18 @@ async function visible(selector){await page.locator(selector).waitFor({state:'vi
 async function width(selector,min){const box=await page.locator(selector).boundingBox();assert.ok(box&&box.width>=min,`${selector}: expected >= ${min}, got ${box?.width}`);return box.width}
 async function fittedSlide(){const rail=await page.locator('#c200Carousel').boundingBox(),slide=await page.locator('.c200-slide').first().boundingBox();assert.ok(slide&&rail&&slide.width<=rail.width-7,`carousel slide must fit its panel: ${slide?.width} / ${rail?.width}`)}
 try{
- mark('boot dashboard');await page.goto(base,{waitUntil:'domcontentloaded'});await visible('#dashboardV200');
- const shell=await page.evaluate(()=>({body:document.body.classList.contains('plugart-v205'),sidebar:getComputedStyle(document.querySelector('.sidebar')).backgroundColor,topbar:getComputedStyle(document.querySelector('.topbar')).backgroundColor}));
- assert.equal(shell.body,true,'V205 white shell must be active');
+ mark('boot dashboard');await page.goto(base,{waitUntil:'domcontentloaded'});await visible('#v209Dashboard');
+ const shell=await page.evaluate(()=>({body:document.body.classList.contains('plugart-v209'),sidebar:getComputedStyle(document.querySelector('.sidebar')).backgroundColor,topbar:getComputedStyle(document.querySelector('.topbar')).backgroundColor}));
+ assert.equal(shell.body,true,'V209 violet shell must be active');
  assert.equal(await page.locator('link[href*="/plugart_v207_core.css"]').count(),1,'one consolidated stylesheet');
  assert.equal(await page.locator('script[src*="/plugart_v207_core.js"]').count(),1,'one consolidated UI runtime');
  await page.waitForFunction(()=>window.__PLUGART_V207_READY===true);
- assert.equal((await page.locator('#buildPill').textContent()).trim(),'V208','active build must be V208');
+ assert.equal((await page.locator('#buildPill').textContent()).trim(),'V209','active build must be V209');
  const legacyOverlayRequests=requests.filter(u=>/plugart_v20(4_prod|5_ios|6_radar)\.(js|css)/.test(u));
  assert.equal(legacyOverlayRequests.length,0,'retired overlay assets must not be downloaded');
- assert.ok(!/13, 14, 17|7, 8, 9|0, 0, 0/.test(shell.sidebar),'sidebar must not use the dark legacy background');
- assert.ok(!/13, 14, 17|7, 8, 9|0, 0, 0/.test(shell.topbar),'topbar must not use the dark legacy background');
- assert.equal(await page.locator('.nav-item[data-route="dashboard"]').isVisible(),true,'navigation buttons must remain visible');await page.locator('#v200Opps .v200-opp').first().waitFor();
+ assert.ok(!/255, 255, 255|247, 249, 252/.test(shell.sidebar),'V209 sidebar must be dark violet, not white');
+ assert.ok(!/255, 255, 255|247, 249, 252/.test(shell.topbar),'V209 topbar must be translucent violet, not white');
+ assert.equal(await page.locator('.nav-item[data-route="dashboard"]').isVisible(),true,'navigation buttons must remain visible');await page.locator('#v209Dashboard .n9-kpi').first().waitFor();
  assert.equal(requests.filter(u=>u.includes('/api/opportunities')).length,0,'hidden editor must not fetch sources');
  assert.equal(await page.locator('#searchOverlay').isVisible(),false);assert.equal(await page.locator('#newOverlay').isVisible(),false);assert.equal(await page.locator('#plugyDrawer').isVisible(),false);
  mark('search and navigation');await page.locator('#globalSearch').click();await visible('#searchOverlay');await page.locator('#commandInput').fill('Bureau');await page.locator('#commandResults button').filter({hasText:'Bureau'}).waitFor();assert.equal(requests.some(u=>u.includes('/static/plugart_v162.js')),false);await page.keyboard.press('Escape');
@@ -34,7 +34,7 @@ try{
  await page.locator('.nav-item[data-route="creation"]').click();await visible('#v208Studio');await page.locator('#v208LegacyToggle').click();await visible('#creationV200');await page.locator('#c200Source option').nth(2).waitFor({state:'attached'});const second=await page.locator('#c200Source option').nth(2).textContent();await page.locator('#c200Source').selectOption({index:2});await page.locator('#c200Source').selectOption('');assert.equal(await page.locator('#c200Name').inputValue(),second);
  mark('creation and responsive layout');const initialWidth=await width('#creationV200',900);
  await page.locator('.nav-item[data-route="radar"]:not([data-radar-direct])').click();await visible('#radarEventsV167');await page.waitForFunction(()=>document.documentElement.dataset.legacyReady==='1');await width('.workspace',1000);await width('#eventGridV167',800);
- await page.locator('.nav-item[data-route="dashboard"]').click();await page.locator('#dashboardV200 .v200-command[data-v200-go="bureau"]').click();await visible('#bureauModeBar');assert.match(await page.locator('#plugyContext').textContent(),/Bureau/);
+ await page.locator('.nav-item[data-route="dashboard"]').click();await page.locator('#v209Dashboard .n9-kpi[data-n9-route="bureau"]').click();await visible('#bureauModeBar');assert.match(await page.locator('#plugyContext').textContent(),/Bureau/);
  await page.locator('.nav-item[data-route="creation"]').click();await width('#creationV200',900);assert.ok((await width('#creationV200',900))>=initialWidth-5);
  await visible('#v204PlugyMini,#v205PlugyMini');await page.locator('#v204PlugyMini,#v205PlugyMini').first().click();await visible('#plugyDrawer');await page.locator('#plugyClose').click();assert.equal(await page.locator('#plugyDrawer').isVisible(),false);assert.equal(await page.locator('#plugyDrawer').getAttribute('aria-hidden'),'true');
  const idea=await (await context.request.post(base+'/api/v156/ideas',{data:{title:'Idée test V202',body:'Un angle culturel transmis'}})).json();
@@ -51,6 +51,6 @@ try{
  await page.locator('.nav-item[data-route="social"]').click();await visible('#igConnectionState');await page.locator('#igConnect').filter({hasText:'Configuration Meta requise'}).waitFor();assert.equal(await page.locator('#igPublish').isDisabled(),true);
  mark('mobile layout');await page.setViewportSize({width:390,height:844});await page.locator('.nav-item[data-route="creation"]').click();await visible('#creationV200');await width('#creationV200',330);await fittedSlide();await page.screenshot({path:'test-results/mobile-creation.png',fullPage:true});
  assert.deepEqual(errors,[],'application JavaScript errors must remain absent');
- await writeFile('test-results/browser-checks.json',JSON.stringify({ok:true,initialWidth,requests:requests.length,errors},null,2));console.log('V207 browser journeys passed: white boot, functional dashboard, widths, routes, mini Plugy drawer, imports, drafts, export, mobile.');
+ await writeFile('test-results/browser-checks.json',JSON.stringify({ok:true,initialWidth,requests:requests.length,errors},null,2));console.log('V207 browser journeys passed: ultraviolet boot, functional dashboard, widths, routes, mini Plugy drawer, imports, drafts, export, mobile.');
 }catch(error){await page.screenshot({path:'test-results/failure.png',fullPage:true});await writeFile('test-results/errors.json',JSON.stringify({message:error.message,errors},null,2));throw error}
 finally{await context.tracing.stop({path:'test-results/trace.zip'});await browser.close()}
