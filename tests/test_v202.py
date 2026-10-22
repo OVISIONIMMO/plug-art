@@ -38,7 +38,7 @@ def test_current_assets_and_endpoint_manifest():
         assert 'plugart_v204_prod.js?v=' not in root.text
         assert 'plugart_v205_ios.js?v=' not in root.text
         assert 'plugart_v206_radar.js?v=' not in root.text
-        assert 'class="plugart-v205 plugart-v207"' in root.text
+        assert 'class="plugart-v205 plugart-v207 plugart-v209"' in root.text
         assert '<script defer src="/static/plugart_v162.js' not in root.text
         health=session.get('/api/health').json()
         assert health['ok'] and health['version']=='209.0'
