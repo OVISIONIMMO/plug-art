@@ -1,6 +1,6 @@
 /* PLUG ART V208 · Editorial Studio. Client canvas is the source of truth for preview + export. */
 (()=>{'use strict';
-const VERSION='208.20261022.1';
+const VERSION='208.20261022.2';
 const q=(s,r=document)=>r.querySelector(s), qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const uid=()=>Math.random().toString(36).slice(2,10);
