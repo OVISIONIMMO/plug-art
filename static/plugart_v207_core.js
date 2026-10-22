@@ -12,7 +12,7 @@ function lightMeta(){
  q('meta[name="theme-color"]')?.setAttribute('content','#ffffff');
  document.documentElement.style.background='#fff';
  document.body.classList.add('plugart-v204-white');
- const bp=q('#buildPill'),sv=q('#sidebarVersion');if(bp&&bp.textContent!=='V208')bp.textContent='V208';if(sv&&sv.textContent!=='V208')sv.textContent='V208';
+ const bp=q('#buildPill'),sv=q('#sidebarVersion');if(bp&&bp.textContent!=='V209')bp.textContent='V209';if(sv&&sv.textContent!=='V209')sv.textContent='V209';
 }
 function installPlugyMini(){
  if(q('#v204PlugyMini'))return;
@@ -149,6 +149,7 @@ const q=(s,r=document)=>r.querySelector(s);
 const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
 
 function forceLight(){
+  if(document.body?.classList.contains('plugart-v209'))return;
   const html=document.documentElement,body=document.body;
   html.dataset.plugartTheme='light';
   html.style.backgroundColor='#ffffff';
@@ -163,8 +164,8 @@ function forceLight(){
 
 function updateVersion(){
   const bp=q('#buildPill'),sv=q('#sidebarVersion');
-  if(bp&&bp.textContent!=='V208')bp.textContent='V208';
-  if(sv&&sv.textContent!=='V208')sv.textContent='V208';
+  if(bp&&bp.textContent!=='V209')bp.textContent='V209';
+  if(sv&&sv.textContent!=='V209')sv.textContent='V209';
 }
 
 function classifyControls(root=document){
@@ -302,7 +303,7 @@ const REV='207.20261015.1';
 const q=(s,r=document)=>r.querySelector(s);
 async function install(){
   const bp=q('#buildPill'),sv=q('#sidebarVersion');
-  if(bp&&bp.textContent!=='V208')bp.textContent='V208'; if(sv&&sv.textContent!=='V208')sv.textContent='V208';
+  if(bp&&bp.textContent!=='V209')bp.textContent='V209'; if(sv&&sv.textContent!=='V209')sv.textContent='V209';
   if(document.body?.dataset.view!=='radar' && !q('#view-radar.active'))return;
   const live=q('#radarLiveV168');
   if(!live||q('#radarDepthV206'))return;
@@ -328,7 +329,7 @@ async function install(){
 function boot(){
   install();
   document.addEventListener('plugart:route',()=>setTimeout(install,120));
-  const mo=new MutationObserver(()=>{const bp=q('#buildPill'),sv=q('#sidebarVersion');if(bp&&bp.textContent!=='V208')bp.textContent='V208';if(sv&&sv.textContent!=='V208')sv.textContent='V208';if((document.body?.dataset.view==='radar'||q('#view-radar.active'))&&!q('#radarDepthV206'))install()});
+  const mo=new MutationObserver(()=>{const bp=q('#buildPill'),sv=q('#sidebarVersion');if(bp&&bp.textContent!=='V209')bp.textContent='V209';if(sv&&sv.textContent!=='V209')sv.textContent='V209';if((document.body?.dataset.view==='radar'||q('#view-radar.active'))&&!q('#radarDepthV206'))install()});
   mo.observe(document.body,{childList:true,subtree:true});
   console.info('[PLUG ART] Radar V206',REV);
 }
