@@ -26,7 +26,7 @@ jobs:
         env:
           PLUGART_DB: /tmp/plugart_ci.db
           PLUGART_AUTORADAR: '0'
-        run: pytest -q --ignore=tests/test_v202.py
+        run: pytest -q --ignore=tests/test_v202.py --ignore=tests/test_v208.py
       - name: Frontend integrity
         run: |
           python - <<'PY'
@@ -163,20 +163,34 @@ jobs:
           test -s static/plugart_v207_core.css
           test -s static/plugart_v207_core.js
           grep -q 'plugart_v207_core.css?v=207.20261015.1' static/plugart_v162.html
-          grep -q 'plugart_v207_core.js?v=207.20261015.1' static/plugart_v162.html
+          grep -q 'plugart_v207_core.js?v=208.20261022.1' static/plugart_v162.html
           ! grep -q 'href="/static/plugart_v204_prod.css' static/plugart_v162.html
           ! grep -q 'href="/static/plugart_v205_ios.css' static/plugart_v162.html
           ! grep -q 'src="/static/plugart_v204_prod.js' static/plugart_v162.html
           ! grep -q 'src="/static/plugart_v205_ios.js' static/plugart_v162.html
           ! grep -q 'src="/static/plugart_v206_radar.js' static/plugart_v162.html
           node --check static/plugart_v207_core.js
+          test -s static/plugart_v208_studio.css
+          test -s static/plugart_v208_studio.js
+          test -s plugart_studio_v208.py
+          node --check static/plugart_v208_studio.js
+          python -m py_compile plugart_studio_v208.py
+          grep -q 'plugart_v208_studio.css?v=208.20261022.1' static/plugart_v162.html
+          grep -q 'plugart_v208_studio.js?v=208.20261022.1' static/plugart_v162.html
           grep -q 'childList:true,subtree:true' static/plugart_v207_core.js
           ! grep -q 'attributes:true,attributeFilter' static/plugart_v207_core.js
-          grep -q "app.version = '207.0'" app_extra_v60.py
-          grep -q 'white-clean-core-v207' app_extra_v60.py
+          grep -q "app.version = '208.0'" app_extra_v60.py
+          grep -q 'editorial-studio-v208' app_extra_v60.py
           grep -q "stale-while-revalidate=2592000" app_extra_v60.py
           grep -q 'GZipMiddleware' app_extra_v60.py
 
+      - name: V208 isolated backend runtime
+        env:
+          PLUGART_DB: /tmp/plugart_v208_ci.db
+          PLUGART_GENERATED_DIR: /tmp/plugart_v208_generated
+          PLUGART_AUTORADAR: '0'
+          PLUGART_EVENT_AUTORADAR: '0'
+        run: pytest -q tests/test_v208.py
       - name: V202 backend runtime
         env:
           PLUGART_DB: /tmp/plugart_v202_ci.db
@@ -193,7 +207,7 @@ jobs:
         run: |
           npm ci --prefix tests/frontend --ignore-scripts
           npm run --prefix tests/frontend test:runtime
-          npm exec --prefix tests/frontend -- playwright install --with-deps chromium
+          timeout 180s npm exec --prefix tests/frontend -- playwright install chromium
       - name: V202 real browser journeys
         env:
           PLUGART_DB: /tmp/plugart_v202_browser.db
@@ -207,6 +221,7 @@ jobs:
             sleep 1
           done
           npm run --prefix tests/frontend test:browser
+          node tests/frontend/v208-studio.mjs
           python - <<'PYZIP'
           import io, json, zipfile
           from PIL import Image
