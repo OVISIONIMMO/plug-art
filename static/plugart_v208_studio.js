@@ -373,7 +373,7 @@ async function upload(file){
  const out=await saveReq('/api/v202/content/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data})});
  S.assets.push({url:out.url,name:file.name.slice(0,110),role:q('#v208AssetRole',root).value,source:'uploaded'});
  S.activeAsset=S.assets.length-1;
- slide().blocks.forEach(b=>{if(b.type==='image'&&!b.url)b.url=out.url;});
+ S.slides.forEach(d=>d.blocks.forEach(b=>{if(b.type==='image'&&!b.url)b.url=out.url;}));
  changed();refreshUI();notice('Visuel officiel importé, sans modification de son contenu.');}
 async function extractFacts(){
  const a=S.assets[S.activeAsset];if(!a){notice('Ajoute un flyer officiel.');tab('sources');return;}
