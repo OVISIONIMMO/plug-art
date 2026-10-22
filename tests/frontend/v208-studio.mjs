@@ -13,6 +13,13 @@ const mark=s=>console.log('[V208 E2E] '+s);
 try{
  mark('open studio');
  await page.goto(base,{waitUntil:'domcontentloaded'});
+ await page.locator('#paThemeToggle').waitFor({state:'visible'});
+ await page.locator('#paThemeToggle').click();
+ await page.locator('[data-pa-theme-option="glacier"]').click();
+ assert.equal(await page.locator('body').getAttribute('data-pa-theme'),'glacier','global theme selection');
+ await page.locator('#paThemeToggle').click();
+ await page.locator('[data-pa-theme-option="warm"]').click();
+ assert.equal(await page.locator('body').getAttribute('data-pa-theme'),'warm','warm UI theme');
  await page.locator('.nav-item[data-route="creation"]').click();
  await page.locator('#v208Canvas').waitFor({state:'visible'});
  assert.equal(await page.locator('[data-template]').count(),12,'12 editable editorial templates');
@@ -21,6 +28,23 @@ try{
  await page.locator('[data-palette="3"]').click();
  const colors=await page.evaluate(()=>window.PLUGART_V208.snapshot().payload.colors);
  assert.equal(colors.primary,'#44beed');
+ mark('twelve distinct background styles');
+ await page.locator('[data-v208-tab="backgrounds"]').click();
+ assert.equal(await page.locator('[data-background]').count(),12,'12 background treatments');
+ const beforeBg=await page.locator('#v208Canvas').evaluate(c=>c.toDataURL('image/png'));
+ await page.locator('[data-background="grid"]').click();
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ const gridBg=await page.locator('#v208Canvas').evaluate(c=>c.toDataURL('image/png'));
+ assert.ok(beforeBg!==gridBg,'Swiss grid must actually redraw the canvas');
+ await page.locator('[data-background="stripes"]').click();
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ const stripesBg=await page.locator('#v208Canvas').evaluate(c=>c.toDataURL('image/png'));
+ assert.ok(gridBg!==stripesBg,'kinetic stripes distinct from Swiss grid');
+ await page.locator('#v208Texture').evaluate(el=>{el.value='68';el.dispatchEvent(new Event('input',{bubbles:true}));});
+ assert.equal((await page.evaluate(()=>window.PLUGART_V208.snapshot().payload)).texture,68);
+ await page.locator('[data-action="background-all"]').click();
+ assert.ok((await page.evaluate(()=>window.PLUGART_V208.snapshot().payload.slides)).every(d=>d.background==='stripes'));
+
 
  mark('write brief');
  await page.locator('[data-v208-tab="brief"]').click();
@@ -55,6 +79,26 @@ try{
  await page.locator('#v208Inspector textarea[data-property="text"]').fill('DEADLINE CONFIRMÉE');
  const text=await page.evaluate(()=>window.PLUGART_V208.snapshot().payload.slides[0].blocks.at(-1).text);
  assert.equal(text,'DEADLINE CONFIRMÉE');
+ mark('AI generation preserves official artwork and custom layers');
+ const projectBefore=await page.evaluate(()=>window.PLUGART_V208.snapshot().payload);
+ await page.route('**/api/v208/studio/copy',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({
+   ok:true,slides:[{kicker:'SOURCE OFFICIELLE',title:'PARIS EXPO COLLECTIVE',body:'Informations vérifiées'}],caption:'Texte IA à relire',requires_review:true
+ })}));
+ await page.locator('#v208AICopy').click();
+ await page.waitForFunction(()=>!document.querySelector('#v208AICopy').disabled &&
+   window.PLUGART_V208.snapshot().payload.slides[0].blocks.some(b=>b.role==='title'&&b.text==='PARIS EXPO COLLECTIVE'));
+ const projectAfter=await page.evaluate(()=>window.PLUGART_V208.snapshot().payload);
+ assert.equal(projectAfter.slides[0].background,projectBefore.slides[0].background,'AI must preserve background');
+ assert.ok(projectAfter.slides[0].blocks.some(b=>b.type==='image'&&b.url===assets[0].url),'AI must preserve official flyer');
+ assert.ok(projectAfter.slides[0].blocks.some(b=>b.text==='DEADLINE CONFIRMÉE'),'AI must preserve extra text layer');
+ await page.unroute('**/api/v208/studio/copy');
+ mark('AI error is not destructive');
+ await page.route('**/api/v208/studio/copy',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({detail:'Service IA temporairement indisponible'})}));
+ const savedBeforeFailure=JSON.stringify((await page.evaluate(()=>window.PLUGART_V208.snapshot())).payload.slides);
+ await page.locator('#v208AICopy').click();
+ await page.waitForFunction(()=>!document.querySelector('#v208AICopy').disabled && document.querySelector('#v208Status').textContent.includes('conservées'));
+ assert.equal(JSON.stringify((await page.evaluate(()=>window.PLUGART_V208.snapshot())).payload.slides),savedBeforeFailure,'error must not reset edits');
+ await page.unroute('**/api/v208/studio/copy');
  await page.locator('.v208-stage-toolbar [data-action="variants"]').click();
  await page.locator('[data-variant="1"]').waitFor({state:'visible'});
  await page.locator('[data-variant="1"]').click();
@@ -75,6 +119,8 @@ try{
  await page.waitForFunction(()=>document.querySelector('#v208ProjectName')?.value==='V208 QA Publication');
  assert.equal(await page.locator('#v208ProjectName').inputValue(),'V208 QA Publication');
  assert.equal((await page.evaluate(()=>window.PLUGART_V208.snapshot().payload.assets)).length,1);
+ assert.ok((await page.evaluate(()=>window.PLUGART_V208.snapshot().payload.slides)).every(d=>d.background),'saved background information');
+ assert.equal(await page.locator('body').getAttribute('data-pa-theme'),'warm','theme persists across reload');
 
  mark('PNG, ZIP, PDF exports');
  for(const [action,name] of [['png','single'],['zip','carrousel'],['pdf','pdf']]){
