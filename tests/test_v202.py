@@ -26,14 +26,14 @@ def test_current_assets_and_endpoint_manifest():
     with TestClient(current.app) as session:
         root=session.get('/')
         assert root.status_code==200
-        assert '202.20261006.1' in root.text
+        assert '210.20261023.1' in root.text
         assert 'plugart_v207_core.css?v=208.20261022.2' in root.text
         assert 'plugart_v208_studio.css?v=208.20261022.2' in root.text
         assert 'plugart_v208_studio.js?v=208.20261022.2' in root.text
         assert 'plugart_v209_ultraviolet.css?v=209.20261022.1' in root.text
         assert 'plugart_v209_precision.css?v=209.20261022.2' in root.text
-        assert 'plugart_v209_dashboard.js?v=209.20261022.1' in root.text
-        assert 'plugart_v207_core.js?v=209.20261022.1' in root.text
+        assert 'plugart_v209_dashboard.js?v=210.20261023.1' in root.text
+        assert 'plugart_v207_core.js?v=210.20261023.1' in root.text
         assert 'plugart_v204_prod.css?v=' not in root.text
         assert 'plugart_v205_ios.css?v=' not in root.text
         assert 'plugart_v204_prod.js?v=' not in root.text
@@ -42,7 +42,7 @@ def test_current_assets_and_endpoint_manifest():
         assert 'class="plugart-v205 plugart-v207 plugart-v209"' in root.text
         assert '<script defer src="/static/plugart_v162.js' not in root.text
         health=session.get('/api/health').json()
-        assert health['ok'] and health['version']=='209.1'
+        assert health['ok'] and health['version']=='210.0'
         smoke=session.get('/api/v202/smoke').json()
         assert smoke['ok'] and smoke['browser_runtime_validated'] is False
         for asset in smoke['checks']['v202_assets']['files']:
@@ -164,3 +164,22 @@ def test_radar_releases_database_writer_during_network_requests(monkeypatch,tmp_
     result=core.discover_sources() if scan=='discover' else core.verify_existing()
     assert len(checks)>=2
     assert result['errors']==0
+
+
+def test_radar_rate_limit_backoff_is_bounded(monkeypatch):
+    """Automatic AI refreshes must not hammer the provider after HTTP 429."""
+    import time
+    module=current.v59
+    now=time.time()
+    monkeypatch.setattr(module,'_v168_refresh_state',lambda key:{
+        'last_run_epoch':now-9*3600,'last_error':'HTTPException: 502: Recherche indisponible (429)'
+    })
+    assert module._v168_should_refresh('opportunities_ai',8) is False
+    monkeypatch.setattr(module,'_v168_refresh_state',lambda key:{
+        'last_run_epoch':now-13*3600,'last_error':'Recherche indisponible (429)'
+    })
+    assert module._v168_should_refresh('opportunities_ai',8) is True
+    monkeypatch.setattr(module,'_v168_refresh_state',lambda key:{
+        'last_run_epoch':now-9*3600,'last_error':''
+    })
+    assert module._v168_should_refresh('opportunities_ai',8) is True

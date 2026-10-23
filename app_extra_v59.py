@@ -3509,7 +3509,14 @@ def _v168_set_refresh_state(key,count=0,error=''):
 
 def _v168_should_refresh(key,hours):
     row=_v168_refresh_state(key)
-    return time.time()-float(row.get('last_run_epoch') or 0)>=max(.25,float(hours))*3600
+    age=time.time()-float(row.get('last_run_epoch') or 0)
+    # Respect the upstream provider's rate limits on automatic runs.
+    # Explicit user-triggered refresh remains possible via its dedicated endpoint.
+    previous_error=str(row.get('last_error') or '').lower()
+    cooldown=float(os.getenv('PLUGART_RATE_LIMIT_COOLDOWN_HOURS','12'))
+    if ('429' in previous_error or 'rate limit' in previous_error) and age<max(8,min(cooldown,48))*3600:
+        return False
+    return age>=max(.25,float(hours))*3600
 
 
 def _v168_curated_events():
@@ -3719,7 +3726,8 @@ def _v168_search_opportunities_ai():
        "Cherche des pages 'submit your work', 'artists submissions', 'exposez chez nous', 'appel aux artistes', 'candidature spontanée', 'group show' et publications publiques Instagram/LinkedIn. Priorité France et Europe.")
     ]
     merged=[];errors=[]
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    # Keep the same four regional searches, but limit simultaneous external model calls.
+    with ThreadPoolExecutor(max_workers=2) as pool:
         futures={pool.submit(_v205_search_opportunity_pass,label,scope,30):label for label,scope in passes}
         for fut in as_completed(futures):
             label=futures[fut]
@@ -4339,7 +4347,7 @@ def smoke_v172():
         nav_ok='data-route="agenda"' not in html and html.count('data-route="creation"')>=1 and html.count('data-route="opencalls"')>=1
         event_map_ok="data-event-map" in js and "ensureMapEventsV173(false).then(renderMap)" in js
         versions=re.findall(r'(?:plugart_v200\.(?:css|js)|plugart_v202_boot\.js)\?v=([^"\s]+)',html)
-        asset_ok=len(versions)==3 and len(set(versions))==1 and versions[0]=='202.20261006.1'
+        asset_ok=len(versions)==3 and len(set(versions))==1 and versions[0]=='210.20261023.1'
         image_runtime=(BASE/'app_extra_v32.py').read_text(encoding='utf-8')
         image_fallback_ok="PLUG_ART_IMAGE_V177_FALLBACK" in image_runtime and "plugart-fallback-v177" in image_runtime
         checks['frontend_runtime']={
