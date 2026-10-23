@@ -2,14 +2,15 @@
  * Reference-inspired layout, never inserts fabricated artists, opportunities or statistics.
  */
 (()=>{'use strict';
-const VERSION='209.20261022.1';
+const VERSION='210.20261023.1';
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const esc=(s)=>String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const num=(n)=>Number.isFinite(Number(n))?Number(n):null;
+const num=(n)=>(n===null||n===undefined||n==='')?null:(Number.isFinite(Number(n))?Number(n):null);
 const clean=(v)=>v==null?'—':esc(v);
 const brandMark='<span>PLUG<br><em>ART</em></span>';
-const state={dashboard:null,events:[],artists:[],projects:[],ready:false,filter:'all',loading:false,lastUpdated:0};
+const state={dashboard:null,events:[],artists:[],projects:[],ready:false,filter:'all',loading:false,lastUpdated:0,lastSecondary:0,request:null,degraded:[]};
+const SECONDARY_TTL=120000,FOREGROUND_TTL=180000;
 const chartShape='<svg class="n9-kpi-spark" viewBox="0 0 80 28" aria-hidden="true"><path d="M1 23 Q10 6 19 18T38 13T55 12T79 4" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round"/></svg>';
 const dots=[
  [9,42],[23,12],[42,66],[61,6],[81,35],[13,78],[45,20],[70,85],
@@ -126,7 +127,11 @@ function paint(){
    scores.setAttribute('aria-label','Aucun score disponible');
   }
  }
- const sync=$('#n9Sync');if(sync)sync.textContent=' · Données synchronisées';
+ const sync=$('#n9Sync');
+ if(sync){
+   sync.textContent=state.degraded.length?' · Synchronisation partielle ('+state.degraded.join(', ')+')':
+     ' · Données à jour à '+new Date(state.lastUpdated||Date.now()).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+ }
  showEvents();showStudio();showArtists();
 }
 function showEvents(){
@@ -178,32 +183,76 @@ async function fetchJSON(url){
  try{const r=await fetch(url,{signal:ctrl.signal,cache:'no-store',headers:{'Accept':'application/json'}});if(!r.ok)throw Error('HTTP '+r.status);return await r.json()}
  finally{clearTimeout(t)}
 }
+function localDate(date){
+ const d=new Date(date);
+ return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+}
 async function load(force=false){
- if(state.loading)return;
+ // Sharing in-flight work prevents double network requests from navigation and refresh.
+ if(state.request)return state.request;
  state.loading=true;
+ const started=performance.now();
  const sync=$('#n9Sync');if(sync)sync.textContent=' · Actualisation…';
- const from=new Date().toISOString().slice(0,10),until=new Date(Date.now()+60*86400000).toISOString().slice(0,10);
- // Reuse the existing bootstrap, and never claim stats exist until the API actually returned them.
- const [dashboard,events,artists,projects]=await Promise.allSettled([
-  typeof window.PLUGART_DASHBOARD_DATA==='function'?window.PLUGART_DASHBOARD_DATA(force):fetchJSON('/api/v124/dashboard-bootstrap'),
-  fetchJSON('/api/v167/events?date_from='+encodeURIComponent(from)+'&date_to='+encodeURIComponent(until)),
-  fetchJSON('/api/artists'),
-  fetchJSON('/api/v208/studio/projects')
- ]);
- if(dashboard.status==='fulfilled')state.dashboard=dashboard.value;
- if(events.status==='fulfilled')state.events=safeList(events.value).filter(e=>e&&e.id);
- if(artists.status==='fulfilled')state.artists=safeList(artists.value);
- if(projects.status==='fulfilled')state.projects=safeList(projects.value&&projects.value.items);
- if($('#v209Dashboard'))paint();
- state.ready=true;state.loading=false;state.lastUpdated=Date.now();
- if(sync&&dashboard.status==='rejected')sync.textContent=' · Connexion partielle, réessaie';
+ state.request=(async()=>{
+  const issues=[];
+  let primaryOK=false;
+  try{
+   // Render useful first-screen stats as soon as the ~18 ms DB bootstrap resolves.
+   const dashboard=typeof window.PLUGART_DASHBOARD_DATA==='function'
+    ?await window.PLUGART_DASHBOARD_DATA(force)
+    :await fetchJSON('/api/v124/dashboard-bootstrap');
+   state.dashboard=dashboard;primaryOK=true;
+   state.lastUpdated=Date.now();
+   state.degraded=[];
+   paint();
+  }catch(e){
+   issues.push('Dashboard');
+  }
+  const now=Date.now();
+  // The three secondary panels are not required to paint the main dashboard.
+  // Skip redundant fetches when cached data is still fresh, but allow explicit refresh.
+  if(force||!state.lastSecondary||now-state.lastSecondary>=SECONDARY_TTL){
+   const from=localDate(now),until=localDate(now+60*86400000);
+   const calls=[
+    ['/api/v167/events?date_from='+encodeURIComponent(from)+'&date_to='+encodeURIComponent(until),'events','Vernissages'],
+    ['/api/artists','artists','Artistes'],
+    ['/api/v208/studio/projects','projects','Studio']
+   ];
+   const fetched=await Promise.allSettled(calls.map(x=>fetchJSON(x[0])));
+   fetched.forEach((r,i)=>{
+    const [,key,label]=calls[i];
+    if(r.status==='rejected'){issues.push(label);return;}
+    const list=key==='projects'?r.value?.items:r.value;
+    if(!Array.isArray(list)){issues.push(label);return;}
+    state[key]=key==='events'?list.filter(e=>e&&e.id):list;
+   });
+   if(fetched.every((r,i)=>r.status==='fulfilled'&&
+      Array.isArray(calls[i][1]==='projects'?r.value?.items:r.value)))state.lastSecondary=Date.now();
+  }
+  if(primaryOK)state.lastUpdated=Date.now();
+  state.degraded=issues;
+  state.ready=true;
+  paint();
+  if(sync&&issues.length)sync.title='La dernière mise à jour n’a pas reçu toutes les données : '+issues.join(', ');
+  else if(sync)sync.removeAttribute('title');
+  console.info('[PLUG ART] Dashboard sync',Math.round(performance.now()-started)+'ms',issues.length?'partial: '+issues.join(','):'ok');
+  return {ok:primaryOK&&issues.length===0,partial:issues.length>0,issues};
+ })().finally(()=>{state.loading=false;state.request=null;});
+ return state.request;
+}
+function freshness(){
+ if(document.visibilityState==='hidden'||document.body.dataset.view!=='dashboard')return;
+ if(state.request)return;
+ if(!state.lastUpdated||Date.now()-state.lastUpdated>FOREGROUND_TTL)void load();
 }
 function init(){
  document.body.classList.add('plugart-v209');document.documentElement.dataset.plugartUi='209';
  ensureVersion();shell();load();
- window.PLUGART_V209={refresh:()=>load(true),getDashboard:()=>state.dashboard,isReady:()=>state.ready};
- window.addEventListener('pageshow',()=>{ensureVersion();shell()});
- document.addEventListener('plugart:route',ensureVersion);
+ window.PLUGART_V209={refresh:()=>load(true),getDashboard:()=>state.dashboard,isReady:()=>state.ready,getSyncState:()=>({lastUpdated:state.lastUpdated,loading:state.loading,issues:[...state.degraded]})};
+ window.addEventListener('pageshow',()=>{ensureVersion();shell();freshness()});
+ document.addEventListener('visibilitychange',freshness);
+ window.addEventListener('focus',freshness);
+ document.addEventListener('plugart:route',()=>{ensureVersion();freshness()});
  console.info('[PLUG ART] V209 ultraviolet dashboard active',VERSION);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
