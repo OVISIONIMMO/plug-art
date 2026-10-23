@@ -414,6 +414,8 @@ def status_v179():
         'version': '210.0',
         'revision': '210.20261023.1',
         'ui': 'precision-glass-perf-v210',
+        'dashboard_refresh': 'progressive-v210',
+        'radar_auto_rate_limit_backoff': True,
         'text_stream': '/api/v179/plugy/stream',
         'image_generation': '/api/v179/content/image',
         'image_enabled': bool(os.getenv('OPENAI_API_KEY', '').strip()),
