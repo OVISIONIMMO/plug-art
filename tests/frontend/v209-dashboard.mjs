@@ -30,7 +30,7 @@ try{
    dashboard:rect(root),build:document.getElementById('buildPill').textContent,
    kpis:root.querySelectorAll('.n9-kpi').length};
  });
- assert.equal(computed.build,'V209','version should not be reset by legacy scripts');
+ assert.equal(computed.build,'V210','version should not be reset by legacy scripts');
  assert.ok(!computed.dark.includes('255, 255, 255'),'site body must not be white');
  assert.ok(parseInt(computed.panelRadius)>14,'panels rounded as in reference');
  assert.ok(computed.kpi.width>120&&computed.kpi.height>90,'metric cards substantial');
