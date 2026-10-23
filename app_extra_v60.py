@@ -438,7 +438,7 @@ async def headers_v179(request: Request, call_next):
         response.headers['Cache-Control'] = 'no-store'
     return response
 
-print(f'PLUG_ART_V209_READY text={FAST_MODEL} image={DEFAULT_IMAGE_MODEL} generated={GENERATED}', flush=True)
+print(f'PLUG_ART_V210_READY text={FAST_MODEL} image={DEFAULT_IMAGE_MODEL} generated={GENERATED}', flush=True)
 
 
 @app.get('/api/v202/smoke')
@@ -465,4 +465,4 @@ def startup_v202():
     report=smoke_v202()
     if not report['checks']['v202_assets']['ok'] or not report['checks']['v202_routes']['ok'] or not report['checks']['frontend_runtime']['asset_version']:
         raise RuntimeError('Assets ou routes V202 incomplets')
-    print('PLUG_ART_V209_SELFTEST '+json.dumps(report,ensure_ascii=False,separators=(',',':')),flush=True)
+    print('PLUG_ART_V210_SELFTEST '+json.dumps(report,ensure_ascii=False,separators=(',',':')),flush=True)
