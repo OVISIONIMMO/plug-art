@@ -20,7 +20,7 @@ class SelectiveGZipMiddleware(GZipMiddleware):
 import app_extra_v59 as v59
 
 app = v59.app
-app.version = '209.1'
+app.version = '210.0'
 BASE = Path(__file__).resolve().parent
 app.user_middleware=[m for m in app.user_middleware if not issubclass(m.cls,GZipMiddleware)]
 app.add_middleware(SelectiveGZipMiddleware, minimum_size=900, compresslevel=5)
@@ -411,9 +411,9 @@ def generated_v179(name: str):
 def status_v179():
     return {
         'ok': True,
-        'version': '209.1',
-        'revision': '209.20261022.2',
-        'ui': 'precision-glass-v209-1',
+        'version': '210.0',
+        'revision': '210.20261023.1',
+        'ui': 'precision-glass-perf-v210',
         'text_stream': '/api/v179/plugy/stream',
         'image_generation': '/api/v179/content/image',
         'image_enabled': bool(os.getenv('OPENAI_API_KEY', '').strip()),
@@ -427,8 +427,8 @@ def status_v179():
 async def headers_v179(request: Request, call_next):
     response = await call_next(request)
     if request.url.path == '/':
-        response.headers['X-Plug-Art-Version'] = '209.1'
-        response.headers['X-Plug-Art-UI'] = 'precision-glass-v209-1'
+        response.headers['X-Plug-Art-Version'] = '210.0'
+        response.headers['X-Plug-Art-UI'] = 'precision-glass-perf-v210'
         response.headers['Cache-Control'] = 'no-store, max-age=0'
     elif request.url.path.startswith('/static/') or request.url.path.startswith('/assets/'):
         response.headers['Cache-Control'] = 'public,max-age=3600,stale-while-revalidate=86400'
@@ -455,7 +455,7 @@ def smoke_v202():
     report['checks']['v202_assets']={'ok':all(x['ok'] for x in assets),'files':assets}
     report['checks']['v202_routes']={'ok':all(x in active for x in required),'missing':[m+' '+p for m,p in required if (m,p) not in active]}
     report['ok']=all(x.get('ok',True) for x in report['checks'].values())
-    report['revision']='209.20261022.2'
+    report['revision']='210.20261023.1'
     report['browser_runtime_validated']=False
     report['scope']='server-routes-database-assets; browser journeys run in CI'
     return report
