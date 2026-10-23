@@ -146,7 +146,7 @@ jobs:
         run: |
           test -s static/plugart_v200.css
           test -s static/plugart_v200.js
-          grep -q 'plugart_v202_boot.js?v=202.20261006.1' static/plugart_v162.html
+          grep -q 'plugart_v202_boot.js?v=210.20261023.1' static/plugart_v162.html
           grep -q 'plugart_v200.css?v=202.20261006.1' static/plugart_v162.html
           grep -q 'plugart_v200.js?v=202.20261006.1' static/plugart_v162.html
           ! grep -q 'fonts.googleapis.com' static/plugart_v162.html
@@ -163,7 +163,7 @@ jobs:
           test -s static/plugart_v207_core.css
           test -s static/plugart_v207_core.js
           grep -q 'plugart_v207_core.css?v=208.20261022.2' static/plugart_v162.html
-          grep -q 'plugart_v207_core.js?v=209.20261022.1' static/plugart_v162.html
+          grep -q 'plugart_v207_core.js?v=210.20261023.1' static/plugart_v162.html
           ! grep -q 'href="/static/plugart_v204_prod.css' static/plugart_v162.html
           ! grep -q 'href="/static/plugart_v205_ios.css' static/plugart_v162.html
           ! grep -q 'src="/static/plugart_v204_prod.js' static/plugart_v162.html
@@ -177,8 +177,9 @@ jobs:
           test -s static/plugart_v209_ultraviolet.css
           test -s static/plugart_v209_dashboard.js
           node --check static/plugart_v209_dashboard.js
+          grep -q 'PLUGART_V209.refresh' static/plugart_v202_boot.js
           grep -q 'plugart_v209_ultraviolet.css?v=209.20261022.1' static/plugart_v162.html
-          grep -q 'plugart_v209_dashboard.js?v=209.20261022.1' static/plugart_v162.html
+          grep -q 'plugart_v209_dashboard.js?v=210.20261023.1' static/plugart_v162.html
           test -s plugart_studio_v208.py
           node --check static/plugart_v208_studio.js
           python -m py_compile plugart_studio_v208.py
@@ -186,8 +187,8 @@ jobs:
           grep -q 'plugart_v208_studio.js?v=208.20261022.2' static/plugart_v162.html
           grep -q 'childList:true,subtree:true' static/plugart_v207_core.js
           ! grep -q 'attributes:true,attributeFilter' static/plugart_v207_core.js
-          grep -q "app.version = '209.1'" app_extra_v60.py
-          grep -q 'precision-glass-v209-1' app_extra_v60.py
+          grep -q "app.version = '210.0'" app_extra_v60.py
+          grep -q 'precision-glass-perf-v210' app_extra_v60.py
           grep -q "stale-while-revalidate=2592000" app_extra_v60.py
           grep -q 'GZipMiddleware' app_extra_v60.py
 
@@ -231,6 +232,7 @@ jobs:
           node tests/frontend/v208-studio.mjs
           node tests/frontend/v209-dashboard.mjs
           node tests/frontend/v209-precision.mjs
+          node tests/frontend/v210-performance.mjs
           python - <<'PYZIP'
           import io, json, zipfile
           from PIL import Image
