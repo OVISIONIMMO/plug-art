@@ -87,7 +87,15 @@ document.addEventListener('click',function(e){
  if(action.id==='newAction')qs('#newOverlay').classList.add('open');
  if(action.id==='refreshData'){
   if(action.disabled)return;action.disabled=true;
-  Promise.resolve(window.PLUGART_V200.refreshDashboard()).then(async function(){if(window.__PLUGART_LEGACY_READY&&window.PLUGART_REFRESH_V202)await window.PLUGART_REFRESH_V202();notice('Données actualisées')}).catch(function(){notice('Actualisation impossible. Réessaie.')}).finally(function(){action.disabled=false});
+  var current=(window.PLUGART_V209&&typeof window.PLUGART_V209.refresh==='function')
+    ?window.PLUGART_V209.refresh()
+    :window.PLUGART_V200.refreshDashboard();
+  Promise.resolve(current).then(async function(result){
+    if(window.__PLUGART_LEGACY_READY&&window.PLUGART_REFRESH_V202)await window.PLUGART_REFRESH_V202();
+    if(result&&result.partial)notice('Actualisation partielle : '+result.issues.join(', ')+'. Réessaie plus tard.');
+    else notice('Dashboard et données actualisés.');
+  }).catch(function(){notice('Actualisation impossible. Tes données existantes sont conservées. Réessaie.')})
+    .finally(function(){action.disabled=false});
  }
 },true);
 document.addEventListener('click',function(e){
