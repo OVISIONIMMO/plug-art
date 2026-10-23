@@ -21,7 +21,7 @@ try{
  assert.equal(await page.locator('link[href*="/plugart_v207_core.css"]').count(),1,'one consolidated stylesheet');
  assert.equal(await page.locator('script[src*="/plugart_v207_core.js"]').count(),1,'one consolidated UI runtime');
  await page.waitForFunction(()=>window.__PLUGART_V207_READY===true);
- assert.equal((await page.locator('#buildPill').textContent()).trim(),'V209','active build must be V209');
+ assert.equal((await page.locator('#buildPill').textContent()).trim(),'V210','active build must be V209');
  const legacyOverlayRequests=requests.filter(u=>/plugart_v20(4_prod|5_ios|6_radar)\.(js|css)/.test(u));
  assert.equal(legacyOverlayRequests.length,0,'retired overlay assets must not be downloaded');
  assert.ok(!/255, 255, 255|247, 249, 252/.test(shell.sidebar),'V209 sidebar must be dark violet, not white');
