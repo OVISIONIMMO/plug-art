@@ -17,7 +17,7 @@ const dots=[
  [52,44],[88,68],[34,89],[5,23],[93,17],[75,10],[30,53],[58,74]
 ];
 function ensureVersion(){
- for(const id of ['buildPill','sidebarVersion']){const el=$('#'+id);if(el&&el.textContent!=='V209')el.textContent='V209'}
+ for(const id of ['buildPill','sidebarVersion']){const el=$('#'+id);if(el&&el.textContent!=='V210')el.textContent='V210'}
  const meta=$('meta[name="theme-color"]');if(meta&&meta.content!=='#120b3c')meta.content='#120b3c';
 }
 function mkKpi(label,key,route,icon,hint){
@@ -246,7 +246,7 @@ function freshness(){
  if(!state.lastUpdated||Date.now()-state.lastUpdated>FOREGROUND_TTL)void load();
 }
 function init(){
- document.body.classList.add('plugart-v209');document.documentElement.dataset.plugartUi='209';
+ document.body.classList.add('plugart-v209');document.documentElement.dataset.plugartUi='210';
  ensureVersion();shell();load();
  window.PLUGART_V209={refresh:()=>load(true),getDashboard:()=>state.dashboard,isReady:()=>state.ready,getSyncState:()=>({lastUpdated:state.lastUpdated,loading:state.loading,issues:[...state.degraded]})};
  window.addEventListener('pageshow',()=>{ensureVersion();shell();freshness()});
