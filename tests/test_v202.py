@@ -164,3 +164,22 @@ def test_radar_releases_database_writer_during_network_requests(monkeypatch,tmp_
     result=core.discover_sources() if scan=='discover' else core.verify_existing()
     assert len(checks)>=2
     assert result['errors']==0
+
+
+def test_radar_rate_limit_backoff_is_bounded(monkeypatch):
+    """Automatic AI refreshes must not hammer the provider after HTTP 429."""
+    import time
+    module=current.v59
+    now=time.time()
+    monkeypatch.setattr(module,'_v168_refresh_state',lambda key:{
+        'last_run_epoch':now-9*3600,'last_error':'HTTPException: 502: Recherche indisponible (429)'
+    })
+    assert module._v168_should_refresh('opportunities_ai',8) is False
+    monkeypatch.setattr(module,'_v168_refresh_state',lambda key:{
+        'last_run_epoch':now-13*3600,'last_error':'Recherche indisponible (429)'
+    })
+    assert module._v168_should_refresh('opportunities_ai',8) is True
+    monkeypatch.setattr(module,'_v168_refresh_state',lambda key:{
+        'last_run_epoch':now-9*3600,'last_error':''
+    })
+    assert module._v168_should_refresh('opportunities_ai',8) is True
