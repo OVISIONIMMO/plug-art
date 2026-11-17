@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#15191a">
-<meta name="description" content="Visite privée immersive 360° d’un appartement Airbnb à Neuilly-Plaisance, assemblée dans l’identité OVISION 360 avec panoramas améliorés.">
+<meta name="description" content="Visite virtuelle privée 360° d’un appartement Airbnb à Neuilly-Plaisance, assemblée dans l’identité OVISION 360 avec panoramas améliorés.">
 <title>Appartement Airbnb à Neuilly-Plaisance | Visite privée OVISION 360</title>
 <style>
 :root{color-scheme:dark;--paper:#f6f8f8;--muted:#c2c9c9;--glow:rgba(255,255,255,.16);--stroke:rgba(255,255,255,.25);--glass:rgba(17,23,27,.48);--shadow:0 12px 48px rgba(0,0,0,.24);--whiteglass:rgba(245,248,250,.90)}
